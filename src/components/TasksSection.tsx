@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
-import { format, addDays, isToday } from 'date-fns';
+import { format, addDays, isToday, isSameDay } from 'date-fns';
 import { Task, WeeklyOutput } from '@/types/productivity';
 import { AddTaskDialog } from './AddTaskDialog';
 import { TaskItem } from './TaskItem';
@@ -39,7 +39,25 @@ export const TasksSection = ({
   weeklyOutputs = []
 }: TasksSectionProps) => {
   const [selectedTaskDate, setSelectedTaskDate] = useState(new Date());
-  const selectedDateTasks = getTasksByDate(selectedTaskDate);
+  
+  // Enhanced task filtering for selected date
+  const getTasksForSelectedDate = (date: Date) => {
+    return tasks.filter(task => {
+      // Show tasks due on this date
+      if (task.dueDate && isSameDay(task.dueDate, date)) {
+        return true;
+      }
+      
+      // Show completed tasks that were completed on this date (even if they were overdue)
+      if (task.completed && task.completedDate && isSameDay(task.completedDate, date)) {
+        return true;
+      }
+      
+      return false;
+    });
+  };
+  
+  const selectedDateTasks = getTasksForSelectedDate(selectedTaskDate);
   const today = new Date();
 
   const navigateDate = (direction: 'prev' | 'next') => {
@@ -133,12 +151,12 @@ export const TasksSection = ({
           )}
         </div>
         
-        {/* Show overdue tasks only when viewing today */}
-        {isToday(selectedTaskDate) && overdueTasks.length > 0 && (
+        {/* Show overdue tasks only when viewing today and they haven't been completed */}
+        {isToday(selectedTaskDate) && overdueTasks.filter(task => !task.completed).length > 0 && (
           <div className="border-t pt-2 sm:pt-3 mt-2 sm:mt-3">
             <h4 className="text-sm font-medium text-orange-600 mb-2">Overdue Tasks</h4>
             <div className="space-y-2">
-              {overdueTasks.slice(0, 3).map(task => (
+              {overdueTasks.filter(task => !task.completed).slice(0, 3).map(task => (
                 <TaskItem 
                   key={task.id} 
                   task={task}

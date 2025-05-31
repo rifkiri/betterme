@@ -50,17 +50,32 @@ export const WeeklyOutputsSection = ({
     weekStartsOn: 1
   });
 
-  // Filter outputs for the selected week
-  const weekOutputs = weeklyOutputs.filter(output => {
-    if (!output.dueDate) return true; // Show outputs without due dates in all weeks
-    return isWithinInterval(output.dueDate, {
-      start: weekStart,
-      end: weekEnd
+  // Enhanced filtering for outputs in the selected week
+  const getOutputsForSelectedWeek = () => {
+    return weeklyOutputs.filter(output => {
+      // Show outputs due in this week
+      if (output.dueDate && isWithinInterval(output.dueDate, { start: weekStart, end: weekEnd })) {
+        return true;
+      }
+      
+      // Show completed outputs that were completed in this week (even if they were originally due in a different week)
+      if (output.progress === 100 && output.completedDate && 
+          isWithinInterval(output.completedDate, { start: weekStart, end: weekEnd })) {
+        return true;
+      }
+      
+      // Show outputs without due dates in all weeks
+      if (!output.dueDate) {
+        return true;
+      }
+      
+      return false;
     });
-  });
+  };
 
-  // For current week, separate rolled over outputs from previous weeks
-  // Exclude completed outputs from being rolled over
+  const weekOutputs = getOutputsForSelectedWeek();
+
+  // For current week, show incomplete rolled over outputs from previous weeks
   const rolledOverOutputs = isCurrentWeek ? overdueWeeklyOutputs.filter(output => {
     // Only include outputs that are NOT from the current week AND not completed
     if (!output.dueDate || output.progress === 100) return false;
@@ -86,7 +101,6 @@ export const WeeklyOutputsSection = ({
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Target className="h-4 w-4 sm:h-5 sm:w-5" />
               <span className="truncate">Weekly Outputs</span>
-              {overdueWeeklyOutputs.length > 0 && isCurrentWeek}
             </CardTitle>
             <CardDescription className="text-xs sm:text-sm">
               {isCurrentWeek ? 'This Week' : format(weekStart, 'MMM dd')} - {format(weekEnd, 'MMM dd, yyyy')}
@@ -131,7 +145,7 @@ export const WeeklyOutputsSection = ({
             )}
           </div>
 
-          {/* Rolled over outputs section (only show in current week) */}
+          {/* Rolled over outputs section (only show in current week and only incomplete ones) */}
           {isCurrentWeek && rolledOverOutputs.length > 0 && (
             <div>
               <h3 className="text-sm font-semibold text-orange-600 mb-2 sm:mb-3 flex items-center gap-2">
