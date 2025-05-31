@@ -1,59 +1,38 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Plus, Calendar as CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-
 const formSchema = z.object({
   title: z.string().min(1, 'Task title is required'),
   description: z.string().optional(),
   priority: z.enum(['High', 'Medium', 'Low']),
   estimatedTime: z.string().optional(),
-  dueDate: z.date().optional(),
+  dueDate: z.date().optional()
 });
-
 type FormValues = z.infer<typeof formSchema>;
-
 interface AddTaskDialogProps {
-  onAddTask: (task: { title: string; description?: string; priority: 'High' | 'Medium' | 'Low'; estimatedTime?: string; dueDate?: Date }) => void;
+  onAddTask: (task: {
+    title: string;
+    description?: string;
+    priority: 'High' | 'Medium' | 'Low';
+    estimatedTime?: string;
+    dueDate?: Date;
+  }) => void;
 }
-
-export const AddTaskDialog = ({ onAddTask }: AddTaskDialogProps) => {
+export const AddTaskDialog = ({
+  onAddTask
+}: AddTaskDialogProps) => {
   const [open, setOpen] = useState(false);
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -62,10 +41,9 @@ export const AddTaskDialog = ({ onAddTask }: AddTaskDialogProps) => {
       description: '',
       priority: 'Medium',
       estimatedTime: '',
-      dueDate: new Date(),
-    },
+      dueDate: new Date()
+    }
   });
-
   const onSubmit = (values: FormValues) => {
     // All required fields are guaranteed by the schema
     onAddTask({
@@ -73,14 +51,12 @@ export const AddTaskDialog = ({ onAddTask }: AddTaskDialogProps) => {
       description: values.description || undefined,
       priority: values.priority,
       estimatedTime: values.estimatedTime || undefined,
-      dueDate: values.dueDate,
+      dueDate: values.dueDate
     });
     form.reset();
     setOpen(false);
   };
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
+  return <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
@@ -96,41 +72,27 @@ export const AddTaskDialog = ({ onAddTask }: AddTaskDialogProps) => {
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
+            <FormField control={form.control} name="title" render={({
+            field
+          }) => <FormItem>
                   <FormLabel>Task Title</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g., Complete project proposal" {...field} />
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
+                </FormItem>} />
+            <FormField control={form.control} name="description" render={({
+            field
+          }) => <FormItem>
                   <FormLabel>Description (Optional)</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Describe your task..."
-                      className="resize-none"
-                      {...field}
-                    />
+                    <Textarea placeholder="Describe your task..." className="resize-none" {...field} />
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="priority"
-              render={({ field }) => (
-                <FormItem>
+                </FormItem>} />
+            <FormField control={form.control} name="priority" render={({
+            field
+          }) => <FormItem>
                   <FormLabel>Priority</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
@@ -145,69 +107,34 @@ export const AddTaskDialog = ({ onAddTask }: AddTaskDialogProps) => {
                     </SelectContent>
                   </Select>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="estimatedTime"
-              render={({ field }) => (
-                <FormItem>
+                </FormItem>} />
+            <FormField control={form.control} name="estimatedTime" render={({
+            field
+          }) => <FormItem>
                   <FormLabel>Estimated Time (Optional)</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g., 2h, 30m" {...field} />
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="dueDate"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Due Date</FormLabel>
+                </FormItem>} />
+            <FormField control={form.control} name="dueDate" render={({
+            field
+          }) => <FormItem className="flex flex-col">
+                  
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
+                        
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) =>
-                          date < new Date() || date < new Date("1900-01-01")
-                        }
-                        initialFocus
-                      />
+                      <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={date => date < new Date() || date < new Date("1900-01-01")} initialFocus />
                     </PopoverContent>
                   </Popover>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
+                </FormItem>} />
             <div className="flex justify-end space-x-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setOpen(false)}
-              >
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
               <Button type="submit">Add Task</Button>
@@ -215,6 +142,5 @@ export const AddTaskDialog = ({ onAddTask }: AddTaskDialogProps) => {
           </form>
         </Form>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
