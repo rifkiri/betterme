@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +8,6 @@ import { WeeklyOutputCard } from './WeeklyOutputCard';
 import { WeekNavigator } from './WeekNavigator';
 import { WeeklyOutput } from '@/types/productivity';
 import { format, startOfWeek, endOfWeek, addWeeks, isWithinInterval, isSameWeek } from 'date-fns';
-
 interface WeeklyOutputsSectionProps {
   weeklyOutputs: WeeklyOutput[];
   deletedWeeklyOutputs: WeeklyOutput[];
@@ -22,7 +20,6 @@ interface WeeklyOutputsSectionProps {
   onRestoreWeeklyOutput: (id: string) => void;
   onPermanentlyDeleteWeeklyOutput: (id: string) => void;
 }
-
 export const WeeklyOutputsSection = ({
   weeklyOutputs,
   deletedWeeklyOutputs,
@@ -66,25 +63,19 @@ export const WeeklyOutputsSection = ({
       end: weekEnd
     });
   }) : [];
-
   const navigateWeek = (direction: 'prev' | 'next') => {
     setSelectedWeek(prev => addWeeks(prev, direction === 'next' ? 1 : -1));
   };
   const goToCurrentWeek = () => {
     setSelectedWeek(new Date());
   };
-
   return <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle className="flex items-center gap-2">
             <Target className="h-5 w-5" />
             Weekly Outputs
-            {overdueWeeklyOutputs.length > 0 && isCurrentWeek && (
-              <Badge variant="destructive" className="ml-2">
-                {overdueWeeklyOutputs.length} overdue
-              </Badge>
-            )}
+            {overdueWeeklyOutputs.length > 0 && isCurrentWeek}
           </CardTitle>
           <CardDescription>
             {isCurrentWeek ? 'This Week' : format(weekStart, 'MMM dd')} - {format(weekEnd, 'MMM dd, yyyy')}
@@ -101,44 +92,21 @@ export const WeeklyOutputsSection = ({
         <div className="space-y-6">
           {/* Current week outputs */}
           <div>
-            {weekOutputs.length === 0 ? 
-              <p className="text-center text-gray-500 py-4">No weekly outputs for this week</p> : 
-              <div className="space-y-4">
-                {weekOutputs.map(output => 
-                  <WeeklyOutputCard 
-                    key={output.id} 
-                    output={output} 
-                    onEditWeeklyOutput={onEditWeeklyOutput} 
-                    onUpdateProgress={onUpdateProgress} 
-                    onMoveWeeklyOutput={onMoveWeeklyOutput} 
-                    onDeleteWeeklyOutput={onDeleteWeeklyOutput} 
-                  />
-                )}
-              </div>
-            }
+            {weekOutputs.length === 0 ? <p className="text-center text-gray-500 py-4">No weekly outputs for this week</p> : <div className="space-y-4">
+                {weekOutputs.map(output => <WeeklyOutputCard key={output.id} output={output} onEditWeeklyOutput={onEditWeeklyOutput} onUpdateProgress={onUpdateProgress} onMoveWeeklyOutput={onMoveWeeklyOutput} onDeleteWeeklyOutput={onDeleteWeeklyOutput} />)}
+              </div>}
           </div>
 
           {/* Rolled over outputs section (only show in current week) */}
-          {isCurrentWeek && rolledOverOutputs.length > 0 && (
-            <div>
+          {isCurrentWeek && rolledOverOutputs.length > 0 && <div>
               <h3 className="text-sm font-semibold text-orange-600 mb-3 flex items-center gap-2">
                 <Target className="h-4 w-4" />
                 Rolled Over Outputs from Previous Weeks
               </h3>
               <div className="space-y-4">
-                {rolledOverOutputs.map(output => 
-                  <WeeklyOutputCard 
-                    key={output.id} 
-                    output={output} 
-                    onEditWeeklyOutput={onEditWeeklyOutput} 
-                    onUpdateProgress={onUpdateProgress} 
-                    onMoveWeeklyOutput={onMoveWeeklyOutput} 
-                    onDeleteWeeklyOutput={onDeleteWeeklyOutput} 
-                  />
-                )}
+                {rolledOverOutputs.map(output => <WeeklyOutputCard key={output.id} output={output} onEditWeeklyOutput={onEditWeeklyOutput} onUpdateProgress={onUpdateProgress} onMoveWeeklyOutput={onMoveWeeklyOutput} onDeleteWeeklyOutput={onDeleteWeeklyOutput} />)}
               </div>
-            </div>
-          )}
+            </div>}
         </div>
       </CardContent>
     </Card>;
