@@ -1,10 +1,11 @@
 import { Button } from '@/components/ui/button';
 import { Home, Calendar, Settings, User, BarChart3, Users } from 'lucide-react';
 import { useLocation, Link } from 'react-router-dom';
+
 export const AppNavigation = () => {
   const location = useLocation();
   const navigationItems = [{
-    name: 'Dashboard',
+    name: 'My Productivity',
     href: '/',
     icon: Home,
     description: 'Daily productivity tracking'
