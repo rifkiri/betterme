@@ -55,7 +55,12 @@ export const AddHabitDialog = ({ onAddHabit }: AddHabitDialogProps) => {
   });
 
   const onSubmit = (values: FormValues) => {
-    onAddHabit(values);
+    // Ensure name is present since it's required by the schema
+    onAddHabit({
+      name: values.name,
+      description: values.description || undefined,
+      category: values.category || undefined,
+    });
     form.reset();
     setOpen(false);
   };

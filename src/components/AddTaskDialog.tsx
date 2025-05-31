@@ -57,7 +57,13 @@ export const AddTaskDialog = ({ onAddTask }: AddTaskDialogProps) => {
   });
 
   const onSubmit = (values: FormValues) => {
-    onAddTask(values);
+    // All required fields are guaranteed by the schema
+    onAddTask({
+      title: values.title,
+      description: values.description || undefined,
+      priority: values.priority,
+      estimatedTime: values.estimatedTime || undefined,
+    });
     form.reset();
     setOpen(false);
   };
