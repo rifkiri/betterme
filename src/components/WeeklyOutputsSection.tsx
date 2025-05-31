@@ -79,25 +79,27 @@ export const WeeklyOutputsSection = ({
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="h-5 w-5" />
-            Weekly Outputs
-            {overdueWeeklyOutputs.length > 0 && isCurrentWeek}
-          </CardTitle>
-          <CardDescription>
-            {isCurrentWeek ? 'This Week' : format(weekStart, 'MMM dd')} - {format(weekEnd, 'MMM dd, yyyy')}
-          </CardDescription>
-        </div>
-        <div className="flex items-center gap-2">
-          <DeletedWeeklyOutputsDialog 
-            deletedWeeklyOutputs={deletedWeeklyOutputs} 
-            onRestore={onRestoreWeeklyOutput} 
-            onPermanentlyDelete={onPermanentlyDeleteWeeklyOutput} 
-          />
-          <AddWeeklyOutputDialog onAddWeeklyOutput={onAddWeeklyOutput} />
+    <Card className="h-fit">
+      <CardHeader className="pb-2 sm:pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="min-w-0">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Target className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="truncate">Weekly Outputs</span>
+              {overdueWeeklyOutputs.length > 0 && isCurrentWeek}
+            </CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
+              {isCurrentWeek ? 'This Week' : format(weekStart, 'MMM dd')} - {format(weekEnd, 'MMM dd, yyyy')}
+            </CardDescription>
+          </div>
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            <DeletedWeeklyOutputsDialog 
+              deletedWeeklyOutputs={deletedWeeklyOutputs} 
+              onRestore={onRestoreWeeklyOutput} 
+              onPermanentlyDelete={onPermanentlyDeleteWeeklyOutput} 
+            />
+            <AddWeeklyOutputDialog onAddWeeklyOutput={onAddWeeklyOutput} />
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -107,13 +109,13 @@ export const WeeklyOutputsSection = ({
           onGoToCurrentWeek={goToCurrentWeek} 
         />
 
-        <div className="space-y-6">
+        <div className="space-y-3 sm:space-y-6">
           {/* Current week outputs */}
           <div>
             {weekOutputs.length === 0 ? (
-              <p className="text-center text-gray-500 py-4">No weekly outputs for this week</p>
+              <p className="text-center text-gray-500 py-4 text-sm">No weekly outputs for this week</p>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-2 sm:space-y-4">
                 {weekOutputs.map(output => (
                   <WeeklyOutputCard 
                     key={output.id} 
@@ -132,11 +134,11 @@ export const WeeklyOutputsSection = ({
           {/* Rolled over outputs section (only show in current week) */}
           {isCurrentWeek && rolledOverOutputs.length > 0 && (
             <div>
-              <h3 className="text-sm font-semibold text-orange-600 mb-3 flex items-center gap-2">
-                <Target className="h-4 w-4" />
-                Rolled Over Outputs from Previous Weeks
+              <h3 className="text-sm font-semibold text-orange-600 mb-2 sm:mb-3 flex items-center gap-2">
+                <Target className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="text-xs sm:text-sm">Rolled Over from Previous Weeks</span>
               </h3>
-              <div className="space-y-4">
+              <div className="space-y-2 sm:space-y-4">
                 {rolledOverOutputs.map(output => (
                   <WeeklyOutputCard 
                     key={output.id} 

@@ -1,3 +1,4 @@
+
 import { Target, CheckCircle, Clock, Award } from 'lucide-react';
 import { useProductivity } from '@/hooks/useProductivity';
 import { QuickStatsCard } from './QuickStatsCard';
@@ -59,16 +60,16 @@ export const SimpleEmployeeDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 p-2 sm:p-4">
-      <div className="max-w-full mx-auto space-y-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 p-1 sm:p-2 lg:p-4">
+      <div className="max-w-full mx-auto space-y-2 sm:space-y-4">
         {/* Header */}
-        <div className="text-center mb-4">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">My Productivity Dashboard</h1>
-          <p className="text-gray-600 text-sm sm:text-base">Track your habits, manage tasks, and plan your week</p>
+        <div className="text-center mb-2 sm:mb-4 px-2">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">My Productivity Dashboard</h1>
+          <p className="text-gray-600 text-xs sm:text-sm lg:text-base">Track your habits, manage tasks, and plan your week</p>
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-1 sm:gap-2 lg:gap-4 mb-2 sm:mb-4 px-1 sm:px-2">
           <QuickStatsCard
             title="Habits Today"
             value={`${completedHabits}/${habits.length}`}
@@ -95,46 +96,53 @@ export const SimpleEmployeeDashboard = () => {
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6">
-          <HabitsSection 
-            habits={habits}
-            archivedHabits={archivedHabits}
-            onAddHabit={addHabit}
-            onEditHabit={editHabit}
-            onToggleHabit={toggleHabit}
-            onArchiveHabit={archiveHabit}
-            onRestoreHabit={restoreHabit}
-            onPermanentlyDeleteHabit={permanentlyDeleteHabit}
-          />
+        {/* Mobile-first responsive grid */}
+        <div className="space-y-2 sm:space-y-4 lg:grid lg:grid-cols-3 lg:gap-3 xl:gap-6 lg:space-y-0">
+          <div className="lg:col-span-1">
+            <HabitsSection 
+              habits={habits}
+              archivedHabits={archivedHabits}
+              onAddHabit={addHabit}
+              onEditHabit={editHabit}
+              onToggleHabit={toggleHabit}
+              onArchiveHabit={archiveHabit}
+              onRestoreHabit={restoreHabit}
+              onPermanentlyDeleteHabit={permanentlyDeleteHabit}
+            />
+          </div>
 
-          <WeeklyOutputsSection
-            weeklyOutputs={weeklyOutputs}
-            deletedWeeklyOutputs={deletedWeeklyOutputs}
-            overdueWeeklyOutputs={overdueWeeklyOutputs}
-            tasks={tasks}
-            onAddWeeklyOutput={addWeeklyOutput}
-            onEditWeeklyOutput={editWeeklyOutput}
-            onUpdateProgress={updateProgress}
-            onMoveWeeklyOutput={moveWeeklyOutput}
-            onDeleteWeeklyOutput={deleteWeeklyOutput}
-            onRestoreWeeklyOutput={restoreWeeklyOutput}
-            onPermanentlyDeleteWeeklyOutput={permanentlyDeleteWeeklyOutput}
-          />
+          <div className="lg:col-span-1">
+            <WeeklyOutputsSection
+              weeklyOutputs={weeklyOutputs}
+              deletedWeeklyOutputs={deletedWeeklyOutputs}
+              overdueWeeklyOutputs={overdueWeeklyOutputs}
+              tasks={tasks}
+              onAddWeeklyOutput={addWeeklyOutput}
+              onEditWeeklyOutput={editWeeklyOutput}
+              onUpdateProgress={updateProgress}
+              onMoveWeeklyOutput={moveWeeklyOutput}
+              onDeleteWeeklyOutput={deleteWeeklyOutput}
+              onRestoreWeeklyOutput={restoreWeeklyOutput}
+              onPermanentlyDeleteWeeklyOutput={permanentlyDeleteWeeklyOutput}
+            />
+          </div>
 
-          <TasksSection
-            tasks={tasks}
-            deletedTasks={deletedTasks}
-            overdueTasks={overdueTasks}
-            onAddTask={addTask}
-            onEditTask={editTask}
-            onToggleTask={toggleTask}
-            onMoveTask={handleRollOver}
-            onDeleteTask={deleteTask}
-            onRestoreTask={restoreTask}
-            onPermanentlyDeleteTask={permanentlyDeleteTask}
-            getTasksByDate={getTasksByDate}
-            weeklyOutputs={weeklyOutputs}
-          />
+          <div className="lg:col-span-1">
+            <TasksSection
+              tasks={tasks}
+              deletedTasks={deletedTasks}
+              overdueTasks={overdueTasks}
+              onAddTask={addTask}
+              onEditTask={editTask}
+              onToggleTask={toggleTask}
+              onMoveTask={handleRollOver}
+              onDeleteTask={deleteTask}
+              onRestoreTask={restoreTask}
+              onPermanentlyDeleteTask={permanentlyDeleteTask}
+              getTasksByDate={getTasksByDate}
+              weeklyOutputs={weeklyOutputs}
+            />
+          </div>
         </div>
       </div>
     </div>

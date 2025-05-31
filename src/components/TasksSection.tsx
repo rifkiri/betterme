@@ -51,42 +51,44 @@ export const TasksSection = ({
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>Tasks</CardTitle>
-          <CardDescription>
-            {isToday(selectedTaskDate) ? 'Today' : format(selectedTaskDate, 'MMM dd, yyyy')}
-          </CardDescription>
-        </div>
-        <div className="flex items-center gap-2">
-          <DeletedTasksDialog 
-            deletedTasks={deletedTasks}
-            onRestoreTask={onRestoreTask}
-            onPermanentlyDeleteTask={onPermanentlyDeleteTask}
-          />
-          <AddTaskDialog 
-            onAddTask={(task) => onAddTask({ ...task, dueDate: selectedTaskDate })} 
-            weeklyOutputs={weeklyOutputs}
-          />
+    <Card className="h-fit">
+      <CardHeader className="pb-2 sm:pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="min-w-0">
+            <CardTitle className="text-base sm:text-lg">Tasks</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
+              {isToday(selectedTaskDate) ? 'Today' : format(selectedTaskDate, 'MMM dd, yyyy')}
+            </CardDescription>
+          </div>
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            <DeletedTasksDialog 
+              deletedTasks={deletedTasks}
+              onRestoreTask={onRestoreTask}
+              onPermanentlyDeleteTask={onPermanentlyDeleteTask}
+            />
+            <AddTaskDialog 
+              onAddTask={(task) => onAddTask({ ...task, dueDate: selectedTaskDate })} 
+              weeklyOutputs={weeklyOutputs}
+            />
+          </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {/* Date Navigation */}
-        <div className="flex items-center justify-between mb-4 p-2 bg-gray-50 rounded-lg">
+      <CardContent className="space-y-2 sm:space-y-3">
+        {/* Date Navigation - Mobile optimized */}
+        <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
           <Button
             size="sm"
             variant="outline"
             onClick={() => navigateDate('prev')}
-            className="flex items-center gap-1"
+            className="flex items-center gap-1 h-8 px-2 text-xs"
           >
-            <ChevronLeft className="h-4 w-4" />
-            Prev
+            <ChevronLeft className="h-3 w-3" />
+            <span className="hidden xs:inline">Prev</span>
           </Button>
           
-          <div className="flex items-center gap-2">
-            <CalendarIcon className="h-4 w-4 text-gray-500" />
-            <span className="text-sm font-medium">
+          <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+            <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 shrink-0" />
+            <span className="text-xs sm:text-sm font-medium truncate">
               {format(selectedTaskDate, 'EEE, MMM dd')}
             </span>
             {!isToday(selectedTaskDate) && (
@@ -94,7 +96,7 @@ export const TasksSection = ({
                 size="sm"
                 variant="ghost"
                 onClick={goToToday}
-                className="text-xs"
+                className="text-xs h-6 px-2 shrink-0"
               >
                 Today
               </Button>
@@ -105,35 +107,37 @@ export const TasksSection = ({
             size="sm"
             variant="outline"
             onClick={() => navigateDate('next')}
-            className="flex items-center gap-1"
+            className="flex items-center gap-1 h-8 px-2 text-xs"
           >
-            Next
-            <ChevronRight className="h-4 w-4" />
+            <span className="hidden xs:inline">Next</span>
+            <ChevronRight className="h-3 w-3" />
           </Button>
         </div>
 
         {/* Tasks for Selected Date */}
-        {selectedDateTasks.length === 0 ? (
-          <p className="text-center text-gray-500 py-4">No tasks for this date</p>
-        ) : (
-          selectedDateTasks.map(task => (
-            <TaskItem 
-              key={task.id} 
-              task={task}
-              onToggleTask={onToggleTask}
-              onEditTask={onEditTask}
-              onMoveTask={onMoveTask}
-              onDeleteTask={onDeleteTask}
-              weeklyOutputs={weeklyOutputs}
-            />
-          ))
-        )}
+        <div className="space-y-2">
+          {selectedDateTasks.length === 0 ? (
+            <p className="text-center text-gray-500 py-4 text-sm">No tasks for this date</p>
+          ) : (
+            selectedDateTasks.map(task => (
+              <TaskItem 
+                key={task.id} 
+                task={task}
+                onToggleTask={onToggleTask}
+                onEditTask={onEditTask}
+                onMoveTask={onMoveTask}
+                onDeleteTask={onDeleteTask}
+                weeklyOutputs={weeklyOutputs}
+              />
+            ))
+          )}
+        </div>
         
         {/* Show overdue tasks only when viewing today */}
         {isToday(selectedTaskDate) && overdueTasks.length > 0 && (
-          <>
-            <div className="border-t pt-3 mt-3">
-              <h4 className="text-sm font-medium text-orange-600 mb-2">Overdue Tasks</h4>
+          <div className="border-t pt-2 sm:pt-3 mt-2 sm:mt-3">
+            <h4 className="text-sm font-medium text-orange-600 mb-2">Overdue Tasks</h4>
+            <div className="space-y-2">
               {overdueTasks.slice(0, 3).map(task => (
                 <TaskItem 
                   key={task.id} 
@@ -146,7 +150,7 @@ export const TasksSection = ({
                 />
               ))}
             </div>
-          </>
+          </div>
         )}
       </CardContent>
     </Card>
