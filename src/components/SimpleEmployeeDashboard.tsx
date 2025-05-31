@@ -16,6 +16,7 @@ export const SimpleEmployeeDashboard = () => {
     deletedWeeklyOutputs,
     addHabit,
     addTask,
+    addWeeklyOutput,
     toggleHabit,
     toggleTask,
     deleteTask,
@@ -93,6 +94,7 @@ export const SimpleEmployeeDashboard = () => {
           <WeeklyOutputsSection
             weeklyOutputs={weeklyOutputs}
             deletedWeeklyOutputs={deletedWeeklyOutputs}
+            onAddWeeklyOutput={addWeeklyOutput}
             onUpdateProgress={updateProgress}
             onDeleteWeeklyOutput={deleteWeeklyOutput}
             onRestoreWeeklyOutput={restoreWeeklyOutput}

@@ -3,12 +3,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Target, Plus, Trash2 } from 'lucide-react';
+import { Target, Trash2, CalendarIcon } from 'lucide-react';
 import { DeletedWeeklyOutputsDialog } from './DeletedWeeklyOutputsDialog';
+import { AddWeeklyOutputDialog } from './AddWeeklyOutputDialog';
+import { WeeklyOutput } from '@/types/productivity';
+import { format, isToday, isTomorrow } from 'date-fns';
 
 interface WeeklyOutputsSectionProps {
-  weeklyOutputs: any[];
-  deletedWeeklyOutputs: any[];
+  weeklyOutputs: WeeklyOutput[];
+  deletedWeeklyOutputs: WeeklyOutput[];
+  onAddWeeklyOutput: (output: Omit<WeeklyOutput, 'id' | 'createdDate'>) => void;
   onUpdateProgress: (outputId: string, newProgress: number) => void;
   onDeleteWeeklyOutput: (id: string) => void;
   onRestoreWeeklyOutput: (id: string) => void;
@@ -18,6 +22,7 @@ interface WeeklyOutputsSectionProps {
 export const WeeklyOutputsSection = ({
   weeklyOutputs,
   deletedWeeklyOutputs,
+  onAddWeeklyOutput,
   onUpdateProgress,
   onDeleteWeeklyOutput,
   onRestoreWeeklyOutput,
@@ -39,7 +44,17 @@ export const WeeklyOutputsSection = ({
           {weeklyOutputs.map((output) => (
             <div key={output.id} className="p-4 bg-blue-50 rounded-lg border border-blue-200">
               <div className="flex items-start justify-between mb-3">
-                <p className="text-sm text-gray-700 leading-relaxed flex-1">{output.title}</p>
+                <div className="flex-1">
+                  <p className="text-sm text-gray-700 leading-relaxed mb-2">{output.title}</p>
+                  {output.dueDate && (
+                    <div className="flex items-center text-xs text-gray-500">
+                      <CalendarIcon className="h-3 w-3 mr-1" />
+                      <span>
+                        Due: {isToday(output.dueDate) ? 'Today' : isTomorrow(output.dueDate) ? 'Tomorrow' : format(output.dueDate, 'MMM dd')}
+                      </span>
+                    </div>
+                  )}
+                </div>
                 <div className="flex items-center space-x-2">
                   <Badge 
                     variant={output.progress === 100 ? 'default' : 'secondary'} 
@@ -98,10 +113,7 @@ export const WeeklyOutputsSection = ({
             </div>
           ))}
           <div className="flex justify-between items-center mt-3">
-            <Button size="sm" variant="outline" className="flex-1 mr-2">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Weekly Output
-            </Button>
+            <AddWeeklyOutputDialog onAddWeeklyOutput={onAddWeeklyOutput} />
             {deletedWeeklyOutputs.length > 0 && (
               <DeletedWeeklyOutputsDialog
                 deletedWeeklyOutputs={deletedWeeklyOutputs}

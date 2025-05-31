@@ -1,3 +1,4 @@
+
 export interface Habit {
   id: string;
   name: string;
@@ -35,6 +36,7 @@ export interface WeeklyOutput {
   title: string;
   progress: number;
   createdDate: Date;
+  dueDate?: Date;
   deletedDate?: Date;
   isDeleted?: boolean;
 }
