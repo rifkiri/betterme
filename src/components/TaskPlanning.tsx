@@ -16,11 +16,12 @@ import {
   Plus
 } from 'lucide-react';
 import { format, addDays, isToday, isTomorrow } from 'date-fns';
-import { Task } from '@/types/productivity';
+import { Task, WeeklyOutput } from '@/types/productivity';
 import { AddTaskDialog } from './AddTaskDialog';
 
 interface TaskPlanningProps {
   tasks: Task[];
+  weeklyOutputs: WeeklyOutput[];
   onToggleTask: (id: string) => void;
   onAddTask: (task: Omit<Task, 'id' | 'completed' | 'createdDate'>) => void;
   onRollOverTask: (taskId: string, newDueDate: Date) => void;
@@ -32,6 +33,7 @@ interface TaskPlanningProps {
 
 export const TaskPlanning = ({
   tasks,
+  weeklyOutputs,
   onToggleTask,
   onAddTask,
   onRollOverTask,
@@ -77,12 +79,6 @@ export const TaskPlanning = ({
                 {task.estimatedTime}
               </span>
             )}
-            {task.dueDate && (
-              <span className="text-sm text-gray-500 flex items-center">
-                <CalendarIcon className="h-3 w-3 mr-1" />
-                {isToday(task.dueDate) ? 'Today' : isTomorrow(task.dueDate) ? 'Tomorrow' : format(task.dueDate, 'MMM dd')}
-              </span>
-            )}
           </div>
         </div>
       </div>
@@ -119,7 +115,7 @@ export const TaskPlanning = ({
                   {todaysTasks.filter(t => t.completed).length} of {todaysTasks.length} completed
                 </CardDescription>
               </div>
-              <AddTaskDialog onAddTask={onAddTask} />
+              <AddTaskDialog onAddTask={onAddTask} weeklyOutputs={weeklyOutputs} />
             </CardHeader>
             <CardContent className="space-y-4">
               {todaysTasks.length === 0 ? (
@@ -207,7 +203,8 @@ export const TaskPlanning = ({
                   </CardDescription>
                 </div>
                 <AddTaskDialog 
-                  onAddTask={(task) => onAddTask({ ...task, dueDate: selectedDate })} 
+                  onAddTask={onAddTask}
+                  weeklyOutputs={weeklyOutputs}
                 />
               </CardHeader>
               <CardContent className="space-y-4">
