@@ -25,6 +25,10 @@ export const SimpleEmployeeDashboard = () => {
     archiveHabit,
     restoreHabit,
     permanentlyDeleteHabit,
+    rollOverTask,
+    getTodaysTasks,
+    getOverdueTasks,
+    getTasksByDate,
     updateProgress,
     deleteWeeklyOutput,
     restoreWeeklyOutput,
@@ -32,8 +36,12 @@ export const SimpleEmployeeDashboard = () => {
   } = useProductivity();
 
   const completedHabits = habits.filter(habit => habit.completed).length;
-  const completedTasks = tasks.filter(task => task.completed).length;
-  const pendingTasks = tasks.filter(task => !task.completed).length;
+  const todaysTasks = getTodaysTasks();
+  const overdueTasks = getOverdueTasks();
+  
+  const handleRollOver = (taskId: string, targetDate: Date) => {
+    rollOverTask(taskId, targetDate);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 p-6">
@@ -53,14 +61,14 @@ export const SimpleEmployeeDashboard = () => {
             gradient="bg-gradient-to-r from-blue-50 to-blue-100"
           />
           <QuickStatsCard
-            title="Completed Tasks"
-            value={completedTasks.toString()}
+            title="Today's Tasks"
+            value={`${todaysTasks.filter(t => t.completed).length}/${todaysTasks.length}`}
             icon={CheckCircle}
             gradient="bg-gradient-to-r from-green-50 to-green-100"
           />
           <QuickStatsCard
-            title="Pending Tasks"
-            value={pendingTasks.toString()}
+            title="Overdue"
+            value={overdueTasks.length.toString()}
             icon={Clock}
             gradient="bg-gradient-to-r from-orange-50 to-orange-100"
           />
@@ -96,12 +104,14 @@ export const SimpleEmployeeDashboard = () => {
           <TasksSection
             tasks={tasks}
             deletedTasks={deletedTasks}
-            weeklyOutputs={weeklyOutputs}
+            overdueTasks={overdueTasks}
             onAddTask={addTask}
             onToggleTask={toggleTask}
+            onMoveTask={handleRollOver}
             onDeleteTask={deleteTask}
             onRestoreTask={restoreTask}
             onPermanentlyDeleteTask={permanentlyDeleteTask}
+            getTasksByDate={getTasksByDate}
           />
         </div>
       </div>

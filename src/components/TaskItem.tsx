@@ -1,19 +1,18 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Circle, Clock, Trash2, Target } from 'lucide-react';
-import { Task, WeeklyOutput } from '@/types/productivity';
+import { CheckCircle, Circle, Clock, ArrowRight, Trash2 } from 'lucide-react';
+import { Task } from '@/types/productivity';
+import { MoveTaskDialog } from './MoveTaskDialog';
 
 interface TaskItemProps {
   task: Task;
   onToggleTask: (id: string) => void;
+  onMoveTask: (taskId: string, targetDate: Date) => void;
   onDeleteTask: (id: string) => void;
-  weeklyOutputs: WeeklyOutput[];
 }
 
-export const TaskItem = ({ task, onToggleTask, onDeleteTask, weeklyOutputs }: TaskItemProps) => {
-  const linkedOutput = weeklyOutputs.find(output => output.id === task.weeklyOutputId);
-
+export const TaskItem = ({ task, onToggleTask, onMoveTask, onDeleteTask }: TaskItemProps) => {
   return (
     <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
       <div className="flex items-center space-x-3 flex-1">
@@ -29,10 +28,10 @@ export const TaskItem = ({ task, onToggleTask, onDeleteTask, weeklyOutputs }: Ta
             <p className={`text-sm font-medium ${task.completed ? 'line-through text-gray-500' : ''}`}>
               {task.title}
             </p>
-            {linkedOutput && (
+            {task.isMoved && (
               <Badge variant="outline" className="text-xs flex items-center gap-1">
-                <Target className="h-2 w-2" />
-                {linkedOutput.title.length > 20 ? `${linkedOutput.title.substring(0, 20)}...` : linkedOutput.title}
+                <ArrowRight className="h-2 w-2" />
+                Moved
               </Badge>
             )}
           </div>
@@ -50,6 +49,11 @@ export const TaskItem = ({ task, onToggleTask, onDeleteTask, weeklyOutputs }: Ta
         </div>
       </div>
       <div className="flex items-center gap-2">
+        {!task.completed && (
+          <MoveTaskDialog 
+            onMoveTask={(newDate) => onMoveTask(task.id, newDate)}
+          />
+        )}
         <Button
           variant="ghost"
           size="sm"

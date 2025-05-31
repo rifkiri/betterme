@@ -66,9 +66,9 @@ export const WeeklyPlanning = ({
   };
 
   const getTasksForDay = (date: Date) => {
-    // Since tasks no longer have due dates, we'll return all tasks for now
-    // This can be customized based on your specific requirements
-    return [];
+    return currentWeekTasks.filter(task => 
+      task.dueDate && format(task.dueDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
+    );
   };
 
   return (

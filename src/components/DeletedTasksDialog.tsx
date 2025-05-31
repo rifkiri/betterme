@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, RotateCcw, Clock } from 'lucide-react';
 import { Task } from '@/types/productivity';
+import { format } from 'date-fns';
 
 interface DeletedTasksDialogProps {
   deletedTasks: Task[];
@@ -56,6 +57,11 @@ export const DeletedTasksDialog = ({
                       </span>
                     )}
                   </div>
+                  {task.dueDate && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Due: {format(task.dueDate, 'MMM dd, yyyy')}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <Button

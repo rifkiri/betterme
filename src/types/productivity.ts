@@ -16,9 +16,11 @@ export interface Task {
   priority: 'High' | 'Medium' | 'Low';
   completed: boolean;
   estimatedTime?: string;
+  dueDate?: Date;
   createdDate: Date;
   completedDate?: Date;
-  weeklyOutputId?: string;
+  originalDueDate?: Date;
+  isMoved?: boolean;
 }
 
 export interface WeeklyPlan {
