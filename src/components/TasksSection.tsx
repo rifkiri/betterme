@@ -1,10 +1,6 @@
 
-import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
-import { format, addDays, isToday } from 'date-fns';
-import { Task } from '@/types/productivity';
+import { Task, WeeklyOutput } from '@/types/productivity';
 import { AddTaskDialog } from './AddTaskDialog';
 import { TaskItem } from './TaskItem';
 import { DeletedTasksDialog } from './DeletedTasksDialog';
@@ -12,39 +8,26 @@ import { DeletedTasksDialog } from './DeletedTasksDialog';
 interface TasksSectionProps {
   tasks: Task[];
   deletedTasks: Task[];
-  overdueTasks: Task[];
+  weeklyOutputs: WeeklyOutput[];
   onAddTask: (task: Omit<Task, 'id' | 'completed' | 'createdDate'>) => void;
   onToggleTask: (id: string) => void;
-  onMoveTask: (taskId: string, targetDate: Date) => void;
   onDeleteTask: (id: string) => void;
   onRestoreTask: (id: string) => void;
   onPermanentlyDeleteTask: (id: string) => void;
-  getTasksByDate: (date: Date) => Task[];
 }
 
 export const TasksSection = ({ 
   tasks, 
   deletedTasks,
-  overdueTasks, 
+  weeklyOutputs,
   onAddTask, 
   onToggleTask, 
-  onMoveTask, 
   onDeleteTask,
   onRestoreTask,
   onPermanentlyDeleteTask,
-  getTasksByDate 
 }: TasksSectionProps) => {
-  const [selectedTaskDate, setSelectedTaskDate] = useState(new Date());
-  const selectedDateTasks = getTasksByDate(selectedTaskDate);
-  const today = new Date();
-
-  const navigateDate = (direction: 'prev' | 'next') => {
-    setSelectedTaskDate(prev => addDays(prev, direction === 'next' ? 1 : -1));
-  };
-
-  const goToToday = () => {
-    setSelectedTaskDate(new Date());
-  };
+  const pendingTasks = tasks.filter(task => !task.completed);
+  const completedTasks = tasks.filter(task => task.completed);
 
   return (
     <Card>
@@ -52,7 +35,7 @@ export const TasksSection = ({
         <div>
           <CardTitle>Tasks</CardTitle>
           <CardDescription>
-            {isToday(selectedTaskDate) ? 'Today' : format(selectedTaskDate, 'MMM dd, yyyy')}
+            Manage your tasks and link them to weekly outputs
           </CardDescription>
         </div>
         <div className="flex items-center gap-2">
@@ -61,81 +44,47 @@ export const TasksSection = ({
             onRestoreTask={onRestoreTask}
             onPermanentlyDeleteTask={onPermanentlyDeleteTask}
           />
-          <AddTaskDialog onAddTask={(task) => onAddTask({ ...task, dueDate: selectedTaskDate })} />
+          <AddTaskDialog 
+            onAddTask={onAddTask} 
+            weeklyOutputs={weeklyOutputs}
+          />
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        {/* Date Navigation */}
-        <div className="flex items-center justify-between mb-4 p-2 bg-gray-50 rounded-lg">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => navigateDate('prev')}
-            className="flex items-center gap-1"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Prev
-          </Button>
-          
-          <div className="flex items-center gap-2">
-            <CalendarIcon className="h-4 w-4 text-gray-500" />
-            <span className="text-sm font-medium">
-              {format(selectedTaskDate, 'EEE, MMM dd')}
-            </span>
-            {!isToday(selectedTaskDate) && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={goToToday}
-                className="text-xs"
-              >
-                Today
-              </Button>
-            )}
+        {/* Pending Tasks */}
+        {pendingTasks.length > 0 && (
+          <div>
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Pending Tasks</h4>
+            {pendingTasks.map(task => (
+              <TaskItem 
+                key={task.id} 
+                task={task}
+                onToggleTask={onToggleTask}
+                onDeleteTask={onDeleteTask}
+                weeklyOutputs={weeklyOutputs}
+              />
+            ))}
           </div>
-          
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => navigateDate('next')}
-            className="flex items-center gap-1"
-          >
-            Next
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {/* Tasks for Selected Date */}
-        {selectedDateTasks.length === 0 ? (
-          <p className="text-center text-gray-500 py-4">No tasks for this date</p>
-        ) : (
-          selectedDateTasks.map(task => (
-            <TaskItem 
-              key={task.id} 
-              task={task}
-              onToggleTask={onToggleTask}
-              onMoveTask={onMoveTask}
-              onDeleteTask={onDeleteTask}
-            />
-          ))
         )}
-        
-        {/* Show overdue tasks only when viewing today */}
-        {isToday(selectedTaskDate) && overdueTasks.length > 0 && (
-          <>
-            <div className="border-t pt-3 mt-3">
-              <h4 className="text-sm font-medium text-orange-600 mb-2">Overdue Tasks</h4>
-              {overdueTasks.slice(0, 3).map(task => (
-                <TaskItem 
-                  key={task.id} 
-                  task={task}
-                  onToggleTask={onToggleTask}
-                  onMoveTask={onMoveTask}
-                  onDeleteTask={onDeleteTask}
-                />
-              ))}
-            </div>
-          </>
+
+        {/* Completed Tasks */}
+        {completedTasks.length > 0 && (
+          <div className={pendingTasks.length > 0 ? "border-t pt-3 mt-3" : ""}>
+            <h4 className="text-sm font-medium text-green-600 mb-2">Completed Tasks</h4>
+            {completedTasks.slice(0, 5).map(task => (
+              <TaskItem 
+                key={task.id} 
+                task={task}
+                onToggleTask={onToggleTask}
+                onDeleteTask={onDeleteTask}
+                weeklyOutputs={weeklyOutputs}
+              />
+            ))}
+          </div>
+        )}
+
+        {tasks.length === 0 && (
+          <p className="text-center text-gray-500 py-4">No tasks yet</p>
         )}
       </CardContent>
     </Card>
