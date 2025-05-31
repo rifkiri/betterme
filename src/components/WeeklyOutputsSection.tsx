@@ -1,31 +1,28 @@
 
-import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Target, Plus } from 'lucide-react';
+import { Target, Plus, Trash2 } from 'lucide-react';
+import { DeletedWeeklyOutputsDialog } from './DeletedWeeklyOutputsDialog';
 
-interface WeeklyOutput {
-  id: string;
-  title: string;
-  progress: number;
+interface WeeklyOutputsSectionProps {
+  weeklyOutputs: any[];
+  deletedWeeklyOutputs: any[];
+  onUpdateProgress: (outputId: string, newProgress: number) => void;
+  onDeleteWeeklyOutput: (id: string) => void;
+  onRestoreWeeklyOutput: (id: string) => void;
+  onPermanentlyDeleteWeeklyOutput: (id: string) => void;
 }
 
-export const WeeklyOutputsSection = () => {
-  const [weeklyOutputs, setWeeklyOutputs] = useState<WeeklyOutput[]>([
-    { id: '1', title: "Complete Q4 project proposal and presentation", progress: 75 },
-    { id: '2', title: "Finish client onboarding documentation", progress: 40 },
-    { id: '3', title: "Conduct 3 team performance reviews", progress: 100 },
-    { id: '4', title: "Launch marketing campaign for new product feature", progress: 20 }
-  ]);
-
-  const updateProgress = (outputId: string, newProgress: number) => {
-    setWeeklyOutputs(prev => prev.map(output => 
-      output.id === outputId ? { ...output, progress: Math.max(0, Math.min(100, newProgress)) } : output
-    ));
-  };
-
+export const WeeklyOutputsSection = ({
+  weeklyOutputs,
+  deletedWeeklyOutputs,
+  onUpdateProgress,
+  onDeleteWeeklyOutput,
+  onRestoreWeeklyOutput,
+  onPermanentlyDeleteWeeklyOutput,
+}: WeeklyOutputsSectionProps) => {
   return (
     <Card>
       <CardHeader>
@@ -43,12 +40,22 @@ export const WeeklyOutputsSection = () => {
             <div key={output.id} className="p-4 bg-blue-50 rounded-lg border border-blue-200">
               <div className="flex items-start justify-between mb-3">
                 <p className="text-sm text-gray-700 leading-relaxed flex-1">{output.title}</p>
-                <Badge 
-                  variant={output.progress === 100 ? 'default' : 'secondary'} 
-                  className="ml-2 text-xs"
-                >
-                  {output.progress}%
-                </Badge>
+                <div className="flex items-center space-x-2">
+                  <Badge 
+                    variant={output.progress === 100 ? 'default' : 'secondary'} 
+                    className="text-xs"
+                  >
+                    {output.progress}%
+                  </Badge>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onDeleteWeeklyOutput(output.id)}
+                    className="text-xs px-2 py-1 text-red-600 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
               
               <div className="mb-3">
@@ -62,7 +69,7 @@ export const WeeklyOutputsSection = () => {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => updateProgress(output.id, output.progress - 10)}
+                  onClick={() => onUpdateProgress(output.id, output.progress - 10)}
                   disabled={output.progress <= 0}
                   className="text-xs px-2 py-1"
                 >
@@ -71,7 +78,7 @@ export const WeeklyOutputsSection = () => {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => updateProgress(output.id, output.progress + 10)}
+                  onClick={() => onUpdateProgress(output.id, output.progress + 10)}
                   disabled={output.progress >= 100}
                   className="text-xs px-2 py-1"
                 >
@@ -81,7 +88,7 @@ export const WeeklyOutputsSection = () => {
                   <Button
                     size="sm"
                     variant="default"
-                    onClick={() => updateProgress(output.id, 100)}
+                    onClick={() => onUpdateProgress(output.id, 100)}
                     className="text-xs px-2 py-1"
                   >
                     Complete
@@ -90,10 +97,19 @@ export const WeeklyOutputsSection = () => {
               </div>
             </div>
           ))}
-          <Button size="sm" variant="outline" className="w-full mt-3">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Weekly Output
-          </Button>
+          <div className="flex justify-between items-center mt-3">
+            <Button size="sm" variant="outline" className="flex-1 mr-2">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Weekly Output
+            </Button>
+            {deletedWeeklyOutputs.length > 0 && (
+              <DeletedWeeklyOutputsDialog
+                deletedWeeklyOutputs={deletedWeeklyOutputs}
+                onRestore={onRestoreWeeklyOutput}
+                onPermanentlyDelete={onPermanentlyDeleteWeeklyOutput}
+              />
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

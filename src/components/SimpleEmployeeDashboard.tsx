@@ -12,6 +12,8 @@ export const SimpleEmployeeDashboard = () => {
     archivedHabits,
     tasks,
     deletedTasks,
+    weeklyOutputs,
+    deletedWeeklyOutputs,
     addHabit,
     addTask,
     toggleHabit,
@@ -26,6 +28,10 @@ export const SimpleEmployeeDashboard = () => {
     getTodaysTasks,
     getOverdueTasks,
     getTasksByDate,
+    updateProgress,
+    deleteWeeklyOutput,
+    restoreWeeklyOutput,
+    permanentlyDeleteWeeklyOutput,
   } = useProductivity();
 
   const completedHabits = habits.filter(habit => habit.completed).length;
@@ -84,7 +90,14 @@ export const SimpleEmployeeDashboard = () => {
             onPermanentlyDeleteHabit={permanentlyDeleteHabit}
           />
 
-          <WeeklyOutputsSection />
+          <WeeklyOutputsSection
+            weeklyOutputs={weeklyOutputs}
+            deletedWeeklyOutputs={deletedWeeklyOutputs}
+            onUpdateProgress={updateProgress}
+            onDeleteWeeklyOutput={deleteWeeklyOutput}
+            onRestoreWeeklyOutput={restoreWeeklyOutput}
+            onPermanentlyDeleteWeeklyOutput={permanentlyDeleteWeeklyOutput}
+          />
 
           <TasksSection
             tasks={tasks}

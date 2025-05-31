@@ -29,3 +29,12 @@ export interface WeeklyPlan {
   tasks: Task[];
   notes?: string;
 }
+
+export interface WeeklyOutput {
+  id: string;
+  title: string;
+  progress: number;
+  createdDate: Date;
+  deletedDate?: Date;
+  isDeleted?: boolean;
+}
