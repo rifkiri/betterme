@@ -1,4 +1,4 @@
-import { Target, CheckCircle, Clock, Award } from 'lucide-react';
+import { Target, CheckCircle, Clock, Award, Calendar } from 'lucide-react';
 import { useProductivity } from '@/hooks/useProductivity';
 import { QuickStatsCard } from './QuickStatsCard';
 import { HabitsSection } from './HabitsSection';
@@ -63,7 +63,16 @@ export const SimpleEmployeeDashboard = () => {
       <div className="max-w-full mx-auto space-y-2 sm:space-y-4">
         {/* Header */}
         <div className="text-center mb-2 sm:mb-4 px-2">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">My Productivity Dashboard</h1>
+          <div className="flex items-center justify-center gap-2 mb-1 sm:mb-2">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">My Productivity Dashboard</h1>
+            <a 
+              href="/monthly" 
+              className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+            >
+              <Calendar className="h-3 w-3" />
+              Monthly
+            </a>
+          </div>
           <p className="text-gray-600 text-xs sm:text-sm lg:text-base">Track your habits, manage tasks, and plan your week</p>
         </div>
 
