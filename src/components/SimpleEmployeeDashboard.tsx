@@ -1,4 +1,3 @@
-
 import { Target, CheckCircle, Clock, Award } from 'lucide-react';
 import { useProductivity } from '@/hooks/useProductivity';
 import { QuickStatsCard } from './QuickStatsCard';
@@ -77,6 +76,12 @@ export const SimpleEmployeeDashboard = () => {
             gradient="bg-gradient-to-r from-blue-50 to-blue-100"
           />
           <QuickStatsCard
+            title="Best Streak"
+            value={Math.max(...habits.map(h => h.streak), 0).toString()}
+            icon={Award}
+            gradient="bg-gradient-to-r from-purple-50 to-purple-100"
+          />
+          <QuickStatsCard
             title="Today's Tasks"
             value={`${todaysTasks.filter(t => t.completed).length}/${todaysTasks.length}`}
             icon={CheckCircle}
@@ -87,12 +92,6 @@ export const SimpleEmployeeDashboard = () => {
             value={(overdueTasks.length + overdueWeeklyOutputs.length).toString()}
             icon={Clock}
             gradient="bg-gradient-to-r from-orange-50 to-orange-100"
-          />
-          <QuickStatsCard
-            title="Best Streak"
-            value={Math.max(...habits.map(h => h.streak), 0).toString()}
-            icon={Award}
-            gradient="bg-gradient-to-r from-purple-50 to-purple-100"
           />
         </div>
 
