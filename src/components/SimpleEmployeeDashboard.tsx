@@ -35,6 +35,7 @@ export const SimpleEmployeeDashboard = () => {
     getOverdueTasks,
     getTasksByDate,
     updateProgress,
+    moveWeeklyOutput,
     deleteWeeklyOutput,
     restoreWeeklyOutput,
     permanentlyDeleteWeeklyOutput,
@@ -111,6 +112,7 @@ export const SimpleEmployeeDashboard = () => {
             onAddWeeklyOutput={addWeeklyOutput}
             onEditWeeklyOutput={editWeeklyOutput}
             onUpdateProgress={updateProgress}
+            onMoveWeeklyOutput={moveWeeklyOutput}
             onDeleteWeeklyOutput={deleteWeeklyOutput}
             onRestoreWeeklyOutput={restoreWeeklyOutput}
             onPermanentlyDeleteWeeklyOutput={permanentlyDeleteWeeklyOutput}
