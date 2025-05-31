@@ -1,6 +1,6 @@
 
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Circle, Clock } from 'lucide-react';
+import { CheckCircle, Circle, Clock, ArrowRight } from 'lucide-react';
 import { Task } from '@/types/productivity';
 import { MoveTaskDialog } from './MoveTaskDialog';
 
@@ -22,9 +22,17 @@ export const TaskItem = ({ task, onToggleTask, onMoveTask }: TaskItemProps) => {
           )}
         </button>
         <div className="flex-1">
-          <p className={`text-sm font-medium ${task.completed ? 'line-through text-gray-500' : ''}`}>
-            {task.title}
-          </p>
+          <div className="flex items-center gap-2">
+            <p className={`text-sm font-medium ${task.completed ? 'line-through text-gray-500' : ''}`}>
+              {task.title}
+            </p>
+            {task.isMoved && (
+              <Badge variant="outline" className="text-xs flex items-center gap-1">
+                <ArrowRight className="h-2 w-2" />
+                Moved
+              </Badge>
+            )}
+          </div>
           <div className="flex items-center space-x-2 mt-1">
             <Badge variant={task.priority === 'High' ? 'destructive' : task.priority === 'Medium' ? 'default' : 'secondary'} className="text-xs">
               {task.priority}

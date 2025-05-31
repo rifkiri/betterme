@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Habit, Task, WeeklyPlan } from '@/types/productivity';
 import { format, startOfWeek, endOfWeek, isToday, isTomorrow, addDays, isWithinInterval } from 'date-fns';
@@ -24,7 +23,9 @@ export const useProductivity = () => {
       estimatedTime: '2h',
       createdDate: yesterday,
       dueDate: yesterday,
-      completedDate: yesterday
+      originalDueDate: yesterday,
+      completedDate: yesterday,
+      isMoved: false
     },
     { 
       id: '2', 
@@ -34,7 +35,9 @@ export const useProductivity = () => {
       estimatedTime: '1h',
       createdDate: yesterday,
       dueDate: yesterday,
-      completedDate: yesterday
+      originalDueDate: yesterday,
+      completedDate: yesterday,
+      isMoved: false
     },
     { 
       id: '3', 
@@ -43,7 +46,9 @@ export const useProductivity = () => {
       completed: false, 
       estimatedTime: '1.5h',
       createdDate: today,
-      dueDate: today
+      dueDate: today,
+      originalDueDate: today,
+      isMoved: false
     },
     { 
       id: '4', 
@@ -52,7 +57,9 @@ export const useProductivity = () => {
       completed: false, 
       estimatedTime: '30m',
       createdDate: today,
-      dueDate: today
+      dueDate: today,
+      originalDueDate: today,
+      isMoved: false
     },
     {
       id: '5',
@@ -61,7 +68,9 @@ export const useProductivity = () => {
       completed: false,
       estimatedTime: '1h',
       createdDate: yesterday,
-      dueDate: yesterday
+      dueDate: yesterday,
+      originalDueDate: yesterday,
+      isMoved: false
     }
   ]);
 
@@ -84,6 +93,8 @@ export const useProductivity = () => {
       completed: false,
       createdDate: new Date(),
       dueDate: task.dueDate || new Date(),
+      originalDueDate: task.dueDate || new Date(),
+      isMoved: false,
     };
     setTasks(prev => [...prev, newTask]);
   };
@@ -115,7 +126,12 @@ export const useProductivity = () => {
   const rollOverTask = (taskId: string, newDueDate: Date) => {
     setTasks(prev => prev.map(task =>
       task.id === taskId 
-        ? { ...task, dueDate: newDueDate }
+        ? { 
+            ...task, 
+            dueDate: newDueDate,
+            originalDueDate: task.originalDueDate || task.dueDate,
+            isMoved: true
+          }
         : task
     ));
   };

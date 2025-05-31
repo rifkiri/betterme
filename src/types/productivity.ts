@@ -18,6 +18,8 @@ export interface Task {
   dueDate?: Date;
   createdDate: Date;
   completedDate?: Date;
+  originalDueDate?: Date;
+  isMoved?: boolean;
 }
 
 export interface WeeklyPlan {
