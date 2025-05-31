@@ -22,7 +22,7 @@ export const DeletedWeeklyOutputsDialog = ({
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <Archive className="h-4 w-4 mr-2" />
-          Deleted Outputs ({deletedWeeklyOutputs.length})
+          Deleted ({deletedWeeklyOutputs.length})
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
