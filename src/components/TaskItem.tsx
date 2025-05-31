@@ -1,8 +1,8 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Circle, Clock, ArrowRight, Trash2 } from 'lucide-react';
-import { Task } from '@/types/productivity';
+import { CheckCircle, Circle, Clock, ArrowRight, Trash2, Target } from 'lucide-react';
+import { Task, WeeklyOutput } from '@/types/productivity';
 import { MoveTaskDialog } from './MoveTaskDialog';
 
 interface TaskItemProps {
@@ -10,9 +10,12 @@ interface TaskItemProps {
   onToggleTask: (id: string) => void;
   onMoveTask: (taskId: string, targetDate: Date) => void;
   onDeleteTask: (id: string) => void;
+  weeklyOutputs?: WeeklyOutput[];
 }
 
-export const TaskItem = ({ task, onToggleTask, onMoveTask, onDeleteTask }: TaskItemProps) => {
+export const TaskItem = ({ task, onToggleTask, onMoveTask, onDeleteTask, weeklyOutputs = [] }: TaskItemProps) => {
+  const linkedOutput = task.weeklyOutputId ? weeklyOutputs.find(output => output.id === task.weeklyOutputId) : null;
+
   return (
     <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
       <div className="flex items-center space-x-3 flex-1">
@@ -34,6 +37,12 @@ export const TaskItem = ({ task, onToggleTask, onMoveTask, onDeleteTask }: TaskI
                 Moved
               </Badge>
             )}
+            {linkedOutput && (
+              <Badge variant="outline" className="text-xs flex items-center gap-1 bg-blue-50 text-blue-600 border-blue-200">
+                <Target className="h-2 w-2" />
+                Linked to Output
+              </Badge>
+            )}
           </div>
           <div className="flex items-center space-x-2 mt-1">
             <Badge variant={task.priority === 'High' ? 'destructive' : task.priority === 'Medium' ? 'default' : 'secondary'} className="text-xs">
@@ -46,6 +55,11 @@ export const TaskItem = ({ task, onToggleTask, onMoveTask, onDeleteTask }: TaskI
               </span>
             )}
           </div>
+          {linkedOutput && (
+            <div className="text-xs text-blue-600 mt-1 truncate">
+              → {linkedOutput.title}
+            </div>
+          )}
         </div>
       </div>
       <div className="flex items-center gap-2">

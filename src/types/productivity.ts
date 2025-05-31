@@ -21,6 +21,7 @@ export interface Task {
   completedDate?: Date;
   originalDueDate?: Date;
   isMoved?: boolean;
+  weeklyOutputId?: string;
 }
 
 export interface WeeklyPlan {

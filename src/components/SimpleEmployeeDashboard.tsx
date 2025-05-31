@@ -1,4 +1,3 @@
-
 import { Target, CheckCircle, Clock, Award } from 'lucide-react';
 import { useProductivity } from '@/hooks/useProductivity';
 import { QuickStatsCard } from './QuickStatsCard';
@@ -112,6 +111,7 @@ export const SimpleEmployeeDashboard = () => {
             onRestoreTask={restoreTask}
             onPermanentlyDeleteTask={permanentlyDeleteTask}
             getTasksByDate={getTasksByDate}
+            weeklyOutputs={weeklyOutputs}
           />
         </div>
       </div>

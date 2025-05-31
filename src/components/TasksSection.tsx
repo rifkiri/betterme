@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, addDays, isToday } from 'date-fns';
-import { Task } from '@/types/productivity';
+import { Task, WeeklyOutput } from '@/types/productivity';
 import { AddTaskDialog } from './AddTaskDialog';
 import { TaskItem } from './TaskItem';
 import { DeletedTasksDialog } from './DeletedTasksDialog';
@@ -20,6 +20,7 @@ interface TasksSectionProps {
   onRestoreTask: (id: string) => void;
   onPermanentlyDeleteTask: (id: string) => void;
   getTasksByDate: (date: Date) => Task[];
+  weeklyOutputs?: WeeklyOutput[];
 }
 
 export const TasksSection = ({ 
@@ -32,7 +33,8 @@ export const TasksSection = ({
   onDeleteTask,
   onRestoreTask,
   onPermanentlyDeleteTask,
-  getTasksByDate 
+  getTasksByDate,
+  weeklyOutputs = []
 }: TasksSectionProps) => {
   const [selectedTaskDate, setSelectedTaskDate] = useState(new Date());
   const selectedDateTasks = getTasksByDate(selectedTaskDate);
@@ -61,7 +63,10 @@ export const TasksSection = ({
             onRestoreTask={onRestoreTask}
             onPermanentlyDeleteTask={onPermanentlyDeleteTask}
           />
-          <AddTaskDialog onAddTask={(task) => onAddTask({ ...task, dueDate: selectedTaskDate })} />
+          <AddTaskDialog 
+            onAddTask={(task) => onAddTask({ ...task, dueDate: selectedTaskDate })} 
+            weeklyOutputs={weeklyOutputs}
+          />
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -116,6 +121,7 @@ export const TasksSection = ({
               onToggleTask={onToggleTask}
               onMoveTask={onMoveTask}
               onDeleteTask={onDeleteTask}
+              weeklyOutputs={weeklyOutputs}
             />
           ))
         )}
@@ -132,6 +138,7 @@ export const TasksSection = ({
                   onToggleTask={onToggleTask}
                   onMoveTask={onMoveTask}
                   onDeleteTask={onDeleteTask}
+                  weeklyOutputs={weeklyOutputs}
                 />
               ))}
             </div>
