@@ -57,9 +57,10 @@ export const WeeklyOutputsSection = ({
   });
 
   // For current week, separate rolled over outputs from previous weeks
+  // Exclude completed outputs from being rolled over
   const rolledOverOutputs = isCurrentWeek ? overdueWeeklyOutputs.filter(output => {
-    // Only include outputs that are NOT from the current week
-    if (!output.dueDate) return false;
+    // Only include outputs that are NOT from the current week AND not completed
+    if (!output.dueDate || output.progress === 100) return false;
     return !isWithinInterval(output.dueDate, {
       start: weekStart,
       end: weekEnd
