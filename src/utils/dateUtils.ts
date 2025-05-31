@@ -20,9 +20,9 @@ export const isTaskOverdue = (taskDate: Date) => {
   return taskDate < today && !isToday(taskDate);
 };
 
-export const isWeeklyOutputOverdue = (dueDate: Date) => {
+export const isWeeklyOutputOverdue = (dueDate: Date, progress: number = 0) => {
   const today = getToday();
-  return isPast(dueDate) && !isToday(dueDate);
+  return isPast(dueDate) && !isToday(dueDate) && progress < 100;
 };
 
 export const isTaskWithinWeek = (taskDate: Date) => {
