@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { WeeklyOutput } from '@/types/productivity';
 import { startOfWeek, addDays, subWeeks } from 'date-fns';
@@ -118,7 +117,7 @@ export const useWeeklyOutputs = () => {
 
   const getOverdueWeeklyOutputs = () => {
     return weeklyOutputs.filter(output => 
-      output.dueDate && isWeeklyOutputOverdue(output.dueDate, output.progress)
+      output.dueDate && isWeeklyOutputOverdue(output.dueDate)
     );
   };
 
