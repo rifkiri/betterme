@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +9,8 @@ import { WeeklyOutputCard } from './WeeklyOutputCard';
 import { WeekNavigator } from './WeekNavigator';
 import { WeeklyOutput } from '@/types/productivity';
 import { format, startOfWeek, endOfWeek, addWeeks, isWithinInterval, isSameWeek } from 'date-fns';
+import { isWeeklyOutputOverdue } from '@/utils/dateUtils';
+
 interface WeeklyOutputsSectionProps {
   weeklyOutputs: WeeklyOutput[];
   deletedWeeklyOutputs: WeeklyOutput[];
@@ -20,6 +23,7 @@ interface WeeklyOutputsSectionProps {
   onRestoreWeeklyOutput: (id: string) => void;
   onPermanentlyDeleteWeeklyOutput: (id: string) => void;
 }
+
 export const WeeklyOutputsSection = ({
   weeklyOutputs,
   deletedWeeklyOutputs,
@@ -52,19 +56,30 @@ export const WeeklyOutputsSection = ({
       end: weekEnd
     });
   });
+
+  // For current week, also include overdue outputs from previous weeks
+  const displayOutputs = isCurrentWeek 
+    ? [...weekOutputs, ...overdueWeeklyOutputs]
+    : weekOutputs;
+
   const navigateWeek = (direction: 'prev' | 'next') => {
     setSelectedWeek(prev => addWeeks(prev, direction === 'next' ? 1 : -1));
   };
   const goToCurrentWeek = () => {
     setSelectedWeek(new Date());
   };
+
   return <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle className="flex items-center gap-2">
             <Target className="h-5 w-5" />
             Weekly Outputs
-            {overdueWeeklyOutputs.length > 0}
+            {overdueWeeklyOutputs.length > 0 && isCurrentWeek && (
+              <Badge variant="destructive" className="ml-2">
+                {overdueWeeklyOutputs.length} overdue
+              </Badge>
+            )}
           </CardTitle>
           <CardDescription>
             {isCurrentWeek ? 'This Week' : format(weekStart, 'MMM dd')} - {format(weekEnd, 'MMM dd, yyyy')}
@@ -79,7 +94,7 @@ export const WeeklyOutputsSection = ({
         <WeekNavigator selectedWeek={selectedWeek} onNavigateWeek={navigateWeek} onGoToCurrentWeek={goToCurrentWeek} />
 
         <div className="space-y-4">
-          {weekOutputs.length === 0 ? <p className="text-center text-gray-500 py-4">No weekly outputs for this week</p> : weekOutputs.map(output => <WeeklyOutputCard key={output.id} output={output} onEditWeeklyOutput={onEditWeeklyOutput} onUpdateProgress={onUpdateProgress} onMoveWeeklyOutput={onMoveWeeklyOutput} onDeleteWeeklyOutput={onDeleteWeeklyOutput} />)}
+          {displayOutputs.length === 0 ? <p className="text-center text-gray-500 py-4">No weekly outputs for this week</p> : displayOutputs.map(output => <WeeklyOutputCard key={output.id} output={output} onEditWeeklyOutput={onEditWeeklyOutput} onUpdateProgress={onUpdateProgress} onMoveWeeklyOutput={onMoveWeeklyOutput} onDeleteWeeklyOutput={onDeleteWeeklyOutput} />)}
         </div>
       </CardContent>
     </Card>;

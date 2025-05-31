@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { WeeklyOutput } from '@/types/productivity';
 import { startOfWeek, addDays, subWeeks } from 'date-fns';
@@ -36,8 +37,11 @@ export const useWeeklyOutputs = () => {
       progress: 20, 
       createdDate: new Date(), 
       dueDate: addDays(currentWeekStart, 6) // Sunday of current week
-    },
-    // Overdue outputs from previous week
+    }
+  ]);
+
+  // Separate state for overdue outputs that will be shown in current week
+  const [overdueWeeklyOutputs, setOverdueWeeklyOutputs] = useState<WeeklyOutput[]>([
     { 
       id: '5', 
       title: "Complete annual budget review and analysis", 
@@ -76,37 +80,58 @@ export const useWeeklyOutputs = () => {
     setWeeklyOutputs(prev => prev.map(output => 
       output.id === id ? { ...output, ...updates } : output
     ));
+    setOverdueWeeklyOutputs(prev => prev.map(output => 
+      output.id === id ? { ...output, ...updates } : output
+    ));
   };
 
   const updateProgress = (outputId: string, newProgress: number) => {
+    const newProgressValue = Math.max(0, Math.min(100, newProgress));
+    
     setWeeklyOutputs(prev => prev.map(output => 
-      output.id === outputId ? { ...output, progress: Math.max(0, Math.min(100, newProgress)) } : output
+      output.id === outputId ? { ...output, progress: newProgressValue } : output
+    ));
+    setOverdueWeeklyOutputs(prev => prev.map(output => 
+      output.id === outputId ? { ...output, progress: newProgressValue } : output
     ));
   };
 
   const moveWeeklyOutput = (id: string, newDueDate: Date) => {
-    setWeeklyOutputs(prev => prev.map(output => 
+    const updateOutput = (output: WeeklyOutput) => 
       output.id === id ? { 
         ...output, 
         dueDate: newDueDate,
         originalDueDate: output.originalDueDate || output.dueDate,
         isMoved: true
-      } : output
-    ));
+      } : output;
+
+    setWeeklyOutputs(prev => prev.map(updateOutput));
+    setOverdueWeeklyOutputs(prev => prev.map(updateOutput));
   };
 
   const deleteWeeklyOutput = (id: string) => {
-    const outputToDelete = weeklyOutputs.find(output => output.id === id);
+    const outputToDelete = weeklyOutputs.find(output => output.id === id) ||
+                          overdueWeeklyOutputs.find(output => output.id === id);
+    
     if (outputToDelete) {
       setDeletedWeeklyOutputs(prev => [...prev, { ...outputToDelete, isDeleted: true, deletedDate: new Date() }]);
       setWeeklyOutputs(prev => prev.filter(output => output.id !== id));
+      setOverdueWeeklyOutputs(prev => prev.filter(output => output.id !== id));
     }
   };
 
   const restoreWeeklyOutput = (id: string) => {
     const outputToRestore = deletedWeeklyOutputs.find(output => output.id === id);
     if (outputToRestore) {
-      setWeeklyOutputs(prev => [...prev, { ...outputToRestore, isDeleted: false, deletedDate: undefined }]);
+      const restoredOutput = { ...outputToRestore, isDeleted: false, deletedDate: undefined };
+      
+      // Check if it's overdue and incomplete
+      if (outputToRestore.dueDate && isWeeklyOutputOverdue(outputToRestore.dueDate) && outputToRestore.progress < 100) {
+        setOverdueWeeklyOutputs(prev => [...prev, restoredOutput]);
+      } else {
+        setWeeklyOutputs(prev => [...prev, restoredOutput]);
+      }
+      
       setDeletedWeeklyOutputs(prev => prev.filter(output => output.id !== id));
     }
   };
@@ -116,8 +141,8 @@ export const useWeeklyOutputs = () => {
   };
 
   const getOverdueWeeklyOutputs = () => {
-    return weeklyOutputs.filter(output => 
-      output.dueDate && isWeeklyOutputOverdue(output.dueDate)
+    return overdueWeeklyOutputs.filter(output => 
+      output.dueDate && isWeeklyOutputOverdue(output.dueDate) && output.progress < 100
     );
   };
 
