@@ -9,7 +9,6 @@ import { WeeklyOutputCard } from './WeeklyOutputCard';
 import { WeekNavigator } from './WeekNavigator';
 import { WeeklyOutput } from '@/types/productivity';
 import { format, startOfWeek, endOfWeek, addWeeks, isWithinInterval, isSameWeek } from 'date-fns';
-import { isWeeklyOutputOverdue } from '@/utils/dateUtils';
 
 interface WeeklyOutputsSectionProps {
   weeklyOutputs: WeeklyOutput[];
@@ -57,11 +56,6 @@ export const WeeklyOutputsSection = ({
     });
   });
 
-  // For current week, also include overdue outputs from previous weeks
-  const displayOutputs = isCurrentWeek 
-    ? [...weekOutputs, ...overdueWeeklyOutputs]
-    : weekOutputs;
-
   const navigateWeek = (direction: 'prev' | 'next') => {
     setSelectedWeek(prev => addWeeks(prev, direction === 'next' ? 1 : -1));
   };
@@ -93,8 +87,47 @@ export const WeeklyOutputsSection = ({
       <CardContent>
         <WeekNavigator selectedWeek={selectedWeek} onNavigateWeek={navigateWeek} onGoToCurrentWeek={goToCurrentWeek} />
 
-        <div className="space-y-4">
-          {displayOutputs.length === 0 ? <p className="text-center text-gray-500 py-4">No weekly outputs for this week</p> : displayOutputs.map(output => <WeeklyOutputCard key={output.id} output={output} onEditWeeklyOutput={onEditWeeklyOutput} onUpdateProgress={onUpdateProgress} onMoveWeeklyOutput={onMoveWeeklyOutput} onDeleteWeeklyOutput={onDeleteWeeklyOutput} />)}
+        <div className="space-y-6">
+          {/* Current week outputs */}
+          <div>
+            {weekOutputs.length === 0 ? 
+              <p className="text-center text-gray-500 py-4">No weekly outputs for this week</p> : 
+              <div className="space-y-4">
+                {weekOutputs.map(output => 
+                  <WeeklyOutputCard 
+                    key={output.id} 
+                    output={output} 
+                    onEditWeeklyOutput={onEditWeeklyOutput} 
+                    onUpdateProgress={onUpdateProgress} 
+                    onMoveWeeklyOutput={onMoveWeeklyOutput} 
+                    onDeleteWeeklyOutput={onDeleteWeeklyOutput} 
+                  />
+                )}
+              </div>
+            }
+          </div>
+
+          {/* Rolled over outputs section (only show in current week) */}
+          {isCurrentWeek && overdueWeeklyOutputs.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-orange-600 mb-3 flex items-center gap-2">
+                <Target className="h-4 w-4" />
+                Rolled Over Outputs from Previous Weeks
+              </h3>
+              <div className="space-y-4">
+                {overdueWeeklyOutputs.map(output => 
+                  <WeeklyOutputCard 
+                    key={output.id} 
+                    output={output} 
+                    onEditWeeklyOutput={onEditWeeklyOutput} 
+                    onUpdateProgress={onUpdateProgress} 
+                    onMoveWeeklyOutput={onMoveWeeklyOutput} 
+                    onDeleteWeeklyOutput={onDeleteWeeklyOutput} 
+                  />
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>;
