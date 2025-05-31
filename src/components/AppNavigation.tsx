@@ -1,6 +1,7 @@
 
 import { Button } from '@/components/ui/button';
-import { Home, Calendar, Settings, Users, User } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Home, Calendar, Settings, Users } from 'lucide-react';
 import { useLocation, Link } from 'react-router-dom';
 
 // Mock function to get current user role (replace with real authentication)
@@ -12,11 +13,35 @@ const getCurrentUserRole = () => {
   return 'team-member';
 };
 
+// Mock function to get current user info
+const getCurrentUser = () => {
+  const authUser = localStorage.getItem('authUser');
+  if (authUser) {
+    const user = JSON.parse(authUser);
+    return {
+      name: user.name || 'User',
+      email: user.email || 'user@company.com'
+    };
+  }
+  return { name: 'User', email: 'user@company.com' };
+};
+
 export const AppNavigation = () => {
   const location = useLocation();
   const userRole = getCurrentUserRole();
+  const currentUser = getCurrentUser();
 
-  // Define navigation items based on user role
+  // Get user initials
+  const getUserInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
+  // Define navigation items based on user role (excluding profile)
   const getNavigationItems = () => {
     const baseItems = [{
       name: 'My Productivity',
@@ -28,11 +53,6 @@ export const AppNavigation = () => {
       href: '/monthly',
       icon: Calendar,
       description: 'Monthly analytics'
-    }, {
-      name: 'Profile',
-      href: '/profile',
-      icon: User,
-      description: 'User profile and preferences'
     }];
 
     if (userRole === 'admin') {
@@ -74,10 +94,14 @@ export const AppNavigation = () => {
             })}
             </nav>
           </div>
-          <div className="md:hidden">
-            <Button variant="ghost" size="sm">
-              <Settings className="h-4 w-4" />
-            </Button>
+          <div className="flex items-center">
+            <Link to="/profile" className="flex items-center">
+              <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-blue-500 hover:ring-offset-2 transition-all">
+                <AvatarFallback className="bg-blue-100 text-blue-600 text-sm font-medium">
+                  {getUserInitials(currentUser.name)}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
           </div>
         </div>
       </div>
