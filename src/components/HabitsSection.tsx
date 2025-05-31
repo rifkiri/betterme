@@ -1,4 +1,5 @@
 
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -6,11 +7,13 @@ import { CheckCircle, Circle, Archive } from 'lucide-react';
 import { Habit } from '@/types/productivity';
 import { AddHabitDialog } from './AddHabitDialog';
 import { ArchivedHabitsDialog } from './ArchivedHabitsDialog';
+import { EditHabitDialog } from './EditHabitDialog';
 
 interface HabitsSectionProps {
   habits: Habit[];
   archivedHabits: Habit[];
   onAddHabit: (habit: { name: string; description?: string; category?: string }) => void;
+  onEditHabit: (id: string, updates: Partial<Habit>) => void;
   onToggleHabit: (id: string) => void;
   onArchiveHabit: (id: string) => void;
   onRestoreHabit: (id: string) => void;
@@ -20,12 +23,15 @@ interface HabitsSectionProps {
 export const HabitsSection = ({ 
   habits, 
   archivedHabits,
-  onAddHabit, 
+  onAddHabit,
+  onEditHabit,
   onToggleHabit, 
   onArchiveHabit,
   onRestoreHabit,
   onPermanentlyDeleteHabit
 }: HabitsSectionProps) => {
+  const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -53,7 +59,10 @@ export const HabitsSection = ({
                   <Circle className="h-5 w-5 text-gray-400" />
                 )}
               </button>
-              <div>
+              <div 
+                className="cursor-pointer hover:bg-gray-100 rounded p-1 -m-1 transition-colors"
+                onClick={() => setEditingHabit(habit)}
+              >
                 <span className={`font-medium ${habit.completed ? 'text-green-700' : 'text-gray-700'}`}>
                   {habit.name}
                 </span>
@@ -76,6 +85,15 @@ export const HabitsSection = ({
           </div>
         ))}
       </CardContent>
+      
+      {editingHabit && (
+        <EditHabitDialog
+          habit={editingHabit}
+          open={true}
+          onOpenChange={(open) => !open && setEditingHabit(null)}
+          onSave={onEditHabit}
+        />
+      )}
     </Card>
   );
 };

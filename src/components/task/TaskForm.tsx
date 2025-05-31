@@ -1,3 +1,4 @@
+
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Calendar as CalendarIcon } from 'lucide-react';
@@ -12,19 +13,23 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { WeeklyOutput } from '@/types/productivity';
 import { taskFormSchema, TaskFormValues } from './taskFormSchema';
+
 interface TaskFormProps {
   onSubmit: (values: TaskFormValues) => void;
   onCancel: () => void;
   weeklyOutputs: WeeklyOutput[];
+  initialValues?: TaskFormValues;
 }
+
 export const TaskForm = ({
   onSubmit,
   onCancel,
-  weeklyOutputs
+  weeklyOutputs,
+  initialValues
 }: TaskFormProps) => {
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
-    defaultValues: {
+    defaultValues: initialValues || {
       title: '',
       description: '',
       priority: 'Medium',
@@ -33,35 +38,50 @@ export const TaskForm = ({
       weeklyOutputId: undefined
     }
   });
+
   const handleSubmit = (values: TaskFormValues) => {
     onSubmit(values);
-    form.reset();
+    if (!initialValues) {
+      form.reset();
+    }
   };
-  return <Form {...form}>
+
+  return (
+    <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <FormField control={form.control} name="title" render={({
-        field
-      }) => <FormItem>
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
               <FormLabel>Task Title</FormLabel>
               <FormControl>
                 <Input placeholder="e.g., Complete project proposal" {...field} />
               </FormControl>
               <FormMessage />
-            </FormItem>} />
+            </FormItem>
+          )}
+        />
         
-        <FormField control={form.control} name="description" render={({
-        field
-      }) => <FormItem>
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
               <FormLabel>Description (Optional)</FormLabel>
               <FormControl>
                 <Textarea placeholder="Describe your task..." className="resize-none" {...field} />
               </FormControl>
               <FormMessage />
-            </FormItem>} />
+            </FormItem>
+          )}
+        />
         
-        <FormField control={form.control} name="priority" render={({
-        field
-      }) => <FormItem>
+        <FormField
+          control={form.control}
+          name="priority"
+          render={({ field }) => (
+            <FormItem>
               <FormLabel>Priority</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
@@ -76,21 +96,29 @@ export const TaskForm = ({
                 </SelectContent>
               </Select>
               <FormMessage />
-            </FormItem>} />
+            </FormItem>
+          )}
+        />
         
-        <FormField control={form.control} name="estimatedTime" render={({
-        field
-      }) => <FormItem>
+        <FormField
+          control={form.control}
+          name="estimatedTime"
+          render={({ field }) => (
+            <FormItem>
               <FormLabel>Estimated Time (Optional)</FormLabel>
               <FormControl>
                 <Input placeholder="e.g., 2h, 30m" {...field} />
               </FormControl>
               <FormMessage />
-            </FormItem>} />
+            </FormItem>
+          )}
+        />
 
-        <FormField control={form.control} name="weeklyOutputId" render={({
-        field
-      }) => <FormItem>
+        <FormField
+          control={form.control}
+          name="weeklyOutputId"
+          render={({ field }) => (
+            <FormItem>
               <FormLabel>Link to Weekly Output (Optional)</FormLabel>
               <Select onValueChange={field.onChange} value={field.value || ""}>
                 <FormControl>
@@ -100,24 +128,67 @@ export const TaskForm = ({
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="none">No weekly output</SelectItem>
-                  {weeklyOutputs.map(output => <SelectItem key={output.id} value={output.id}>
+                  {weeklyOutputs.map(output => (
+                    <SelectItem key={output.id} value={output.id}>
                       {output.title}
-                    </SelectItem>)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />
-            </FormItem>} />
+            </FormItem>
+          )}
+        />
         
-        <FormField control={form.control} name="dueDate" render={({
-        field
-      }) => {}} />
+        <FormField
+          control={form.control}
+          name="dueDate"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Due Date</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        format(field.value, "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    disabled={(date) =>
+                      date < new Date("1900-01-01")
+                    }
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         
         <div className="flex justify-end space-x-2">
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit">Add Task</Button>
+          <Button type="submit">{initialValues ? 'Save Changes' : 'Add Task'}</Button>
         </div>
       </form>
-    </Form>;
+    </Form>
+  );
 };

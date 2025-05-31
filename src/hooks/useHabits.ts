@@ -23,6 +23,12 @@ export const useHabits = () => {
     setHabits(prev => [...prev, newHabit]);
   };
 
+  const editHabit = (id: string, updates: Partial<Habit>) => {
+    setHabits(prev => prev.map(habit => 
+      habit.id === id ? { ...habit, ...updates } : habit
+    ));
+  };
+
   const toggleHabit = (id: string) => {
     setHabits(prev => prev.map(habit => 
       habit.id === id 
@@ -59,6 +65,7 @@ export const useHabits = () => {
     habits,
     archivedHabits,
     addHabit,
+    editHabit,
     toggleHabit,
     archiveHabit,
     restoreHabit,

@@ -1,19 +1,23 @@
 
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Circle, Clock, ArrowRight, Trash2, Target } from 'lucide-react';
 import { Task, WeeklyOutput } from '@/types/productivity';
 import { MoveTaskDialog } from './MoveTaskDialog';
+import { EditTaskDialog } from './EditTaskDialog';
 
 interface TaskItemProps {
   task: Task;
   onToggleTask: (id: string) => void;
+  onEditTask: (id: string, updates: Partial<Task>) => void;
   onMoveTask: (taskId: string, targetDate: Date) => void;
   onDeleteTask: (id: string) => void;
   weeklyOutputs?: WeeklyOutput[];
 }
 
-export const TaskItem = ({ task, onToggleTask, onMoveTask, onDeleteTask, weeklyOutputs = [] }: TaskItemProps) => {
+export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteTask, weeklyOutputs = [] }: TaskItemProps) => {
+  const [editingTask, setEditingTask] = useState(false);
   const linkedOutput = task.weeklyOutputId ? weeklyOutputs.find(output => output.id === task.weeklyOutputId) : null;
 
   return (
@@ -28,9 +32,14 @@ export const TaskItem = ({ task, onToggleTask, onMoveTask, onDeleteTask, weeklyO
         </button>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <p className={`text-sm font-medium ${task.completed ? 'line-through text-gray-500' : ''}`}>
-              {task.title}
-            </p>
+            <div 
+              className="cursor-pointer hover:bg-gray-100 rounded p-1 -m-1 transition-colors"
+              onClick={() => setEditingTask(true)}
+            >
+              <p className={`text-sm font-medium ${task.completed ? 'line-through text-gray-500' : ''}`}>
+                {task.title}
+              </p>
+            </div>
             {task.isMoved && (
               <Badge variant="outline" className="text-xs flex items-center gap-1">
                 <ArrowRight className="h-2 w-2" />
@@ -77,6 +86,16 @@ export const TaskItem = ({ task, onToggleTask, onMoveTask, onDeleteTask, weeklyO
           <Trash2 className="h-4 w-4" />
         </Button>
       </div>
+      
+      {editingTask && (
+        <EditTaskDialog
+          task={task}
+          open={true}
+          onOpenChange={(open) => !open && setEditingTask(false)}
+          onSave={onEditTask}
+          weeklyOutputs={weeklyOutputs}
+        />
+      )}
     </div>
   );
 };

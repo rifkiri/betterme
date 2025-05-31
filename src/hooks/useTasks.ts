@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Task } from '@/types/productivity';
 import { getToday, getYesterday, isSameDate, isTaskOverdue, isTaskWithinWeek } from '@/utils/dateUtils';
@@ -82,6 +83,12 @@ export const useTasks = () => {
     setTasks(prev => [...prev, newTask]);
   };
 
+  const editTask = (id: string, updates: Partial<Task>) => {
+    setTasks(prev => prev.map(task => 
+      task.id === id ? { ...task, ...updates } : task
+    ));
+  };
+
   const toggleTask = (id: string) => {
     setTasks(prev => prev.map(task => 
       task.id === id 
@@ -162,6 +169,7 @@ export const useTasks = () => {
     tasks,
     deletedTasks,
     addTask,
+    editTask,
     toggleTask,
     deleteTask,
     restoreTask,

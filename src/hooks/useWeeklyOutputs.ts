@@ -21,6 +21,12 @@ export const useWeeklyOutputs = () => {
     setWeeklyOutputs(prev => [...prev, newOutput]);
   };
 
+  const editWeeklyOutput = (id: string, updates: Partial<WeeklyOutput>) => {
+    setWeeklyOutputs(prev => prev.map(output => 
+      output.id === id ? { ...output, ...updates } : output
+    ));
+  };
+
   const updateProgress = (outputId: string, newProgress: number) => {
     setWeeklyOutputs(prev => prev.map(output => 
       output.id === outputId ? { ...output, progress: Math.max(0, Math.min(100, newProgress)) } : output
@@ -51,6 +57,7 @@ export const useWeeklyOutputs = () => {
     weeklyOutputs,
     deletedWeeklyOutputs,
     addWeeklyOutput,
+    editWeeklyOutput,
     updateProgress,
     deleteWeeklyOutput,
     restoreWeeklyOutput,
