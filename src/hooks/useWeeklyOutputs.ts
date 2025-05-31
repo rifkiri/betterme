@@ -1,12 +1,13 @@
 
 import { useState } from 'react';
 import { WeeklyOutput } from '@/types/productivity';
-import { startOfWeek, addDays } from 'date-fns';
+import { startOfWeek, addDays, subWeeks } from 'date-fns';
 import { isWeeklyOutputOverdue } from '@/utils/dateUtils';
 
 export const useWeeklyOutputs = () => {
   // Get current week start (Monday)
   const currentWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+  const previousWeekStart = subWeeks(currentWeekStart, 1);
   
   const [weeklyOutputs, setWeeklyOutputs] = useState<WeeklyOutput[]>([
     { 
@@ -36,6 +37,28 @@ export const useWeeklyOutputs = () => {
       progress: 20, 
       createdDate: new Date(), 
       dueDate: addDays(currentWeekStart, 6) // Sunday of current week
+    },
+    // Overdue outputs from previous week
+    { 
+      id: '5', 
+      title: "Complete annual budget review and analysis", 
+      progress: 60, 
+      createdDate: subWeeks(new Date(), 1), 
+      dueDate: addDays(previousWeekStart, 4) // Friday of previous week
+    },
+    { 
+      id: '6', 
+      title: "Finalize vendor contract negotiations", 
+      progress: 30, 
+      createdDate: subWeeks(new Date(), 1), 
+      dueDate: addDays(previousWeekStart, 3) // Thursday of previous week
+    },
+    { 
+      id: '7', 
+      title: "Submit quarterly compliance report", 
+      progress: 85, 
+      createdDate: subWeeks(new Date(), 1), 
+      dueDate: addDays(previousWeekStart, 6) // Sunday of previous week
     }
   ]);
 
