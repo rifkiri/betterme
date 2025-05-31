@@ -14,6 +14,7 @@ interface TasksSectionProps {
   onAddTask: (task: Omit<Task, 'id' | 'completed' | 'createdDate'>) => void;
   onToggleTask: (id: string) => void;
   onMoveTask: (taskId: string, targetDate: Date) => void;
+  onDeleteTask: (id: string) => void;
   getTasksByDate: (date: Date) => Task[];
 }
 
@@ -23,6 +24,7 @@ export const TasksSection = ({
   onAddTask, 
   onToggleTask, 
   onMoveTask, 
+  onDeleteTask,
   getTasksByDate 
 }: TasksSectionProps) => {
   const [selectedTaskDate, setSelectedTaskDate] = useState(new Date());
@@ -99,6 +101,7 @@ export const TasksSection = ({
               task={task}
               onToggleTask={onToggleTask}
               onMoveTask={onMoveTask}
+              onDeleteTask={onDeleteTask}
             />
           ))
         )}
@@ -114,6 +117,7 @@ export const TasksSection = ({
                   task={task}
                   onToggleTask={onToggleTask}
                   onMoveTask={onMoveTask}
+                  onDeleteTask={onDeleteTask}
                 />
               ))}
             </div>

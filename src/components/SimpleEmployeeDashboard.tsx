@@ -14,6 +14,8 @@ export const SimpleEmployeeDashboard = () => {
     addTask,
     toggleHabit,
     toggleTask,
+    deleteTask,
+    archiveHabit,
     rollOverTask,
     getTodaysTasks,
     getOverdueTasks,
@@ -70,6 +72,7 @@ export const SimpleEmployeeDashboard = () => {
             habits={habits}
             onAddHabit={addHabit}
             onToggleHabit={toggleHabit}
+            onArchiveHabit={archiveHabit}
           />
 
           <WeeklyOutputsSection />
@@ -80,6 +83,7 @@ export const SimpleEmployeeDashboard = () => {
             onAddTask={addTask}
             onToggleTask={toggleTask}
             onMoveTask={handleRollOver}
+            onDeleteTask={deleteTask}
             getTasksByDate={getTasksByDate}
           />
         </div>

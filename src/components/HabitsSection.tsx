@@ -1,7 +1,8 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Circle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CheckCircle, Circle, Archive } from 'lucide-react';
 import { Habit } from '@/types/productivity';
 import { AddHabitDialog } from './AddHabitDialog';
 
@@ -9,9 +10,10 @@ interface HabitsSectionProps {
   habits: Habit[];
   onAddHabit: (habit: { name: string; description?: string; category?: string }) => void;
   onToggleHabit: (id: string) => void;
+  onArchiveHabit: (id: string) => void;
 }
 
-export const HabitsSection = ({ habits, onAddHabit, onToggleHabit }: HabitsSectionProps) => {
+export const HabitsSection = ({ habits, onAddHabit, onToggleHabit, onArchiveHabit }: HabitsSectionProps) => {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -39,10 +41,18 @@ export const HabitsSection = ({ habits, onAddHabit, onToggleHabit }: HabitsSecti
                 {habit.category && <p className="text-xs text-gray-500">{habit.category}</p>}
               </div>
             </div>
-            <div className="text-right">
+            <div className="flex items-center gap-2">
               <Badge variant={habit.streak > 0 ? 'default' : 'secondary'} className="text-xs">
                 {habit.streak} day streak
               </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onArchiveHabit(habit.id)}
+                className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
+              >
+                <Archive className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         ))}

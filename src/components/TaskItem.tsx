@@ -1,6 +1,7 @@
 
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Circle, Clock, ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CheckCircle, Circle, Clock, ArrowRight, Trash2 } from 'lucide-react';
 import { Task } from '@/types/productivity';
 import { MoveTaskDialog } from './MoveTaskDialog';
 
@@ -8,9 +9,10 @@ interface TaskItemProps {
   task: Task;
   onToggleTask: (id: string) => void;
   onMoveTask: (taskId: string, targetDate: Date) => void;
+  onDeleteTask: (id: string) => void;
 }
 
-export const TaskItem = ({ task, onToggleTask, onMoveTask }: TaskItemProps) => {
+export const TaskItem = ({ task, onToggleTask, onMoveTask, onDeleteTask }: TaskItemProps) => {
   return (
     <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
       <div className="flex items-center space-x-3 flex-1">
@@ -46,11 +48,21 @@ export const TaskItem = ({ task, onToggleTask, onMoveTask }: TaskItemProps) => {
           </div>
         </div>
       </div>
-      {!task.completed && (
-        <MoveTaskDialog 
-          onMoveTask={(newDate) => onMoveTask(task.id, newDate)}
-        />
-      )}
+      <div className="flex items-center gap-2">
+        {!task.completed && (
+          <MoveTaskDialog 
+            onMoveTask={(newDate) => onMoveTask(task.id, newDate)}
+          />
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onDeleteTask(task.id)}
+          className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 };

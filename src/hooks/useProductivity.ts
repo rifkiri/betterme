@@ -123,6 +123,18 @@ export const useProductivity = () => {
     ));
   };
 
+  const deleteTask = (id: string) => {
+    setTasks(prev => prev.filter(task => task.id !== id));
+  };
+
+  const archiveHabit = (id: string) => {
+    setHabits(prev => prev.map(habit => 
+      habit.id === id 
+        ? { ...habit, archived: true }
+        : habit
+    ));
+  };
+
   const rollOverTask = (taskId: string, newDueDate: Date) => {
     setTasks(prev => prev.map(task => {
       if (task.id === taskId) {
@@ -179,13 +191,15 @@ export const useProductivity = () => {
   };
 
   return {
-    habits,
+    habits: habits.filter(habit => !habit.archived),
     tasks,
     weeklyPlans,
     addHabit,
     addTask,
     toggleHabit,
     toggleTask,
+    deleteTask,
+    archiveHabit,
     rollOverTask,
     getTasksByDate,
     getTodaysTasks,

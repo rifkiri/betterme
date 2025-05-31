@@ -1,4 +1,3 @@
-
 export interface Habit {
   id: string;
   name: string;
@@ -6,6 +5,7 @@ export interface Habit {
   completed: boolean;
   streak: number;
   category?: string;
+  archived?: boolean;
 }
 
 export interface Task {
