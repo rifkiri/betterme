@@ -1,6 +1,6 @@
 
 import { Button } from '@/components/ui/button';
-import { Home, Calendar, Settings, User, BarChart3 } from 'lucide-react';
+import { Home, Calendar, Settings, User, BarChart3, Users } from 'lucide-react';
 import { useLocation, Link } from 'react-router-dom';
 
 export const AppNavigation = () => {
@@ -18,6 +18,12 @@ export const AppNavigation = () => {
       href: '/monthly',
       icon: Calendar,
       description: 'Monthly analytics'
+    },
+    {
+      name: 'Manager',
+      href: '/manager',
+      icon: Users,
+      description: 'Team management'
     },
     {
       name: 'Analytics',
