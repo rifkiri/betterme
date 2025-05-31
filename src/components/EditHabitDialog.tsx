@@ -8,6 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Habit } from '@/types/productivity';
 
 const habitSchema = z.object({
@@ -24,6 +25,19 @@ interface EditHabitDialogProps {
   onOpenChange: (open: boolean) => void;
   onSave: (habitId: string, updates: Partial<Habit>) => void;
 }
+
+const categoryOptions = [
+  'Health',
+  'Learning',
+  'Wellness',
+  'Productivity',
+  'Exercise',
+  'Nutrition',
+  'Personal Development',
+  'Work',
+  'Social',
+  'Creativity'
+];
 
 export const EditHabitDialog = ({ habit, open, onOpenChange, onSave }: EditHabitDialogProps) => {
   const form = useForm<HabitFormValues>({
@@ -89,9 +103,21 @@ export const EditHabitDialog = ({ habit, open, onOpenChange, onSave }: EditHabit
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Category (Optional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Health, Learning" {...field} />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="">No category</SelectItem>
+                      {categoryOptions.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
