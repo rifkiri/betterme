@@ -56,6 +56,16 @@ export const WeeklyOutputsSection = ({
     });
   });
 
+  // For current week, separate rolled over outputs from previous weeks
+  const rolledOverOutputs = isCurrentWeek ? overdueWeeklyOutputs.filter(output => {
+    // Only include outputs that are NOT from the current week
+    if (!output.dueDate) return false;
+    return !isWithinInterval(output.dueDate, {
+      start: weekStart,
+      end: weekEnd
+    });
+  }) : [];
+
   const navigateWeek = (direction: 'prev' | 'next') => {
     setSelectedWeek(prev => addWeeks(prev, direction === 'next' ? 1 : -1));
   };
@@ -108,14 +118,14 @@ export const WeeklyOutputsSection = ({
           </div>
 
           {/* Rolled over outputs section (only show in current week) */}
-          {isCurrentWeek && overdueWeeklyOutputs.length > 0 && (
+          {isCurrentWeek && rolledOverOutputs.length > 0 && (
             <div>
               <h3 className="text-sm font-semibold text-orange-600 mb-3 flex items-center gap-2">
                 <Target className="h-4 w-4" />
                 Rolled Over Outputs from Previous Weeks
               </h3>
               <div className="space-y-4">
-                {overdueWeeklyOutputs.map(output => 
+                {rolledOverOutputs.map(output => 
                   <WeeklyOutputCard 
                     key={output.id} 
                     output={output} 
