@@ -1,4 +1,3 @@
-
 import { Target, CheckCircle, Clock, Award } from 'lucide-react';
 import { useProductivity } from '@/hooks/useProductivity';
 import { QuickStatsCard } from './QuickStatsCard';
@@ -60,16 +59,16 @@ export const SimpleEmployeeDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 p-2 sm:p-4">
+      <div className="max-w-full mx-auto space-y-4">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Productivity Dashboard</h1>
-          <p className="text-gray-600">Track your habits, manage tasks, and plan your week</p>
+        <div className="text-center mb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">My Productivity Dashboard</h1>
+          <p className="text-gray-600 text-sm sm:text-base">Track your habits, manage tasks, and plan your week</p>
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4">
           <QuickStatsCard
             title="Habits Today"
             value={`${completedHabits}/${habits.length}`}
@@ -96,7 +95,7 @@ export const SimpleEmployeeDashboard = () => {
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6">
           <HabitsSection 
             habits={habits}
             archivedHabits={archivedHabits}
