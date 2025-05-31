@@ -1,3 +1,4 @@
+
 import { Target, CheckCircle, Clock, Award } from 'lucide-react';
 import { useProductivity } from '@/hooks/useProductivity';
 import { QuickStatsCard } from './QuickStatsCard';
@@ -6,6 +7,8 @@ import { WeeklyOutputsSection } from './WeeklyOutputsSection';
 import { TasksSection } from './TasksSection';
 
 export const SimpleEmployeeDashboard = () => {
+  console.log('SimpleEmployeeDashboard rendering...');
+  
   const {
     habits,
     archivedHabits,
@@ -34,9 +37,17 @@ export const SimpleEmployeeDashboard = () => {
     permanentlyDeleteWeeklyOutput,
   } = useProductivity();
 
+  console.log('Dashboard data:', {
+    habitsCount: habits.length,
+    tasksCount: tasks.length,
+    weeklyOutputsCount: weeklyOutputs.length
+  });
+
   const completedHabits = habits.filter(habit => habit.completed).length;
   const todaysTasks = getTodaysTasks();
   const overdueTasks = getOverdueTasks();
+  
+  console.log('Today tasks:', todaysTasks.length, 'Overdue tasks:', overdueTasks.length);
   
   const handleRollOver = (taskId: string, targetDate: Date) => {
     rollOverTask(taskId, targetDate);
