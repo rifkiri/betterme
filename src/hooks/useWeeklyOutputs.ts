@@ -1,13 +1,40 @@
-
 import { useState } from 'react';
 import { WeeklyOutput } from '@/types/productivity';
+import { startOfWeek, addDays } from 'date-fns';
 
 export const useWeeklyOutputs = () => {
+  // Get current week start (Monday)
+  const currentWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+  
   const [weeklyOutputs, setWeeklyOutputs] = useState<WeeklyOutput[]>([
-    { id: '1', title: "Complete Q4 project proposal and presentation", progress: 75, createdDate: new Date(), dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
-    { id: '2', title: "Finish client onboarding documentation", progress: 40, createdDate: new Date(), dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000) },
-    { id: '3', title: "Conduct 3 team performance reviews", progress: 100, createdDate: new Date(), dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) },
-    { id: '4', title: "Launch marketing campaign for new product feature", progress: 20, createdDate: new Date(), dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000) }
+    { 
+      id: '1', 
+      title: "Complete Q4 project proposal and presentation", 
+      progress: 75, 
+      createdDate: new Date(), 
+      dueDate: addDays(currentWeekStart, 4) // Friday of current week
+    },
+    { 
+      id: '2', 
+      title: "Finish client onboarding documentation", 
+      progress: 40, 
+      createdDate: new Date(), 
+      dueDate: addDays(currentWeekStart, 2) // Wednesday of current week
+    },
+    { 
+      id: '3', 
+      title: "Conduct 3 team performance reviews", 
+      progress: 100, 
+      createdDate: new Date(), 
+      dueDate: addDays(currentWeekStart, 1) // Tuesday of current week
+    },
+    { 
+      id: '4', 
+      title: "Launch marketing campaign for new product feature", 
+      progress: 20, 
+      createdDate: new Date(), 
+      dueDate: addDays(currentWeekStart, 6) // Sunday of current week
+    }
   ]);
 
   const [deletedWeeklyOutputs, setDeletedWeeklyOutputs] = useState<WeeklyOutput[]>([]);
