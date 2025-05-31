@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -53,7 +52,7 @@ export const AddTaskDialog = ({
       priority: 'Medium',
       estimatedTime: '',
       dueDate: new Date(),
-      weeklyOutputId: ''
+      weeklyOutputId: undefined
     }
   });
 
@@ -158,14 +157,14 @@ export const AddTaskDialog = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Link to Weekly Output (Optional)</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a weekly output" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">No weekly output</SelectItem>
+                      <SelectItem value="none">No weekly output</SelectItem>
                       {weeklyOutputs.map((output) => (
                         <SelectItem key={output.id} value={output.id}>
                           {output.title}
