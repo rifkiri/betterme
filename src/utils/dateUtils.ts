@@ -20,9 +20,21 @@ export const isTaskOverdue = (taskDate: Date) => {
   return taskDate < today && !isToday(taskDate);
 };
 
-export const isWeeklyOutputOverdue = (dueDate: Date, progress: number = 0) => {
+export const isWeeklyOutputOverdue = (dueDate: Date, progress: number = 0, completedDate?: Date) => {
   const today = getToday();
-  return isPast(dueDate) && !isToday(dueDate) && progress < 100;
+  
+  // If not completed yet, check if past due date
+  if (progress < 100) {
+    return isPast(dueDate) && !isToday(dueDate);
+  }
+  
+  // If completed, check if it was completed after the due date
+  if (completedDate) {
+    return completedDate > dueDate;
+  }
+  
+  // If completed but no completion date recorded, assume not overdue
+  return false;
 };
 
 export const isTaskWithinWeek = (taskDate: Date) => {

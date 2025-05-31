@@ -27,7 +27,7 @@ export const WeeklyOutputCard = ({
   const [editingOutput, setEditingOutput] = useState<WeeklyOutput | null>(null);
 
   const isOverdue = () => {
-    return output.dueDate && isWeeklyOutputOverdue(output.dueDate, output.progress);
+    return output.dueDate && isWeeklyOutputOverdue(output.dueDate, output.progress, output.completedDate);
   };
 
   return (

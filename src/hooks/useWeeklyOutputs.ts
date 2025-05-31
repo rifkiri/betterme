@@ -81,9 +81,23 @@ export const useWeeklyOutputs = () => {
   const updateProgress = (outputId: string, newProgress: number) => {
     const newProgressValue = Math.max(0, Math.min(100, newProgress));
     
-    setWeeklyOutputs(prev => prev.map(output => 
-      output.id === outputId ? { ...output, progress: newProgressValue } : output
-    ));
+    setWeeklyOutputs(prev => prev.map(output => {
+      if (output.id === outputId) {
+        const updates: Partial<WeeklyOutput> = { progress: newProgressValue };
+        
+        // If completing the output (reaching 100%), set completion date
+        if (newProgressValue === 100 && output.progress < 100) {
+          updates.completedDate = new Date();
+        }
+        // If reducing progress from 100%, remove completion date
+        else if (newProgressValue < 100 && output.progress === 100) {
+          updates.completedDate = undefined;
+        }
+        
+        return { ...output, ...updates };
+      }
+      return output;
+    }));
   };
 
   const moveWeeklyOutput = (id: string, newDueDate: Date) => {
@@ -122,7 +136,7 @@ export const useWeeklyOutputs = () => {
 
   const getOverdueWeeklyOutputs = () => {
     return weeklyOutputs.filter(output => 
-      output.dueDate && isWeeklyOutputOverdue(output.dueDate) && output.progress < 100
+      output.dueDate && isWeeklyOutputOverdue(output.dueDate, output.progress, output.completedDate)
     );
   };
 
