@@ -124,16 +124,21 @@ export const useProductivity = () => {
   };
 
   const rollOverTask = (taskId: string, newDueDate: Date) => {
-    setTasks(prev => prev.map(task =>
-      task.id === taskId 
-        ? { 
-            ...task, 
-            dueDate: newDueDate,
-            originalDueDate: task.originalDueDate || task.dueDate,
-            isMoved: true
-          }
-        : task
-    ));
+    setTasks(prev => prev.map(task => {
+      if (task.id === taskId) {
+        const originalDate = task.originalDueDate || task.dueDate;
+        const isMovedBackToOriginal = originalDate && 
+          format(newDueDate, 'yyyy-MM-dd') === format(originalDate, 'yyyy-MM-dd');
+        
+        return { 
+          ...task, 
+          dueDate: newDueDate,
+          originalDueDate: task.originalDueDate || task.dueDate,
+          isMoved: !isMovedBackToOriginal
+        };
+      }
+      return task;
+    }));
   };
 
   const getTasksByDate = (date: Date) => {
