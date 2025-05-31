@@ -16,7 +16,7 @@ import {
   Plus
 } from 'lucide-react';
 import { format, addDays, isToday, isTomorrow } from 'date-fns';
-import { Task } from '@/types/productivity';
+import { Task, WeeklyOutput } from '@/types/productivity';
 import { AddTaskDialog } from './AddTaskDialog';
 
 interface TaskPlanningProps {
@@ -28,6 +28,7 @@ interface TaskPlanningProps {
   getOverdueTasks: () => Task[];
   getCompletedTasks: () => Task[];
   getTasksByDate: (date: Date) => Task[];
+  weeklyOutputs: WeeklyOutput[];
 }
 
 export const TaskPlanning = ({
@@ -38,7 +39,8 @@ export const TaskPlanning = ({
   getTodaysTasks,
   getOverdueTasks,
   getCompletedTasks,
-  getTasksByDate
+  getTasksByDate,
+  weeklyOutputs
 }: TaskPlanningProps) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [activeTab, setActiveTab] = useState('today');
@@ -119,7 +121,7 @@ export const TaskPlanning = ({
                   {todaysTasks.filter(t => t.completed).length} of {todaysTasks.length} completed
                 </CardDescription>
               </div>
-              <AddTaskDialog onAddTask={onAddTask} />
+              <AddTaskDialog onAddTask={onAddTask} weeklyOutputs={weeklyOutputs} />
             </CardHeader>
             <CardContent className="space-y-4">
               {todaysTasks.length === 0 ? (
@@ -208,6 +210,7 @@ export const TaskPlanning = ({
                 </div>
                 <AddTaskDialog 
                   onAddTask={(task) => onAddTask({ ...task, dueDate: selectedDate })} 
+                  weeklyOutputs={weeklyOutputs}
                 />
               </CardHeader>
               <CardContent className="space-y-4">
