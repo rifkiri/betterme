@@ -50,7 +50,7 @@ export const AppNavigation = () => {
         description: 'Team management'
       }];
     } else {
-      // team-member gets all base items
+      // team-member gets only base items
       return baseItems;
     }
   };
