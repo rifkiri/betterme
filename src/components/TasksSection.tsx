@@ -14,6 +14,7 @@ interface TasksSectionProps {
   deletedTasks: Task[];
   overdueTasks: Task[];
   onAddTask: (task: Omit<Task, 'id' | 'completed' | 'createdDate'>) => void;
+  onEditTask: (id: string, updates: Partial<Task>) => void;
   onToggleTask: (id: string) => void;
   onMoveTask: (taskId: string, targetDate: Date) => void;
   onDeleteTask: (id: string) => void;
@@ -28,6 +29,7 @@ export const TasksSection = ({
   deletedTasks,
   overdueTasks, 
   onAddTask, 
+  onEditTask,
   onToggleTask, 
   onMoveTask, 
   onDeleteTask,
@@ -119,6 +121,7 @@ export const TasksSection = ({
               key={task.id} 
               task={task}
               onToggleTask={onToggleTask}
+              onEditTask={onEditTask}
               onMoveTask={onMoveTask}
               onDeleteTask={onDeleteTask}
               weeklyOutputs={weeklyOutputs}
@@ -136,6 +139,7 @@ export const TasksSection = ({
                   key={task.id} 
                   task={task}
                   onToggleTask={onToggleTask}
+                  onEditTask={onEditTask}
                   onMoveTask={onMoveTask}
                   onDeleteTask={onDeleteTask}
                   weeklyOutputs={weeklyOutputs}

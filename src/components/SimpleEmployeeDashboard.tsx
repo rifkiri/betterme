@@ -17,8 +17,11 @@ export const SimpleEmployeeDashboard = () => {
     weeklyOutputs,
     deletedWeeklyOutputs,
     addHabit,
+    editHabit,
     addTask,
+    editTask,
     addWeeklyOutput,
+    editWeeklyOutput,
     toggleHabit,
     toggleTask,
     deleteTask,
@@ -95,6 +98,7 @@ export const SimpleEmployeeDashboard = () => {
             habits={habits}
             archivedHabits={archivedHabits}
             onAddHabit={addHabit}
+            onEditHabit={editHabit}
             onToggleHabit={toggleHabit}
             onArchiveHabit={archiveHabit}
             onRestoreHabit={restoreHabit}
@@ -105,6 +109,7 @@ export const SimpleEmployeeDashboard = () => {
             weeklyOutputs={weeklyOutputs}
             deletedWeeklyOutputs={deletedWeeklyOutputs}
             onAddWeeklyOutput={addWeeklyOutput}
+            onEditWeeklyOutput={editWeeklyOutput}
             onUpdateProgress={updateProgress}
             onDeleteWeeklyOutput={deleteWeeklyOutput}
             onRestoreWeeklyOutput={restoreWeeklyOutput}
@@ -116,6 +121,7 @@ export const SimpleEmployeeDashboard = () => {
             deletedTasks={deletedTasks}
             overdueTasks={overdueTasks}
             onAddTask={addTask}
+            onEditTask={editTask}
             onToggleTask={toggleTask}
             onMoveTask={handleRollOver}
             onDeleteTask={deleteTask}
