@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Calendar, CheckCircle, Target, TrendingUp, Clock, Award } from 'lucide-react';
+import { Calendar, CheckCircle, Target, TrendingUp, Clock, Award, AlertTriangle } from 'lucide-react';
 
 // Mock individual data
 const employeeData = {
@@ -34,6 +34,12 @@ const employeeData = {
     weeklyOutputs: [
       { title: 'User Authentication System', progress: 95, dueDate: '2024-06-02' },
       { title: 'Performance Monitoring Dashboard', progress: 70, dueDate: '2024-06-07' }
+    ],
+    overdueTasks: [
+      { title: 'Legacy Code Refactoring', priority: 'Medium', daysOverdue: 2, originalDueDate: '2024-05-29' }
+    ],
+    overdueOutputs: [
+      { title: 'Mobile App Integration', progress: 60, daysOverdue: 1, originalDueDate: '2024-05-30' }
     ]
   },
   'mike-chen': {
@@ -61,6 +67,13 @@ const employeeData = {
     weeklyOutputs: [
       { title: 'Q3 Product Roadmap', progress: 85, dueDate: '2024-06-01' },
       { title: 'User Research Report', progress: 60, dueDate: '2024-06-05' }
+    ],
+    overdueTasks: [
+      { title: 'Market Competitor Analysis', priority: 'High', daysOverdue: 3, originalDueDate: '2024-05-28' },
+      { title: 'Product Metrics Review', priority: 'Medium', daysOverdue: 1, originalDueDate: '2024-05-30' }
+    ],
+    overdueOutputs: [
+      { title: 'Q2 Marketing Campaign Strategy', progress: 40, daysOverdue: 4, originalDueDate: '2024-05-27' }
     ]
   }
 };
@@ -141,6 +154,74 @@ export const IndividualPerformance = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Overdue Items Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Overdue Tasks */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              Overdue Tasks
+            </CardTitle>
+            <CardDescription>Tasks that are past their due date</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {employee.overdueTasks.length > 0 ? (
+              <div className="space-y-3">
+                {employee.overdueTasks.map((task, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="text-sm font-medium">{task.title}</div>
+                      <div className="text-xs text-muted-foreground">Due: {task.originalDueDate}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-red-600">{task.daysOverdue}d late</span>
+                      {getPriorityBadge(task.priority)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No overdue tasks</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Overdue Outputs */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-orange-500" />
+              Overdue Outputs
+            </CardTitle>
+            <CardDescription>Weekly outputs that are past their due date</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {employee.overdueOutputs.length > 0 ? (
+              <div className="space-y-3">
+                {employee.overdueOutputs.map((output, index) => (
+                  <div key={index} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium">{output.title}</div>
+                        <div className="text-xs text-muted-foreground">Due: {output.originalDueDate}</div>
+                      </div>
+                      <span className="text-xs text-orange-600">{output.daysOverdue}d late</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Progress value={output.progress} className="flex-1 h-2" />
+                      <span className="text-xs text-muted-foreground">{output.progress}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No overdue outputs</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Detailed Performance */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
