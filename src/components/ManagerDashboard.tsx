@@ -1,16 +1,13 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TeamOverview } from './TeamOverview';
 import { IndividualPerformance } from './IndividualPerformance';
 import { Users, User, BarChart3 } from 'lucide-react';
-
 export const ManagerDashboard = () => {
-  return (
-    <div className="max-w-7xl mx-auto py-8 px-4">
+  return <div className="max-w-7xl mx-auto py-8 px-4">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Manager Dashboard</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">My Team</h1>
         <p className="text-gray-600">Monitor team productivity and individual performance</p>
       </div>
 
@@ -34,6 +31,5 @@ export const ManagerDashboard = () => {
           <IndividualPerformance />
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 };
