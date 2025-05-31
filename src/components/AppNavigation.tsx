@@ -10,7 +10,7 @@ export const AppNavigation = () => {
     icon: Home,
     description: 'Daily productivity tracking'
   }, {
-    name: 'Monthly',
+    name: 'Dashboard',
     href: '/monthly',
     icon: Calendar,
     description: 'Monthly analytics'
