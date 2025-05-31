@@ -9,7 +9,7 @@ import { DeletedWeeklyOutputsDialog } from './DeletedWeeklyOutputsDialog';
 import { AddWeeklyOutputDialog } from './AddWeeklyOutputDialog';
 import { EditWeeklyOutputDialog } from './EditWeeklyOutputDialog';
 import { WeeklyOutput } from '@/types/productivity';
-import { format, isToday, isTomorrow, startOfWeek, endOfWeek, addWeeks, isWithinInterval } from 'date-fns';
+import { format, isToday, isTomorrow, startOfWeek, endOfWeek, addWeeks, isWithinInterval, isSameWeek } from 'date-fns';
 
 interface WeeklyOutputsSectionProps {
   weeklyOutputs: WeeklyOutput[];
@@ -37,8 +37,8 @@ export const WeeklyOutputsSection = ({
 
   const weekStart = startOfWeek(selectedWeek, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(selectedWeek, { weekStartsOn: 1 });
-  const currentWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
-  const isCurrentWeek = format(weekStart, 'yyyy-MM-dd') === format(currentWeekStart, 'yyyy-MM-dd');
+  const today = new Date();
+  const isCurrentWeek = isSameWeek(selectedWeek, today, { weekStartsOn: 1 });
 
   // Filter outputs for the selected week
   const weekOutputs = weeklyOutputs.filter(output => {
