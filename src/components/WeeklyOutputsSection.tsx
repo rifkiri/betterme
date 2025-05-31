@@ -36,13 +36,23 @@ export const WeeklyOutputsSection = ({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle className="flex items-center gap-2">
             <Target className="h-5 w-5" />
             This Week's Outputs
           </CardTitle>
           <CardDescription>Key deliverables and goals for the week</CardDescription>
+        </div>
+        <div className="flex items-center gap-2">
+          {deletedWeeklyOutputs.length > 0 && (
+            <DeletedWeeklyOutputsDialog
+              deletedWeeklyOutputs={deletedWeeklyOutputs}
+              onRestore={onRestoreWeeklyOutput}
+              onPermanentlyDelete={onPermanentlyDeleteWeeklyOutput}
+            />
+          )}
+          <AddWeeklyOutputDialog onAddWeeklyOutput={onAddWeeklyOutput} />
         </div>
       </CardHeader>
       <CardContent>
@@ -123,16 +133,6 @@ export const WeeklyOutputsSection = ({
               </div>
             </div>
           ))}
-          <div className="flex justify-between items-center mt-3">
-            <AddWeeklyOutputDialog onAddWeeklyOutput={onAddWeeklyOutput} />
-            {deletedWeeklyOutputs.length > 0 && (
-              <DeletedWeeklyOutputsDialog
-                deletedWeeklyOutputs={deletedWeeklyOutputs}
-                onRestore={onRestoreWeeklyOutput}
-                onPermanentlyDelete={onPermanentlyDeleteWeeklyOutput}
-              />
-            )}
-          </div>
         </div>
       </CardContent>
       
