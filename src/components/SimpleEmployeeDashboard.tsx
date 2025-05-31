@@ -45,6 +45,14 @@ export const SimpleEmployeeDashboard = () => {
   const todaysTasks = getTodaysTasks();
   const overdueTasks = getOverdueTasks();
 
+  // Weekly outputs/goals - this would typically come from your productivity hook
+  const weeklyOutputs = [
+    "Complete Q4 project proposal and presentation",
+    "Finish client onboarding documentation",
+    "Conduct 3 team performance reviews",
+    "Launch marketing campaign for new product feature"
+  ];
+
   const handleRollOver = (taskId: string, targetDate: Date) => {
     rollOverTask(taskId, targetDate);
   };
@@ -194,6 +202,35 @@ export const SimpleEmployeeDashboard = () => {
             </CardContent>
           </Card>
 
+          {/* Weekly Plan */}
+          <Card>
+            <CardHeader>
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5" />
+                  This Week's Outputs
+                </CardTitle>
+                <CardDescription>Key deliverables and goals for the week</CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {weeklyOutputs.map((output, index) => (
+                  <div key={index} className="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-medium">
+                      {index + 1}
+                    </div>
+                    <p className="text-sm text-gray-700 leading-relaxed">{output}</p>
+                  </div>
+                ))}
+                <Button size="sm" variant="outline" className="w-full mt-3">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Weekly Output
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Today's Tasks */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -224,88 +261,88 @@ export const SimpleEmployeeDashboard = () => {
               )}
             </CardContent>
           </Card>
-
-          {/* Weekly Overview */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Weekly Overview</CardTitle>
-                  <CardDescription>
-                    {format(weekStart, 'MMM dd')} - {format(addDays(weekStart, 6), 'MMM dd, yyyy')}
-                  </CardDescription>
-                </div>
-                <div className="flex gap-1">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setSelectedWeekOffset(selectedWeekOffset - 1)}
-                  >
-                    ←
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setSelectedWeekOffset(selectedWeekOffset + 1)}
-                  >
-                    →
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {weekDays.map((day, index) => {
-                  const dayTasks = getTasksForDay(day);
-                  const isCurrentDay = isToday(day);
-                  const completedCount = dayTasks.filter(t => t.completed).length;
-                  
-                  return (
-                    <div 
-                      key={index} 
-                      className={`p-3 border rounded-lg ${isCurrentDay ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'}`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className={`font-medium text-sm ${isCurrentDay ? 'text-blue-700' : 'text-gray-700'}`}>
-                          {format(day, 'EEE dd')}
-                          {isCurrentDay && <span className="ml-1 text-xs">(Today)</span>}
-                        </h4>
-                        <span className="text-xs text-gray-500">
-                          {completedCount}/{dayTasks.length}
-                        </span>
-                      </div>
-                      
-                      {dayTasks.length > 0 && (
-                        <Progress 
-                          value={dayTasks.length > 0 ? (completedCount / dayTasks.length) * 100 : 0} 
-                          className="h-2 mb-2"
-                        />
-                      )}
-                      
-                      <div className="space-y-1">
-                        {dayTasks.slice(0, 3).map(task => (
-                          <div key={task.id} className="flex items-center space-x-2">
-                            {task.completed ? (
-                              <CheckCircle className="h-3 w-3 text-green-500" />
-                            ) : (
-                              <Circle className="h-3 w-3 text-gray-400" />
-                            )}
-                            <span className={`text-xs ${task.completed ? 'line-through text-gray-500' : ''}`}>
-                              {task.title.length > 25 ? `${task.title.slice(0, 25)}...` : task.title}
-                            </span>
-                          </div>
-                        ))}
-                        {dayTasks.length > 3 && (
-                          <span className="text-xs text-gray-400">+{dayTasks.length - 3} more</span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
         </div>
+
+        {/* Daily Overview */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Daily Overview</CardTitle>
+                <CardDescription>
+                  {format(weekStart, 'MMM dd')} - {format(addDays(weekStart, 6), 'MMM dd, yyyy')}
+                </CardDescription>
+              </div>
+              <div className="flex gap-1">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setSelectedWeekOffset(selectedWeekOffset - 1)}
+                >
+                  ←
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setSelectedWeekOffset(selectedWeekOffset + 1)}
+                >
+                  →
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-7 gap-4">
+              {weekDays.map((day, index) => {
+                const dayTasks = getTasksForDay(day);
+                const isCurrentDay = isToday(day);
+                const completedCount = dayTasks.filter(t => t.completed).length;
+                
+                return (
+                  <div 
+                    key={index} 
+                    className={`p-3 border rounded-lg ${isCurrentDay ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'}`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className={`font-medium text-sm ${isCurrentDay ? 'text-blue-700' : 'text-gray-700'}`}>
+                        {format(day, 'EEE dd')}
+                        {isCurrentDay && <span className="ml-1 text-xs">(Today)</span>}
+                      </h4>
+                      <span className="text-xs text-gray-500">
+                        {completedCount}/{dayTasks.length}
+                      </span>
+                    </div>
+                    
+                    {dayTasks.length > 0 && (
+                      <Progress 
+                        value={dayTasks.length > 0 ? (completedCount / dayTasks.length) * 100 : 0} 
+                        className="h-2 mb-2"
+                      />
+                    )}
+                    
+                    <div className="space-y-1">
+                      {dayTasks.slice(0, 3).map(task => (
+                        <div key={task.id} className="flex items-center space-x-2">
+                          {task.completed ? (
+                            <CheckCircle className="h-3 w-3 text-green-500" />
+                          ) : (
+                            <Circle className="h-3 w-3 text-gray-400" />
+                          )}
+                          <span className={`text-xs ${task.completed ? 'line-through text-gray-500' : ''}`}>
+                            {task.title.length > 25 ? `${task.title.slice(0, 25)}...` : task.title}
+                          </span>
+                        </div>
+                      ))}
+                      {dayTasks.length > 3 && (
+                        <span className="text-xs text-gray-400">+{dayTasks.length - 3} more</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
