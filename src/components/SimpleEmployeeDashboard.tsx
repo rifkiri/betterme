@@ -29,6 +29,14 @@ export const SimpleEmployeeDashboard = () => {
   const [selectedWeekOffset, setSelectedWeekOffset] = useState(0);
   const [selectedTaskDate, setSelectedTaskDate] = useState(new Date());
   
+  // Weekly outputs with progress tracking
+  const [weeklyOutputs, setWeeklyOutputs] = useState([
+    { id: '1', title: "Complete Q4 project proposal and presentation", progress: 75 },
+    { id: '2', title: "Finish client onboarding documentation", progress: 40 },
+    { id: '3', title: "Conduct 3 team performance reviews", progress: 100 },
+    { id: '4', title: "Launch marketing campaign for new product feature", progress: 20 }
+  ]);
+  
   const today = new Date();
   const weekStart = addWeeks(startOfWeek(today, {
     weekStartsOn: 1
@@ -41,9 +49,6 @@ export const SimpleEmployeeDashboard = () => {
   const todaysTasks = getTodaysTasks();
   const overdueTasks = getOverdueTasks();
   const selectedDateTasks = getTasksByDate(selectedTaskDate);
-
-  // Weekly outputs/goals - this would typically come from your productivity hook
-  const weeklyOutputs = ["Complete Q4 project proposal and presentation", "Finish client onboarding documentation", "Conduct 3 team performance reviews", "Launch marketing campaign for new product feature"];
   
   const handleRollOver = (taskId: string, targetDate: Date) => {
     rollOverTask(taskId, targetDate);
@@ -59,6 +64,20 @@ export const SimpleEmployeeDashboard = () => {
 
   const goToToday = () => {
     setSelectedTaskDate(new Date());
+  };
+
+  const updateProgress = (outputId: string, newProgress: number) => {
+    setWeeklyOutputs(prev => prev.map(output => 
+      output.id === outputId ? { ...output, progress: Math.max(0, Math.min(100, newProgress)) } : output
+    ));
+  };
+
+  const getProgressColor = (progress: number) => {
+    if (progress === 100) return 'bg-green-500';
+    if (progress >= 75) return 'bg-blue-500';
+    if (progress >= 50) return 'bg-yellow-500';
+    if (progress >= 25) return 'bg-orange-500';
+    return 'bg-red-500';
   };
   
   const TaskItem = ({
@@ -196,13 +215,58 @@ export const SimpleEmployeeDashboard = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {weeklyOutputs.map((output, index) => <div key={index} className="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-medium">
-                      {index + 1}
+              <div className="space-y-4">
+                {weeklyOutputs.map((output) => (
+                  <div key={output.id} className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-start justify-between mb-3">
+                      <p className="text-sm text-gray-700 leading-relaxed flex-1">{output.title}</p>
+                      <Badge 
+                        variant={output.progress === 100 ? 'default' : 'secondary'} 
+                        className="ml-2 text-xs"
+                      >
+                        {output.progress}%
+                      </Badge>
                     </div>
-                    <p className="text-sm text-gray-700 leading-relaxed">{output}</p>
-                  </div>)}
+                    
+                    <div className="mb-3">
+                      <Progress 
+                        value={output.progress} 
+                        className="h-2"
+                      />
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => updateProgress(output.id, output.progress - 10)}
+                        disabled={output.progress <= 0}
+                        className="text-xs px-2 py-1"
+                      >
+                        -10%
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => updateProgress(output.id, output.progress + 10)}
+                        disabled={output.progress >= 100}
+                        className="text-xs px-2 py-1"
+                      >
+                        +10%
+                      </Button>
+                      {output.progress !== 100 && (
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={() => updateProgress(output.id, 100)}
+                          className="text-xs px-2 py-1"
+                        >
+                          Complete
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
                 <Button size="sm" variant="outline" className="w-full mt-3">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Weekly Output
