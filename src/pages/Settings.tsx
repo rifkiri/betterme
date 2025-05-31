@@ -1,10 +1,8 @@
 
 import React from "react";
 import { AppNavigation } from "@/components/AppNavigation";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminDashboard } from "@/components/AdminDashboard";
-import { Settings as SettingsIcon, Shield } from "lucide-react";
 
 // Mock function to get current user role (replace with real authentication)
 const getCurrentUserRole = () => {
@@ -28,38 +26,19 @@ const Settings = () => {
           <p className="text-gray-600">Configure your app preferences and system settings</p>
         </div>
 
-        <Tabs defaultValue="general" className="space-y-6">
-          <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-2' : 'grid-cols-1'} lg:w-[400px]`}>
-            <TabsTrigger value="general" className="flex items-center gap-2">
-              <SettingsIcon className="h-4 w-4" />
-              General
-            </TabsTrigger>
-            {isAdmin && (
-              <TabsTrigger value="admin" className="flex items-center gap-2">
-                <Shield className="h-4 w-4" />
-                Admin
-              </TabsTrigger>
-            )}
-          </TabsList>
-
-          <TabsContent value="general">
-            <Card>
-              <CardHeader>
-                <CardTitle>App Settings</CardTitle>
-                <CardDescription>Configure your app preferences</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">App settings coming soon...</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {isAdmin && (
-            <TabsContent value="admin">
-              <AdminDashboard />
-            </TabsContent>
-          )}
-        </Tabs>
+        {isAdmin ? (
+          <AdminDashboard />
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Settings</CardTitle>
+              <CardDescription>Access restricted</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">You don't have permission to access settings. Please contact your administrator.</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
