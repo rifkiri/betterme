@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,9 +20,20 @@ import {
   Award
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from "recharts";
+import { useProductivity } from "@/hooks/useProductivity";
+import { AddHabitDialog } from "@/components/AddHabitDialog";
+import { AddTaskDialog } from "@/components/AddTaskDialog";
 
 const Index = () => {
   const [currentRole, setCurrentRole] = useState<'employee' | 'manager' | 'admin'>('employee');
+  const { habits, tasks, addHabit, addTask, toggleHabit, toggleTask } = useProductivity();
+
+  // Calculate dynamic statistics
+  const completedHabits = habits.filter(habit => habit.completed).length;
+  const totalHabits = habits.length;
+  const completedTasks = tasks.filter(task => task.completed).length;
+  const totalTasks = tasks.length;
+  const taskCompletionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   // Sample data for different dashboards
   const habitData = [
@@ -59,7 +69,7 @@ const Index = () => {
             <Target className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-700">3/5</div>
+            <div className="text-2xl font-bold text-blue-700">{completedHabits}/{totalHabits}</div>
             <p className="text-xs text-blue-600">Completed today</p>
           </CardContent>
         </Card>
@@ -70,8 +80,8 @@ const Index = () => {
             <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-700">8/12</div>
-            <p className="text-xs text-green-600">67% completion rate</p>
+            <div className="text-2xl font-bold text-green-700">{completedTasks}/{totalTasks}</div>
+            <p className="text-xs text-green-600">{taskCompletionRate}% completion rate</p>
           </CardContent>
         </Card>
         
@@ -89,25 +99,24 @@ const Index = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle>Daily Habits</CardTitle>
-            <CardDescription>Track your daily habit completion</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Daily Habits</CardTitle>
+              <CardDescription>Track your daily habit completion</CardDescription>
+            </div>
+            <AddHabitDialog onAddHabit={addHabit} />
           </CardHeader>
           <CardContent className="space-y-4">
-            {[
-              { name: 'Morning Exercise', completed: true, streak: 14 },
-              { name: 'Read 30 minutes', completed: true, streak: 12 },
-              { name: 'Meditation', completed: true, streak: 8 },
-              { name: 'Drink 8 glasses water', completed: false, streak: 3 },
-              { name: 'No social media', completed: false, streak: 0 },
-            ].map((habit, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            {habits.map((habit) => (
+              <div key={habit.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-3">
-                  {habit.completed ? (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <Circle className="h-5 w-5 text-gray-400" />
-                  )}
+                  <button onClick={() => toggleHabit(habit.id)}>
+                    {habit.completed ? (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <Circle className="h-5 w-5 text-gray-400" />
+                    )}
+                  </button>
                   <span className={habit.completed ? 'text-green-700' : 'text-gray-600'}>
                     {habit.name}
                   </span>
@@ -142,36 +151,38 @@ const Index = () => {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Today's Tasks</CardTitle>
-          <CardDescription>Your work items for today</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Today's Tasks</CardTitle>
+            <CardDescription>Your work items for today</CardDescription>
+          </div>
+          <AddTaskDialog onAddTask={addTask} />
         </CardHeader>
         <CardContent className="space-y-4">
-          {[
-            { task: 'Complete project proposal', priority: 'High', completed: true, time: '2h' },
-            { task: 'Review team feedback', priority: 'Medium', completed: true, time: '1h' },
-            { task: 'Client meeting preparation', priority: 'High', completed: false, time: '1.5h' },
-            { task: 'Update documentation', priority: 'Low', completed: false, time: '30m' },
-          ].map((item, index) => (
-            <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+          {tasks.map((task) => (
+            <div key={task.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
               <div className="flex items-center space-x-3">
-                {item.completed ? (
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                ) : (
-                  <Circle className="h-5 w-5 text-gray-400" />
-                )}
+                <button onClick={() => toggleTask(task.id)}>
+                  {task.completed ? (
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                  ) : (
+                    <Circle className="h-5 w-5 text-gray-400" />
+                  )}
+                </button>
                 <div>
-                  <p className={`font-medium ${item.completed ? 'line-through text-gray-500' : ''}`}>
-                    {item.task}
+                  <p className={`font-medium ${task.completed ? 'line-through text-gray-500' : ''}`}>
+                    {task.title}
                   </p>
                   <div className="flex items-center space-x-2 mt-1">
-                    <Badge variant={item.priority === 'High' ? 'destructive' : item.priority === 'Medium' ? 'default' : 'secondary'}>
-                      {item.priority}
+                    <Badge variant={task.priority === 'High' ? 'destructive' : task.priority === 'Medium' ? 'default' : 'secondary'}>
+                      {task.priority}
                     </Badge>
-                    <span className="text-sm text-gray-500 flex items-center">
-                      <Clock className="h-3 w-3 mr-1" />
-                      {item.time}
-                    </span>
+                    {task.estimatedTime && (
+                      <span className="text-sm text-gray-500 flex items-center">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {task.estimatedTime}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
