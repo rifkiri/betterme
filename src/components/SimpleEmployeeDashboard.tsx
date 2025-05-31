@@ -9,6 +9,7 @@ import { format, addDays, isToday, startOfWeek, endOfWeek, addWeeks } from 'date
 import { useProductivity } from '@/hooks/useProductivity';
 import { AddHabitDialog } from './AddHabitDialog';
 import { AddTaskDialog } from './AddTaskDialog';
+import { MoveTaskDialog } from './MoveTaskDialog';
 import { Task } from '@/types/productivity';
 
 export const SimpleEmployeeDashboard = () => {
@@ -106,10 +107,11 @@ export const SimpleEmployeeDashboard = () => {
           </div>
         </div>
       </div>
-      {targetDate && !task.completed && <Button size="sm" variant="outline" onClick={() => handleRollOver(task.id, targetDate)} className="flex items-center gap-1 text-xs">
-          <ArrowRight className="h-3 w-3" />
-          Move
-        </Button>}
+      {!task.completed && (
+        <MoveTaskDialog 
+          onMoveTask={(newDate) => handleRollOver(task.id, newDate)}
+        />
+      )}
     </div>;
 
   return <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 p-6">
