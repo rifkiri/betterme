@@ -15,7 +15,7 @@ export const AppNavigation = () => {
     icon: Calendar,
     description: 'Monthly analytics'
   }, {
-    name: 'Manager',
+    name: 'My Team',
     href: '/manager',
     icon: Users,
     description: 'Team management'
