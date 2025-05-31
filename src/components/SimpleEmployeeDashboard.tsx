@@ -1,14 +1,16 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, Circle, Clock, Calendar as CalendarIcon, ArrowRight, Target, Plus, Award } from 'lucide-react';
+import { CheckCircle, Circle, Clock, Calendar as CalendarIcon, ArrowRight, Target, Plus, Award, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, addDays, isToday, startOfWeek, endOfWeek, addWeeks } from 'date-fns';
 import { useProductivity } from '@/hooks/useProductivity';
 import { AddHabitDialog } from './AddHabitDialog';
 import { AddTaskDialog } from './AddTaskDialog';
 import { Task } from '@/types/productivity';
+
 export const SimpleEmployeeDashboard = () => {
   const {
     habits,
@@ -23,7 +25,10 @@ export const SimpleEmployeeDashboard = () => {
     getTasksByDate,
     createWeeklyPlan
   } = useProductivity();
+
   const [selectedWeekOffset, setSelectedWeekOffset] = useState(0);
+  const [selectedTaskDate, setSelectedTaskDate] = useState(new Date());
+  
   const today = new Date();
   const weekStart = addWeeks(startOfWeek(today, {
     weekStartsOn: 1
@@ -31,18 +36,31 @@ export const SimpleEmployeeDashboard = () => {
   const weekDays = Array.from({
     length: 7
   }, (_, i) => addDays(weekStart, i));
+  
   const completedHabits = habits.filter(habit => habit.completed).length;
   const todaysTasks = getTodaysTasks();
   const overdueTasks = getOverdueTasks();
+  const selectedDateTasks = getTasksByDate(selectedTaskDate);
 
   // Weekly outputs/goals - this would typically come from your productivity hook
   const weeklyOutputs = ["Complete Q4 project proposal and presentation", "Finish client onboarding documentation", "Conduct 3 team performance reviews", "Launch marketing campaign for new product feature"];
+  
   const handleRollOver = (taskId: string, targetDate: Date) => {
     rollOverTask(taskId, targetDate);
   };
+  
   const getTasksForDay = (date: Date) => {
     return getTasksByDate(date);
   };
+
+  const navigateDate = (direction: 'prev' | 'next') => {
+    setSelectedTaskDate(prev => addDays(prev, direction === 'next' ? 1 : -1));
+  };
+
+  const goToToday = () => {
+    setSelectedTaskDate(new Date());
+  };
+  
   const TaskItem = ({
     task,
     targetDate
@@ -74,6 +92,7 @@ export const SimpleEmployeeDashboard = () => {
           Move
         </Button>}
     </div>;
+
   return <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
@@ -192,30 +211,85 @@ export const SimpleEmployeeDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Today's Tasks */}
+          {/* Tasks with Date Navigation */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>Today's Tasks</CardTitle>
-                <CardDescription>Focus on what matters</CardDescription>
+                <CardTitle>Tasks</CardTitle>
+                <CardDescription>
+                  {isToday(selectedTaskDate) ? 'Today' : format(selectedTaskDate, 'MMM dd, yyyy')}
+                </CardDescription>
               </div>
-              <AddTaskDialog onAddTask={addTask} />
+              <AddTaskDialog onAddTask={(task) => addTask({ ...task, dueDate: selectedTaskDate })} />
             </CardHeader>
             <CardContent className="space-y-3">
-              {todaysTasks.length === 0 ? <p className="text-center text-gray-500 py-4">No tasks for today</p> : todaysTasks.map(task => <TaskItem key={task.id} task={task} targetDate={addDays(today, 1)} />)}
+              {/* Date Navigation */}
+              <div className="flex items-center justify-between mb-4 p-2 bg-gray-50 rounded-lg">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigateDate('prev')}
+                  className="flex items-center gap-1"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Prev
+                </Button>
+                
+                <div className="flex items-center gap-2">
+                  <CalendarIcon className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm font-medium">
+                    {format(selectedTaskDate, 'EEE, MMM dd')}
+                  </span>
+                  {!isToday(selectedTaskDate) && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={goToToday}
+                      className="text-xs"
+                    >
+                      Today
+                    </Button>
+                  )}
+                </div>
+                
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigateDate('next')}
+                  className="flex items-center gap-1"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Tasks for Selected Date */}
+              {selectedDateTasks.length === 0 ? (
+                <p className="text-center text-gray-500 py-4">No tasks for this date</p>
+              ) : (
+                selectedDateTasks.map(task => (
+                  <TaskItem 
+                    key={task.id} 
+                    task={task} 
+                    targetDate={addDays(selectedTaskDate, 1)} 
+                  />
+                ))
+              )}
               
-              {overdueTasks.length > 0 && <>
+              {/* Show overdue tasks only when viewing today */}
+              {isToday(selectedTaskDate) && overdueTasks.length > 0 && (
+                <>
                   <div className="border-t pt-3 mt-3">
                     <h4 className="text-sm font-medium text-orange-600 mb-2">Overdue Tasks</h4>
-                    {overdueTasks.slice(0, 3).map(task => <TaskItem key={task.id} task={task} targetDate={today} />)}
+                    {overdueTasks.slice(0, 3).map(task => (
+                      <TaskItem key={task.id} task={task} targetDate={today} />
+                    ))}
                   </div>
-                </>}
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
-
-        {/* Daily Overview */}
-        
       </div>
     </div>;
 };
