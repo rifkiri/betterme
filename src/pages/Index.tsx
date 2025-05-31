@@ -23,10 +23,27 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useProductivity } from "@/hooks/useProductivity";
 import { AddHabitDialog } from "@/components/AddHabitDialog";
 import { AddTaskDialog } from "@/components/AddTaskDialog";
+import { TaskPlanning } from "@/components/TaskPlanning";
+import { WeeklyPlanning } from "@/components/WeeklyPlanning";
 
 const Index = () => {
   const [currentRole, setCurrentRole] = useState<'employee' | 'manager' | 'admin'>('employee');
-  const { habits, tasks, addHabit, addTask, toggleHabit, toggleTask } = useProductivity();
+  const { 
+    habits, 
+    tasks, 
+    weeklyPlans,
+    addHabit, 
+    addTask, 
+    toggleHabit, 
+    toggleTask,
+    rollOverTask,
+    getTodaysTasks,
+    getOverdueTasks,
+    getCompletedTasks,
+    getTasksByDate,
+    getCurrentWeekTasks,
+    createWeeklyPlan
+  } = useProductivity();
 
   // Calculate dynamic statistics
   const completedHabits = habits.filter(habit => habit.completed).length;
@@ -97,99 +114,182 @@ const Index = () => {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Daily Habits</CardTitle>
-              <CardDescription>Track your daily habit completion</CardDescription>
-            </div>
-            <AddHabitDialog onAddHabit={addHabit} />
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {habits.map((habit) => (
-              <div key={habit.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <button onClick={() => toggleHabit(habit.id)}>
-                    {habit.completed ? (
-                      <CheckCircle className="h-5 w-5 text-green-500" />
-                    ) : (
-                      <Circle className="h-5 w-5 text-gray-400" />
-                    )}
-                  </button>
-                  <span className={habit.completed ? 'text-green-700' : 'text-gray-600'}>
-                    {habit.name}
-                  </span>
-                </div>
-                <Badge variant={habit.streak > 0 ? 'default' : 'secondary'}>
-                  {habit.streak} day streak
-                </Badge>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="planning">Task Planning</TabsTrigger>
+          <TabsTrigger value="weekly">Weekly Plan</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        </TabsList>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Weekly Progress</CardTitle>
-            <CardDescription>Your habit completion over the week</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={habitData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="exercise" stroke="#3b82f6" strokeWidth={3} />
-                <Line type="monotone" dataKey="reading" stroke="#10b981" strokeWidth={3} />
-                <Line type="monotone" dataKey="meditation" stroke="#8b5cf6" strokeWidth={3} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Today's Tasks</CardTitle>
-            <CardDescription>Your work items for today</CardDescription>
-          </div>
-          <AddTaskDialog onAddTask={addTask} />
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {tasks.map((task) => (
-            <div key={task.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-              <div className="flex items-center space-x-3">
-                <button onClick={() => toggleTask(task.id)}>
-                  {task.completed ? (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <Circle className="h-5 w-5 text-gray-400" />
-                  )}
-                </button>
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                  <p className={`font-medium ${task.completed ? 'line-through text-gray-500' : ''}`}>
-                    {task.title}
-                  </p>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <Badge variant={task.priority === 'High' ? 'destructive' : task.priority === 'Medium' ? 'default' : 'secondary'}>
-                      {task.priority}
-                    </Badge>
-                    {task.estimatedTime && (
-                      <span className="text-sm text-gray-500 flex items-center">
-                        <Clock className="h-3 w-3 mr-1" />
-                        {task.estimatedTime}
+                  <CardTitle>Daily Habits</CardTitle>
+                  <CardDescription>Track your daily habit completion</CardDescription>
+                </div>
+                <AddHabitDialog onAddHabit={addHabit} />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {habits.map((habit) => (
+                  <div key={habit.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <button onClick={() => toggleHabit(habit.id)}>
+                        {habit.completed ? (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <Circle className="h-5 w-5 text-gray-400" />
+                        )}
+                      </button>
+                      <span className={habit.completed ? 'text-green-700' : 'text-gray-600'}>
+                        {habit.name}
                       </span>
-                    )}
+                    </div>
+                    <Badge variant={habit.streak > 0 ? 'default' : 'secondary'}>
+                      {habit.streak} day streak
+                    </Badge>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Weekly Progress</CardTitle>
+                <CardDescription>Your habit completion over the week</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={habitData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="exercise" stroke="#3b82f6" strokeWidth={3} />
+                    <Line type="monotone" dataKey="reading" stroke="#10b981" strokeWidth={3} />
+                    <Line type="monotone" dataKey="meditation" stroke="#8b5cf6" strokeWidth={3} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Today's Tasks</CardTitle>
+                <CardDescription>Your work items for today</CardDescription>
+              </div>
+              <AddTaskDialog onAddTask={addTask} />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {getTodaysTasks().slice(0, 5).map((task) => (
+                <div key={task.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center space-x-3">
+                    <button onClick={() => toggleTask(task.id)}>
+                      {task.completed ? (
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <Circle className="h-5 w-5 text-gray-400" />
+                      )}
+                    </button>
+                    <div>
+                      <p className={`font-medium ${task.completed ? 'line-through text-gray-500' : ''}`}>
+                        {task.title}
+                      </p>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <Badge variant={task.priority === 'High' ? 'destructive' : task.priority === 'Medium' ? 'default' : 'secondary'}>
+                          {task.priority}
+                        </Badge>
+                        {task.estimatedTime && (
+                          <span className="text-sm text-gray-500 flex items-center">
+                            <Clock className="h-3 w-3 mr-1" />
+                            {task.estimatedTime}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+              ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="planning">
+          <TaskPlanning
+            tasks={tasks}
+            onToggleTask={toggleTask}
+            onAddTask={addTask}
+            onRollOverTask={rollOverTask}
+            getTodaysTasks={getTodaysTasks}
+            getOverdueTasks={getOverdueTasks}
+            getCompletedTasks={getCompletedTasks}
+            getTasksByDate={getTasksByDate}
+          />
+        </TabsContent>
+
+        <TabsContent value="weekly">
+          <WeeklyPlanning
+            currentWeekTasks={getCurrentWeekTasks()}
+            weeklyPlans={weeklyPlans}
+            onCreateWeeklyPlan={createWeeklyPlan}
+          />
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Weekly Progress</CardTitle>
+                <CardDescription>Your habit completion over the week</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={habitData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="exercise" stroke="#3b82f6" strokeWidth={3} />
+                    <Line type="monotone" dataKey="reading" stroke="#10b981" strokeWidth={3} />
+                    <Line type="monotone" dataKey="meditation" stroke="#8b5cf6" strokeWidth={3} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Task Distribution</CardTitle>
+                <CardDescription>Your task status breakdown</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={120}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 

@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Plus } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
 import {
   Dialog,
   DialogContent,
@@ -27,21 +28,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Task title is required'),
   description: z.string().optional(),
   priority: z.enum(['High', 'Medium', 'Low']),
   estimatedTime: z.string().optional(),
+  dueDate: z.date().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 interface AddTaskDialogProps {
-  onAddTask: (task: { title: string; description?: string; priority: 'High' | 'Medium' | 'Low'; estimatedTime?: string }) => void;
+  onAddTask: (task: { title: string; description?: string; priority: 'High' | 'Medium' | 'Low'; estimatedTime?: string; dueDate?: Date }) => void;
 }
 
 export const AddTaskDialog = ({ onAddTask }: AddTaskDialogProps) => {
@@ -53,6 +62,7 @@ export const AddTaskDialog = ({ onAddTask }: AddTaskDialogProps) => {
       description: '',
       priority: 'Medium',
       estimatedTime: '',
+      dueDate: new Date(),
     },
   });
 
@@ -63,6 +73,7 @@ export const AddTaskDialog = ({ onAddTask }: AddTaskDialogProps) => {
       description: values.description || undefined,
       priority: values.priority,
       estimatedTime: values.estimatedTime || undefined,
+      dueDate: values.dueDate,
     });
     form.reset();
     setOpen(false);
@@ -146,6 +157,47 @@ export const AddTaskDialog = ({ onAddTask }: AddTaskDialogProps) => {
                   <FormControl>
                     <Input placeholder="e.g., 2h, 30m" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="dueDate"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Due Date</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) =>
+                          date < new Date() || date < new Date("1900-01-01")
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
