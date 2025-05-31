@@ -55,7 +55,7 @@ export const SimpleEmployeeDashboard = () => {
       <div className="max-w-full mx-auto space-y-2 sm:space-y-4">
         {/* Header */}
         <div className="text-center mb-2 sm:mb-4 px-2">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">My Productivity Center</h1>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">My Productivity</h1>
           <p className="text-gray-600 text-xs sm:text-sm lg:text-base">Track your habits, manage tasks, and plan your week</p>
         </div>
 
