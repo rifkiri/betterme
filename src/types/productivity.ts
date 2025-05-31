@@ -40,4 +40,6 @@ export interface WeeklyOutput {
   dueDate?: Date;
   deletedDate?: Date;
   isDeleted?: boolean;
+  originalDueDate?: Date;
+  isMoved?: boolean;
 }

@@ -60,6 +60,17 @@ export const useWeeklyOutputs = () => {
     ));
   };
 
+  const moveWeeklyOutput = (id: string, newDueDate: Date) => {
+    setWeeklyOutputs(prev => prev.map(output => 
+      output.id === id ? { 
+        ...output, 
+        dueDate: newDueDate,
+        originalDueDate: output.originalDueDate || output.dueDate,
+        isMoved: true
+      } : output
+    ));
+  };
+
   const deleteWeeklyOutput = (id: string) => {
     const outputToDelete = weeklyOutputs.find(output => output.id === id);
     if (outputToDelete) {
@@ -86,6 +97,7 @@ export const useWeeklyOutputs = () => {
     addWeeklyOutput,
     editWeeklyOutput,
     updateProgress,
+    moveWeeklyOutput,
     deleteWeeklyOutput,
     restoreWeeklyOutput,
     permanentlyDeleteWeeklyOutput,

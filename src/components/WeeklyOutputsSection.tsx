@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,8 +7,9 @@ import { Target, Trash2, CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-
 import { DeletedWeeklyOutputsDialog } from './DeletedWeeklyOutputsDialog';
 import { AddWeeklyOutputDialog } from './AddWeeklyOutputDialog';
 import { EditWeeklyOutputDialog } from './EditWeeklyOutputDialog';
+import { MoveWeeklyOutputDialog } from './MoveWeeklyOutputDialog';
 import { WeeklyOutput } from '@/types/productivity';
-import { format, isToday, isTomorrow, startOfWeek, endOfWeek, addWeeks, isWithinInterval, isSameWeek } from 'date-fns';
+import { format, isToday, isTomorrow, startOfWeek, endOfWeek, addWeeks, isWithinInterval, isSameWeek, isPast } from 'date-fns';
 
 interface WeeklyOutputsSectionProps {
   weeklyOutputs: WeeklyOutput[];
@@ -17,6 +17,7 @@ interface WeeklyOutputsSectionProps {
   onAddWeeklyOutput: (output: Omit<WeeklyOutput, 'id' | 'createdDate'>) => void;
   onEditWeeklyOutput: (id: string, updates: Partial<WeeklyOutput>) => void;
   onUpdateProgress: (outputId: string, newProgress: number) => void;
+  onMoveWeeklyOutput: (id: string, newDueDate: Date) => void;
   onDeleteWeeklyOutput: (id: string) => void;
   onRestoreWeeklyOutput: (id: string) => void;
   onPermanentlyDeleteWeeklyOutput: (id: string) => void;
@@ -28,6 +29,7 @@ export const WeeklyOutputsSection = ({
   onAddWeeklyOutput,
   onEditWeeklyOutput,
   onUpdateProgress,
+  onMoveWeeklyOutput,
   onDeleteWeeklyOutput,
   onRestoreWeeklyOutput,
   onPermanentlyDeleteWeeklyOutput,
@@ -52,6 +54,10 @@ export const WeeklyOutputsSection = ({
 
   const goToCurrentWeek = () => {
     setSelectedWeek(new Date());
+  };
+
+  const isOverdue = (output: WeeklyOutput) => {
+    return output.dueDate && isPast(output.dueDate) && !isToday(output.dueDate) && output.progress < 100;
   };
 
   return (
@@ -121,7 +127,9 @@ export const WeeklyOutputsSection = ({
             <p className="text-center text-gray-500 py-4">No weekly outputs for this week</p>
           ) : (
             weekOutputs.map((output) => (
-              <div key={output.id} className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div key={output.id} className={`p-4 rounded-lg border ${
+                isOverdue(output) ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'
+              }`}>
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
                     <div 
@@ -129,12 +137,18 @@ export const WeeklyOutputsSection = ({
                       onClick={() => setEditingOutput(output)}
                     >
                       <p className="text-sm text-gray-700 leading-relaxed mb-2">{output.title}</p>
+                      {output.isMoved && output.originalDueDate && (
+                        <p className="text-xs text-orange-600 mb-1">
+                          Moved from: {format(output.originalDueDate, 'MMM dd')}
+                        </p>
+                      )}
                     </div>
                     {output.dueDate && (
                       <div className="flex items-center text-xs text-gray-500">
                         <CalendarIcon className="h-3 w-3 mr-1" />
-                        <span>
+                        <span className={isOverdue(output) ? 'text-red-600 font-medium' : ''}>
                           Due: {isToday(output.dueDate) ? 'Today' : isTomorrow(output.dueDate) ? 'Tomorrow' : format(output.dueDate, 'MMM dd')}
+                          {isOverdue(output) && ' (Overdue)'}
                         </span>
                       </div>
                     )}
@@ -146,6 +160,10 @@ export const WeeklyOutputsSection = ({
                     >
                       {output.progress}%
                     </Badge>
+                    <MoveWeeklyOutputDialog
+                      onMoveOutput={(newDueDate) => onMoveWeeklyOutput(output.id, newDueDate)}
+                      disabled={output.progress === 100}
+                    />
                     <Button
                       size="sm"
                       variant="outline"
