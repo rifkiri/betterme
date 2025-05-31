@@ -5,15 +5,27 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle, Circle, Archive } from 'lucide-react';
 import { Habit } from '@/types/productivity';
 import { AddHabitDialog } from './AddHabitDialog';
+import { ArchivedHabitsDialog } from './ArchivedHabitsDialog';
 
 interface HabitsSectionProps {
   habits: Habit[];
+  archivedHabits: Habit[];
   onAddHabit: (habit: { name: string; description?: string; category?: string }) => void;
   onToggleHabit: (id: string) => void;
   onArchiveHabit: (id: string) => void;
+  onRestoreHabit: (id: string) => void;
+  onPermanentlyDeleteHabit: (id: string) => void;
 }
 
-export const HabitsSection = ({ habits, onAddHabit, onToggleHabit, onArchiveHabit }: HabitsSectionProps) => {
+export const HabitsSection = ({ 
+  habits, 
+  archivedHabits,
+  onAddHabit, 
+  onToggleHabit, 
+  onArchiveHabit,
+  onRestoreHabit,
+  onPermanentlyDeleteHabit
+}: HabitsSectionProps) => {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -21,7 +33,14 @@ export const HabitsSection = ({ habits, onAddHabit, onToggleHabit, onArchiveHabi
           <CardTitle>Daily Habits</CardTitle>
           <CardDescription>Build your streaks</CardDescription>
         </div>
-        <AddHabitDialog onAddHabit={onAddHabit} />
+        <div className="flex items-center gap-2">
+          <ArchivedHabitsDialog 
+            archivedHabits={archivedHabits}
+            onRestoreHabit={onRestoreHabit}
+            onPermanentlyDeleteHabit={onPermanentlyDeleteHabit}
+          />
+          <AddHabitDialog onAddHabit={onAddHabit} />
+        </div>
       </CardHeader>
       <CardContent className="space-y-3">
         {habits.map(habit => (

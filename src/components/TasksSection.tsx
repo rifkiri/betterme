@@ -7,24 +7,31 @@ import { format, addDays, isToday } from 'date-fns';
 import { Task } from '@/types/productivity';
 import { AddTaskDialog } from './AddTaskDialog';
 import { TaskItem } from './TaskItem';
+import { DeletedTasksDialog } from './DeletedTasksDialog';
 
 interface TasksSectionProps {
   tasks: Task[];
+  deletedTasks: Task[];
   overdueTasks: Task[];
   onAddTask: (task: Omit<Task, 'id' | 'completed' | 'createdDate'>) => void;
   onToggleTask: (id: string) => void;
   onMoveTask: (taskId: string, targetDate: Date) => void;
   onDeleteTask: (id: string) => void;
+  onRestoreTask: (id: string) => void;
+  onPermanentlyDeleteTask: (id: string) => void;
   getTasksByDate: (date: Date) => Task[];
 }
 
 export const TasksSection = ({ 
   tasks, 
+  deletedTasks,
   overdueTasks, 
   onAddTask, 
   onToggleTask, 
   onMoveTask, 
   onDeleteTask,
+  onRestoreTask,
+  onPermanentlyDeleteTask,
   getTasksByDate 
 }: TasksSectionProps) => {
   const [selectedTaskDate, setSelectedTaskDate] = useState(new Date());
@@ -48,7 +55,14 @@ export const TasksSection = ({
             {isToday(selectedTaskDate) ? 'Today' : format(selectedTaskDate, 'MMM dd, yyyy')}
           </CardDescription>
         </div>
-        <AddTaskDialog onAddTask={(task) => onAddTask({ ...task, dueDate: selectedTaskDate })} />
+        <div className="flex items-center gap-2">
+          <DeletedTasksDialog 
+            deletedTasks={deletedTasks}
+            onRestoreTask={onRestoreTask}
+            onPermanentlyDeleteTask={onPermanentlyDeleteTask}
+          />
+          <AddTaskDialog onAddTask={(task) => onAddTask({ ...task, dueDate: selectedTaskDate })} />
+        </div>
       </CardHeader>
       <CardContent className="space-y-3">
         {/* Date Navigation */}

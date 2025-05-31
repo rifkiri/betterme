@@ -14,6 +14,8 @@ export const useProductivity = () => {
     { id: '5', name: 'No social media', completed: false, streak: 0, category: 'Productivity' },
   ]);
 
+  const [archivedHabits, setArchivedHabits] = useState<Habit[]>([]);
+
   const [tasks, setTasks] = useState<Task[]>([
     { 
       id: '1', 
@@ -74,6 +76,7 @@ export const useProductivity = () => {
     }
   ]);
 
+  const [deletedTasks, setDeletedTasks] = useState<Task[]>([]);
   const [weeklyPlans, setWeeklyPlans] = useState<WeeklyPlan[]>([]);
 
   const addHabit = (habit: Omit<Habit, 'id' | 'completed' | 'streak'>) => {
@@ -124,15 +127,43 @@ export const useProductivity = () => {
   };
 
   const deleteTask = (id: string) => {
-    setTasks(prev => prev.filter(task => task.id !== id));
+    const taskToDelete = tasks.find(task => task.id === id);
+    if (taskToDelete) {
+      setDeletedTasks(prev => [...prev, taskToDelete]);
+      setTasks(prev => prev.filter(task => task.id !== id));
+    }
+  };
+
+  const restoreTask = (id: string) => {
+    const taskToRestore = deletedTasks.find(task => task.id === id);
+    if (taskToRestore) {
+      setTasks(prev => [...prev, taskToRestore]);
+      setDeletedTasks(prev => prev.filter(task => task.id !== id));
+    }
+  };
+
+  const permanentlyDeleteTask = (id: string) => {
+    setDeletedTasks(prev => prev.filter(task => task.id !== id));
   };
 
   const archiveHabit = (id: string) => {
-    setHabits(prev => prev.map(habit => 
-      habit.id === id 
-        ? { ...habit, archived: true }
-        : habit
-    ));
+    const habitToArchive = habits.find(habit => habit.id === id);
+    if (habitToArchive) {
+      setArchivedHabits(prev => [...prev, { ...habitToArchive, archived: true }]);
+      setHabits(prev => prev.filter(habit => habit.id !== id));
+    }
+  };
+
+  const restoreHabit = (id: string) => {
+    const habitToRestore = archivedHabits.find(habit => habit.id === id);
+    if (habitToRestore) {
+      setHabits(prev => [...prev, { ...habitToRestore, archived: false }]);
+      setArchivedHabits(prev => prev.filter(habit => habit.id !== id));
+    }
+  };
+
+  const permanentlyDeleteHabit = (id: string) => {
+    setArchivedHabits(prev => prev.filter(habit => habit.id !== id));
   };
 
   const rollOverTask = (taskId: string, newDueDate: Date) => {
@@ -191,15 +222,21 @@ export const useProductivity = () => {
   };
 
   return {
-    habits: habits.filter(habit => !habit.archived),
+    habits,
+    archivedHabits,
     tasks,
+    deletedTasks,
     weeklyPlans,
     addHabit,
     addTask,
     toggleHabit,
     toggleTask,
     deleteTask,
+    restoreTask,
+    permanentlyDeleteTask,
     archiveHabit,
+    restoreHabit,
+    permanentlyDeleteHabit,
     rollOverTask,
     getTasksByDate,
     getTodaysTasks,

@@ -9,13 +9,19 @@ import { TasksSection } from './TasksSection';
 export const SimpleEmployeeDashboard = () => {
   const {
     habits,
+    archivedHabits,
     tasks,
+    deletedTasks,
     addHabit,
     addTask,
     toggleHabit,
     toggleTask,
     deleteTask,
+    restoreTask,
+    permanentlyDeleteTask,
     archiveHabit,
+    restoreHabit,
+    permanentlyDeleteHabit,
     rollOverTask,
     getTodaysTasks,
     getOverdueTasks,
@@ -70,20 +76,26 @@ export const SimpleEmployeeDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <HabitsSection 
             habits={habits}
+            archivedHabits={archivedHabits}
             onAddHabit={addHabit}
             onToggleHabit={toggleHabit}
             onArchiveHabit={archiveHabit}
+            onRestoreHabit={restoreHabit}
+            onPermanentlyDeleteHabit={permanentlyDeleteHabit}
           />
 
           <WeeklyOutputsSection />
 
           <TasksSection
             tasks={tasks}
+            deletedTasks={deletedTasks}
             overdueTasks={overdueTasks}
             onAddTask={addTask}
             onToggleTask={toggleTask}
             onMoveTask={handleRollOver}
             onDeleteTask={deleteTask}
+            onRestoreTask={restoreTask}
+            onPermanentlyDeleteTask={permanentlyDeleteTask}
             getTasksByDate={getTasksByDate}
           />
         </div>
