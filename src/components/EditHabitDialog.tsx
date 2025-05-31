@@ -110,7 +110,7 @@ export const EditHabitDialog = ({ habit, open, onOpenChange, onSave }: EditHabit
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">No category</SelectItem>
+                      <SelectItem value="none">No category</SelectItem>
                       {categoryOptions.map((category) => (
                         <SelectItem key={category} value={category}>
                           {category}
