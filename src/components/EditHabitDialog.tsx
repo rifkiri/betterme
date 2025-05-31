@@ -27,13 +27,13 @@ interface EditHabitDialogProps {
 
 const categoryOptions = [
   'Health',
-  'Wealth',
-  'Personal',
-  'Relationship',
-  'Productivity',
-  'Social',
   'Mental',
-  'Spiritual'
+  'Personal',
+  'Productivity',
+  'Relationship',
+  'Social',
+  'Spiritual',
+  'Wealth'
 ];
 
 export const EditHabitDialog = ({ habit, open, onOpenChange, onSave }: EditHabitDialogProps) => {

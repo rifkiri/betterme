@@ -45,13 +45,13 @@ interface AddHabitDialogProps {
 
 const categoryOptions = [
   'Health',
-  'Wealth',
-  'Personal',
-  'Relationship',
-  'Productivity',
-  'Social',
   'Mental',
-  'Spiritual'
+  'Personal',
+  'Productivity',
+  'Relationship',
+  'Social',
+  'Spiritual',
+  'Wealth'
 ];
 
 export const AddHabitDialog = ({ onAddHabit }: AddHabitDialogProps) => {
