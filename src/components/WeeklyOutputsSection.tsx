@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -45,13 +44,11 @@ export const WeeklyOutputsSection = ({
           <CardDescription>Key deliverables and goals for the week</CardDescription>
         </div>
         <div className="flex items-center gap-2">
-          {deletedWeeklyOutputs.length > 0 && (
-            <DeletedWeeklyOutputsDialog
-              deletedWeeklyOutputs={deletedWeeklyOutputs}
-              onRestore={onRestoreWeeklyOutput}
-              onPermanentlyDelete={onPermanentlyDeleteWeeklyOutput}
-            />
-          )}
+          <DeletedWeeklyOutputsDialog
+            deletedWeeklyOutputs={deletedWeeklyOutputs}
+            onRestore={onRestoreWeeklyOutput}
+            onPermanentlyDelete={onPermanentlyDeleteWeeklyOutput}
+          />
           <AddWeeklyOutputDialog onAddWeeklyOutput={onAddWeeklyOutput} />
         </div>
       </CardHeader>
