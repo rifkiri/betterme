@@ -61,14 +61,14 @@ export const WeeklyOutputCard = ({
           </div>
           <div className="flex items-center space-x-2">
             <Badge 
-              variant={isOverdue() ? 'destructive' : output.progress === 100 ? 'default' : 'secondary'} 
+              variant={output.progress === 100 ? 'default' : isOverdue() ? 'destructive' : 'secondary'} 
               className="text-xs"
             >
               {output.progress}%
             </Badge>
             <MoveWeeklyOutputDialog
               onMoveOutput={(newDueDate) => onMoveWeeklyOutput(output.id, newDueDate)}
-              disabled={false}
+              disabled={output.progress === 100}
             />
             <Button
               size="sm"
