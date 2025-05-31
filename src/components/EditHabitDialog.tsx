@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -28,15 +27,13 @@ interface EditHabitDialogProps {
 
 const categoryOptions = [
   'Health',
-  'Learning',
-  'Wellness',
+  'Wealth',
+  'Personal',
+  'Relationship',
   'Productivity',
-  'Exercise',
-  'Nutrition',
-  'Personal Development',
-  'Work',
   'Social',
-  'Creativity'
+  'Mental',
+  'Spiritual'
 ];
 
 export const EditHabitDialog = ({ habit, open, onOpenChange, onSave }: EditHabitDialogProps) => {
