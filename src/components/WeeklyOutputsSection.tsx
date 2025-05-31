@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,11 +10,13 @@ import { AddWeeklyOutputDialog } from './AddWeeklyOutputDialog';
 import { EditWeeklyOutputDialog } from './EditWeeklyOutputDialog';
 import { MoveWeeklyOutputDialog } from './MoveWeeklyOutputDialog';
 import { WeeklyOutput } from '@/types/productivity';
-import { format, isToday, isTomorrow, startOfWeek, endOfWeek, addWeeks, isWithinInterval, isSameWeek, isPast } from 'date-fns';
+import { format, isToday, isTomorrow, startOfWeek, endOfWeek, addWeeks, isWithinInterval, isSameWeek } from 'date-fns';
+import { isWeeklyOutputOverdue } from '@/utils/dateUtils';
 
 interface WeeklyOutputsSectionProps {
   weeklyOutputs: WeeklyOutput[];
   deletedWeeklyOutputs: WeeklyOutput[];
+  overdueWeeklyOutputs: WeeklyOutput[];
   onAddWeeklyOutput: (output: Omit<WeeklyOutput, 'id' | 'createdDate'>) => void;
   onEditWeeklyOutput: (id: string, updates: Partial<WeeklyOutput>) => void;
   onUpdateProgress: (outputId: string, newProgress: number) => void;
@@ -26,6 +29,7 @@ interface WeeklyOutputsSectionProps {
 export const WeeklyOutputsSection = ({
   weeklyOutputs,
   deletedWeeklyOutputs,
+  overdueWeeklyOutputs,
   onAddWeeklyOutput,
   onEditWeeklyOutput,
   onUpdateProgress,
@@ -57,7 +61,7 @@ export const WeeklyOutputsSection = ({
   };
 
   const isOverdue = (output: WeeklyOutput) => {
-    return output.dueDate && isPast(output.dueDate) && !isToday(output.dueDate) && output.progress < 100;
+    return output.dueDate && isWeeklyOutputOverdue(output.dueDate, output.progress);
   };
 
   return (
@@ -67,6 +71,11 @@ export const WeeklyOutputsSection = ({
           <CardTitle className="flex items-center gap-2">
             <Target className="h-5 w-5" />
             Weekly Outputs
+            {overdueWeeklyOutputs.length > 0 && (
+              <Badge variant="destructive" className="ml-2">
+                {overdueWeeklyOutputs.length} overdue
+              </Badge>
+            )}
           </CardTitle>
           <CardDescription>
             {isCurrentWeek ? 'This Week' : format(weekStart, 'MMM dd')} - {format(weekEnd, 'MMM dd, yyyy')}
@@ -155,7 +164,7 @@ export const WeeklyOutputsSection = ({
                   </div>
                   <div className="flex items-center space-x-2">
                     <Badge 
-                      variant={output.progress === 100 ? 'default' : 'secondary'} 
+                      variant={output.progress === 100 ? 'default' : isOverdue(output) ? 'destructive' : 'secondary'} 
                       className="text-xs"
                     >
                       {output.progress}%
@@ -178,7 +187,7 @@ export const WeeklyOutputsSection = ({
                 <div className="mb-3">
                   <Progress 
                     value={output.progress} 
-                    className="h-2"
+                    className={`h-2 ${isOverdue(output) ? 'bg-red-100' : ''}`}
                   />
                 </div>
                 

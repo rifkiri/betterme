@@ -1,6 +1,8 @@
+
 import { useState } from 'react';
 import { WeeklyOutput } from '@/types/productivity';
 import { startOfWeek, addDays } from 'date-fns';
+import { isWeeklyOutputOverdue } from '@/utils/dateUtils';
 
 export const useWeeklyOutputs = () => {
   // Get current week start (Monday)
@@ -91,6 +93,12 @@ export const useWeeklyOutputs = () => {
     setDeletedWeeklyOutputs(prev => prev.filter(output => output.id !== id));
   };
 
+  const getOverdueWeeklyOutputs = () => {
+    return weeklyOutputs.filter(output => 
+      output.dueDate && isWeeklyOutputOverdue(output.dueDate, output.progress)
+    );
+  };
+
   return {
     weeklyOutputs,
     deletedWeeklyOutputs,
@@ -101,5 +109,6 @@ export const useWeeklyOutputs = () => {
     deleteWeeklyOutput,
     restoreWeeklyOutput,
     permanentlyDeleteWeeklyOutput,
+    getOverdueWeeklyOutputs,
   };
 };

@@ -39,6 +39,7 @@ export const SimpleEmployeeDashboard = () => {
     deleteWeeklyOutput,
     restoreWeeklyOutput,
     permanentlyDeleteWeeklyOutput,
+    getOverdueWeeklyOutputs,
   } = useProductivity();
 
   console.log('Dashboard data:', {
@@ -50,8 +51,9 @@ export const SimpleEmployeeDashboard = () => {
   const completedHabits = habits.filter(habit => habit.completed).length;
   const todaysTasks = getTodaysTasks();
   const overdueTasks = getOverdueTasks();
+  const overdueWeeklyOutputs = getOverdueWeeklyOutputs();
   
-  console.log('Today tasks:', todaysTasks.length, 'Overdue tasks:', overdueTasks.length);
+  console.log('Today tasks:', todaysTasks.length, 'Overdue tasks:', overdueTasks.length, 'Overdue weekly outputs:', overdueWeeklyOutputs.length);
   
   const handleRollOver = (taskId: string, targetDate: Date) => {
     rollOverTask(taskId, targetDate);
@@ -82,7 +84,7 @@ export const SimpleEmployeeDashboard = () => {
           />
           <QuickStatsCard
             title="Overdue"
-            value={overdueTasks.length.toString()}
+            value={(overdueTasks.length + overdueWeeklyOutputs.length).toString()}
             icon={Clock}
             gradient="bg-gradient-to-r from-orange-50 to-orange-100"
           />
@@ -109,6 +111,7 @@ export const SimpleEmployeeDashboard = () => {
           <WeeklyOutputsSection
             weeklyOutputs={weeklyOutputs}
             deletedWeeklyOutputs={deletedWeeklyOutputs}
+            overdueWeeklyOutputs={overdueWeeklyOutputs}
             onAddWeeklyOutput={addWeeklyOutput}
             onEditWeeklyOutput={editWeeklyOutput}
             onUpdateProgress={updateProgress}
