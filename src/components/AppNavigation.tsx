@@ -1,35 +1,62 @@
+
 import { Button } from '@/components/ui/button';
 import { Home, Calendar, Settings, Users, User } from 'lucide-react';
 import { useLocation, Link } from 'react-router-dom';
 
+// Mock function to get current user role (replace with real authentication)
+const getCurrentUserRole = () => {
+  const authUser = localStorage.getItem('authUser');
+  if (authUser) {
+    return JSON.parse(authUser).role;
+  }
+  return 'team-member';
+};
+
 export const AppNavigation = () => {
   const location = useLocation();
-  const navigationItems = [{
-    name: 'My Productivity',
-    href: '/',
-    icon: Home,
-    description: 'Daily productivity tracking'
-  }, {
-    name: 'Dashboard',
-    href: '/monthly',
-    icon: Calendar,
-    description: 'Monthly analytics'
-  }, {
-    name: 'My Team',
-    href: '/manager',
-    icon: Users,
-    description: 'Team management'
-  }, {
-    name: 'Profile',
-    href: '/profile',
-    icon: User,
-    description: 'User profile and preferences'
-  }, {
-    name: 'Settings',
-    href: '/settings',
-    icon: Settings,
-    description: 'App preferences'
-  }];
+  const userRole = getCurrentUserRole();
+
+  // Define navigation items based on user role
+  const getNavigationItems = () => {
+    const baseItems = [{
+      name: 'My Productivity',
+      href: '/',
+      icon: Home,
+      description: 'Daily productivity tracking'
+    }, {
+      name: 'Dashboard',
+      href: '/monthly',
+      icon: Calendar,
+      description: 'Monthly analytics'
+    }, {
+      name: 'Profile',
+      href: '/profile',
+      icon: User,
+      description: 'User profile and preferences'
+    }];
+
+    if (userRole === 'admin') {
+      return [...baseItems, {
+        name: 'Settings',
+        href: '/settings',
+        icon: Settings,
+        description: 'App preferences'
+      }];
+    } else if (userRole === 'manager') {
+      return [...baseItems, {
+        name: 'My Team',
+        href: '/manager',
+        icon: Users,
+        description: 'Team management'
+      }];
+    } else {
+      // team-member gets all base items
+      return baseItems;
+    }
+  };
+
+  const navigationItems = getNavigationItems();
+
   return <div className="bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
