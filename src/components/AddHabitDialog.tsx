@@ -43,6 +43,17 @@ interface AddHabitDialogProps {
   onAddHabit: (habit: { name: string; description?: string; category?: string }) => void;
 }
 
+const categoryOptions = [
+  'Health',
+  'Wealth',
+  'Personal',
+  'Relationship',
+  'Productivity',
+  'Social',
+  'Mental',
+  'Spiritual'
+];
+
 export const AddHabitDialog = ({ onAddHabit }: AddHabitDialogProps) => {
   const [open, setOpen] = useState(false);
   const form = useForm<FormValues>({
@@ -118,19 +129,19 @@ export const AddHabitDialog = ({ onAddHabit }: AddHabitDialogProps) => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Category (Optional)</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Health">Health</SelectItem>
-                      <SelectItem value="Learning">Learning</SelectItem>
-                      <SelectItem value="Wellness">Wellness</SelectItem>
-                      <SelectItem value="Productivity">Productivity</SelectItem>
-                      <SelectItem value="Exercise">Exercise</SelectItem>
-                      <SelectItem value="Nutrition">Nutrition</SelectItem>
+                      <SelectItem value="none">No category</SelectItem>
+                      {categoryOptions.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
