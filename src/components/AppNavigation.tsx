@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Home, Calendar, Settings, User, BarChart3, Users } from 'lucide-react';
+import { Home, Calendar, Settings, Users } from 'lucide-react';
 import { useLocation, Link } from 'react-router-dom';
 
 export const AppNavigation = () => {
@@ -19,16 +19,6 @@ export const AppNavigation = () => {
     href: '/manager',
     icon: Users,
     description: 'Team management'
-  }, {
-    name: 'Analytics',
-    href: '/analytics',
-    icon: BarChart3,
-    description: 'Detailed reports'
-  }, {
-    name: 'Profile',
-    href: '/profile',
-    icon: User,
-    description: 'User settings'
   }, {
     name: 'Settings',
     href: '/settings',
