@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { TeamSummaryCards } from './team/TeamSummaryCards';
 import { OverdueItemsSection } from './team/OverdueItemsSection';
 import { TeamPerformanceTable } from './team/TeamPerformanceTable';
 import { TeamTrendsCard } from './team/TeamTrendsCard';
+import { TeamMoodChart } from './team/TeamMoodChart';
 import { TeamData } from '@/types/teamData';
 
 // Mock team data without individual mood information
@@ -130,6 +132,7 @@ export const TeamOverview = () => {
   return (
     <div className="space-y-6">
       <TeamSummaryCards teamData={teamData} />
+      <TeamMoodChart teamData={teamData} />
       <OverdueItemsSection teamData={teamData} />
       <TeamPerformanceTable teamData={teamData} />
       <TeamTrendsCard teamData={teamData} />

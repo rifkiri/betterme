@@ -1,4 +1,3 @@
-
 export interface TeamMember {
   id: string;
   name: string;
@@ -7,6 +6,8 @@ export interface TeamMember {
   tasksRate: number;
   outputsRate: number;
   status: 'excellent' | 'good' | 'average' | 'needs-attention';
+  averageMood?: number;
+  moodTrend?: 'improving' | 'declining' | 'stable';
 }
 
 export interface MoodEntry {

@@ -93,14 +93,14 @@ export const TeamMoodChart = ({ teamData }: TeamMoodChartProps) => {
           <div className="text-center p-3 bg-green-50 rounded-lg">
             <p className="text-sm text-gray-600">Highest</p>
             <p className="text-xl font-bold text-green-600">
-              {Math.max(...teamData.membersSummary.map(m => m.averageMood || 7))}
+              {Math.max(...teamData.membersSummary.map(m => m.averageMood || 7.0))}
             </p>
           </div>
 
           <div className="text-center p-3 bg-red-50 rounded-lg">
             <p className="text-sm text-gray-600">Lowest</p>
             <p className="text-xl font-bold text-red-600">
-              {Math.min(...teamData.membersSummary.map(m => m.averageMood || 7))}
+              {Math.min(...teamData.membersSummary.map(m => m.averageMood || 7.0))}
             </p>
           </div>
         </div>
