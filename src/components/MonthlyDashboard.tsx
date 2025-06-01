@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,8 @@ import { useProductivity } from '@/hooks/useProductivity';
 import { MonthlyStats } from './MonthlyStats';
 import { MonthlyChart } from './MonthlyChart';
 import { MonthlyHeatmap } from './MonthlyHeatmap';
+import { MoodChart } from './MoodChart';
+
 export const MonthlyDashboard = () => {
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const {
@@ -14,15 +17,18 @@ export const MonthlyDashboard = () => {
     tasks,
     weeklyOutputs
   } = useProductivity();
+
   const monthStart = startOfMonth(selectedMonth);
   const monthEnd = endOfMonth(selectedMonth);
   const monthDays = eachDayOfInterval({
     start: monthStart,
     end: monthEnd
   });
+
   const navigateMonth = (direction: 'prev' | 'next') => {
     setSelectedMonth(prev => direction === 'next' ? addMonths(prev, 1) : subMonths(prev, 1));
   };
+
   const goToCurrentMonth = () => {
     setSelectedMonth(new Date());
   };
@@ -33,7 +39,9 @@ export const MonthlyDashboard = () => {
   const completedTasks = monthlyTasks.filter(task => task.completed).length;
   const completedOutputs = monthlyOutputs.filter(output => output.progress === 100).length;
   const averageHabitStreak = habits.length > 0 ? Math.round(habits.reduce((sum, habit) => sum + habit.streak, 0) / habits.length) : 0;
-  return <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 p-2 sm:p-4">
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 p-2 sm:p-4">
       <div className="max-w-7xl mx-auto space-y-4">
         {/* Header */}
         <div className="text-center mb-6">
@@ -55,9 +63,11 @@ export const MonthlyDashboard = () => {
                 <span className="text-lg font-semibold">
                   {format(selectedMonth, 'MMMM yyyy')}
                 </span>
-                {!isSameMonth(selectedMonth, new Date()) && <Button size="sm" variant="ghost" onClick={goToCurrentMonth} className="ml-2">
+                {!isSameMonth(selectedMonth, new Date()) && (
+                  <Button size="sm" variant="ghost" onClick={goToCurrentMonth} className="ml-2">
                     Current Month
-                  </Button>}
+                  </Button>
+                )}
               </div>
               
               <Button size="sm" variant="outline" onClick={() => navigateMonth('next')} className="flex items-center gap-2">
@@ -127,6 +137,9 @@ export const MonthlyDashboard = () => {
           </Card>
         </div>
 
+        {/* Mood Tracking */}
+        <MoodChart monthDays={monthDays} selectedMonth={selectedMonth} />
+
         {/* Charts and Analytics */}
         <div className="grid lg:grid-cols-2 gap-6">
           <MonthlyStats tasks={monthlyTasks} outputs={monthlyOutputs} habits={habits} monthDays={monthDays} />
@@ -137,5 +150,6 @@ export const MonthlyDashboard = () => {
         {/* Monthly Heatmap */}
         <MonthlyHeatmap tasks={monthlyTasks} outputs={monthlyOutputs} habits={habits} monthDays={monthDays} selectedMonth={selectedMonth} />
       </div>
-    </div>;
+    </div>
+  );
 };
