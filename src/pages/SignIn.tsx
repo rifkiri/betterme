@@ -5,15 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Eye, EyeOff, Settings } from 'lucide-react';
 import { toast } from 'sonner';
-
-// Mock users data (replace with Google Sheets API call)
-const mockUsers = [
-  { id: '1', email: 'admin@company.com', password: 'admin123', role: 'admin', name: 'Admin User' },
-  { id: '2', email: 'manager@company.com', password: 'manager123', role: 'manager', name: 'Manager User' },
-  { id: '3', email: 'sarah@company.com', password: 'temp123', role: 'team-member', name: 'Sarah Johnson' },
-];
+import { googleSheetsService } from '@/services/GoogleSheetsService';
 
 const SignIn = () => {
   const [email, setEmail] = useState('');
@@ -22,33 +17,64 @@ const SignIn = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+  const isGoogleSheetsConfigured = googleSheetsService.isConfigured() && googleSheetsService.isAuthenticated();
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Mock authentication (replace with Google Sheets API call)
-    const user = mockUsers.find(u => u.email === email && u.password === password);
-    
-    if (user) {
-      localStorage.setItem('authUser', JSON.stringify({
-        id: user.id,
-        name: user.name,
-        role: user.role,
-        email: user.email
-      }));
-      
-      toast.success('Sign in successful!');
-      
-      // Redirect based on role
-      if (user.role === 'admin') {
-        navigate('/settings');
-      } else if (user.role === 'manager') {
-        navigate('/manager');
-      } else {
-        navigate('/');
+    try {
+      if (!isGoogleSheetsConfigured) {
+        toast.error('Google Sheets is not configured. Please contact your administrator.');
+        setIsLoading(false);
+        return;
       }
-    } else {
-      toast.error('Invalid email or password');
+
+      console.log('Attempting to authenticate user:', email);
+      
+      // Fetch users from Google Sheets
+      const users = await googleSheetsService.getUsers();
+      console.log('Fetched users from Google Sheets:', users.length);
+      
+      // Find user by email and password
+      const user = users.find(u => 
+        u.email.toLowerCase() === email.toLowerCase() && 
+        (u.temporaryPassword === password || u.temporaryPassword === password)
+      );
+      
+      if (user) {
+        console.log('User found, logging in:', user.email, user.role);
+        
+        // Store authenticated user
+        localStorage.setItem('authUser', JSON.stringify({
+          id: user.id,
+          name: user.name,
+          role: user.role,
+          email: user.email
+        }));
+        
+        // Update last login
+        await googleSheetsService.updateUser(user.id, {
+          lastLogin: new Date().toISOString().split('T')[0]
+        });
+        
+        toast.success('Sign in successful!');
+        
+        // Redirect based on role
+        if (user.role === 'admin') {
+          navigate('/settings');
+        } else if (user.role === 'manager') {
+          navigate('/manager');
+        } else {
+          navigate('/');
+        }
+      } else {
+        console.log('Invalid credentials for email:', email);
+        toast.error('Invalid email or password');
+      }
+    } catch (error) {
+      console.error('Authentication error:', error);
+      toast.error('Authentication failed. Please check your connection and try again.');
     }
     
     setIsLoading(false);
@@ -62,6 +88,15 @@ const SignIn = () => {
           <CardDescription>Enter your credentials to access your dashboard</CardDescription>
         </CardHeader>
         <CardContent>
+          {!isGoogleSheetsConfigured && (
+            <Alert className="mb-4">
+              <Settings className="h-4 w-4" />
+              <AlertDescription>
+                Google Sheets integration is not configured. Please contact your administrator to set up the connection.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <form onSubmit={handleSignIn} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -72,6 +107,7 @@ const SignIn = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={!isGoogleSheetsConfigured}
               />
             </div>
             
@@ -85,6 +121,7 @@ const SignIn = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  disabled={!isGoogleSheetsConfigured}
                 />
                 <Button
                   type="button"
@@ -92,25 +129,31 @@ const SignIn = () => {
                   size="sm"
                   className="absolute right-2 top-1/2 -translate-y-1/2 h-auto p-1"
                   onClick={() => setShowPassword(!showPassword)}
+                  disabled={!isGoogleSheetsConfigured}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
               </div>
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isLoading || !isGoogleSheetsConfigured}
+            >
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
 
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <h4 className="font-medium text-sm text-blue-900 mb-2">Demo Credentials:</h4>
-            <div className="text-xs text-blue-700 space-y-1">
-              <p><strong>Admin:</strong> admin@company.com / admin123</p>
-              <p><strong>Manager:</strong> manager@company.com / manager123</p>
-              <p><strong>Team Member:</strong> sarah@company.com / temp123</p>
+          {!isGoogleSheetsConfigured && (
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+              <h4 className="font-medium text-sm text-blue-900 mb-2">Setup Required:</h4>
+              <div className="text-xs text-blue-700 space-y-1">
+                <p>• Administrator needs to configure Google Sheets integration</p>
+                <p>• Contact your system administrator for access</p>
+              </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>
