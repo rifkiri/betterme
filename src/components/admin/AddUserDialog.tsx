@@ -18,6 +18,7 @@ export const AddUserDialog = ({ open, onOpenChange, onAddUser }: AddUserDialogPr
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<UserRole>('team-member');
+  const [position, setPosition] = useState('');
   const [temporaryPassword, setTemporaryPassword] = useState('');
 
   const generatePassword = () => {
@@ -33,7 +34,7 @@ export const AddUserDialog = ({ open, onOpenChange, onAddUser }: AddUserDialogPr
     e.preventDefault();
     
     if (!name || !email || !role || !temporaryPassword) {
-      toast.error('Please fill in all fields');
+      toast.error('Please fill in all required fields');
       return;
     }
 
@@ -41,6 +42,7 @@ export const AddUserDialog = ({ open, onOpenChange, onAddUser }: AddUserDialogPr
       name,
       email,
       role,
+      position: position || undefined,
       temporaryPassword,
       hasChangedPassword: false
     });
@@ -51,6 +53,7 @@ export const AddUserDialog = ({ open, onOpenChange, onAddUser }: AddUserDialogPr
     setName('');
     setEmail('');
     setRole('team-member');
+    setPosition('');
     setTemporaryPassword('');
     onOpenChange(false);
   };
@@ -89,18 +92,30 @@ export const AddUserDialog = ({ open, onOpenChange, onAddUser }: AddUserDialogPr
             />
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="role">Role</Label>
-            <Select value={role} onValueChange={(value: UserRole) => setRole(value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="team-member">Team Member</SelectItem>
-                <SelectItem value="manager">Manager</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="role">Role</Label>
+              <Select value={role} onValueChange={(value: UserRole) => setRole(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="team-member">Team Member</SelectItem>
+                  <SelectItem value="manager">Manager</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="position">Position</Label>
+              <Input
+                id="position"
+                value={position}
+                onChange={(e) => setPosition(e.target.value)}
+                placeholder="e.g. Senior Developer"
+              />
+            </div>
           </div>
           
           <div className="space-y-2">
