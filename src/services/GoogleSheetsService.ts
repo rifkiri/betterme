@@ -3,50 +3,168 @@ import { User } from '@/types/userTypes';
 
 // Google Sheets API configuration
 const SHEETS_API_BASE = 'https://sheets.googleapis.com/v4/spreadsheets';
-const SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec'; // User will need to replace this
+const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
+const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 
-interface SheetsResponse {
-  success: boolean;
-  data?: any;
-  error?: string;
+interface TokenResponse {
+  access_token: string;
+  refresh_token?: string;
+  expires_in: number;
+  token_type: string;
 }
 
 export class GoogleSheetsService {
-  private apiKey: string;
+  private clientId: string;
+  private clientSecret: string;
   private spreadsheetId: string;
+  private accessToken: string;
+  private refreshToken: string;
+  private tokenExpiry: number;
 
   constructor() {
-    // These will be set from localStorage or user input
-    this.apiKey = localStorage.getItem('googleSheetsApiKey') || '';
+    this.clientId = localStorage.getItem('googleOAuthClientId') || '';
+    this.clientSecret = localStorage.getItem('googleOAuthClientSecret') || '';
     this.spreadsheetId = localStorage.getItem('googleSheetsId') || '';
+    this.accessToken = localStorage.getItem('googleAccessToken') || '';
+    this.refreshToken = localStorage.getItem('googleRefreshToken') || '';
+    this.tokenExpiry = parseInt(localStorage.getItem('googleTokenExpiry') || '0');
   }
 
   // Configuration methods
-  setCredentials(apiKey: string, spreadsheetId: string) {
-    this.apiKey = apiKey;
+  setCredentials(clientId: string, clientSecret: string, spreadsheetId: string) {
+    this.clientId = clientId;
+    this.clientSecret = clientSecret;
     this.spreadsheetId = spreadsheetId;
-    localStorage.setItem('googleSheetsApiKey', apiKey);
+    localStorage.setItem('googleOAuthClientId', clientId);
+    localStorage.setItem('googleOAuthClientSecret', clientSecret);
     localStorage.setItem('googleSheetsId', spreadsheetId);
   }
 
   isConfigured(): boolean {
-    return !!(this.apiKey && this.spreadsheetId);
+    return !!(this.clientId && this.clientSecret && this.spreadsheetId);
   }
 
-  // Generic method to read data from a sheet
+  isAuthenticated(): boolean {
+    return !!(this.accessToken && Date.now() < this.tokenExpiry);
+  }
+
+  // OAuth2 flow methods
+  getAuthUrl(): string {
+    const redirectUri = `${window.location.origin}/oauth/callback`;
+    const scope = 'https://www.googleapis.com/auth/spreadsheets';
+    const params = new URLSearchParams({
+      client_id: this.clientId,
+      redirect_uri: redirectUri,
+      scope: scope,
+      response_type: 'code',
+      access_type: 'offline',
+      prompt: 'consent'
+    });
+
+    return `${GOOGLE_AUTH_URL}?${params.toString()}`;
+  }
+
+  async exchangeCodeForTokens(code: string): Promise<void> {
+    const redirectUri = `${window.location.origin}/oauth/callback`;
+    
+    const response = await fetch(GOOGLE_TOKEN_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        client_id: this.clientId,
+        client_secret: this.clientSecret,
+        code: code,
+        grant_type: 'authorization_code',
+        redirect_uri: redirectUri
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to exchange code for tokens');
+    }
+
+    const tokens: TokenResponse = await response.json();
+    
+    this.accessToken = tokens.access_token;
+    this.tokenExpiry = Date.now() + (tokens.expires_in * 1000);
+    
+    if (tokens.refresh_token) {
+      this.refreshToken = tokens.refresh_token;
+      localStorage.setItem('googleRefreshToken', this.refreshToken);
+    }
+
+    localStorage.setItem('googleAccessToken', this.accessToken);
+    localStorage.setItem('googleTokenExpiry', this.tokenExpiry.toString());
+  }
+
+  private async refreshAccessToken(): Promise<void> {
+    if (!this.refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    const response = await fetch(GOOGLE_TOKEN_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        client_id: this.clientId,
+        client_secret: this.clientSecret,
+        refresh_token: this.refreshToken,
+        grant_type: 'refresh_token'
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to refresh access token');
+    }
+
+    const tokens: TokenResponse = await response.json();
+    
+    this.accessToken = tokens.access_token;
+    this.tokenExpiry = Date.now() + (tokens.expires_in * 1000);
+
+    localStorage.setItem('googleAccessToken', this.accessToken);
+    localStorage.setItem('googleTokenExpiry', this.tokenExpiry.toString());
+  }
+
+  private async getValidAccessToken(): Promise<string> {
+    if (Date.now() >= this.tokenExpiry) {
+      await this.refreshAccessToken();
+    }
+    return this.accessToken;
+  }
+
+  // API methods
+  private async makeAuthorizedRequest(url: string, options: RequestInit = {}): Promise<Response> {
+    const token = await this.getValidAccessToken();
+    
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response;
+  }
+
   private async readSheet(range: string): Promise<any[]> {
-    if (!this.isConfigured()) {
-      throw new Error('Google Sheets not configured');
+    if (!this.isAuthenticated()) {
+      throw new Error('Not authenticated with Google');
     }
 
     try {
-      const url = `${SHEETS_API_BASE}/${this.spreadsheetId}/values/${range}?key=${this.apiKey}`;
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
+      const url = `${SHEETS_API_BASE}/${this.spreadsheetId}/values/${range}`;
+      const response = await this.makeAuthorizedRequest(url);
       const data = await response.json();
       return data.values || [];
     } catch (error) {
@@ -55,27 +173,17 @@ export class GoogleSheetsService {
     }
   }
 
-  // Generic method to write data to a sheet
   private async writeSheet(range: string, values: any[][]): Promise<void> {
-    if (!this.isConfigured()) {
-      throw new Error('Google Sheets not configured');
+    if (!this.isAuthenticated()) {
+      throw new Error('Not authenticated with Google');
     }
 
     try {
-      const url = `${SHEETS_API_BASE}/${this.spreadsheetId}/values/${range}?valueInputOption=RAW&key=${this.apiKey}`;
-      const response = await fetch(url, {
+      const url = `${SHEETS_API_BASE}/${this.spreadsheetId}/values/${range}?valueInputOption=RAW`;
+      await this.makeAuthorizedRequest(url, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          values: values
-        })
+        body: JSON.stringify({ values })
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
     } catch (error) {
       console.error('Error writing to sheet:', error);
       throw error;
@@ -85,7 +193,7 @@ export class GoogleSheetsService {
   // User management methods
   async getUsers(): Promise<User[]> {
     try {
-      const rows = await this.readSheet('Users!A2:L1000'); // Skip header row
+      const rows = await this.readSheet('Users!A2:L1000');
       
       return rows.map((row, index) => ({
         id: row[0] || (index + 1).toString(),
@@ -123,13 +231,12 @@ export class GoogleSheetsService {
         user.lastLogin || ''
       ];
 
-      // Add header if this is the first user
       if (users.length === 0) {
         const header = ['ID', 'Name', 'Email', 'Role', 'Position', 'Department', 'Manager', 'Temp Password', 'Password Changed', 'Created At', 'Last Login'];
         await this.writeSheet('Users!A1:K1', [header]);
       }
 
-      const nextRow = users.length + 2; // +1 for header, +1 for next row
+      const nextRow = users.length + 2;
       await this.writeSheet(`Users!A${nextRow}:K${nextRow}`, [newRow]);
     } catch (error) {
       console.error('Error adding user:', error);
@@ -147,7 +254,7 @@ export class GoogleSheetsService {
       }
 
       const updatedUser = { ...users[userIndex], ...updates };
-      const rowIndex = userIndex + 2; // +1 for header, +1 for 0-based to 1-based
+      const rowIndex = userIndex + 2;
 
       const updatedRow = [
         updatedUser.id,
@@ -175,7 +282,6 @@ export class GoogleSheetsService {
       const users = await this.getUsers();
       const filteredUsers = users.filter(u => u.id !== userId);
       
-      // Clear the sheet and rewrite with filtered data
       await this.writeSheet('Users!A1:K1000', []);
       
       if (filteredUsers.length > 0) {
@@ -203,5 +309,4 @@ export class GoogleSheetsService {
   }
 }
 
-// Create a singleton instance
 export const googleSheetsService = new GoogleSheetsService();

@@ -7,25 +7,41 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { googleSheetsService } from '@/services/GoogleSheetsService';
 import { toast } from 'sonner';
-import { Settings, ExternalLink } from 'lucide-react';
+import { Settings, ExternalLink, Shield } from 'lucide-react';
 
 export const GoogleSheetsConfig = () => {
-  const [apiKey, setApiKey] = useState(localStorage.getItem('googleSheetsApiKey') || '');
+  const [clientId, setClientId] = useState(localStorage.getItem('googleOAuthClientId') || '');
+  const [clientSecret, setClientSecret] = useState(localStorage.getItem('googleOAuthClientSecret') || '');
   const [spreadsheetId, setSpreadsheetId] = useState(localStorage.getItem('googleSheetsId') || '');
   const [isConfigured, setIsConfigured] = useState(googleSheetsService.isConfigured());
+  const [isAuthenticated, setIsAuthenticated] = useState(googleSheetsService.isAuthenticated());
 
   const handleSaveConfig = () => {
-    if (!apiKey || !spreadsheetId) {
-      toast.error('Please fill in both API key and spreadsheet ID');
+    if (!clientId || !clientSecret || !spreadsheetId) {
+      toast.error('Please fill in all required fields');
       return;
     }
 
     try {
-      googleSheetsService.setCredentials(apiKey, spreadsheetId);
+      googleSheetsService.setCredentials(clientId, clientSecret, spreadsheetId);
       setIsConfigured(true);
       toast.success('Google Sheets configuration saved successfully');
     } catch (error) {
       toast.error('Failed to save configuration');
+    }
+  };
+
+  const handleAuthenticate = () => {
+    if (!isConfigured) {
+      toast.error('Please save configuration first');
+      return;
+    }
+
+    try {
+      const authUrl = googleSheetsService.getAuthUrl();
+      window.location.href = authUrl;
+    } catch (error) {
+      toast.error('Failed to start authentication');
     }
   };
 
@@ -34,7 +50,7 @@ export const GoogleSheetsConfig = () => {
       await googleSheetsService.getUsers();
       toast.success('Connection test successful!');
     } catch (error) {
-      toast.error('Connection test failed. Please check your configuration.');
+      toast.error('Connection test failed. Please check your configuration and authentication.');
     }
   };
 
@@ -43,35 +59,45 @@ export const GoogleSheetsConfig = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Settings className="h-5 w-5" />
-          Google Sheets Configuration
+          Google Sheets OAuth2 Configuration
         </CardTitle>
         <CardDescription>
-          Connect your user management system to Google Sheets for data storage
+          Connect your user management system to Google Sheets with OAuth2 authentication
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <Alert>
           <AlertDescription>
-            You'll need to create a Google Sheets API key and prepare a spreadsheet. 
+            You'll need to create OAuth2 credentials in Google Cloud Console. 
             <a 
-              href="https://developers.google.com/sheets/api/quickstart" 
+              href="https://console.cloud.google.com/apis/credentials" 
               target="_blank" 
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-blue-600 hover:underline ml-1"
             >
-              Follow this guide <ExternalLink className="h-3 w-3" />
+              Go to Google Cloud Console <ExternalLink className="h-3 w-3" />
             </a>
           </AlertDescription>
         </Alert>
 
         <div className="space-y-2">
-          <Label htmlFor="api-key">Google Sheets API Key</Label>
+          <Label htmlFor="client-id">OAuth2 Client ID</Label>
           <Input
-            id="api-key"
+            id="client-id"
+            value={clientId}
+            onChange={(e) => setClientId(e.target.value)}
+            placeholder="Enter your OAuth2 Client ID"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="client-secret">OAuth2 Client Secret</Label>
+          <Input
+            id="client-secret"
             type="password"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            placeholder="Enter your Google Sheets API key"
+            value={clientSecret}
+            onChange={(e) => setClientSecret(e.target.value)}
+            placeholder="Enter your OAuth2 Client Secret"
           />
         </div>
 
@@ -92,7 +118,13 @@ export const GoogleSheetsConfig = () => {
           <Button onClick={handleSaveConfig}>
             Save Configuration
           </Button>
-          {isConfigured && (
+          {isConfigured && !isAuthenticated && (
+            <Button variant="outline" onClick={handleAuthenticate}>
+              <Shield className="h-4 w-4 mr-2" />
+              Authenticate with Google
+            </Button>
+          )}
+          {isAuthenticated && (
             <Button variant="outline" onClick={handleTestConnection}>
               Test Connection
             </Button>
@@ -101,11 +133,28 @@ export const GoogleSheetsConfig = () => {
 
         {isConfigured && (
           <Alert>
-            <AlertDescription className="text-green-600">
-              ✓ Google Sheets is configured and ready to use
+            <AlertDescription className={isAuthenticated ? "text-green-600" : "text-yellow-600"}>
+              {isAuthenticated ? (
+                <>✓ Google Sheets is configured and authenticated</>
+              ) : (
+                <>⚠ Configuration saved. Please authenticate with Google to enable write access.</>
+              )}
             </AlertDescription>
           </Alert>
         )}
+
+        <Alert>
+          <AlertDescription>
+            <strong>Setup Instructions:</strong>
+            <ol className="list-decimal list-inside mt-2 space-y-1 text-sm">
+              <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Google Cloud Console</a></li>
+              <li>Create a new "Web application" OAuth 2.0 client</li>
+              <li>Add <code className="bg-gray-100 px-1 rounded">{window.location.origin}/oauth/callback</code> to authorized redirect URIs</li>
+              <li>Enable the Google Sheets API in your project</li>
+              <li>Copy the Client ID and Client Secret here</li>
+            </ol>
+          </AlertDescription>
+        </Alert>
       </CardContent>
     </Card>
   );
