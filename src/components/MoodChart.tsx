@@ -2,7 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Heart, TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { format, eachDayOfInterval, isSameDay } from 'date-fns';
+import { format } from 'date-fns';
 
 interface MoodEntry {
   date: Date;
@@ -12,18 +12,33 @@ interface MoodEntry {
 interface MoodChartProps {
   monthDays: Date[];
   selectedMonth: Date;
+  moodData?: MoodEntry[];
 }
 
-export const MoodChart = ({ monthDays, selectedMonth }: MoodChartProps) => {
-  // Mock mood data - in real app this would come from your mood tracking storage
-  const generateMockMoodData = (): MoodEntry[] => {
-    return monthDays.map(day => ({
-      date: day,
-      mood: Math.floor(Math.random() * 10) + 1 // Random mood between 1-10
-    }));
-  };
-
-  const moodData = generateMockMoodData();
+export const MoodChart = ({ monthDays, selectedMonth, moodData = [] }: MoodChartProps) => {
+  // Show empty state if no mood data
+  if (!moodData.length) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Heart className="h-5 w-5 text-pink-500" />
+            Monthly Mood Tracker
+          </CardTitle>
+          <CardDescription>
+            Track your daily mood fluctuations throughout {format(selectedMonth, 'MMMM yyyy')}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="py-8">
+          <div className="text-center text-gray-500">
+            <Heart className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <p>No mood data available for {format(selectedMonth, 'MMMM yyyy')}</p>
+            <p className="text-sm">Start tracking your daily mood to see insights here</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const chartData = moodData.map(entry => ({
     date: format(entry.date, 'MMM dd'),

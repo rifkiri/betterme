@@ -10,21 +10,8 @@ interface TeamMoodChartProps {
 }
 
 export const TeamMoodChart = ({ teamData }: TeamMoodChartProps) => {
-  // Generate mock team mood data for the past 30 days
-  const generateTeamMoodData = () => {
-    const days = Array.from({ length: 30 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (29 - i));
-      return {
-        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        teamAverage: Math.floor(Math.random() * 3) + 6 + Math.sin(Math.random() * Math.PI) * 1.5 // 5-9 range
-      };
-    });
-
-    return days;
-  };
-
-  const chartData = generateTeamMoodData();
+  // Use real mood data from teamData or empty array
+  const chartData = teamData.moodData || [];
 
   const getMoodIcon = (trend?: string) => {
     if (trend === 'improving') return <TrendingUp className="h-4 w-4 text-green-500" />;
@@ -44,6 +31,30 @@ export const TeamMoodChart = ({ teamData }: TeamMoodChartProps) => {
     return 'Terrible';
   };
 
+  // Show empty state if no mood data
+  if (!chartData.length) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Heart className="h-5 w-5 text-pink-500" />
+            Team Mood Overview
+          </CardTitle>
+          <CardDescription>
+            Track overall team mood trends over the past 30 days
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="py-8">
+          <div className="text-center text-gray-500">
+            <Heart className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <p>No mood data available</p>
+            <p className="text-sm">Mood tracking data will appear here once team members start logging their moods</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -61,10 +72,10 @@ export const TeamMoodChart = ({ teamData }: TeamMoodChartProps) => {
           <div className="text-center p-4 bg-blue-50 rounded-lg">
             <p className="text-sm text-gray-600">Current Average</p>
             <p className="text-2xl font-bold text-blue-600">
-              {teamData.teamStats.teamAverageMood?.toFixed(1) || '7.2'}
+              {teamData.teamStats.teamAverageMood?.toFixed(1) || '0.0'}
             </p>
             <p className="text-xs text-gray-500">
-              {getMoodLabel(teamData.teamStats.teamAverageMood || 7.2)}
+              {teamData.teamStats.teamAverageMood ? getMoodLabel(teamData.teamStats.teamAverageMood) : 'No data'}
             </p>
           </div>
           
@@ -73,7 +84,7 @@ export const TeamMoodChart = ({ teamData }: TeamMoodChartProps) => {
             <div className="flex items-center justify-center gap-2 mt-2">
               {getMoodIcon(teamData.teamStats.teamMoodTrend)}
               <span className="text-sm font-medium capitalize">
-                {teamData.teamStats.teamMoodTrend || 'stable'}
+                {teamData.teamStats.teamMoodTrend || 'No trend'}
               </span>
             </div>
           </div>
@@ -114,7 +125,7 @@ export const TeamMoodChart = ({ teamData }: TeamMoodChartProps) => {
                 
                 <Line 
                   type="monotone" 
-                  dataKey="teamAverage" 
+                  dataKey="mood" 
                   stroke="#1f2937" 
                   strokeWidth={3}
                   name="Team Average"

@@ -6,27 +6,10 @@ import { Heart, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface IndividualMoodChartProps {
   employeeName: string;
+  moodData?: Array<{ date: string; mood: number; }>;
 }
 
-export const IndividualMoodChart = ({ employeeName }: IndividualMoodChartProps) => {
-  // Generate mock mood data for the selected employee for the past 30 days
-  const generateMoodData = () => {
-    const days = Array.from({ length: 30 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (29 - i));
-      return {
-        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        mood: Math.floor(Math.random() * 4) + 6 + Math.sin(i * 0.2) * 1.5 // 4.5-9.5 range with some variation
-      };
-    });
-    return days;
-  };
-
-  const chartData = generateMoodData();
-  const currentMood = chartData[chartData.length - 1].mood;
-  const averageMood = chartData.reduce((sum, day) => sum + day.mood, 0) / chartData.length;
-  const trend = currentMood > averageMood ? 'improving' : currentMood < averageMood ? 'declining' : 'stable';
-
+export const IndividualMoodChart = ({ employeeName, moodData = [] }: IndividualMoodChartProps) => {
   const getMoodIcon = (trendType: string) => {
     if (trendType === 'improving') return <TrendingUp className="h-4 w-4 text-green-500" />;
     if (trendType === 'declining') return <TrendingDown className="h-4 w-4 text-red-500" />;
@@ -51,6 +34,34 @@ export const IndividualMoodChart = ({ employeeName }: IndividualMoodChartProps) 
     if (mood >= 4) return '#f59e0b'; // yellow
     return '#ef4444'; // red
   };
+
+  // Show empty state if no mood data
+  if (!moodData.length) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Heart className="h-5 w-5 text-pink-500" />
+            {employeeName}'s Mood Trends
+          </CardTitle>
+          <CardDescription>
+            Track mood fluctuations over the past 30 days
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="py-8">
+          <div className="text-center text-gray-500">
+            <Heart className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <p>No mood data available for {employeeName}</p>
+            <p className="text-sm">Mood tracking data will appear here once they start logging their moods</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const currentMood = moodData[moodData.length - 1].mood;
+  const averageMood = moodData.reduce((sum, day) => sum + day.mood, 0) / moodData.length;
+  const trend = currentMood > averageMood ? 'improving' : currentMood < averageMood ? 'declining' : 'stable';
 
   return (
     <Card>
@@ -96,7 +107,7 @@ export const IndividualMoodChart = ({ employeeName }: IndividualMoodChartProps) 
           <h4 className="text-sm font-medium mb-3">30-Day Mood History</h4>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
+              <LineChart data={moodData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   dataKey="date" 
