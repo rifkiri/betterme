@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { googleSheetsService } from '@/services/GoogleSheetsService';
 import { Habit, Task, WeeklyOutput } from '@/types/productivity';
@@ -351,12 +350,15 @@ export const useProductivity = () => {
       try {
         await googleSheetsService.addWeeklyOutput({ ...newOutput, userId });
         await loadAllData();
+        toast.success('Weekly output saved to Google Sheets');
       } catch (error) {
+        console.error('Failed to save weekly output to Google Sheets:', error);
         toast.error('Failed to save weekly output to Google Sheets');
         setWeeklyOutputs(prev => [...prev, newOutput]);
       }
     } else {
       setWeeklyOutputs(prev => [...prev, newOutput]);
+      toast.info('Weekly output saved locally. Connect to Google Sheets to sync.');
     }
   };
 
@@ -367,7 +369,9 @@ export const useProductivity = () => {
       try {
         await googleSheetsService.updateWeeklyOutput(id, userId, updates);
         await loadAllData();
+        toast.success('Weekly output updated in Google Sheets');
       } catch (error) {
+        console.error('Failed to update weekly output in Google Sheets:', error);
         toast.error('Failed to update weekly output in Google Sheets');
         setWeeklyOutputs(prev => prev.map(output => 
           output.id === id ? { ...output, ...updates } : output
@@ -377,6 +381,7 @@ export const useProductivity = () => {
       setWeeklyOutputs(prev => prev.map(output => 
         output.id === id ? { ...output, ...updates } : output
       ));
+      toast.info('Weekly output updated locally. Connect to Google Sheets to sync.');
     }
   };
 

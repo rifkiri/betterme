@@ -1,4 +1,3 @@
-
 import { User } from '@/types/userTypes';
 import { Habit, Task, WeeklyPlan, WeeklyOutput } from '@/types/productivity';
 
@@ -650,6 +649,84 @@ export class GoogleSheetsService {
       await this.writeSheet(`WeeklyOutputs!A${rowIndex}:K${rowIndex}`, [updatedRow]);
     } catch (error) {
       console.error('Error updating weekly output:', error);
+      throw error;
+    }
+  }
+
+  // Mood data management methods
+  async getMoodData(userId: string): Promise<Array<{ id: string; userId: string; date: string; mood: number; notes?: string; }>> {
+    try {
+      const rows = await this.readSheet('MoodData!A2:E1000');
+      
+      return rows
+        .filter(row => row[1] === userId)
+        .map((row, index) => ({
+          id: row[0] || (index + 1).toString(),
+          userId: row[1],
+          date: row[2] || '',
+          mood: parseFloat(row[3]) || 0,
+          notes: row[4] || undefined
+        }));
+    } catch (error) {
+      console.error('Error fetching mood data:', error);
+      return [];
+    }
+  }
+
+  async addMoodEntry(entry: { id: string; userId: string; date: string; mood: number; notes?: string; }): Promise<void> {
+    try {
+      const newRow = [
+        entry.id,
+        entry.userId,
+        entry.date,
+        entry.mood.toString(),
+        entry.notes || ''
+      ];
+
+      const allEntries = await this.readSheet('MoodData!A2:E1000');
+      if (allEntries.length === 0) {
+        const header = ['ID', 'User ID', 'Date', 'Mood', 'Notes'];
+        await this.writeSheet('MoodData!A1:E1', [header]);
+      }
+
+      const nextRow = allEntries.length + 2;
+      await this.writeSheet(`MoodData!A${nextRow}:E${nextRow}`, [newRow]);
+    } catch (error) {
+      console.error('Error adding mood entry:', error);
+      throw error;
+    }
+  }
+
+  async updateMoodEntry(entryId: string, userId: string, updates: { mood?: number; notes?: string; }): Promise<void> {
+    try {
+      const allRows = await this.readSheet('MoodData!A2:E1000');
+      const entryIndex = allRows.findIndex(row => row[0] === entryId && row[1] === userId);
+      
+      if (entryIndex === -1) {
+        throw new Error('Mood entry not found');
+      }
+
+      const entry = allRows[entryIndex];
+      const updatedEntry = {
+        id: entry[0],
+        userId: entry[1],
+        date: entry[2],
+        mood: updates.mood !== undefined ? updates.mood : parseFloat(entry[3]) || 0,
+        notes: updates.notes !== undefined ? updates.notes : entry[4]
+      };
+
+      const updatedRow = [
+        updatedEntry.id,
+        updatedEntry.userId,
+        updatedEntry.date,
+        updatedEntry.mood.toString(),
+        updatedEntry.notes || ''
+      ];
+
+      const rowIndex = entryIndex + 2;
+      await this.writeSheet(`MoodData!A${rowIndex}:E${rowIndex}`, [updatedRow]);
+    } catch (error) {
+      console.error('Error updating mood entry:', error);
       throw error;
     }
   }
