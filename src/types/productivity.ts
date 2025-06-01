@@ -3,6 +3,7 @@ export interface Habit {
   id: string;
   userId?: string;
   name: string;
+  description?: string;
   completed: boolean;
   streak: number;
   category?: string;
@@ -15,6 +16,7 @@ export interface Task {
   id: string;
   userId?: string;
   title: string;
+  description?: string;
   priority: 'Low' | 'Medium' | 'High';
   completed: boolean;
   estimatedTime?: string;
@@ -25,15 +27,18 @@ export interface Task {
   isMoved: boolean;
   isDeleted?: boolean;
   deletedDate?: Date;
+  weeklyOutputId?: string;
 }
 
 export interface WeeklyPlan {
   id: string;
   userId?: string;
   week: string;
+  weekStartDate: Date;
   goals: string[];
   priorities: string[];
   notes?: string;
+  tasks: Task[];
   createdAt: Date;
   updatedAt: Date;
 }

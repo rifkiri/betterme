@@ -3,19 +3,12 @@ import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { WeeklyOutput } from '@/types/productivity';
+import { WeeklyOutput, Task } from '@/types/productivity';
 import { TaskForm } from './task/TaskForm';
 import { TaskFormValues } from './task/taskFormSchema';
 
 interface AddTaskDialogProps {
-  onAddTask: (task: {
-    title: string;
-    description?: string;
-    priority: 'High' | 'Medium' | 'Low';
-    estimatedTime?: string;
-    dueDate?: Date;
-    weeklyOutputId?: string;
-  }) => void;
+  onAddTask: (task: Omit<Task, 'id' | 'completed' | 'createdDate' | 'isMoved'>) => void;
   weeklyOutputs: WeeklyOutput[];
 }
 
@@ -31,7 +24,7 @@ export const AddTaskDialog = ({
       description: values.description || undefined,
       priority: values.priority,
       estimatedTime: values.estimatedTime || undefined,
-      dueDate: values.dueDate,
+      dueDate: values.dueDate || new Date(),
       weeklyOutputId: values.weeklyOutputId || undefined
     });
     setOpen(false);
