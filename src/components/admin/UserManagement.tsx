@@ -1,13 +1,16 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { UserTable } from './UserTable';
 import { AddUserDialog } from './AddUserDialog';
+import { GoogleSheetsConfig } from './GoogleSheetsConfig';
 import { User } from '@/types/userTypes';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, RefreshCw } from 'lucide-react';
+import { googleSheetsService } from '@/services/GoogleSheetsService';
+import { toast } from 'sonner';
 
-// Mock users data with position information
+// Mock users data as fallback
 const initialUsers: User[] = [
   {
     id: '1',
@@ -61,41 +64,124 @@ const initialUsers: User[] = [
 export const UserManagement = () => {
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [useGoogleSheets, setUseGoogleSheets] = useState(googleSheetsService.isConfigured());
 
-  const handleAddUser = (newUser: Omit<User, 'id' | 'createdAt'>) => {
+  // Load users from Google Sheets if configured
+  const loadUsers = async () => {
+    if (!googleSheetsService.isConfigured()) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const sheetsUsers = await googleSheetsService.getUsers();
+      if (sheetsUsers.length > 0) {
+        setUsers(sheetsUsers);
+        setUseGoogleSheets(true);
+      }
+    } catch (error) {
+      console.error('Failed to load users from Google Sheets:', error);
+      toast.error('Failed to load users from Google Sheets');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const handleAddUser = async (newUser: Omit<User, 'id' | 'createdAt'>) => {
     const user: User = {
       ...newUser,
       id: Date.now().toString(),
       createdAt: new Date().toISOString().split('T')[0]
     };
-    setUsers([...users, user]);
-    // TODO: Add user to Google Sheets
+
+    if (useGoogleSheets && googleSheetsService.isConfigured()) {
+      try {
+        await googleSheetsService.addUser(user);
+        await loadUsers(); // Reload from sheets
+        toast.success('User added to Google Sheets successfully');
+      } catch (error) {
+        toast.error('Failed to add user to Google Sheets');
+        // Fallback to local state
+        setUsers([...users, user]);
+      }
+    } else {
+      setUsers([...users, user]);
+    }
   };
 
-  const handleDeleteUser = (userId: string) => {
-    setUsers(users.filter(user => user.id !== userId));
-    // TODO: Remove user from Google Sheets
+  const handleDeleteUser = async (userId: string) => {
+    if (useGoogleSheets && googleSheetsService.isConfigured()) {
+      try {
+        await googleSheetsService.deleteUser(userId);
+        await loadUsers(); // Reload from sheets
+        toast.success('User deleted from Google Sheets successfully');
+      } catch (error) {
+        toast.error('Failed to delete user from Google Sheets');
+        // Fallback to local state
+        setUsers(users.filter(user => user.id !== userId));
+      }
+    } else {
+      setUsers(users.filter(user => user.id !== userId));
+    }
   };
 
-  const handleUpdateUser = (userId: string, updates: Partial<User>) => {
-    setUsers(users.map(user => 
-      user.id === userId ? { ...user, ...updates } : user
-    ));
-    // TODO: Update user in Google Sheets
+  const handleUpdateUser = async (userId: string, updates: Partial<User>) => {
+    if (useGoogleSheets && googleSheetsService.isConfigured()) {
+      try {
+        await googleSheetsService.updateUser(userId, updates);
+        await loadUsers(); // Reload from sheets
+        toast.success('User updated in Google Sheets successfully');
+      } catch (error) {
+        toast.error('Failed to update user in Google Sheets');
+        // Fallback to local state
+        setUsers(users.map(user => 
+          user.id === userId ? { ...user, ...updates } : user
+        ));
+      }
+    } else {
+      setUsers(users.map(user => 
+        user.id === userId ? { ...user, ...updates } : user
+      ));
+    }
   };
 
   return (
     <div className="space-y-6">
+      <GoogleSheetsConfig />
+      
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>User Management</CardTitle>
-            <CardDescription>Manage user accounts, permissions, and organizational positions</CardDescription>
+            <CardDescription>
+              Manage user accounts, permissions, and organizational positions
+              {useGoogleSheets && (
+                <span className="text-green-600"> • Connected to Google Sheets</span>
+              )}
+            </CardDescription>
           </div>
-          <Button onClick={() => setIsAddUserOpen(true)}>
-            <UserPlus className="h-4 w-4 mr-2" />
-            Add User
-          </Button>
+          <div className="flex items-center gap-2">
+            {useGoogleSheets && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={loadUsers}
+                disabled={isLoading}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            )}
+            <Button onClick={() => setIsAddUserOpen(true)}>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Add User
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <UserTable
