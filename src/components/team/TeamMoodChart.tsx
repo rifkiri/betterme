@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Heart, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { TeamData } from '@/types/teamData';
 
@@ -10,33 +10,21 @@ interface TeamMoodChartProps {
 }
 
 export const TeamMoodChart = ({ teamData }: TeamMoodChartProps) => {
-  // Generate mock mood data for the past 30 days
-  const generateMoodData = () => {
+  // Generate mock team mood data for the past 30 days
+  const generateTeamMoodData = () => {
     const days = Array.from({ length: 30 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - (29 - i));
-      return date.toISOString().split('T')[0];
+      return {
+        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        teamAverage: Math.floor(Math.random() * 3) + 6 + Math.sin(Math.random() * Math.PI) * 1.5 // 5-9 range
+      };
     });
 
-    return days.map(date => {
-      const dayData: any = { date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) };
-      
-      // Add mood data for each team member
-      teamData.membersSummary.forEach(member => {
-        dayData[member.name] = Math.floor(Math.random() * 4) + 6 + Math.sin(Math.random() * Math.PI) * 2; // 4-10 range with some variation
-      });
-
-      // Calculate team average
-      const moodValues = teamData.membersSummary.map(member => dayData[member.name]);
-      dayData.teamAverage = moodValues.reduce((sum, mood) => sum + mood, 0) / moodValues.length;
-
-      return dayData;
-    });
+    return days;
   };
 
-  const chartData = generateMoodData();
-  
-  const colors = ['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#6366f1', '#84cc16'];
+  const chartData = generateTeamMoodData();
 
   const getMoodIcon = (trend?: string) => {
     if (trend === 'improving') return <TrendingUp className="h-4 w-4 text-green-500" />;
@@ -61,18 +49,18 @@ export const TeamMoodChart = ({ teamData }: TeamMoodChartProps) => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Heart className="h-5 w-5 text-pink-500" />
-          Team Mood Trends
+          Team Mood Overview
         </CardTitle>
         <CardDescription>
-          Track individual and team mood fluctuations over the past 30 days
+          Track overall team mood trends over the past 30 days
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Team Mood Summary */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="text-center p-3 bg-blue-50 rounded-lg">
-            <p className="text-sm text-gray-600">Team Average</p>
-            <p className="text-xl font-bold text-blue-600">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="text-center p-4 bg-blue-50 rounded-lg">
+            <p className="text-sm text-gray-600">Current Average</p>
+            <p className="text-2xl font-bold text-blue-600">
               {teamData.teamStats.teamAverageMood?.toFixed(1) || '7.2'}
             </p>
             <p className="text-xs text-gray-500">
@@ -80,9 +68,9 @@ export const TeamMoodChart = ({ teamData }: TeamMoodChartProps) => {
             </p>
           </div>
           
-          <div className="text-center p-3 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-600">Team Trend</p>
-            <div className="flex items-center justify-center gap-1">
+          <div className="text-center p-4 bg-gray-50 rounded-lg">
+            <p className="text-sm text-gray-600">Trend</p>
+            <div className="flex items-center justify-center gap-2 mt-2">
               {getMoodIcon(teamData.teamStats.teamMoodTrend)}
               <span className="text-sm font-medium capitalize">
                 {teamData.teamStats.teamMoodTrend || 'stable'}
@@ -90,55 +78,19 @@ export const TeamMoodChart = ({ teamData }: TeamMoodChartProps) => {
             </div>
           </div>
 
-          <div className="text-center p-3 bg-green-50 rounded-lg">
-            <p className="text-sm text-gray-600">Highest</p>
-            <p className="text-xl font-bold text-green-600">
-              {Math.max(...teamData.membersSummary.map(m => m.averageMood || 7.0))}
+          <div className="text-center p-4 bg-green-50 rounded-lg">
+            <p className="text-sm text-gray-600">Team Size</p>
+            <p className="text-2xl font-bold text-green-600">
+              {teamData.activeMembers}/{teamData.totalMembers}
             </p>
-          </div>
-
-          <div className="text-center p-3 bg-red-50 rounded-lg">
-            <p className="text-sm text-gray-600">Lowest</p>
-            <p className="text-xl font-bold text-red-600">
-              {Math.min(...teamData.membersSummary.map(m => m.averageMood || 7.0))}
-            </p>
+            <p className="text-xs text-gray-500">Active Members</p>
           </div>
         </div>
 
-        {/* Individual Team Member Mood Stats */}
+        {/* Team Mood Trend Chart */}
         <div>
-          <h4 className="text-sm font-medium mb-3">Individual Mood Overview</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {teamData.membersSummary.map((member, index) => (
-              <div key={member.id} className="p-3 border rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <p className="font-medium text-sm">{member.name}</p>
-                    <p className="text-xs text-gray-500">{member.role}</p>
-                  </div>
-                  {getMoodIcon(member.moodTrend)}
-                </div>
-                <div className="flex items-center gap-2">
-                  <div 
-                    className="w-3 h-3 rounded-full" 
-                    style={{ backgroundColor: colors[index % colors.length] }}
-                  ></div>
-                  <span className="text-lg font-bold">
-                    {member.averageMood?.toFixed(1) || (Math.random() * 3 + 6).toFixed(1)}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {getMoodLabel(member.averageMood || 7)}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Mood Trend Chart */}
-        <div>
-          <h4 className="text-sm font-medium mb-3">30-Day Mood Trends</h4>
-          <div className="h-80">
+          <h4 className="text-sm font-medium mb-3">30-Day Team Mood Trend</h4>
+          <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -153,37 +105,21 @@ export const TeamMoodChart = ({ teamData }: TeamMoodChartProps) => {
                   tickCount={10}
                 />
                 <Tooltip 
-                  formatter={(value: number, name: string) => [
+                  formatter={(value: number) => [
                     `${value.toFixed(1)} - ${getMoodLabel(value)}`, 
-                    name
+                    'Team Average'
                   ]}
                   labelFormatter={(label) => `Date: ${label}`}
                 />
-                <Legend />
                 
-                {/* Team average line */}
                 <Line 
                   type="monotone" 
                   dataKey="teamAverage" 
                   stroke="#1f2937" 
                   strokeWidth={3}
-                  strokeDasharray="5 5"
                   name="Team Average"
-                  dot={{ r: 4 }}
+                  dot={{ r: 4, fill: '#1f2937' }}
                 />
-                
-                {/* Individual member lines */}
-                {teamData.membersSummary.slice(0, 5).map((member, index) => (
-                  <Line 
-                    key={member.id}
-                    type="monotone" 
-                    dataKey={member.name} 
-                    stroke={colors[index % colors.length]} 
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                    name={member.name}
-                  />
-                ))}
               </LineChart>
             </ResponsiveContainer>
           </div>
