@@ -3,184 +3,34 @@ import { User } from '@/types/userTypes';
 
 // Google Sheets API configuration
 const SHEETS_API_BASE = 'https://sheets.googleapis.com/v4/spreadsheets';
-const GOOGLE_AUTH_SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
-const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
-const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
+const SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec'; // User will need to replace this
 
-interface TokenResponse {
-  access_token: string;
-  refresh_token?: string;
-  expires_in: number;
-  token_type: string;
+interface SheetsResponse {
+  success: boolean;
+  data?: any;
+  error?: string;
 }
 
 export class GoogleSheetsService {
-  private clientId: string;
-  private clientSecret: string;
+  private apiKey: string;
   private spreadsheetId: string;
-  private accessToken: string;
-  private refreshToken: string;
-  private tokenExpiry: number;
 
   constructor() {
     // These will be set from localStorage or user input
-    this.clientId = localStorage.getItem('googleClientId') || '';
-    this.clientSecret = localStorage.getItem('googleClientSecret') || '';
+    this.apiKey = localStorage.getItem('googleSheetsApiKey') || '';
     this.spreadsheetId = localStorage.getItem('googleSheetsId') || '';
-    this.accessToken = localStorage.getItem('googleAccessToken') || '';
-    this.refreshToken = localStorage.getItem('googleRefreshToken') || '';
-    this.tokenExpiry = parseInt(localStorage.getItem('googleTokenExpiry') || '0');
   }
 
   // Configuration methods
-  setCredentials(clientId: string, clientSecret: string, spreadsheetId: string) {
-    this.clientId = clientId;
-    this.clientSecret = clientSecret;
+  setCredentials(apiKey: string, spreadsheetId: string) {
+    this.apiKey = apiKey;
     this.spreadsheetId = spreadsheetId;
-    localStorage.setItem('googleClientId', clientId);
-    localStorage.setItem('googleClientSecret', clientSecret);
+    localStorage.setItem('googleSheetsApiKey', apiKey);
     localStorage.setItem('googleSheetsId', spreadsheetId);
   }
 
   isConfigured(): boolean {
-    return !!(this.clientId && this.clientSecret && this.spreadsheetId);
-  }
-
-  isAuthenticated(): boolean {
-    return !!(this.accessToken && this.tokenExpiry > Date.now());
-  }
-
-  // OAuth2 Authentication Flow
-  getAuthUrl(): string {
-    const redirectUri = window.location.origin + '/oauth/callback';
-    const params = new URLSearchParams({
-      client_id: this.clientId,
-      redirect_uri: redirectUri,
-      scope: GOOGLE_AUTH_SCOPE,
-      response_type: 'code',
-      access_type: 'offline',
-      prompt: 'consent'
-    });
-
-    return `${GOOGLE_AUTH_URL}?${params.toString()}`;
-  }
-
-  async exchangeCodeForTokens(code: string): Promise<void> {
-    const redirectUri = window.location.origin + '/oauth/callback';
-    
-    try {
-      const response = await fetch(GOOGLE_TOKEN_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          client_id: this.clientId,
-          client_secret: this.clientSecret,
-          code: code,
-          grant_type: 'authorization_code',
-          redirect_uri: redirectUri,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Token exchange failed: ${response.status}`);
-      }
-
-      const tokens: TokenResponse = await response.json();
-      
-      this.accessToken = tokens.access_token;
-      this.tokenExpiry = Date.now() + (tokens.expires_in * 1000);
-      
-      if (tokens.refresh_token) {
-        this.refreshToken = tokens.refresh_token;
-        localStorage.setItem('googleRefreshToken', this.refreshToken);
-      }
-
-      localStorage.setItem('googleAccessToken', this.accessToken);
-      localStorage.setItem('googleTokenExpiry', this.tokenExpiry.toString());
-    } catch (error) {
-      console.error('Error exchanging code for tokens:', error);
-      throw error;
-    }
-  }
-
-  async refreshAccessToken(): Promise<void> {
-    if (!this.refreshToken) {
-      throw new Error('No refresh token available');
-    }
-
-    try {
-      const response = await fetch(GOOGLE_TOKEN_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          client_id: this.clientId,
-          client_secret: this.clientSecret,
-          refresh_token: this.refreshToken,
-          grant_type: 'refresh_token',
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Token refresh failed: ${response.status}`);
-      }
-
-      const tokens: TokenResponse = await response.json();
-      
-      this.accessToken = tokens.access_token;
-      this.tokenExpiry = Date.now() + (tokens.expires_in * 1000);
-
-      localStorage.setItem('googleAccessToken', this.accessToken);
-      localStorage.setItem('googleTokenExpiry', this.tokenExpiry.toString());
-    } catch (error) {
-      console.error('Error refreshing token:', error);
-      throw error;
-    }
-  }
-
-  private async ensureValidToken(): Promise<void> {
-    if (!this.isAuthenticated() && this.refreshToken) {
-      await this.refreshAccessToken();
-    }
-    
-    if (!this.isAuthenticated()) {
-      throw new Error('Authentication required. Please re-authenticate.');
-    }
-  }
-
-  private async makeAuthenticatedRequest(url: string, options: RequestInit = {}): Promise<Response> {
-    await this.ensureValidToken();
-
-    const headers = {
-      'Authorization': `Bearer ${this.accessToken}`,
-      'Content-Type': 'application/json',
-      ...options.headers,
-    };
-
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
-
-    if (response.status === 401) {
-      // Token might be expired, try to refresh
-      if (this.refreshToken) {
-        await this.refreshAccessToken();
-        // Retry the request with new token
-        return fetch(url, {
-          ...options,
-          headers: {
-            ...headers,
-            'Authorization': `Bearer ${this.accessToken}`,
-          },
-        });
-      }
-    }
-
-    return response;
+    return !!(this.apiKey && this.spreadsheetId);
   }
 
   // Generic method to read data from a sheet
@@ -190,12 +40,11 @@ export class GoogleSheetsService {
     }
 
     try {
-      const url = `${SHEETS_API_BASE}/${this.spreadsheetId}/values/${range}`;
-      const response = await this.makeAuthenticatedRequest(url);
+      const url = `${SHEETS_API_BASE}/${this.spreadsheetId}/values/${range}?key=${this.apiKey}`;
+      const response = await fetch(url);
       
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(`HTTP error! status: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       const data = await response.json();
@@ -213,17 +62,19 @@ export class GoogleSheetsService {
     }
 
     try {
-      const url = `${SHEETS_API_BASE}/${this.spreadsheetId}/values/${range}?valueInputOption=RAW`;
-      const response = await this.makeAuthenticatedRequest(url, {
+      const url = `${SHEETS_API_BASE}/${this.spreadsheetId}/values/${range}?valueInputOption=RAW&key=${this.apiKey}`;
+      const response = await fetch(url, {
         method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           values: values
         })
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(`HTTP error! status: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
     } catch (error) {
       console.error('Error writing to sheet:', error);
@@ -349,16 +200,6 @@ export class GoogleSheetsService {
       console.error('Error deleting user:', error);
       throw error;
     }
-  }
-
-  // Logout method
-  logout(): void {
-    this.accessToken = '';
-    this.refreshToken = '';
-    this.tokenExpiry = 0;
-    localStorage.removeItem('googleAccessToken');
-    localStorage.removeItem('googleRefreshToken');
-    localStorage.removeItem('googleTokenExpiry');
   }
 }
 
