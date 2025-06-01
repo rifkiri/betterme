@@ -7,9 +7,6 @@ export interface TeamMember {
   tasksRate: number;
   outputsRate: number;
   status: 'excellent' | 'good' | 'average' | 'needs-attention';
-  currentMood?: number;
-  averageMood?: number;
-  moodTrend?: 'improving' | 'declining' | 'stable';
 }
 
 export interface MoodEntry {

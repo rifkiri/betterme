@@ -1,13 +1,11 @@
-
 import React from 'react';
 import { TeamSummaryCards } from './team/TeamSummaryCards';
 import { OverdueItemsSection } from './team/OverdueItemsSection';
 import { TeamPerformanceTable } from './team/TeamPerformanceTable';
 import { TeamTrendsCard } from './team/TeamTrendsCard';
-import { TeamMoodChart } from './team/TeamMoodChart';
 import { TeamData } from '@/types/teamData';
 
-// Mock team data with mood information
+// Mock team data without individual mood information
 const teamData: TeamData = {
   totalMembers: 8,
   activeMembers: 7,
@@ -27,10 +25,7 @@ const teamData: TeamData = {
       habitsRate: 90,
       tasksRate: 95,
       outputsRate: 88,
-      status: 'excellent',
-      currentMood: 8,
-      averageMood: 8.2,
-      moodTrend: 'stable'
+      status: 'excellent'
     },
     {
       id: '2',
@@ -39,10 +34,7 @@ const teamData: TeamData = {
       habitsRate: 85,
       tasksRate: 78,
       outputsRate: 82,
-      status: 'good',
-      currentMood: 7,
-      averageMood: 7.1,
-      moodTrend: 'improving'
+      status: 'good'
     },
     {
       id: '3',
@@ -51,10 +43,7 @@ const teamData: TeamData = {
       habitsRate: 75,
       tasksRate: 88,
       outputsRate: 65,
-      status: 'average',
-      currentMood: 6,
-      averageMood: 6.8,
-      moodTrend: 'declining'
+      status: 'average'
     },
     {
       id: '4',
@@ -63,10 +52,7 @@ const teamData: TeamData = {
       habitsRate: 60,
       tasksRate: 70,
       outputsRate: 55,
-      status: 'needs-attention',
-      currentMood: 5,
-      averageMood: 6.2,
-      moodTrend: 'declining'
+      status: 'needs-attention'
     },
     {
       id: '5',
@@ -75,10 +61,7 @@ const teamData: TeamData = {
       habitsRate: 88,
       tasksRate: 92,
       outputsRate: 78,
-      status: 'good',
-      currentMood: 8,
-      averageMood: 7.9,
-      moodTrend: 'stable'
+      status: 'good'
     }
   ],
   overdueTasks: [
@@ -147,7 +130,6 @@ export const TeamOverview = () => {
   return (
     <div className="space-y-6">
       <TeamSummaryCards teamData={teamData} />
-      <TeamMoodChart teamData={teamData} />
       <OverdueItemsSection teamData={teamData} />
       <TeamPerformanceTable teamData={teamData} />
       <TeamTrendsCard teamData={teamData} />

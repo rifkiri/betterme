@@ -6,6 +6,7 @@ import { OverdueSection } from './individual/OverdueSection';
 import { HabitsPerformance } from './individual/HabitsPerformance';
 import { RecentTasksCard } from './individual/RecentTasksCard';
 import { WeeklyOutputsProgress } from './individual/WeeklyOutputsProgress';
+import { IndividualMoodChart } from './individual/IndividualMoodChart';
 import { EmployeeData } from '@/types/individualData';
 
 // Mock individual data
@@ -91,6 +92,8 @@ export const IndividualPerformance = () => {
       />
 
       <EmployeeOverview employee={employee} />
+
+      <IndividualMoodChart employeeName={employee.name} />
 
       <OverdueSection 
         overdueTasks={employee.overdueTasks} 
