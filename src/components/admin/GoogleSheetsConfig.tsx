@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { googleSheetsService } from '@/services/GoogleSheetsService';
 import { toast } from 'sonner';
-import { Settings, ExternalLink, Shield } from 'lucide-react';
+import { Settings, ExternalLink, Shield, Copy } from 'lucide-react';
 
 export const GoogleSheetsConfig = () => {
   const [clientId, setClientId] = useState(localStorage.getItem('googleOAuthClientId') || '');
@@ -16,6 +16,13 @@ export const GoogleSheetsConfig = () => {
   const [isConfigured, setIsConfigured] = useState(googleSheetsService.isConfigured());
   const [isAuthenticated, setIsAuthenticated] = useState(googleSheetsService.isAuthenticated());
 
+  const redirectUri = `${window.location.origin}/oauth/callback`;
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Copied to clipboard');
+  };
+
   const handleSaveConfig = () => {
     if (!clientId || !clientSecret || !spreadsheetId) {
       toast.error('Please fill in all required fields');
@@ -23,10 +30,14 @@ export const GoogleSheetsConfig = () => {
     }
 
     try {
+      console.log('Saving Google Sheets configuration...');
       googleSheetsService.setCredentials(clientId, clientSecret, spreadsheetId);
       setIsConfigured(true);
       toast.success('Google Sheets configuration saved successfully');
+      console.log('Configuration saved, checking authentication status...');
+      setIsAuthenticated(googleSheetsService.isAuthenticated());
     } catch (error) {
+      console.error('Failed to save configuration:', error);
       toast.error('Failed to save configuration');
     }
   };
@@ -38,18 +49,26 @@ export const GoogleSheetsConfig = () => {
     }
 
     try {
+      console.log('Starting OAuth flow...');
       const authUrl = googleSheetsService.getAuthUrl();
+      console.log('Auth URL generated:', authUrl);
+      
+      // Open in same window to avoid popup blockers
       window.location.href = authUrl;
     } catch (error) {
-      toast.error('Failed to start authentication');
+      console.error('Failed to start authentication:', error);
+      toast.error('Failed to start authentication - check console for details');
     }
   };
 
   const handleTestConnection = async () => {
     try {
+      console.log('Testing Google Sheets connection...');
       await googleSheetsService.getUsers();
       toast.success('Connection test successful!');
+      console.log('Connection test passed');
     } catch (error) {
+      console.error('Connection test failed:', error);
       toast.error('Connection test failed. Please check your configuration and authentication.');
     }
   };
@@ -68,15 +87,20 @@ export const GoogleSheetsConfig = () => {
       <CardContent className="space-y-4">
         <Alert>
           <AlertDescription>
-            You'll need to create OAuth2 credentials in Google Cloud Console. 
-            <a 
-              href="https://console.cloud.google.com/apis/credentials" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-blue-600 hover:underline ml-1"
-            >
-              Go to Google Cloud Console <ExternalLink className="h-3 w-3" />
-            </a>
+            <strong>Required Redirect URI:</strong>
+            <div className="flex items-center gap-2 mt-2">
+              <code className="bg-gray-100 px-2 py-1 rounded text-sm flex-1">{redirectUri}</code>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => copyToClipboard(redirectUri)}
+              >
+                <Copy className="h-3 w-3" />
+              </Button>
+            </div>
+            <p className="mt-2 text-sm">
+              Copy this URL and add it to your OAuth2 client's authorized redirect URIs in Google Cloud Console.
+            </p>
           </AlertDescription>
         </Alert>
 
@@ -149,9 +173,10 @@ export const GoogleSheetsConfig = () => {
             <ol className="list-decimal list-inside mt-2 space-y-1 text-sm">
               <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Google Cloud Console</a></li>
               <li>Create a new "Web application" OAuth 2.0 client</li>
-              <li>Add <code className="bg-gray-100 px-1 rounded">{window.location.origin}/oauth/callback</code> to authorized redirect URIs</li>
+              <li>Copy the redirect URI above and add it to authorized redirect URIs</li>
               <li>Enable the Google Sheets API in your project</li>
               <li>Copy the Client ID and Client Secret here</li>
+              <li>Click "Save Configuration" then "Authenticate with Google"</li>
             </ol>
           </AlertDescription>
         </Alert>

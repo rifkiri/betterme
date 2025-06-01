@@ -14,27 +14,37 @@ export const OAuthCallback = () => {
 
   useEffect(() => {
     const handleCallback = async () => {
+      console.log('OAuth callback started');
+      console.log('Search params:', Object.fromEntries(searchParams.entries()));
+      
       const code = searchParams.get('code');
       const error = searchParams.get('error');
+      const errorDescription = searchParams.get('error_description');
 
       if (error) {
+        console.error('OAuth error:', error, errorDescription);
         setStatus('error');
-        setMessage(`Authentication failed: ${error}`);
-        toast.error('Authentication failed');
+        setMessage(`Authentication failed: ${error}${errorDescription ? ` - ${errorDescription}` : ''}`);
+        toast.error(`Authentication failed: ${error}`);
         setTimeout(() => navigate('/settings'), 3000);
         return;
       }
 
       if (!code) {
+        console.error('No authorization code received');
         setStatus('error');
-        setMessage('No authorization code received');
-        toast.error('Authentication failed');
+        setMessage('No authorization code received from Google');
+        toast.error('No authorization code received');
         setTimeout(() => navigate('/settings'), 3000);
         return;
       }
 
+      console.log('Authorization code received:', code.substring(0, 10) + '...');
+
       try {
+        console.log('Exchanging code for tokens...');
         await googleSheetsService.exchangeCodeForTokens(code);
+        console.log('Token exchange successful');
         setStatus('success');
         setMessage('Successfully authenticated with Google Sheets!');
         toast.success('Authentication successful!');
@@ -42,8 +52,8 @@ export const OAuthCallback = () => {
       } catch (error) {
         console.error('OAuth callback error:', error);
         setStatus('error');
-        setMessage('Failed to complete authentication');
-        toast.error('Authentication failed');
+        setMessage(`Failed to complete authentication: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        toast.error('Authentication failed - check console for details');
         setTimeout(() => navigate('/settings'), 3000);
       }
     };
@@ -75,9 +85,12 @@ export const OAuthCallback = () => {
             </p>
           )}
           {status === 'error' && (
-            <p className="text-sm text-red-600">
-              Redirecting to settings...
-            </p>
+            <div className="text-sm space-y-2">
+              <p className="text-red-600">Redirecting to settings...</p>
+              <p className="text-xs text-muted-foreground">
+                Check the console for detailed error information
+              </p>
+            </div>
           )}
         </CardContent>
       </Card>

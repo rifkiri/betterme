@@ -1,4 +1,3 @@
-
 import { User } from '@/types/userTypes';
 
 // Google Sheets API configuration
@@ -32,24 +31,44 @@ export class GoogleSheetsService {
 
   // Configuration methods
   setCredentials(clientId: string, clientSecret: string, spreadsheetId: string) {
+    console.log('Setting Google Sheets credentials...');
     this.clientId = clientId;
     this.clientSecret = clientSecret;
     this.spreadsheetId = spreadsheetId;
     localStorage.setItem('googleOAuthClientId', clientId);
     localStorage.setItem('googleOAuthClientSecret', clientSecret);
     localStorage.setItem('googleSheetsId', spreadsheetId);
+    console.log('Credentials saved to localStorage');
   }
 
   isConfigured(): boolean {
-    return !!(this.clientId && this.clientSecret && this.spreadsheetId);
+    const configured = !!(this.clientId && this.clientSecret && this.spreadsheetId);
+    console.log('Configuration status:', { 
+      configured, 
+      hasClientId: !!this.clientId, 
+      hasClientSecret: !!this.clientSecret, 
+      hasSpreadsheetId: !!this.spreadsheetId 
+    });
+    return configured;
   }
 
   isAuthenticated(): boolean {
-    return !!(this.accessToken && Date.now() < this.tokenExpiry);
+    const authenticated = !!(this.accessToken && Date.now() < this.tokenExpiry);
+    console.log('Authentication status:', { 
+      authenticated, 
+      hasAccessToken: !!this.accessToken, 
+      tokenExpiry: new Date(this.tokenExpiry).toISOString(),
+      isExpired: Date.now() >= this.tokenExpiry
+    });
+    return authenticated;
   }
 
   // OAuth2 flow methods
   getAuthUrl(): string {
+    if (!this.isConfigured()) {
+      throw new Error('Google Sheets not configured. Please set credentials first.');
+    }
+
     const redirectUri = `${window.location.origin}/oauth/callback`;
     const scope = 'https://www.googleapis.com/auth/spreadsheets';
     const params = new URLSearchParams({
@@ -61,42 +80,64 @@ export class GoogleSheetsService {
       prompt: 'consent'
     });
 
-    return `${GOOGLE_AUTH_URL}?${params.toString()}`;
+    const authUrl = `${GOOGLE_AUTH_URL}?${params.toString()}`;
+    console.log('Generated auth URL with params:', Object.fromEntries(params.entries()));
+    return authUrl;
   }
 
   async exchangeCodeForTokens(code: string): Promise<void> {
+    console.log('Exchanging authorization code for tokens...');
     const redirectUri = `${window.location.origin}/oauth/callback`;
     
-    const response = await fetch(GOOGLE_TOKEN_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        client_id: this.clientId,
-        client_secret: this.clientSecret,
-        code: code,
-        grant_type: 'authorization_code',
-        redirect_uri: redirectUri
-      })
-    });
+    const requestBody = {
+      client_id: this.clientId,
+      client_secret: this.clientSecret,
+      code: code,
+      grant_type: 'authorization_code',
+      redirect_uri: redirectUri
+    };
 
-    if (!response.ok) {
-      throw new Error('Failed to exchange code for tokens');
+    console.log('Token request params:', { ...requestBody, client_secret: '[REDACTED]', code: code.substring(0, 10) + '...' });
+
+    try {
+      const response = await fetch(GOOGLE_TOKEN_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams(requestBody)
+      });
+
+      console.log('Token response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Token exchange failed:', errorText);
+        throw new Error(`Failed to exchange code for tokens: ${response.status} ${errorText}`);
+      }
+
+      const tokens: TokenResponse = await response.json();
+      console.log('Received tokens:', { 
+        access_token: tokens.access_token.substring(0, 10) + '...', 
+        has_refresh_token: !!tokens.refresh_token,
+        expires_in: tokens.expires_in
+      });
+      
+      this.accessToken = tokens.access_token;
+      this.tokenExpiry = Date.now() + (tokens.expires_in * 1000);
+      
+      if (tokens.refresh_token) {
+        this.refreshToken = tokens.refresh_token;
+        localStorage.setItem('googleRefreshToken', this.refreshToken);
+      }
+
+      localStorage.setItem('googleAccessToken', this.accessToken);
+      localStorage.setItem('googleTokenExpiry', this.tokenExpiry.toString());
+      console.log('Tokens saved successfully');
+    } catch (error) {
+      console.error('Error during token exchange:', error);
+      throw error;
     }
-
-    const tokens: TokenResponse = await response.json();
-    
-    this.accessToken = tokens.access_token;
-    this.tokenExpiry = Date.now() + (tokens.expires_in * 1000);
-    
-    if (tokens.refresh_token) {
-      this.refreshToken = tokens.refresh_token;
-      localStorage.setItem('googleRefreshToken', this.refreshToken);
-    }
-
-    localStorage.setItem('googleAccessToken', this.accessToken);
-    localStorage.setItem('googleTokenExpiry', this.tokenExpiry.toString());
   }
 
   private async refreshAccessToken(): Promise<void> {
