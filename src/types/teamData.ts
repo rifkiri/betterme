@@ -7,6 +7,15 @@ export interface TeamMember {
   tasksRate: number;
   outputsRate: number;
   status: 'excellent' | 'good' | 'average' | 'needs-attention';
+  currentMood?: number;
+  averageMood?: number;
+  moodTrend?: 'improving' | 'declining' | 'stable';
+}
+
+export interface MoodEntry {
+  date: string;
+  mood: number;
+  memberId: string;
 }
 
 export interface OverdueTask {
@@ -35,6 +44,8 @@ export interface TeamData {
     tasksCompletionRate: number;
     outputsCompletionRate: number;
     avgHabitStreak: number;
+    teamAverageMood?: number;
+    teamMoodTrend?: 'improving' | 'declining' | 'stable';
   };
   membersSummary: TeamMember[];
   overdueTasks: OverdueTask[];
@@ -47,4 +58,5 @@ export interface TeamData {
     tasksChange: string;
     outputsChange: string;
   };
+  moodData?: MoodEntry[];
 }
