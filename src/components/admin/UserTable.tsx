@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { User, UserRole } from '@/types/userTypes';
 import { Trash2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
@@ -35,6 +36,11 @@ export const UserTable = ({ users, onDeleteUser, onUpdateUser }: UserTableProps)
     }
   };
 
+  const handleRoleChange = (userId: string, newRole: UserRole) => {
+    onUpdateUser(userId, { role: newRole });
+    toast.success('User role updated successfully');
+  };
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -55,9 +61,16 @@ export const UserTable = ({ users, onDeleteUser, onUpdateUser }: UserTableProps)
               <TableCell className="font-medium">{user.name}</TableCell>
               <TableCell>{user.email}</TableCell>
               <TableCell>
-                <Badge variant={getRoleBadgeVariant(user.role)}>
-                  {user.role.replace('-', ' ')}
-                </Badge>
+                <Select value={user.role} onValueChange={(value: UserRole) => handleRoleChange(user.id, value)}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="team-member">Team Member</SelectItem>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
               </TableCell>
               <TableCell>
                 <Badge variant={user.hasChangedPassword ? 'default' : 'outline'}>
