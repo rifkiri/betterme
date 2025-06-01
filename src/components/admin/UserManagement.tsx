@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { UserTable } from './UserTable';
 import { AddUserDialog } from './AddUserDialog';
-import { GoogleSheetsConfig } from './GoogleSheetsConfig';
 import { User } from '@/types/userTypes';
 import { UserPlus, RefreshCw } from 'lucide-react';
 import { googleSheetsService } from '@/services/GoogleSheetsService';
@@ -151,52 +150,48 @@ export const UserManagement = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <GoogleSheetsConfig />
-      
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>User Management</CardTitle>
-            <CardDescription>
-              Manage user accounts, permissions, and organizational positions
-              {useGoogleSheets && (
-                <span className="text-green-600"> • Connected to Google Sheets</span>
-              )}
-            </CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>User Management</CardTitle>
+          <CardDescription>
+            Manage user accounts, permissions, and organizational positions
             {useGoogleSheets && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={loadUsers}
-                disabled={isLoading}
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
+              <span className="text-green-600"> • Connected to Google Sheets</span>
             )}
-            <Button onClick={() => setIsAddUserOpen(true)}>
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add User
+          </CardDescription>
+        </div>
+        <div className="flex items-center gap-2">
+          {useGoogleSheets && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={loadUsers}
+              disabled={isLoading}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh
             </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <UserTable
-            users={users}
-            onDeleteUser={handleDeleteUser}
-            onUpdateUser={handleUpdateUser}
-          />
-        </CardContent>
-      </Card>
+          )}
+          <Button onClick={() => setIsAddUserOpen(true)}>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Add User
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <UserTable
+          users={users}
+          onDeleteUser={handleDeleteUser}
+          onUpdateUser={handleUpdateUser}
+        />
+      </CardContent>
 
       <AddUserDialog
         open={isAddUserOpen}
         onOpenChange={setIsAddUserOpen}
         onAddUser={handleAddUser}
       />
-    </div>
+    </Card>
   );
 };
