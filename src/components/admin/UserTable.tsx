@@ -1,12 +1,13 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { User, UserRole } from '@/types/userTypes';
-import { Trash2, Eye, EyeOff } from 'lucide-react';
+import { Trash2, Eye, Edit } from 'lucide-react';
 import { toast } from 'sonner';
+import { EditUserDialog } from './EditUserDialog';
 
 interface UserTableProps {
   users: User[];
@@ -28,6 +29,9 @@ const getRoleBadgeVariant = (role: UserRole) => {
 };
 
 export const UserTable = ({ users, onDeleteUser, onUpdateUser }: UserTableProps) => {
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
   const handleShowPassword = (user: User) => {
     if (user.temporaryPassword) {
       toast.info(`Temporary password: ${user.temporaryPassword}`);
@@ -41,66 +45,87 @@ export const UserTable = ({ users, onDeleteUser, onUpdateUser }: UserTableProps)
     toast.success('User role updated successfully');
   };
 
+  const handleEditUser = (user: User) => {
+    setEditingUser(user);
+    setIsEditDialogOpen(true);
+  };
+
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead>Last Login</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell className="font-medium">{user.name}</TableCell>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>
-                <Select value={user.role} onValueChange={(value: UserRole) => handleRoleChange(user.id, value)}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="team-member">Team Member</SelectItem>
-                    <SelectItem value="manager">Manager</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-              </TableCell>
-              <TableCell>
-                <Badge variant={user.hasChangedPassword ? 'default' : 'outline'}>
-                  {user.hasChangedPassword ? 'Active' : 'Pending'}
-                </Badge>
-              </TableCell>
-              <TableCell>{user.createdAt}</TableCell>
-              <TableCell>{user.lastLogin || 'Never'}</TableCell>
-              <TableCell className="text-right space-x-2">
-                {user.temporaryPassword && (
+    <>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead>Last Login</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {users.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell className="font-medium">{user.name}</TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>
+                  <Select value={user.role} onValueChange={(value: UserRole) => handleRoleChange(user.id, value)}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="team-member">Team Member</SelectItem>
+                      <SelectItem value="manager">Manager</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={user.hasChangedPassword ? 'default' : 'outline'}>
+                    {user.hasChangedPassword ? 'Active' : 'Pending'}
+                  </Badge>
+                </TableCell>
+                <TableCell>{user.createdAt}</TableCell>
+                <TableCell>{user.lastLogin || 'Never'}</TableCell>
+                <TableCell className="text-right space-x-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleShowPassword(user)}
+                    onClick={() => handleEditUser(user)}
                   >
-                    <Eye className="h-4 w-4" />
+                    <Edit className="h-4 w-4" />
                   </Button>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onDeleteUser(user.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+                  {user.temporaryPassword && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleShowPassword(user)}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onDeleteUser(user.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <EditUserDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        user={editingUser}
+        onUpdateUser={onUpdateUser}
+      />
+    </>
   );
 };
