@@ -25,6 +25,7 @@ export const AddTaskDialog = ({
       priority: values.priority,
       estimatedTime: values.estimatedTime || undefined,
       dueDate: values.dueDate || new Date(),
+      originalDueDate: values.dueDate || new Date(),
       weeklyOutputId: values.weeklyOutputId || undefined
     });
     setOpen(false);

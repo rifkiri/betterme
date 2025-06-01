@@ -22,7 +22,7 @@ import { AddTaskDialog } from './AddTaskDialog';
 interface TaskPlanningProps {
   tasks: Task[];
   onToggleTask: (id: string) => void;
-  onAddTask: (task: Omit<Task, 'id' | 'completed' | 'createdDate'>) => void;
+  onAddTask: (task: Omit<Task, 'id' | 'completed' | 'createdDate' | 'isMoved'>) => void;
   onRollOverTask: (taskId: string, newDueDate: Date) => void;
   getTodaysTasks: () => Task[];
   getOverdueTasks: () => Task[];
@@ -209,7 +209,7 @@ export const TaskPlanning = ({
                   </CardDescription>
                 </div>
                 <AddTaskDialog 
-                  onAddTask={(task) => onAddTask({ ...task, dueDate: selectedDate })} 
+                  onAddTask={(task) => onAddTask({ ...task, dueDate: selectedDate, originalDueDate: selectedDate })} 
                   weeklyOutputs={weeklyOutputs}
                 />
               </CardHeader>

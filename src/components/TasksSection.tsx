@@ -13,7 +13,7 @@ interface TasksSectionProps {
   tasks: Task[];
   deletedTasks: Task[];
   overdueTasks: Task[];
-  onAddTask: (task: Omit<Task, 'id' | 'completed' | 'createdDate'>) => void;
+  onAddTask: (task: Omit<Task, 'id' | 'completed' | 'createdDate' | 'isMoved'>) => void;
   onEditTask: (id: string, updates: Partial<Task>) => void;
   onToggleTask: (id: string) => void;
   onMoveTask: (taskId: string, targetDate: Date) => void;
@@ -85,7 +85,7 @@ export const TasksSection = ({
               onPermanentlyDeleteTask={onPermanentlyDeleteTask}
             />
             <AddTaskDialog 
-              onAddTask={(task) => onAddTask({ ...task, dueDate: selectedTaskDate })} 
+              onAddTask={(task) => onAddTask({ ...task, dueDate: selectedTaskDate, originalDueDate: selectedTaskDate })} 
               weeklyOutputs={weeklyOutputs}
             />
           </div>

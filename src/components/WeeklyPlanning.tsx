@@ -56,9 +56,13 @@ export const WeeklyPlanning = ({
     if (validGoals.length > 0) {
       onCreateWeeklyPlan({
         weekStartDate: weekStart,
+        week: format(weekStart, 'yyyy-MM-dd'),
         goals: validGoals,
+        priorities: validGoals, // Using goals as priorities for now
         tasks: currentWeekTasks,
-        notes: notes || undefined
+        notes: notes || undefined,
+        createdAt: new Date(),
+        updatedAt: new Date()
       });
       setGoals(['']);
       setNotes('');
