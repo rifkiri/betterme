@@ -1,371 +1,79 @@
-import { User } from '@/types/userTypes';
-import { Habit, Task, WeeklyPlan, WeeklyOutput } from '@/types/productivity';
+import { Habit, Task, WeeklyOutput, MoodEntry } from '@/types/productivity';
 
-// Google Sheets API configuration
-const SHEETS_API_BASE = 'https://sheets.googleapis.com/v4/spreadsheets';
-const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
-const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
-
-interface TokenResponse {
-  access_token: string;
-  refresh_token?: string;
-  expires_in: number;
-  token_type: string;
-}
-
-export class GoogleSheetsService {
-  private clientId: string;
-  private clientSecret: string;
-  private spreadsheetId: string;
-  private accessToken: string;
-  private refreshToken: string;
-  private tokenExpiry: number;
+class GoogleSheetsService {
+  private accessToken: string | null = null;
+  private spreadsheetId: string | null = null;
 
   constructor() {
-    this.clientId = localStorage.getItem('googleOAuthClientId') || '';
-    this.clientSecret = localStorage.getItem('googleOAuthClientSecret') || '';
-    this.spreadsheetId = localStorage.getItem('googleSheetsId') || '';
-    this.accessToken = localStorage.getItem('googleAccessToken') || '';
-    this.refreshToken = localStorage.getItem('googleRefreshToken') || '';
-    this.tokenExpiry = parseInt(localStorage.getItem('googleTokenExpiry') || '0');
+    this.loadConfig();
   }
 
-  // Configuration methods
-  setCredentials(clientId: string, clientSecret: string, spreadsheetId: string) {
-    console.log('Setting Google Sheets credentials...');
-    this.clientId = clientId;
-    this.clientSecret = clientSecret;
+  configure(accessToken: string, spreadsheetId: string) {
+    this.accessToken = accessToken;
     this.spreadsheetId = spreadsheetId;
-    localStorage.setItem('googleOAuthClientId', clientId);
-    localStorage.setItem('googleOAuthClientSecret', clientSecret);
-    localStorage.setItem('googleSheetsId', spreadsheetId);
-    console.log('Credentials saved to localStorage');
+    localStorage.setItem('googleSheetsConfig', JSON.stringify({ accessToken, spreadsheetId }));
+  }
+
+  loadConfig() {
+    const config = localStorage.getItem('googleSheetsConfig');
+    if (config) {
+      const { accessToken, spreadsheetId } = JSON.parse(config);
+      this.accessToken = accessToken;
+      this.spreadsheetId = spreadsheetId;
+    }
   }
 
   isConfigured(): boolean {
-    const configured = !!(this.clientId && this.clientSecret && this.spreadsheetId);
-    console.log('Configuration status:', { 
-      configured, 
-      hasClientId: !!this.clientId, 
-      hasClientSecret: !!this.clientSecret, 
-      hasSpreadsheetId: !!this.spreadsheetId 
-    });
-    return configured;
+    return !!this.spreadsheetId;
   }
 
   isAuthenticated(): boolean {
-    const authenticated = !!(this.accessToken && Date.now() < this.tokenExpiry);
-    console.log('Authentication status:', { 
-      authenticated, 
-      hasAccessToken: !!this.accessToken, 
-      tokenExpiry: new Date(this.tokenExpiry).toISOString(),
-      isExpired: Date.now() >= this.tokenExpiry
-    });
-    return authenticated;
+    return !!this.accessToken;
   }
 
-  // OAuth2 flow methods
-  getAuthUrl(): string {
-    if (!this.isConfigured()) {
-      throw new Error('Google Sheets not configured. Please set credentials first.');
-    }
-
-    const redirectUri = `${window.location.origin}/oauth/callback`;
-    const scope = 'https://www.googleapis.com/auth/spreadsheets';
-    const params = new URLSearchParams({
-      client_id: this.clientId,
-      redirect_uri: redirectUri,
-      scope: scope,
-      response_type: 'code',
-      access_type: 'offline',
-      prompt: 'consent'
-    });
-
-    const authUrl = `${GOOGLE_AUTH_URL}?${params.toString()}`;
-    console.log('Generated auth URL with params:', Object.fromEntries(params.entries()));
-    return authUrl;
+  clearConfig() {
+    this.accessToken = null;
+    this.spreadsheetId = null;
+    localStorage.removeItem('googleSheetsConfig');
   }
 
-  async exchangeCodeForTokens(code: string): Promise<void> {
-    console.log('Exchanging authorization code for tokens...');
-    const redirectUri = `${window.location.origin}/oauth/callback`;
-    
-    const requestBody = {
-      client_id: this.clientId,
-      client_secret: this.clientSecret,
-      code: code,
-      grant_type: 'authorization_code',
-      redirect_uri: redirectUri
-    };
-
-    console.log('Token request params:', { ...requestBody, client_secret: '[REDACTED]', code: code.substring(0, 10) + '...' });
-
-    try {
-      const response = await fetch(GOOGLE_TOKEN_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams(requestBody)
-      });
-
-      console.log('Token response status:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Token exchange failed:', errorText);
-        throw new Error(`Failed to exchange code for tokens: ${response.status} ${errorText}`);
-      }
-
-      const tokens: TokenResponse = await response.json();
-      console.log('Received tokens:', { 
-        access_token: tokens.access_token.substring(0, 10) + '...', 
-        has_refresh_token: !!tokens.refresh_token,
-        expires_in: tokens.expires_in
-      });
-      
-      this.accessToken = tokens.access_token;
-      this.tokenExpiry = Date.now() + (tokens.expires_in * 1000);
-      
-      if (tokens.refresh_token) {
-        this.refreshToken = tokens.refresh_token;
-        localStorage.setItem('googleRefreshToken', this.refreshToken);
-      }
-
-      localStorage.setItem('googleAccessToken', this.accessToken);
-      localStorage.setItem('googleTokenExpiry', this.tokenExpiry.toString());
-      console.log('Tokens saved successfully');
-    } catch (error) {
-      console.error('Error during token exchange:', error);
-      throw error;
-    }
-  }
-
-  private async refreshAccessToken(): Promise<void> {
-    if (!this.refreshToken) {
-      throw new Error('No refresh token available');
-    }
-
-    const response = await fetch(GOOGLE_TOKEN_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        client_id: this.clientId,
-        client_secret: this.clientSecret,
-        refresh_token: this.refreshToken,
-        grant_type: 'refresh_token'
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to refresh access token');
-    }
-
-    const tokens: TokenResponse = await response.json();
-    
-    this.accessToken = tokens.access_token;
-    this.tokenExpiry = Date.now() + (tokens.expires_in * 1000);
-
-    localStorage.setItem('googleAccessToken', this.accessToken);
-    localStorage.setItem('googleTokenExpiry', this.tokenExpiry.toString());
-  }
-
-  private async getValidAccessToken(): Promise<string> {
-    if (Date.now() >= this.tokenExpiry) {
-      await this.refreshAccessToken();
-    }
-    return this.accessToken;
-  }
-
-  // API methods
-  private async makeAuthorizedRequest(url: string, options: RequestInit = {}): Promise<Response> {
-    const token = await this.getValidAccessToken();
-    
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    return response;
-  }
-
-  private async readSheet(range: string): Promise<any[]> {
-    if (!this.isAuthenticated()) {
-      throw new Error('Not authenticated with Google');
-    }
-
-    try {
-      const url = `${SHEETS_API_BASE}/${this.spreadsheetId}/values/${range}`;
-      const response = await this.makeAuthorizedRequest(url);
-      const data = await response.json();
-      return data.values || [];
-    } catch (error) {
-      console.error('Error reading sheet:', error);
-      throw error;
-    }
-  }
-
-  private async writeSheet(range: string, values: any[][]): Promise<void> {
-    if (!this.isAuthenticated()) {
-      throw new Error('Not authenticated with Google');
-    }
-
-    try {
-      const url = `${SHEETS_API_BASE}/${this.spreadsheetId}/values/${range}?valueInputOption=RAW`;
-      await this.makeAuthorizedRequest(url, {
-        method: 'PUT',
-        body: JSON.stringify({ values })
-      });
-    } catch (error) {
-      console.error('Error writing to sheet:', error);
-      throw error;
-    }
-  }
-
-  // User management methods
-  async getUsers(): Promise<User[]> {
-    try {
-      const rows = await this.readSheet('Users!A2:L1000');
-      
-      return rows.map((row, index) => ({
-        id: row[0] || (index + 1).toString(),
-        name: row[1] || '',
-        email: row[2] || '',
-        role: (row[3] as any) || 'team-member',
-        position: row[4] || undefined,
-        department: row[5] || undefined,
-        manager: row[6] || undefined,
-        temporaryPassword: row[7] || undefined,
-        hasChangedPassword: row[8] === 'TRUE',
-        createdAt: row[9] || new Date().toISOString().split('T')[0],
-        lastLogin: row[10] || undefined
-      }));
-    } catch (error) {
-      console.error('Error fetching users:', error);
+  // Habits methods
+  async getHabits(userId: string): Promise<Habit[]> {
+    if (!this.isAuthenticated() || !this.spreadsheetId) {
       return [];
     }
-  }
 
-  async addUser(user: User): Promise<void> {
     try {
-      const users = await this.getUsers();
-      const newRow = [
-        user.id,
-        user.name,
-        user.email,
-        user.role,
-        user.position || '',
-        user.department || '',
-        user.manager || '',
-        user.temporaryPassword || '',
-        user.hasChangedPassword ? 'TRUE' : 'FALSE',
-        user.createdAt,
-        user.lastLogin || ''
-      ];
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/Habits`,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+          },
+        }
+      );
 
-      if (users.length === 0) {
-        const header = ['ID', 'Name', 'Email', 'Role', 'Position', 'Department', 'Manager', 'Temp Password', 'Password Changed', 'Created At', 'Last Login'];
-        await this.writeSheet('Users!A1:K1', [header]);
+      if (!response.ok) {
+        console.error('Failed to fetch habits:', response.status);
+        return [];
       }
 
-      const nextRow = users.length + 2;
-      await this.writeSheet(`Users!A${nextRow}:K${nextRow}`, [newRow]);
-    } catch (error) {
-      console.error('Error adding user:', error);
-      throw error;
-    }
-  }
+      const data = await response.json();
+      const rows = data.values || [];
 
-  async updateUser(userId: string, updates: Partial<User>): Promise<void> {
-    try {
-      const users = await this.getUsers();
-      const userIndex = users.findIndex(u => u.id === userId);
-      
-      if (userIndex === -1) {
-        throw new Error('User not found');
-      }
-
-      const updatedUser = { ...users[userIndex], ...updates };
-      const rowIndex = userIndex + 2;
-
-      const updatedRow = [
-        updatedUser.id,
-        updatedUser.name,
-        updatedUser.email,
-        updatedUser.role,
-        updatedUser.position || '',
-        updatedUser.department || '',
-        updatedUser.manager || '',
-        updatedUser.temporaryPassword || '',
-        updatedUser.hasChangedPassword ? 'TRUE' : 'FALSE',
-        updatedUser.createdAt,
-        updatedUser.lastLogin || ''
-      ];
-
-      await this.writeSheet(`Users!A${rowIndex}:K${rowIndex}`, [updatedRow]);
-    } catch (error) {
-      console.error('Error updating user:', error);
-      throw error;
-    }
-  }
-
-  async deleteUser(userId: string): Promise<void> {
-    try {
-      const users = await this.getUsers();
-      const filteredUsers = users.filter(u => u.id !== userId);
-      
-      await this.writeSheet('Users!A1:K1000', []);
-      
-      if (filteredUsers.length > 0) {
-        const header = ['ID', 'Name', 'Email', 'Role', 'Position', 'Department', 'Manager', 'Temp Password', 'Password Changed', 'Created At', 'Last Login'];
-        const rows = [header, ...filteredUsers.map(user => [
-          user.id,
-          user.name,
-          user.email,
-          user.role,
-          user.position || '',
-          user.department || '',
-          user.manager || '',
-          user.temporaryPassword || '',
-          user.hasChangedPassword ? 'TRUE' : 'FALSE',
-          user.createdAt,
-          user.lastLogin || ''
-        ])];
-        
-        await this.writeSheet(`Users!A1:K${rows.length}`, rows);
-      }
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      throw error;
-    }
-  }
-
-  // Habits management methods
-  async getHabits(userId: string): Promise<Habit[]> {
-    try {
-      const rows = await this.readSheet('Habits!A2:H1000');
-      
-      return rows
-        .filter(row => row[1] === userId)
-        .map((row, index) => ({
-          id: row[0] || (index + 1).toString(),
-          userId: row[1],
+      // Skip header row and filter by userId
+      return rows.slice(1)
+        .filter((row: string[]) => row[1] === userId) // Filter by userId
+        .map((row: string[]) => ({
+          id: row[0] || '',
           name: row[2] || '',
-          completed: row[3] === 'TRUE',
-          streak: parseInt(row[4]) || 0,
-          category: row[5] || '',
-          archived: row[6] === 'TRUE',
-          createdAt: row[7] || new Date().toISOString()
+          description: row[3] || '',
+          completed: row[4] === 'TRUE',
+          streak: parseInt(row[5]) || 0,
+          category: row[6] || '',
+          archived: row[7] === 'TRUE',
+          isDeleted: row[8] === 'TRUE',
+          createdAt: row[9] || '',
         }));
     } catch (error) {
       console.error('Error fetching habits:', error);
@@ -373,95 +81,154 @@ export class GoogleSheetsService {
     }
   }
 
-  async addHabit(habit: Habit & { userId: string }): Promise<void> {
+  async addHabit(habit: Habit & { userId: string }) {
+    if (!this.isAuthenticated() || !this.spreadsheetId) {
+      throw new Error('Not authenticated or spreadsheet not configured');
+    }
+
     try {
-      const habits = await this.getHabits(habit.userId);
-      const newRow = [
+      const values = [[
         habit.id,
         habit.userId,
         habit.name,
+        habit.description || '',
         habit.completed ? 'TRUE' : 'FALSE',
         habit.streak.toString(),
         habit.category || '',
         habit.archived ? 'TRUE' : 'FALSE',
+        habit.isDeleted ? 'TRUE' : 'FALSE',
         habit.createdAt || new Date().toISOString()
-      ];
+      ]];
 
-      if (habits.length === 0) {
-        const header = ['ID', 'User ID', 'Name', 'Completed', 'Streak', 'Category', 'Archived', 'Created At'];
-        await this.writeSheet('Habits!A1:H1', [header]);
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/Habits:append?valueInputOption=RAW`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            values: values
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Failed to add habit:', errorText);
+        throw new Error(`Failed to add habit: ${response.status} ${errorText}`);
       }
 
-      const allHabits = await this.readSheet('Habits!A2:H1000');
-      const nextRow = allHabits.length + 2;
-      await this.writeSheet(`Habits!A${nextRow}:H${nextRow}`, [newRow]);
+      return await response.json();
     } catch (error) {
       console.error('Error adding habit:', error);
       throw error;
     }
   }
 
-  async updateHabit(habitId: string, userId: string, updates: Partial<Habit>): Promise<void> {
+  async updateHabit(id: string, userId: string, updates: Partial<Habit>) {
+    if (!this.isAuthenticated() || !this.spreadsheetId) {
+      throw new Error('Not authenticated or spreadsheet not configured');
+    }
+
     try {
-      const allRows = await this.readSheet('Habits!A2:H1000');
-      const habitIndex = allRows.findIndex(row => row[0] === habitId && row[1] === userId);
+      // First, get all habits to find the row
+      const habits = await this.getHabits(userId);
+      const habitIndex = habits.findIndex(habit => habit.id === id);
       
       if (habitIndex === -1) {
         throw new Error('Habit not found');
       }
 
-      const habit = allRows[habitIndex];
-      const updatedHabit = {
-        id: habit[0],
-        userId: habit[1],
-        name: updates.name !== undefined ? updates.name : habit[2],
-        completed: updates.completed !== undefined ? updates.completed : habit[3] === 'TRUE',
-        streak: updates.streak !== undefined ? updates.streak : parseInt(habit[4]) || 0,
-        category: updates.category !== undefined ? updates.category : habit[5],
-        archived: updates.archived !== undefined ? updates.archived : habit[6] === 'TRUE',
-        createdAt: habit[7]
-      };
+      const existingHabit = habits[habitIndex];
+      const updatedHabit = { ...existingHabit, ...updates };
 
-      const updatedRow = [
+      // Prepare the row data
+      const values = [[
         updatedHabit.id,
-        updatedHabit.userId,
+        userId,
         updatedHabit.name,
+        updatedHabit.description || '',
         updatedHabit.completed ? 'TRUE' : 'FALSE',
         updatedHabit.streak.toString(),
         updatedHabit.category || '',
         updatedHabit.archived ? 'TRUE' : 'FALSE',
-        updatedHabit.createdAt
-      ];
+        updatedHabit.isDeleted ? 'TRUE' : 'FALSE',
+        updatedHabit.createdAt || new Date().toISOString()
+      ]];
 
-      const rowIndex = habitIndex + 2;
-      await this.writeSheet(`Habits!A${rowIndex}:H${rowIndex}`, [updatedRow]);
+      // Update the specific row (add 2 to account for header row and 0-based indexing)
+      const rowNumber = habitIndex + 2;
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/Habits!A${rowNumber}:J${rowNumber}?valueInputOption=RAW`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            values: values
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Failed to update habit:', errorText);
+        throw new Error(`Failed to update habit: ${response.status} ${errorText}`);
+      }
+
+      return await response.json();
     } catch (error) {
       console.error('Error updating habit:', error);
       throw error;
     }
   }
 
-  // Tasks management methods
+  // Tasks methods
   async getTasks(userId: string): Promise<Task[]> {
+    if (!this.isAuthenticated() || !this.spreadsheetId) {
+      return [];
+    }
+
     try {
-      const rows = await this.readSheet('Tasks!A2:M1000');
-      
-      return rows
-        .filter(row => row[1] === userId)
-        .map((row, index) => ({
-          id: row[0] || (index + 1).toString(),
-          userId: row[1],
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/Tasks`,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.error('Failed to fetch tasks:', response.status);
+        return [];
+      }
+
+      const data = await response.json();
+      const rows = data.values || [];
+
+      // Skip header row and filter by userId
+      return rows.slice(1)
+        .filter((row: string[]) => row[1] === userId) // Filter by userId
+        .map((row: string[]) => ({
+          id: row[0] || '',
           title: row[2] || '',
-          priority: row[3] || 'Medium',
-          completed: row[4] === 'TRUE',
-          estimatedTime: row[5] || '',
-          createdDate: row[6] ? new Date(row[6]) : new Date(),
-          dueDate: row[7] ? new Date(row[7]) : new Date(),
-          originalDueDate: row[8] ? new Date(row[8]) : undefined,
-          completedDate: row[9] ? new Date(row[9]) : undefined,
-          isMoved: row[10] === 'TRUE',
-          isDeleted: row[11] === 'TRUE',
-          deletedDate: row[12] ? new Date(row[12]) : undefined
+          description: row[3] || '',
+          priority: row[4] as 'Low' | 'Medium' | 'High',
+          completed: row[5] === 'TRUE',
+          estimatedTime: row[6] || '',
+          createdDate: row[7] ? new Date(row[7]) : new Date(),
+          dueDate: row[8] ? new Date(row[8]) : new Date(),
+          originalDueDate: row[9] ? new Date(row[9]) : undefined,
+          completedDate: row[10] ? new Date(row[10]) : undefined,
+          isMoved: row[11] === 'TRUE',
+          isDeleted: row[12] === 'TRUE',
+          deletedDate: row[13] ? new Date(row[13]) : undefined,
+          weeklyOutputId: row[14] || undefined,
         }));
     } catch (error) {
       console.error('Error fetching tasks:', error);
@@ -469,98 +236,265 @@ export class GoogleSheetsService {
     }
   }
 
-  async addTask(task: Task & { userId: string }): Promise<void> {
+  async addTask(task: Task & { userId: string }) {
+    if (!this.isAuthenticated() || !this.spreadsheetId) {
+      throw new Error('Not authenticated or spreadsheet not configured');
+    }
+
     try {
-      const newRow = [
+      const values = [[
         task.id,
         task.userId,
         task.title,
+        task.description || '',
         task.priority,
         task.completed ? 'TRUE' : 'FALSE',
         task.estimatedTime || '',
         task.createdDate.toISOString(),
         task.dueDate.toISOString(),
-        task.originalDueDate?.toISOString() || '',
-        task.completedDate?.toISOString() || '',
+        task.originalDueDate ? task.originalDueDate.toISOString() : '',
+        task.completedDate ? task.completedDate.toISOString() : '',
         task.isMoved ? 'TRUE' : 'FALSE',
         task.isDeleted ? 'TRUE' : 'FALSE',
-        task.deletedDate?.toISOString() || ''
-      ];
+        task.deletedDate ? task.deletedDate.toISOString() : '',
+        task.weeklyOutputId || ''
+      ]];
 
-      const allTasks = await this.readSheet('Tasks!A2:M1000');
-      if (allTasks.length === 0) {
-        const header = ['ID', 'User ID', 'Title', 'Priority', 'Completed', 'Estimated Time', 'Created Date', 'Due Date', 'Original Due Date', 'Completed Date', 'Is Moved', 'Is Deleted', 'Deleted Date'];
-        await this.writeSheet('Tasks!A1:M1', [header]);
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/Tasks:append?valueInputOption=RAW`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            values: values
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Failed to add task:', errorText);
+        throw new Error(`Failed to add task: ${response.status} ${errorText}`);
       }
 
-      const nextRow = allTasks.length + 2;
-      await this.writeSheet(`Tasks!A${nextRow}:M${nextRow}`, [newRow]);
+      return await response.json();
     } catch (error) {
       console.error('Error adding task:', error);
       throw error;
     }
   }
 
-  async updateTask(taskId: string, userId: string, updates: Partial<Task>): Promise<void> {
+  async updateTask(id: string, userId: string, updates: Partial<Task>) {
+    if (!this.isAuthenticated() || !this.spreadsheetId) {
+      throw new Error('Not authenticated or spreadsheet not configured');
+    }
+
     try {
-      const allRows = await this.readSheet('Tasks!A2:M1000');
-      const taskIndex = allRows.findIndex(row => row[0] === taskId && row[1] === userId);
-      
+      // First, get all tasks to find the row
+      const tasks = await this.getTasks(userId);
+      const taskIndex = tasks.findIndex(task => task.id === id);
+
       if (taskIndex === -1) {
         throw new Error('Task not found');
       }
 
-      const task = allRows[taskIndex];
-      const updatedTask = {
-        id: task[0],
-        userId: task[1],
-        title: updates.title !== undefined ? updates.title : task[2],
-        priority: updates.priority !== undefined ? updates.priority : task[3],
-        completed: updates.completed !== undefined ? updates.completed : task[4] === 'TRUE',
-        estimatedTime: updates.estimatedTime !== undefined ? updates.estimatedTime : task[5],
-        createdDate: updates.createdDate !== undefined ? updates.createdDate : new Date(task[6]),
-        dueDate: updates.dueDate !== undefined ? updates.dueDate : new Date(task[7]),
-        originalDueDate: updates.originalDueDate !== undefined ? updates.originalDueDate : (task[8] ? new Date(task[8]) : undefined),
-        completedDate: updates.completedDate !== undefined ? updates.completedDate : (task[9] ? new Date(task[9]) : undefined),
-        isMoved: updates.isMoved !== undefined ? updates.isMoved : task[10] === 'TRUE',
-        isDeleted: updates.isDeleted !== undefined ? updates.isDeleted : task[11] === 'TRUE',
-        deletedDate: updates.deletedDate !== undefined ? updates.deletedDate : (task[12] ? new Date(task[12]) : undefined)
-      };
+      const existingTask = tasks[taskIndex];
+      const updatedTask = { ...existingTask, ...updates };
 
-      const updatedRow = [
+      // Prepare the row data
+      const values = [[
         updatedTask.id,
-        updatedTask.userId,
+        userId,
         updatedTask.title,
+        updatedTask.description || '',
         updatedTask.priority,
         updatedTask.completed ? 'TRUE' : 'FALSE',
         updatedTask.estimatedTime || '',
         updatedTask.createdDate.toISOString(),
         updatedTask.dueDate.toISOString(),
-        updatedTask.originalDueDate?.toISOString() || '',
-        updatedTask.completedDate?.toISOString() || '',
+        updatedTask.originalDueDate ? updatedTask.originalDueDate.toISOString() : '',
+        updatedTask.completedDate ? updatedTask.completedDate.toISOString() : '',
         updatedTask.isMoved ? 'TRUE' : 'FALSE',
         updatedTask.isDeleted ? 'TRUE' : 'FALSE',
-        updatedTask.deletedDate?.toISOString() || ''
-      ];
+        updatedTask.deletedDate ? updatedTask.deletedDate.toISOString() : '',
+        updatedTask.weeklyOutputId || ''
+      ]];
 
-      const rowIndex = taskIndex + 2;
-      await this.writeSheet(`Tasks!A${rowIndex}:M${rowIndex}`, [updatedRow]);
+      // Update the specific row (add 2 to account for header row and 0-based indexing)
+      const rowNumber = taskIndex + 2;
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/Tasks!A${rowNumber}:O${rowNumber}?valueInputOption=RAW`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            values: values
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Failed to update task:', errorText);
+        throw new Error(`Failed to update task: ${response.status} ${errorText}`);
+      }
+
+      return await response.json();
     } catch (error) {
       console.error('Error updating task:', error);
       throw error;
     }
   }
 
-  // Weekly Outputs management methods
-  async getWeeklyOutputs(userId: string): Promise<WeeklyOutput[]> {
+  // Weekly Outputs methods
+  async addWeeklyOutput(output: WeeklyOutput & { userId: string }) {
+    if (!this.isAuthenticated() || !this.spreadsheetId) {
+      throw new Error('Not authenticated or spreadsheet not configured');
+    }
+
+    console.log('Adding weekly output to Google Sheets:', output);
+
     try {
-      const rows = await this.readSheet('WeeklyOutputs!A2:L1000');
+      const values = [[
+        output.id,
+        output.userId,
+        output.title,
+        output.progress.toString(),
+        output.createdDate.toISOString(),
+        output.dueDate ? output.dueDate.toISOString() : '',
+        output.originalDueDate ? output.originalDueDate.toISOString() : '',
+        output.completedDate ? output.completedDate.toISOString() : '',
+        output.isMoved ? 'TRUE' : 'FALSE',
+        output.isDeleted ? 'TRUE' : 'FALSE',
+        output.deletedDate ? output.deletedDate.toISOString() : ''
+      ]];
+
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/WeeklyOutputs:append?valueInputOption=RAW`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            values: values
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Failed to add weekly output:', errorText);
+        throw new Error(`Failed to add weekly output: ${response.status} ${errorText}`);
+      }
+
+      console.log('Weekly output added successfully');
+      return await response.json();
+    } catch (error) {
+      console.error('Error adding weekly output:', error);
+      throw error;
+    }
+  }
+
+  async updateWeeklyOutput(id: string, userId: string, updates: Partial<WeeklyOutput>) {
+    if (!this.isAuthenticated() || !this.spreadsheetId) {
+      throw new Error('Not authenticated or spreadsheet not configured');
+    }
+
+    console.log('Updating weekly output in Google Sheets:', { id, userId, updates });
+
+    try {
+      // First, get all weekly outputs to find the row
+      const outputs = await this.getWeeklyOutputs(userId);
+      const outputIndex = outputs.findIndex(output => output.id === id);
       
-      return rows
-        .filter(row => row[1] === userId)
-        .map((row, index) => ({
-          id: row[0] || (index + 1).toString(),
-          userId: row[1],
+      if (outputIndex === -1) {
+        throw new Error('Weekly output not found');
+      }
+
+      const existingOutput = outputs[outputIndex];
+      const updatedOutput = { ...existingOutput, ...updates };
+
+      // Prepare the row data
+      const values = [[
+        updatedOutput.id,
+        userId,
+        updatedOutput.title,
+        updatedOutput.progress.toString(),
+        updatedOutput.createdDate.toISOString(),
+        updatedOutput.dueDate ? updatedOutput.dueDate.toISOString() : '',
+        updatedOutput.originalDueDate ? updatedOutput.originalDueDate.toISOString() : '',
+        updatedOutput.completedDate ? updatedOutput.completedDate.toISOString() : '',
+        updatedOutput.isMoved ? 'TRUE' : 'FALSE',
+        updatedOutput.isDeleted ? 'TRUE' : 'FALSE',
+        updatedOutput.deletedDate ? updatedOutput.deletedDate.toISOString() : ''
+      ]];
+
+      // Update the specific row (add 2 to account for header row and 0-based indexing)
+      const rowNumber = outputIndex + 2;
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/WeeklyOutputs!A${rowNumber}:K${rowNumber}?valueInputOption=RAW`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            values: values
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Failed to update weekly output:', errorText);
+        throw new Error(`Failed to update weekly output: ${response.status} ${errorText}`);
+      }
+
+      console.log('Weekly output updated successfully');
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating weekly output:', error);
+      throw error;
+    }
+  }
+
+  async getWeeklyOutputs(userId: string): Promise<WeeklyOutput[]> {
+    if (!this.isAuthenticated() || !this.spreadsheetId) {
+      return [];
+    }
+
+    try {
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/WeeklyOutputs`,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.error('Failed to fetch weekly outputs:', response.status);
+        return [];
+      }
+
+      const data = await response.json();
+      const rows = data.values || [];
+      
+      // Skip header row and filter by userId
+      return rows.slice(1)
+        .filter((row: string[]) => row[1] === userId) // Filter by userId
+        .map((row: string[]) => ({
+          id: row[0] || '',
           title: row[2] || '',
           progress: parseInt(row[3]) || 0,
           createdDate: row[4] ? new Date(row[4]) : new Date(),
@@ -577,95 +511,39 @@ export class GoogleSheetsService {
     }
   }
 
-  async addWeeklyOutput(output: WeeklyOutput & { userId: string }): Promise<void> {
-    try {
-      const newRow = [
-        output.id,
-        output.userId,
-        output.title,
-        output.progress.toString(),
-        output.createdDate.toISOString(),
-        output.dueDate.toISOString(),
-        output.originalDueDate?.toISOString() || '',
-        output.completedDate?.toISOString() || '',
-        output.isMoved ? 'TRUE' : 'FALSE',
-        output.isDeleted ? 'TRUE' : 'FALSE',
-        output.deletedDate?.toISOString() || ''
-      ];
+  // Mood Tracking methods
+  async getMoodData(userId: string): Promise<MoodEntry[]> {
+    if (!this.isAuthenticated() || !this.spreadsheetId) {
+      return [];
+    }
 
-      const allOutputs = await this.readSheet('WeeklyOutputs!A2:L1000');
-      if (allOutputs.length === 0) {
-        const header = ['ID', 'User ID', 'Title', 'Progress', 'Created Date', 'Due Date', 'Original Due Date', 'Completed Date', 'Is Moved', 'Is Deleted', 'Deleted Date'];
-        await this.writeSheet('WeeklyOutputs!A1:K1', [header]);
+    try {
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/MoodTracking`,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.error('Failed to fetch mood data:', response.status);
+        return [];
       }
 
-      const nextRow = allOutputs.length + 2;
-      await this.writeSheet(`WeeklyOutputs!A${nextRow}:K${nextRow}`, [newRow]);
-    } catch (error) {
-      console.error('Error adding weekly output:', error);
-      throw error;
-    }
-  }
+      const data = await response.json();
+      const rows = data.values || [];
 
-  async updateWeeklyOutput(outputId: string, userId: string, updates: Partial<WeeklyOutput>): Promise<void> {
-    try {
-      const allRows = await this.readSheet('WeeklyOutputs!A2:L1000');
-      const outputIndex = allRows.findIndex(row => row[0] === outputId && row[1] === userId);
-      
-      if (outputIndex === -1) {
-        throw new Error('Weekly output not found');
-      }
-
-      const output = allRows[outputIndex];
-      const updatedOutput = {
-        id: output[0],
-        userId: output[1],
-        title: updates.title !== undefined ? updates.title : output[2],
-        progress: updates.progress !== undefined ? updates.progress : parseInt(output[3]) || 0,
-        createdDate: updates.createdDate !== undefined ? updates.createdDate : new Date(output[4]),
-        dueDate: updates.dueDate !== undefined ? updates.dueDate : new Date(output[5]),
-        originalDueDate: updates.originalDueDate !== undefined ? updates.originalDueDate : (output[6] ? new Date(output[6]) : undefined),
-        completedDate: updates.completedDate !== undefined ? updates.completedDate : (output[7] ? new Date(output[7]) : undefined),
-        isMoved: updates.isMoved !== undefined ? updates.isMoved : output[8] === 'TRUE',
-        isDeleted: updates.isDeleted !== undefined ? updates.isDeleted : output[9] === 'TRUE',
-        deletedDate: updates.deletedDate !== undefined ? updates.deletedDate : (output[10] ? new Date(output[10]) : undefined)
-      };
-
-      const updatedRow = [
-        updatedOutput.id,
-        updatedOutput.userId,
-        updatedOutput.title,
-        updatedOutput.progress.toString(),
-        updatedOutput.createdDate.toISOString(),
-        updatedOutput.dueDate.toISOString(),
-        updatedOutput.originalDueDate?.toISOString() || '',
-        updatedOutput.completedDate?.toISOString() || '',
-        updatedOutput.isMoved ? 'TRUE' : 'FALSE',
-        updatedOutput.isDeleted ? 'TRUE' : 'FALSE',
-        updatedOutput.deletedDate?.toISOString() || ''
-      ];
-
-      const rowIndex = outputIndex + 2;
-      await this.writeSheet(`WeeklyOutputs!A${rowIndex}:K${rowIndex}`, [updatedRow]);
-    } catch (error) {
-      console.error('Error updating weekly output:', error);
-      throw error;
-    }
-  }
-
-  // Mood data management methods
-  async getMoodData(userId: string): Promise<Array<{ id: string; userId: string; date: string; mood: number; notes?: string; }>> {
-    try {
-      const rows = await this.readSheet('MoodData!A2:E1000');
-      
-      return rows
-        .filter(row => row[1] === userId)
-        .map((row, index) => ({
-          id: row[0] || (index + 1).toString(),
-          userId: row[1],
+      // Skip header row and filter by userId
+      return rows.slice(1)
+        .filter((row: string[]) => row[1] === userId) // Filter by userId
+        .map((row: string[]) => ({
+          id: row[0] || '',
+          userId: row[1] || '',
           date: row[2] || '',
-          mood: parseFloat(row[3]) || 0,
-          notes: row[4] || undefined
+          mood: parseInt(row[3]) || 0,
+          notes: row[4] || '',
         }));
     } catch (error) {
       console.error('Error fetching mood data:', error);
@@ -673,58 +551,96 @@ export class GoogleSheetsService {
     }
   }
 
-  async addMoodEntry(entry: { id: string; userId: string; date: string; mood: number; notes?: string; }): Promise<void> {
-    try {
-      const newRow = [
-        entry.id,
-        entry.userId,
-        entry.date,
-        entry.mood.toString(),
-        entry.notes || ''
-      ];
+  async addMoodEntry(moodEntry: MoodEntry) {
+    if (!this.isAuthenticated() || !this.spreadsheetId) {
+      throw new Error('Not authenticated or spreadsheet not configured');
+    }
 
-      const allEntries = await this.readSheet('MoodData!A2:E1000');
-      if (allEntries.length === 0) {
-        const header = ['ID', 'User ID', 'Date', 'Mood', 'Notes'];
-        await this.writeSheet('MoodData!A1:E1', [header]);
+    try {
+      const values = [[
+        moodEntry.id,
+        moodEntry.userId,
+        moodEntry.date,
+        moodEntry.mood.toString(),
+        moodEntry.notes || '',
+      ]];
+
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/MoodTracking:append?valueInputOption=RAW`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            values: values
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Failed to add mood entry:', errorText);
+        throw new Error(`Failed to add mood entry: ${response.status} ${errorText}`);
       }
 
-      const nextRow = allEntries.length + 2;
-      await this.writeSheet(`MoodData!A${nextRow}:E${nextRow}`, [newRow]);
+      return await response.json();
     } catch (error) {
       console.error('Error adding mood entry:', error);
       throw error;
     }
   }
 
-  async updateMoodEntry(entryId: string, userId: string, updates: { mood?: number; notes?: string; }): Promise<void> {
+  async updateMoodEntry(id: string, userId: string, updates: Partial<MoodEntry>) {
+    if (!this.isAuthenticated() || !this.spreadsheetId) {
+      throw new Error('Not authenticated or spreadsheet not configured');
+    }
+
     try {
-      const allRows = await this.readSheet('MoodData!A2:E1000');
-      const entryIndex = allRows.findIndex(row => row[0] === entryId && row[1] === userId);
-      
-      if (entryIndex === -1) {
+      // First, get all mood entries to find the row
+      const moodEntries = await this.getMoodData(userId);
+      const moodEntryIndex = moodEntries.findIndex(entry => entry.id === id);
+
+      if (moodEntryIndex === -1) {
         throw new Error('Mood entry not found');
       }
 
-      const entry = allRows[entryIndex];
-      const updatedEntry = {
-        id: entry[0],
-        userId: entry[1],
-        date: entry[2],
-        mood: updates.mood !== undefined ? updates.mood : parseFloat(entry[3]) || 0,
-        notes: updates.notes !== undefined ? updates.notes : entry[4]
-      };
+      const existingEntry = moodEntries[moodEntryIndex];
+      const updatedEntry = { ...existingEntry, ...updates };
 
-      const updatedRow = [
+      // Prepare the row data
+      const values = [[
         updatedEntry.id,
         updatedEntry.userId,
         updatedEntry.date,
         updatedEntry.mood.toString(),
-        updatedEntry.notes || ''
-      ];
+        updatedEntry.notes || '',
+      ]];
 
-      const rowIndex = entryIndex + 2;
-      await this.writeSheet(`MoodData!A${rowIndex}:E${rowIndex}`, [updatedRow]);
+      // Update the specific row (add 2 to account for header row and 0-based indexing)
+      const rowNumber = moodEntryIndex + 2;
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/MoodTracking!A${rowNumber}:E${rowNumber}?valueInputOption=RAW`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            values: values
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Failed to update mood entry:', errorText);
+        throw new Error(`Failed to update mood entry: ${response.status} ${errorText}`);
+      }
+
+      return await response.json();
     } catch (error) {
       console.error('Error updating mood entry:', error);
       throw error;

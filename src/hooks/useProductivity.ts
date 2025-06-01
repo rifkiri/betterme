@@ -338,7 +338,10 @@ export const useProductivity = () => {
 
   // Weekly Outputs methods
   const addWeeklyOutput = async (output: Omit<WeeklyOutput, 'id' | 'createdDate'>) => {
-    if (!userId) return;
+    if (!userId) {
+      console.error('No user ID found');
+      return;
+    }
 
     const newOutput: WeeklyOutput = {
       ...output,
@@ -346,38 +349,53 @@ export const useProductivity = () => {
       createdDate: new Date(),
     };
 
+    console.log('Adding weekly output:', newOutput);
+    console.log('Google Sheets configured:', googleSheetsService.isConfigured());
+    console.log('Google Sheets authenticated:', googleSheetsService.isAuthenticated());
+
     if (googleSheetsService.isConfigured() && googleSheetsService.isAuthenticated()) {
       try {
+        console.log('Attempting to save to Google Sheets...');
         await googleSheetsService.addWeeklyOutput({ ...newOutput, userId });
+        console.log('Successfully saved to Google Sheets, reloading data...');
         await loadAllData();
         toast.success('Weekly output saved to Google Sheets');
       } catch (error) {
         console.error('Failed to save weekly output to Google Sheets:', error);
-        toast.error('Failed to save weekly output to Google Sheets');
+        toast.error('Failed to save weekly output to Google Sheets: ' + (error instanceof Error ? error.message : 'Unknown error'));
         setWeeklyOutputs(prev => [...prev, newOutput]);
       }
     } else {
+      console.log('Not authenticated or configured, saving locally');
       setWeeklyOutputs(prev => [...prev, newOutput]);
       toast.info('Weekly output saved locally. Connect to Google Sheets to sync.');
     }
   };
 
   const editWeeklyOutput = async (id: string, updates: Partial<WeeklyOutput>) => {
-    if (!userId) return;
+    if (!userId) {
+      console.error('No user ID found');
+      return;
+    }
+
+    console.log('Editing weekly output:', { id, updates });
 
     if (googleSheetsService.isConfigured() && googleSheetsService.isAuthenticated()) {
       try {
+        console.log('Attempting to update in Google Sheets...');
         await googleSheetsService.updateWeeklyOutput(id, userId, updates);
+        console.log('Successfully updated in Google Sheets, reloading data...');
         await loadAllData();
         toast.success('Weekly output updated in Google Sheets');
       } catch (error) {
         console.error('Failed to update weekly output in Google Sheets:', error);
-        toast.error('Failed to update weekly output in Google Sheets');
+        toast.error('Failed to update weekly output in Google Sheets: ' + (error instanceof Error ? error.message : 'Unknown error'));
         setWeeklyOutputs(prev => prev.map(output => 
           output.id === id ? { ...output, ...updates } : output
         ));
       }
     } else {
+      console.log('Not authenticated or configured, updating locally');
       setWeeklyOutputs(prev => prev.map(output => 
         output.id === id ? { ...output, ...updates } : output
       ));
