@@ -1,4 +1,6 @@
+
 import { User } from '@/types/userTypes';
+import { Habit, Task, WeeklyPlan, WeeklyOutput } from '@/types/productivity';
 
 // Google Sheets API configuration
 const SHEETS_API_BASE = 'https://sheets.googleapis.com/v4/spreadsheets';
@@ -345,6 +347,309 @@ export class GoogleSheetsService {
       }
     } catch (error) {
       console.error('Error deleting user:', error);
+      throw error;
+    }
+  }
+
+  // Habits management methods
+  async getHabits(userId: string): Promise<Habit[]> {
+    try {
+      const rows = await this.readSheet('Habits!A2:H1000');
+      
+      return rows
+        .filter(row => row[1] === userId)
+        .map((row, index) => ({
+          id: row[0] || (index + 1).toString(),
+          userId: row[1],
+          name: row[2] || '',
+          completed: row[3] === 'TRUE',
+          streak: parseInt(row[4]) || 0,
+          category: row[5] || '',
+          archived: row[6] === 'TRUE',
+          createdAt: row[7] || new Date().toISOString()
+        }));
+    } catch (error) {
+      console.error('Error fetching habits:', error);
+      return [];
+    }
+  }
+
+  async addHabit(habit: Habit & { userId: string }): Promise<void> {
+    try {
+      const habits = await this.getHabits(habit.userId);
+      const newRow = [
+        habit.id,
+        habit.userId,
+        habit.name,
+        habit.completed ? 'TRUE' : 'FALSE',
+        habit.streak.toString(),
+        habit.category || '',
+        habit.archived ? 'TRUE' : 'FALSE',
+        habit.createdAt || new Date().toISOString()
+      ];
+
+      if (habits.length === 0) {
+        const header = ['ID', 'User ID', 'Name', 'Completed', 'Streak', 'Category', 'Archived', 'Created At'];
+        await this.writeSheet('Habits!A1:H1', [header]);
+      }
+
+      const allHabits = await this.readSheet('Habits!A2:H1000');
+      const nextRow = allHabits.length + 2;
+      await this.writeSheet(`Habits!A${nextRow}:H${nextRow}`, [newRow]);
+    } catch (error) {
+      console.error('Error adding habit:', error);
+      throw error;
+    }
+  }
+
+  async updateHabit(habitId: string, userId: string, updates: Partial<Habit>): Promise<void> {
+    try {
+      const allRows = await this.readSheet('Habits!A2:H1000');
+      const habitIndex = allRows.findIndex(row => row[0] === habitId && row[1] === userId);
+      
+      if (habitIndex === -1) {
+        throw new Error('Habit not found');
+      }
+
+      const habit = allRows[habitIndex];
+      const updatedHabit = {
+        id: habit[0],
+        userId: habit[1],
+        name: updates.name !== undefined ? updates.name : habit[2],
+        completed: updates.completed !== undefined ? updates.completed : habit[3] === 'TRUE',
+        streak: updates.streak !== undefined ? updates.streak : parseInt(habit[4]) || 0,
+        category: updates.category !== undefined ? updates.category : habit[5],
+        archived: updates.archived !== undefined ? updates.archived : habit[6] === 'TRUE',
+        createdAt: habit[7]
+      };
+
+      const updatedRow = [
+        updatedHabit.id,
+        updatedHabit.userId,
+        updatedHabit.name,
+        updatedHabit.completed ? 'TRUE' : 'FALSE',
+        updatedHabit.streak.toString(),
+        updatedHabit.category || '',
+        updatedHabit.archived ? 'TRUE' : 'FALSE',
+        updatedHabit.createdAt
+      ];
+
+      const rowIndex = habitIndex + 2;
+      await this.writeSheet(`Habits!A${rowIndex}:H${rowIndex}`, [updatedRow]);
+    } catch (error) {
+      console.error('Error updating habit:', error);
+      throw error;
+    }
+  }
+
+  // Tasks management methods
+  async getTasks(userId: string): Promise<Task[]> {
+    try {
+      const rows = await this.readSheet('Tasks!A2:M1000');
+      
+      return rows
+        .filter(row => row[1] === userId)
+        .map((row, index) => ({
+          id: row[0] || (index + 1).toString(),
+          userId: row[1],
+          title: row[2] || '',
+          priority: row[3] || 'Medium',
+          completed: row[4] === 'TRUE',
+          estimatedTime: row[5] || '',
+          createdDate: row[6] ? new Date(row[6]) : new Date(),
+          dueDate: row[7] ? new Date(row[7]) : new Date(),
+          originalDueDate: row[8] ? new Date(row[8]) : undefined,
+          completedDate: row[9] ? new Date(row[9]) : undefined,
+          isMoved: row[10] === 'TRUE',
+          isDeleted: row[11] === 'TRUE',
+          deletedDate: row[12] ? new Date(row[12]) : undefined
+        }));
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      return [];
+    }
+  }
+
+  async addTask(task: Task & { userId: string }): Promise<void> {
+    try {
+      const newRow = [
+        task.id,
+        task.userId,
+        task.title,
+        task.priority,
+        task.completed ? 'TRUE' : 'FALSE',
+        task.estimatedTime || '',
+        task.createdDate.toISOString(),
+        task.dueDate.toISOString(),
+        task.originalDueDate?.toISOString() || '',
+        task.completedDate?.toISOString() || '',
+        task.isMoved ? 'TRUE' : 'FALSE',
+        task.isDeleted ? 'TRUE' : 'FALSE',
+        task.deletedDate?.toISOString() || ''
+      ];
+
+      const allTasks = await this.readSheet('Tasks!A2:M1000');
+      if (allTasks.length === 0) {
+        const header = ['ID', 'User ID', 'Title', 'Priority', 'Completed', 'Estimated Time', 'Created Date', 'Due Date', 'Original Due Date', 'Completed Date', 'Is Moved', 'Is Deleted', 'Deleted Date'];
+        await this.writeSheet('Tasks!A1:M1', [header]);
+      }
+
+      const nextRow = allTasks.length + 2;
+      await this.writeSheet(`Tasks!A${nextRow}:M${nextRow}`, [newRow]);
+    } catch (error) {
+      console.error('Error adding task:', error);
+      throw error;
+    }
+  }
+
+  async updateTask(taskId: string, userId: string, updates: Partial<Task>): Promise<void> {
+    try {
+      const allRows = await this.readSheet('Tasks!A2:M1000');
+      const taskIndex = allRows.findIndex(row => row[0] === taskId && row[1] === userId);
+      
+      if (taskIndex === -1) {
+        throw new Error('Task not found');
+      }
+
+      const task = allRows[taskIndex];
+      const updatedTask = {
+        id: task[0],
+        userId: task[1],
+        title: updates.title !== undefined ? updates.title : task[2],
+        priority: updates.priority !== undefined ? updates.priority : task[3],
+        completed: updates.completed !== undefined ? updates.completed : task[4] === 'TRUE',
+        estimatedTime: updates.estimatedTime !== undefined ? updates.estimatedTime : task[5],
+        createdDate: updates.createdDate !== undefined ? updates.createdDate : new Date(task[6]),
+        dueDate: updates.dueDate !== undefined ? updates.dueDate : new Date(task[7]),
+        originalDueDate: updates.originalDueDate !== undefined ? updates.originalDueDate : (task[8] ? new Date(task[8]) : undefined),
+        completedDate: updates.completedDate !== undefined ? updates.completedDate : (task[9] ? new Date(task[9]) : undefined),
+        isMoved: updates.isMoved !== undefined ? updates.isMoved : task[10] === 'TRUE',
+        isDeleted: updates.isDeleted !== undefined ? updates.isDeleted : task[11] === 'TRUE',
+        deletedDate: updates.deletedDate !== undefined ? updates.deletedDate : (task[12] ? new Date(task[12]) : undefined)
+      };
+
+      const updatedRow = [
+        updatedTask.id,
+        updatedTask.userId,
+        updatedTask.title,
+        updatedTask.priority,
+        updatedTask.completed ? 'TRUE' : 'FALSE',
+        updatedTask.estimatedTime || '',
+        updatedTask.createdDate.toISOString(),
+        updatedTask.dueDate.toISOString(),
+        updatedTask.originalDueDate?.toISOString() || '',
+        updatedTask.completedDate?.toISOString() || '',
+        updatedTask.isMoved ? 'TRUE' : 'FALSE',
+        updatedTask.isDeleted ? 'TRUE' : 'FALSE',
+        updatedTask.deletedDate?.toISOString() || ''
+      ];
+
+      const rowIndex = taskIndex + 2;
+      await this.writeSheet(`Tasks!A${rowIndex}:M${rowIndex}`, [updatedRow]);
+    } catch (error) {
+      console.error('Error updating task:', error);
+      throw error;
+    }
+  }
+
+  // Weekly Outputs management methods
+  async getWeeklyOutputs(userId: string): Promise<WeeklyOutput[]> {
+    try {
+      const rows = await this.readSheet('WeeklyOutputs!A2:L1000');
+      
+      return rows
+        .filter(row => row[1] === userId)
+        .map((row, index) => ({
+          id: row[0] || (index + 1).toString(),
+          userId: row[1],
+          title: row[2] || '',
+          progress: parseInt(row[3]) || 0,
+          createdDate: row[4] ? new Date(row[4]) : new Date(),
+          dueDate: row[5] ? new Date(row[5]) : new Date(),
+          originalDueDate: row[6] ? new Date(row[6]) : undefined,
+          completedDate: row[7] ? new Date(row[7]) : undefined,
+          isMoved: row[8] === 'TRUE',
+          isDeleted: row[9] === 'TRUE',
+          deletedDate: row[10] ? new Date(row[10]) : undefined
+        }));
+    } catch (error) {
+      console.error('Error fetching weekly outputs:', error);
+      return [];
+    }
+  }
+
+  async addWeeklyOutput(output: WeeklyOutput & { userId: string }): Promise<void> {
+    try {
+      const newRow = [
+        output.id,
+        output.userId,
+        output.title,
+        output.progress.toString(),
+        output.createdDate.toISOString(),
+        output.dueDate.toISOString(),
+        output.originalDueDate?.toISOString() || '',
+        output.completedDate?.toISOString() || '',
+        output.isMoved ? 'TRUE' : 'FALSE',
+        output.isDeleted ? 'TRUE' : 'FALSE',
+        output.deletedDate?.toISOString() || ''
+      ];
+
+      const allOutputs = await this.readSheet('WeeklyOutputs!A2:L1000');
+      if (allOutputs.length === 0) {
+        const header = ['ID', 'User ID', 'Title', 'Progress', 'Created Date', 'Due Date', 'Original Due Date', 'Completed Date', 'Is Moved', 'Is Deleted', 'Deleted Date'];
+        await this.writeSheet('WeeklyOutputs!A1:K1', [header]);
+      }
+
+      const nextRow = allOutputs.length + 2;
+      await this.writeSheet(`WeeklyOutputs!A${nextRow}:K${nextRow}`, [newRow]);
+    } catch (error) {
+      console.error('Error adding weekly output:', error);
+      throw error;
+    }
+  }
+
+  async updateWeeklyOutput(outputId: string, userId: string, updates: Partial<WeeklyOutput>): Promise<void> {
+    try {
+      const allRows = await this.readSheet('WeeklyOutputs!A2:L1000');
+      const outputIndex = allRows.findIndex(row => row[0] === outputId && row[1] === userId);
+      
+      if (outputIndex === -1) {
+        throw new Error('Weekly output not found');
+      }
+
+      const output = allRows[outputIndex];
+      const updatedOutput = {
+        id: output[0],
+        userId: output[1],
+        title: updates.title !== undefined ? updates.title : output[2],
+        progress: updates.progress !== undefined ? updates.progress : parseInt(output[3]) || 0,
+        createdDate: updates.createdDate !== undefined ? updates.createdDate : new Date(output[4]),
+        dueDate: updates.dueDate !== undefined ? updates.dueDate : new Date(output[5]),
+        originalDueDate: updates.originalDueDate !== undefined ? updates.originalDueDate : (output[6] ? new Date(output[6]) : undefined),
+        completedDate: updates.completedDate !== undefined ? updates.completedDate : (output[7] ? new Date(output[7]) : undefined),
+        isMoved: updates.isMoved !== undefined ? updates.isMoved : output[8] === 'TRUE',
+        isDeleted: updates.isDeleted !== undefined ? updates.isDeleted : output[9] === 'TRUE',
+        deletedDate: updates.deletedDate !== undefined ? updates.deletedDate : (output[10] ? new Date(output[10]) : undefined)
+      };
+
+      const updatedRow = [
+        updatedOutput.id,
+        updatedOutput.userId,
+        updatedOutput.title,
+        updatedOutput.progress.toString(),
+        updatedOutput.createdDate.toISOString(),
+        updatedOutput.dueDate.toISOString(),
+        updatedOutput.originalDueDate?.toISOString() || '',
+        updatedOutput.completedDate?.toISOString() || '',
+        updatedOutput.isMoved ? 'TRUE' : 'FALSE',
+        updatedOutput.isDeleted ? 'TRUE' : 'FALSE',
+        updatedOutput.deletedDate?.toISOString() || ''
+      ];
+
+      const rowIndex = outputIndex + 2;
+      await this.writeSheet(`WeeklyOutputs!A${rowIndex}:K${rowIndex}`, [updatedRow]);
+    } catch (error) {
+      console.error('Error updating weekly output:', error);
       throw error;
     }
   }

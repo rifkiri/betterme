@@ -1,46 +1,61 @@
 
 export interface Habit {
   id: string;
+  userId?: string;
   name: string;
-  description?: string;
   completed: boolean;
   streak: number;
   category?: string;
   archived?: boolean;
+  isDeleted?: boolean;
+  createdAt?: string;
 }
 
 export interface Task {
   id: string;
+  userId?: string;
   title: string;
-  description?: string;
-  priority: 'High' | 'Medium' | 'Low';
+  priority: 'Low' | 'Medium' | 'High';
   completed: boolean;
   estimatedTime?: string;
-  dueDate?: Date;
   createdDate: Date;
-  completedDate?: Date;
+  dueDate: Date;
   originalDueDate?: Date;
-  isMoved?: boolean;
-  weeklyOutputId?: string;
+  completedDate?: Date;
+  isMoved: boolean;
+  isDeleted?: boolean;
+  deletedDate?: Date;
 }
 
 export interface WeeklyPlan {
   id: string;
-  weekStartDate: Date;
+  userId?: string;
+  week: string;
   goals: string[];
-  tasks: Task[];
+  priorities: string[];
   notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface WeeklyOutput {
   id: string;
+  userId?: string;
   title: string;
   progress: number;
   createdDate: Date;
-  dueDate?: Date;
-  deletedDate?: Date;
-  isDeleted?: boolean;
+  dueDate: Date;
   originalDueDate?: Date;
-  isMoved?: boolean;
   completedDate?: Date;
+  isMoved?: boolean;
+  isDeleted?: boolean;
+  deletedDate?: Date;
+}
+
+export interface MoodEntry {
+  id: string;
+  userId?: string;
+  date: string;
+  mood: number;
+  notes?: string;
 }
