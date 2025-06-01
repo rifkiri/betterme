@@ -25,8 +25,8 @@ const teamData: TeamData = {
   overdueStats: {
     tasksCount: 0,
     outputsCount: 0,
-    tasksTrend: 'stable',
-    outputsTrend: 'stable',
+    tasksTrend: 'down',
+    outputsTrend: 'down',
     tasksChange: '0',
     outputsChange: '0'
   }
