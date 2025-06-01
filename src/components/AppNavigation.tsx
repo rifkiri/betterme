@@ -1,3 +1,4 @@
+
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Home, Calendar, Settings, Users } from 'lucide-react';
@@ -48,7 +49,7 @@ export const AppNavigation = () => {
       icon: Home,
       description: 'Daily productivity tracking'
     }, {
-      name: 'Dashboard',
+      name: 'My Progress',
       href: '/monthly',
       icon: Calendar,
       description: 'Monthly analytics'
