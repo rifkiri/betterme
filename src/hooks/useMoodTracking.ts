@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 interface MoodEntry {
   id: string;
-  userId?: string;
+  userId: string;
   date: string;
   mood: number;
   notes?: string;
