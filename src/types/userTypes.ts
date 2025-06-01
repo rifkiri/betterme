@@ -6,6 +6,9 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  position?: string;
+  department?: string;
+  manager?: string;
   temporaryPassword?: string;
   hasChangedPassword: boolean;
   createdAt: string;

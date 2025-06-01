@@ -19,6 +19,9 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUpdateUser }: EditU
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<UserRole>('team-member');
+  const [position, setPosition] = useState('');
+  const [department, setDepartment] = useState('');
+  const [manager, setManager] = useState('');
   const [newPassword, setNewPassword] = useState('');
 
   useEffect(() => {
@@ -26,6 +29,9 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUpdateUser }: EditU
       setName(user.name);
       setEmail(user.email);
       setRole(user.role);
+      setPosition(user.position || '');
+      setDepartment(user.department || '');
+      setManager(user.manager || '');
       setNewPassword('');
     }
   }, [user]);
@@ -50,7 +56,10 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUpdateUser }: EditU
     const updates: Partial<User> = {
       name,
       email,
-      role
+      role,
+      position: position || undefined,
+      department: department || undefined,
+      manager: manager || undefined
     };
 
     // If a new password is provided, reset the password
@@ -74,50 +83,86 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUpdateUser }: EditU
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
           <DialogDescription>
-            Update user information and optionally reset their password.
+            Update user information and organizational position.
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="edit-name">Full Name</Label>
-            <Input
-              id="edit-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter full name"
-              required
-            />
+        <form onSubmit={handleSubmit} className="space-y-4 max-h-[60vh] overflow-y-auto">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Full Name *</Label>
+              <Input
+                id="edit-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter full name"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">Email *</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter email address"
+                required
+              />
+            </div>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="edit-email">Email</Label>
-            <Input
-              id="edit-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter email address"
-              required
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-role">Role *</Label>
+              <Select value={role} onValueChange={(value: UserRole) => setRole(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="team-member">Team Member</SelectItem>
+                  <SelectItem value="manager">Manager</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-position">Position</Label>
+              <Input
+                id="edit-position"
+                value={position}
+                onChange={(e) => setPosition(e.target.value)}
+                placeholder="e.g. Senior Developer"
+              />
+            </div>
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="edit-role">Role</Label>
-            <Select value={role} onValueChange={(value: UserRole) => setRole(value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="team-member">Team Member</SelectItem>
-                <SelectItem value="manager">Manager</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-              </SelectContent>
-            </Select>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-department">Department</Label>
+              <Input
+                id="edit-department"
+                value={department}
+                onChange={(e) => setDepartment(e.target.value)}
+                placeholder="e.g. Engineering"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-manager">Manager</Label>
+              <Input
+                id="edit-manager"
+                value={manager}
+                onChange={(e) => setManager(e.target.value)}
+                placeholder="e.g. John Smith"
+              />
+            </div>
           </div>
           
           <div className="space-y-2">

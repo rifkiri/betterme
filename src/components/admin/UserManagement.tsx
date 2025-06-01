@@ -7,13 +7,15 @@ import { AddUserDialog } from './AddUserDialog';
 import { User } from '@/types/userTypes';
 import { UserPlus } from 'lucide-react';
 
-// Mock users data (replace with Google Sheets API call)
+// Mock users data with position information
 const initialUsers: User[] = [
   {
     id: '1',
     name: 'Admin User',
     email: 'admin@company.com',
     role: 'admin',
+    position: 'Chief Technology Officer',
+    department: 'Technology',
     hasChangedPassword: true,
     createdAt: '2024-01-15',
     lastLogin: '2024-05-31'
@@ -23,6 +25,9 @@ const initialUsers: User[] = [
     name: 'Manager User',
     email: 'manager@company.com',
     role: 'manager',
+    position: 'Engineering Manager',
+    department: 'Engineering',
+    manager: 'Admin User',
     hasChangedPassword: true,
     createdAt: '2024-02-01',
     lastLogin: '2024-05-30'
@@ -32,6 +37,9 @@ const initialUsers: User[] = [
     name: 'Sarah Johnson',
     email: 'sarah@company.com',
     role: 'team-member',
+    position: 'Senior Developer',
+    department: 'Engineering',
+    manager: 'Manager User',
     temporaryPassword: 'temp123',
     hasChangedPassword: false,
     createdAt: '2024-03-15'
@@ -41,6 +49,9 @@ const initialUsers: User[] = [
     name: 'Mike Chen',
     email: 'mike@company.com',
     role: 'team-member',
+    position: 'Product Manager',
+    department: 'Product',
+    manager: 'Manager User',
     hasChangedPassword: true,
     createdAt: '2024-03-20',
     lastLogin: '2024-05-29'
@@ -79,7 +90,7 @@ export const UserManagement = () => {
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>User Management</CardTitle>
-            <CardDescription>Manage user accounts and permissions</CardDescription>
+            <CardDescription>Manage user accounts, permissions, and organizational positions</CardDescription>
           </div>
           <Button onClick={() => setIsAddUserOpen(true)}>
             <UserPlus className="h-4 w-4 mr-2" />

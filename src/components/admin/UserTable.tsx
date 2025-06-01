@@ -59,6 +59,9 @@ export const UserTable = ({ users, onDeleteUser, onUpdateUser }: UserTableProps)
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Role</TableHead>
+              <TableHead>Position</TableHead>
+              <TableHead>Department</TableHead>
+              <TableHead>Manager</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Created</TableHead>
               <TableHead>Last Login</TableHead>
@@ -82,6 +85,9 @@ export const UserTable = ({ users, onDeleteUser, onUpdateUser }: UserTableProps)
                     </SelectContent>
                   </Select>
                 </TableCell>
+                <TableCell>{user.position || '-'}</TableCell>
+                <TableCell>{user.department || '-'}</TableCell>
+                <TableCell>{user.manager || '-'}</TableCell>
                 <TableCell>
                   <Badge variant={user.hasChangedPassword ? 'default' : 'outline'}>
                     {user.hasChangedPassword ? 'Active' : 'Pending'}
