@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TeamOverview } from './TeamOverview';
 import { IndividualPerformance } from './IndividualPerformance';
-import { Users, User, BarChart3 } from 'lucide-react';
+import { Users, User } from 'lucide-react';
 
 export const ManagerDashboard = () => {
   return (

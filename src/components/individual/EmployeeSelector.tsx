@@ -18,11 +18,10 @@ export const EmployeeSelector = ({ selectedEmployee, onEmployeeChange }: Employe
       <CardContent>
         <Select value={selectedEmployee} onValueChange={onEmployeeChange}>
           <SelectTrigger className="w-full md:w-[300px]">
-            <SelectValue placeholder="Select team member" />
+            <SelectValue placeholder="No team members available" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="sarah-johnson">Sarah Johnson - Senior Developer</SelectItem>
-            <SelectItem value="mike-chen">Mike Chen - Product Manager</SelectItem>
+            {/* Employee options will be populated from real data */}
           </SelectContent>
         </Select>
       </CardContent>

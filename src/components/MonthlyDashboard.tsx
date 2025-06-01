@@ -33,7 +33,7 @@ export const MonthlyDashboard = () => {
     setSelectedMonth(new Date());
   };
 
-  // Calculate monthly metrics
+  // Calculate monthly metrics from real data
   const monthlyTasks = tasks.filter(task => task.dueDate && isSameMonth(task.dueDate, selectedMonth));
   const monthlyOutputs = weeklyOutputs.filter(output => output.dueDate && isSameMonth(output.dueDate, selectedMonth));
   const completedTasks = monthlyTasks.filter(task => task.completed).length;
