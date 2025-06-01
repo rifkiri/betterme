@@ -9,59 +9,8 @@ import { UserPlus, RefreshCw } from 'lucide-react';
 import { googleSheetsService } from '@/services/GoogleSheetsService';
 import { toast } from 'sonner';
 
-// Mock users data as fallback
-const initialUsers: User[] = [
-  {
-    id: '1',
-    name: 'Admin User',
-    email: 'admin@company.com',
-    role: 'admin',
-    position: 'Chief Technology Officer',
-    department: 'Technology',
-    hasChangedPassword: true,
-    createdAt: '2024-01-15',
-    lastLogin: '2024-05-31'
-  },
-  {
-    id: '2',
-    name: 'Manager User',
-    email: 'manager@company.com',
-    role: 'manager',
-    position: 'Engineering Manager',
-    department: 'Engineering',
-    manager: 'Admin User',
-    hasChangedPassword: true,
-    createdAt: '2024-02-01',
-    lastLogin: '2024-05-30'
-  },
-  {
-    id: '3',
-    name: 'Sarah Johnson',
-    email: 'sarah@company.com',
-    role: 'team-member',
-    position: 'Senior Developer',
-    department: 'Engineering',
-    manager: 'Manager User',
-    temporaryPassword: 'temp123',
-    hasChangedPassword: false,
-    createdAt: '2024-03-15'
-  },
-  {
-    id: '4',
-    name: 'Mike Chen',
-    email: 'mike@company.com',
-    role: 'team-member',
-    position: 'Product Manager',
-    department: 'Product',
-    manager: 'Manager User',
-    hasChangedPassword: true,
-    createdAt: '2024-03-20',
-    lastLogin: '2024-05-29'
-  }
-];
-
 export const UserManagement = () => {
-  const [users, setUsers] = useState<User[]>(initialUsers);
+  const [users, setUsers] = useState<User[]>([]);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [useGoogleSheets, setUseGoogleSheets] = useState(googleSheetsService.isConfigured());
@@ -75,7 +24,7 @@ export const UserManagement = () => {
     setIsLoading(true);
     try {
       const sheetsUsers = await googleSheetsService.getUsers();
-      if (sheetsUsers.length > 0) {
+      if (sheetsUsers.length >= 0) { // Changed from > 0 to >= 0 to handle empty sheets
         setUsers(sheetsUsers);
         setUseGoogleSheets(true);
       }
