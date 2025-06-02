@@ -72,8 +72,7 @@ export class UnifiedSignInService {
       hasChangedPassword: existingUserData.has_changed_password || false,
       userStatus: existingUserData.user_status || 'active',
       createdAt: existingUserData.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
-      lastLogin: existingUserData.last_login?.split('T')[0],
-      managerId: existingUserData.manager_id || undefined
+      lastLogin: existingUserData.last_login?.split('T')[0]
     };
 
     // Check if this is a temporary password login attempt
