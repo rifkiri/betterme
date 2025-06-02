@@ -5,10 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Eye, EyeOff, Settings } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
-import { googleSheetsService } from '@/services/GoogleSheetsService';
+import { localDataService } from '@/services/LocalDataService';
 
 const SignIn = () => {
   const [email, setEmail] = useState('');
@@ -17,29 +16,21 @@ const SignIn = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const isGoogleSheetsConfigured = googleSheetsService.isConfigured() && googleSheetsService.isAuthenticated();
-
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      if (!isGoogleSheetsConfigured) {
-        toast.error('Google Sheets is not configured. Please contact your administrator.');
-        setIsLoading(false);
-        return;
-      }
-
       console.log('Attempting to authenticate user:', email);
       
-      // Fetch users from Google Sheets
-      const users = await googleSheetsService.getUsers();
-      console.log('Fetched users from Google Sheets:', users.length);
+      // Fetch users from local storage
+      const users = localDataService.getUsers();
+      console.log('Fetched users from local storage:', users.length);
       
       // Find user by email and password
       const user = users.find(u => 
         u.email.toLowerCase() === email.toLowerCase() && 
-        (u.temporaryPassword === password || u.temporaryPassword === password)
+        (u.temporaryPassword === password)
       );
       
       if (user) {
@@ -54,7 +45,7 @@ const SignIn = () => {
         }));
         
         // Update last login
-        await googleSheetsService.updateUser(user.id, {
+        localDataService.updateUser(user.id, {
           lastLogin: new Date().toISOString().split('T')[0]
         });
         
@@ -74,7 +65,7 @@ const SignIn = () => {
       }
     } catch (error) {
       console.error('Authentication error:', error);
-      toast.error('Authentication failed. Please check your connection and try again.');
+      toast.error('Authentication failed. Please try again.');
     }
     
     setIsLoading(false);
@@ -88,15 +79,6 @@ const SignIn = () => {
           <CardDescription>Enter your credentials to access your dashboard</CardDescription>
         </CardHeader>
         <CardContent>
-          {!isGoogleSheetsConfigured && (
-            <Alert className="mb-4">
-              <Settings className="h-4 w-4" />
-              <AlertDescription>
-                Google Sheets integration is not configured. Please contact your administrator to set up the connection.
-              </AlertDescription>
-            </Alert>
-          )}
-
           <form onSubmit={handleSignIn} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -107,7 +89,6 @@ const SignIn = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                disabled={!isGoogleSheetsConfigured}
               />
             </div>
             
@@ -121,7 +102,6 @@ const SignIn = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  disabled={!isGoogleSheetsConfigured}
                 />
                 <Button
                   type="button"
@@ -129,7 +109,6 @@ const SignIn = () => {
                   size="sm"
                   className="absolute right-2 top-1/2 -translate-y-1/2 h-auto p-1"
                   onClick={() => setShowPassword(!showPassword)}
-                  disabled={!isGoogleSheetsConfigured}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
@@ -139,21 +118,21 @@ const SignIn = () => {
             <Button 
               type="submit" 
               className="w-full" 
-              disabled={isLoading || !isGoogleSheetsConfigured}
+              disabled={isLoading}
             >
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
 
-          {!isGoogleSheetsConfigured && (
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-              <h4 className="font-medium text-sm text-blue-900 mb-2">Setup Required:</h4>
-              <div className="text-xs text-blue-700 space-y-1">
-                <p>• Administrator needs to configure Google Sheets integration</p>
-                <p>• Contact your system administrator for access</p>
-              </div>
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+            <h4 className="font-medium text-sm text-blue-900 mb-2">Demo Credentials:</h4>
+            <div className="text-xs text-blue-700 space-y-1">
+              <p><strong>Admin:</strong> admin@company.com / admin123</p>
+              <p><strong>Manager:</strong> sarah@company.com / manager123</p>
+              <p><strong>Developer:</strong> mike@company.com / dev123</p>
+              <p><strong>Designer:</strong> lisa@company.com / design123</p>
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
     </div>

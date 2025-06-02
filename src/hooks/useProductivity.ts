@@ -1,9 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { googleHabitsService } from '@/services/GoogleHabitsService';
-import { googleTasksService } from '@/services/GoogleTasksService';
-import { googleWeeklyOutputsService } from '@/services/GoogleWeeklyOutputsService';
-import { googleOAuthService } from '@/services/GoogleOAuthService';
+import { localDataService } from '@/services/LocalDataService';
 import { Habit, Task, WeeklyOutput } from '@/types/productivity';
 import { toast } from 'sonner';
 
@@ -24,18 +21,18 @@ export const useProductivity = () => {
 
   const userId = getCurrentUserId();
 
-  // Load all data from Google Sheets
+  // Load all data from local storage
   const loadAllData = async () => {
-    if (!userId || !googleOAuthService.isConfigured() || !googleOAuthService.isAuthenticated()) {
+    if (!userId) {
       return;
     }
 
     setIsLoading(true);
     try {
       const [habitsData, tasksData, weeklyOutputsData] = await Promise.all([
-        googleHabitsService.getHabits(userId),
-        googleTasksService.getTasks(userId),
-        googleWeeklyOutputsService.getWeeklyOutputs(userId)
+        Promise.resolve(localDataService.getHabits(userId)),
+        Promise.resolve(localDataService.getTasks(userId)),
+        Promise.resolve(localDataService.getWeeklyOutputs(userId))
       ]);
 
       setHabits(habitsData.filter(h => !h.archived && !h.isDeleted));
@@ -45,8 +42,8 @@ export const useProductivity = () => {
       setWeeklyOutputs(weeklyOutputsData.filter(w => !w.isDeleted));
       setDeletedWeeklyOutputs(weeklyOutputsData.filter(w => w.isDeleted));
     } catch (error) {
-      console.error('Failed to load data from Google Sheets:', error);
-      toast.error('Failed to load data from Google Sheets');
+      console.error('Failed to load data:', error);
+      toast.error('Failed to load data');
     } finally {
       setIsLoading(false);
     }
@@ -67,15 +64,12 @@ export const useProductivity = () => {
       streak: 0,
     };
 
-    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
-      try {
-        await googleHabitsService.addHabit({ ...newHabit, userId });
-        await loadAllData();
-      } catch (error) {
-        toast.error('Failed to save habit to Google Sheets');
-        setHabits(prev => [...prev, newHabit]);
-      }
-    } else {
+    try {
+      localDataService.addHabit({ ...newHabit, userId });
+      await loadAllData();
+      toast.success('Habit added successfully');
+    } catch (error) {
+      toast.error('Failed to add habit');
       setHabits(prev => [...prev, newHabit]);
     }
   };
@@ -83,17 +77,12 @@ export const useProductivity = () => {
   const editHabit = async (id: string, updates: Partial<Habit>) => {
     if (!userId) return;
 
-    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
-      try {
-        await googleHabitsService.updateHabit(id, userId, updates);
-        await loadAllData();
-      } catch (error) {
-        toast.error('Failed to update habit in Google Sheets');
-        setHabits(prev => prev.map(habit => 
-          habit.id === id ? { ...habit, ...updates } : habit
-        ));
-      }
-    } else {
+    try {
+      localDataService.updateHabit(id, userId, updates);
+      await loadAllData();
+      toast.success('Habit updated successfully');
+    } catch (error) {
+      toast.error('Failed to update habit');
       setHabits(prev => prev.map(habit => 
         habit.id === id ? { ...habit, ...updates } : habit
       ));
@@ -111,17 +100,11 @@ export const useProductivity = () => {
       streak: !habit.completed ? habit.streak + 1 : Math.max(0, habit.streak - 1)
     };
 
-    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
-      try {
-        await googleHabitsService.updateHabit(id, userId, updates);
-        await loadAllData();
-      } catch (error) {
-        toast.error('Failed to update habit in Google Sheets');
-        setHabits(prev => prev.map(habit => 
-          habit.id === id ? { ...habit, ...updates } : habit
-        ));
-      }
-    } else {
+    try {
+      localDataService.updateHabit(id, userId, updates);
+      await loadAllData();
+    } catch (error) {
+      toast.error('Failed to update habit');
       setHabits(prev => prev.map(habit => 
         habit.id === id ? { ...habit, ...updates } : habit
       ));
@@ -131,19 +114,12 @@ export const useProductivity = () => {
   const archiveHabit = async (id: string) => {
     if (!userId) return;
 
-    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
-      try {
-        await googleHabitsService.updateHabit(id, userId, { archived: true });
-        await loadAllData();
-      } catch (error) {
-        toast.error('Failed to archive habit in Google Sheets');
-        const habitToArchive = habits.find(habit => habit.id === id);
-        if (habitToArchive) {
-          setArchivedHabits(prev => [...prev, { ...habitToArchive, archived: true }]);
-          setHabits(prev => prev.filter(habit => habit.id !== id));
-        }
-      }
-    } else {
+    try {
+      localDataService.updateHabit(id, userId, { archived: true });
+      await loadAllData();
+      toast.success('Habit archived');
+    } catch (error) {
+      toast.error('Failed to archive habit');
       const habitToArchive = habits.find(habit => habit.id === id);
       if (habitToArchive) {
         setArchivedHabits(prev => [...prev, { ...habitToArchive, archived: true }]);
@@ -155,19 +131,12 @@ export const useProductivity = () => {
   const restoreHabit = async (id: string) => {
     if (!userId) return;
 
-    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
-      try {
-        await googleHabitsService.updateHabit(id, userId, { archived: false });
-        await loadAllData();
-      } catch (error) {
-        toast.error('Failed to restore habit in Google Sheets');
-        const habitToRestore = archivedHabits.find(habit => habit.id === id);
-        if (habitToRestore) {
-          setHabits(prev => [...prev, { ...habitToRestore, archived: false }]);
-          setArchivedHabits(prev => prev.filter(habit => habit.id !== id));
-        }
-      }
-    } else {
+    try {
+      localDataService.updateHabit(id, userId, { archived: false });
+      await loadAllData();
+      toast.success('Habit restored');
+    } catch (error) {
+      toast.error('Failed to restore habit');
       const habitToRestore = archivedHabits.find(habit => habit.id === id);
       if (habitToRestore) {
         setHabits(prev => [...prev, { ...habitToRestore, archived: false }]);
@@ -178,6 +147,7 @@ export const useProductivity = () => {
 
   const permanentlyDeleteHabit = async (id: string) => {
     setArchivedHabits(prev => prev.filter(habit => habit.id !== id));
+    toast.success('Habit permanently deleted');
   };
 
   // Tasks methods
@@ -194,15 +164,12 @@ export const useProductivity = () => {
       isMoved: false,
     };
 
-    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
-      try {
-        await googleTasksService.addTask({ ...newTask, userId });
-        await loadAllData();
-      } catch (error) {
-        toast.error('Failed to save task to Google Sheets');
-        setTasks(prev => [...prev, newTask]);
-      }
-    } else {
+    try {
+      localDataService.addTask({ ...newTask, userId });
+      await loadAllData();
+      toast.success('Task added successfully');
+    } catch (error) {
+      toast.error('Failed to add task');
       setTasks(prev => [...prev, newTask]);
     }
   };
@@ -210,17 +177,12 @@ export const useProductivity = () => {
   const editTask = async (id: string, updates: Partial<Task>) => {
     if (!userId) return;
 
-    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
-      try {
-        await googleTasksService.updateTask(id, userId, updates);
-        await loadAllData();
-      } catch (error) {
-        toast.error('Failed to update task in Google Sheets');
-        setTasks(prev => prev.map(task => 
-          task.id === id ? { ...task, ...updates } : task
-        ));
-      }
-    } else {
+    try {
+      localDataService.updateTask(id, userId, updates);
+      await loadAllData();
+      toast.success('Task updated successfully');
+    } catch (error) {
+      toast.error('Failed to update task');
       setTasks(prev => prev.map(task => 
         task.id === id ? { ...task, ...updates } : task
       ));
@@ -238,17 +200,11 @@ export const useProductivity = () => {
       completedDate: !task.completed ? new Date() : undefined
     };
 
-    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
-      try {
-        await googleTasksService.updateTask(id, userId, updates);
-        await loadAllData();
-      } catch (error) {
-        toast.error('Failed to update task in Google Sheets');
-        setTasks(prev => prev.map(task => 
-          task.id === id ? { ...task, ...updates } : task
-        ));
-      }
-    } else {
+    try {
+      localDataService.updateTask(id, userId, updates);
+      await loadAllData();
+    } catch (error) {
+      toast.error('Failed to update task');
       setTasks(prev => prev.map(task => 
         task.id === id ? { ...task, ...updates } : task
       ));
@@ -258,19 +214,12 @@ export const useProductivity = () => {
   const deleteTask = async (id: string) => {
     if (!userId) return;
 
-    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
-      try {
-        await googleTasksService.updateTask(id, userId, { isDeleted: true, deletedDate: new Date() });
-        await loadAllData();
-      } catch (error) {
-        toast.error('Failed to delete task in Google Sheets');
-        const taskToDelete = tasks.find(task => task.id === id);
-        if (taskToDelete) {
-          setDeletedTasks(prev => [...prev, taskToDelete]);
-          setTasks(prev => prev.filter(task => task.id !== id));
-        }
-      }
-    } else {
+    try {
+      localDataService.updateTask(id, userId, { isDeleted: true, deletedDate: new Date() });
+      await loadAllData();
+      toast.success('Task deleted');
+    } catch (error) {
+      toast.error('Failed to delete task');
       const taskToDelete = tasks.find(task => task.id === id);
       if (taskToDelete) {
         setDeletedTasks(prev => [...prev, taskToDelete]);
@@ -282,19 +231,12 @@ export const useProductivity = () => {
   const restoreTask = async (id: string) => {
     if (!userId) return;
 
-    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
-      try {
-        await googleTasksService.updateTask(id, userId, { isDeleted: false, deletedDate: undefined });
-        await loadAllData();
-      } catch (error) {
-        toast.error('Failed to restore task in Google Sheets');
-        const taskToRestore = deletedTasks.find(task => task.id === id);
-        if (taskToRestore) {
-          setTasks(prev => [...prev, taskToRestore]);
-          setDeletedTasks(prev => prev.filter(task => task.id !== id));
-        }
-      }
-    } else {
+    try {
+      localDataService.updateTask(id, userId, { isDeleted: false, deletedDate: undefined });
+      await loadAllData();
+      toast.success('Task restored');
+    } catch (error) {
+      toast.error('Failed to restore task');
       const taskToRestore = deletedTasks.find(task => task.id === id);
       if (taskToRestore) {
         setTasks(prev => [...prev, taskToRestore]);
@@ -305,6 +247,7 @@ export const useProductivity = () => {
 
   const permanentlyDeleteTask = async (id: string) => {
     setDeletedTasks(prev => prev.filter(task => task.id !== id));
+    toast.success('Task permanently deleted');
   };
 
   const rollOverTask = async (taskId: string, newDueDate: Date) => {
@@ -323,17 +266,12 @@ export const useProductivity = () => {
       isMoved: !isMovedBackToOriginal
     };
 
-    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
-      try {
-        await googleTasksService.updateTask(taskId, userId, updates);
-        await loadAllData();
-      } catch (error) {
-        toast.error('Failed to update task in Google Sheets');
-        setTasks(prev => prev.map(task => 
-          task.id === taskId ? { ...task, ...updates } : task
-        ));
-      }
-    } else {
+    try {
+      localDataService.updateTask(taskId, userId, updates);
+      await loadAllData();
+      toast.success('Task moved successfully');
+    } catch (error) {
+      toast.error('Failed to move task');
       setTasks(prev => prev.map(task => 
         task.id === taskId ? { ...task, ...updates } : task
       ));
@@ -354,25 +292,17 @@ export const useProductivity = () => {
     };
 
     console.log('Adding weekly output:', newOutput);
-    console.log('Google Sheets configured:', googleOAuthService.isConfigured());
-    console.log('Google Sheets authenticated:', googleOAuthService.isAuthenticated());
 
-    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
-      try {
-        console.log('Attempting to save to Google Sheets...');
-        await googleWeeklyOutputsService.addWeeklyOutput({ ...newOutput, userId });
-        console.log('Successfully saved to Google Sheets, reloading data...');
-        await loadAllData();
-        toast.success('Weekly output saved to Google Sheets');
-      } catch (error) {
-        console.error('Failed to save weekly output to Google Sheets:', error);
-        toast.error('Failed to save weekly output to Google Sheets: ' + (error instanceof Error ? error.message : 'Unknown error'));
-        setWeeklyOutputs(prev => [...prev, newOutput]);
-      }
-    } else {
-      console.log('Not authenticated or configured, saving locally');
+    try {
+      console.log('Attempting to save locally...');
+      localDataService.addWeeklyOutput({ ...newOutput, userId });
+      console.log('Successfully saved locally, reloading data...');
+      await loadAllData();
+      toast.success('Weekly output added successfully');
+    } catch (error) {
+      console.error('Failed to save weekly output:', error);
+      toast.error('Failed to save weekly output: ' + (error instanceof Error ? error.message : 'Unknown error'));
       setWeeklyOutputs(prev => [...prev, newOutput]);
-      toast.info('Weekly output saved locally. Connect to Google Sheets to sync.');
     }
   };
 
@@ -384,26 +314,18 @@ export const useProductivity = () => {
 
     console.log('Editing weekly output:', { id, updates });
 
-    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
-      try {
-        console.log('Attempting to update in Google Sheets...');
-        await googleWeeklyOutputsService.updateWeeklyOutput(id, userId, updates);
-        console.log('Successfully updated in Google Sheets, reloading data...');
-        await loadAllData();
-        toast.success('Weekly output updated in Google Sheets');
-      } catch (error) {
-        console.error('Failed to update weekly output in Google Sheets:', error);
-        toast.error('Failed to update weekly output in Google Sheets: ' + (error instanceof Error ? error.message : 'Unknown error'));
-        setWeeklyOutputs(prev => prev.map(output => 
-          output.id === id ? { ...output, ...updates } : output
-        ));
-      }
-    } else {
-      console.log('Not authenticated or configured, updating locally');
+    try {
+      console.log('Attempting to update locally...');
+      localDataService.updateWeeklyOutput(id, userId, updates);
+      console.log('Successfully updated locally, reloading data...');
+      await loadAllData();
+      toast.success('Weekly output updated successfully');
+    } catch (error) {
+      console.error('Failed to update weekly output:', error);
+      toast.error('Failed to update weekly output: ' + (error instanceof Error ? error.message : 'Unknown error'));
       setWeeklyOutputs(prev => prev.map(output => 
         output.id === id ? { ...output, ...updates } : output
       ));
-      toast.info('Weekly output updated locally. Connect to Google Sheets to sync.');
     }
   };
 
@@ -443,19 +365,12 @@ export const useProductivity = () => {
   const deleteWeeklyOutput = async (id: string) => {
     if (!userId) return;
 
-    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
-      try {
-        await googleWeeklyOutputsService.updateWeeklyOutput(id, userId, { isDeleted: true, deletedDate: new Date() });
-        await loadAllData();
-      } catch (error) {
-        toast.error('Failed to delete weekly output in Google Sheets');
-        const outputToDelete = weeklyOutputs.find(output => output.id === id);
-        if (outputToDelete) {
-          setDeletedWeeklyOutputs(prev => [...prev, { ...outputToDelete, isDeleted: true, deletedDate: new Date() }]);
-          setWeeklyOutputs(prev => prev.filter(output => output.id !== id));
-        }
-      }
-    } else {
+    try {
+      localDataService.updateWeeklyOutput(id, userId, { isDeleted: true, deletedDate: new Date() });
+      await loadAllData();
+      toast.success('Weekly output deleted');
+    } catch (error) {
+      toast.error('Failed to delete weekly output');
       const outputToDelete = weeklyOutputs.find(output => output.id === id);
       if (outputToDelete) {
         setDeletedWeeklyOutputs(prev => [...prev, { ...outputToDelete, isDeleted: true, deletedDate: new Date() }]);
@@ -467,20 +382,12 @@ export const useProductivity = () => {
   const restoreWeeklyOutput = async (id: string) => {
     if (!userId) return;
 
-    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
-      try {
-        await googleWeeklyOutputsService.updateWeeklyOutput(id, userId, { isDeleted: false, deletedDate: undefined });
-        await loadAllData();
-      } catch (error) {
-        toast.error('Failed to restore weekly output in Google Sheets');
-        const outputToRestore = deletedWeeklyOutputs.find(output => output.id === id);
-        if (outputToRestore) {
-          const restoredOutput = { ...outputToRestore, isDeleted: false, deletedDate: undefined };
-          setWeeklyOutputs(prev => [...prev, restoredOutput]);
-          setDeletedWeeklyOutputs(prev => prev.filter(output => output.id !== id));
-        }
-      }
-    } else {
+    try {
+      localDataService.updateWeeklyOutput(id, userId, { isDeleted: false, deletedDate: undefined });
+      await loadAllData();
+      toast.success('Weekly output restored');
+    } catch (error) {
+      toast.error('Failed to restore weekly output');
       const outputToRestore = deletedWeeklyOutputs.find(output => output.id === id);
       if (outputToRestore) {
         const restoredOutput = { ...outputToRestore, isDeleted: false, deletedDate: undefined };
@@ -492,6 +399,7 @@ export const useProductivity = () => {
 
   const permanentlyDeleteWeeklyOutput = async (id: string) => {
     setDeletedWeeklyOutputs(prev => prev.filter(output => output.id !== id));
+    toast.success('Weekly output permanently deleted');
   };
 
   // Helper methods for filtering data

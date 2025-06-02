@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { googleMoodTrackingService } from '@/services/GoogleMoodTrackingService';
-import { googleOAuthService } from '@/services/GoogleOAuthService';
+import { localDataService } from '@/services/LocalDataService';
 import { toast } from 'sonner';
 
 interface MoodEntry {
@@ -24,19 +23,19 @@ export const useMoodTracking = () => {
 
   const userId = getCurrentUserId();
 
-  // Load mood data from Google Sheets
+  // Load mood data from local storage
   const loadMoodData = async () => {
-    if (!userId || !googleOAuthService.isConfigured() || !googleOAuthService.isAuthenticated()) {
+    if (!userId) {
       return;
     }
 
     setIsLoading(true);
     try {
-      const moodData = await googleMoodTrackingService.getMoodData(userId);
+      const moodData = localDataService.getMoodData(userId);
       setMoodEntries(moodData);
     } catch (error) {
-      console.error('Failed to load mood data from Google Sheets:', error);
-      toast.error('Failed to load mood data from Google Sheets');
+      console.error('Failed to load mood data:', error);
+      toast.error('Failed to load mood data');
     } finally {
       setIsLoading(false);
     }
@@ -58,20 +57,14 @@ export const useMoodTracking = () => {
       notes
     };
 
-    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
-      try {
-        await googleMoodTrackingService.addMoodEntry(newEntry);
-        await loadMoodData();
-        toast.success('Mood entry saved to Google Sheets');
-      } catch (error) {
-        toast.error('Failed to save mood entry to Google Sheets');
-        // Fallback to local state
-        setMoodEntries(prev => [...prev, newEntry]);
-      }
-    } else {
-      // Store locally if not authenticated
+    try {
+      localDataService.addMoodEntry(newEntry);
+      await loadMoodData();
+      toast.success('Mood entry saved successfully');
+    } catch (error) {
+      toast.error('Failed to save mood entry');
+      // Fallback to local state
       setMoodEntries(prev => [...prev, newEntry]);
-      toast.info('Mood entry saved locally. Connect to Google Sheets to sync.');
     }
   };
 
@@ -79,24 +72,16 @@ export const useMoodTracking = () => {
   const updateMoodEntry = async (id: string, mood: number, notes?: string) => {
     if (!userId) return;
 
-    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
-      try {
-        await googleMoodTrackingService.updateMoodEntry(id, userId, { mood, notes });
-        await loadMoodData();
-        toast.success('Mood entry updated in Google Sheets');
-      } catch (error) {
-        toast.error('Failed to update mood entry in Google Sheets');
-        // Fallback to local state
-        setMoodEntries(prev => prev.map(entry => 
-          entry.id === id ? { ...entry, mood, notes } : entry
-        ));
-      }
-    } else {
-      // Update locally if not authenticated
+    try {
+      localDataService.updateMoodEntry(id, userId, { mood, notes });
+      await loadMoodData();
+      toast.success('Mood entry updated successfully');
+    } catch (error) {
+      toast.error('Failed to update mood entry');
+      // Fallback to local state
       setMoodEntries(prev => prev.map(entry => 
         entry.id === id ? { ...entry, mood, notes } : entry
       ));
-      toast.info('Mood entry updated locally. Connect to Google Sheets to sync.');
     }
   };
 

@@ -6,61 +6,23 @@ import { UserTable } from './UserTable';
 import { AddUserDialog } from './AddUserDialog';
 import { User } from '@/types/userTypes';
 import { UserPlus, RefreshCw } from 'lucide-react';
-import { googleSheetsService } from '@/services/GoogleSheetsService';
+import { localDataService } from '@/services/LocalDataService';
 import { toast } from 'sonner';
-
-// Local interface that matches Google Sheets structure
-interface GoogleSheetsUser {
-  id: string;
-  name: string;
-  email: string;
-  role: 'admin' | 'manager' | 'team-member';
-  temporaryPassword: string;
-  createdAt: string;
-  lastLogin?: string;
-}
 
 export const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [useGoogleSheets, setUseGoogleSheets] = useState(googleSheetsService.isConfigured());
 
-  // Convert Google Sheets user to app user format
-  const convertToAppUser = (sheetsUser: GoogleSheetsUser): User => ({
-    ...sheetsUser,
-    temporaryPassword: sheetsUser.temporaryPassword || '',
-    hasChangedPassword: false // Default value for new users from sheets
-  });
-
-  // Convert app user to Google Sheets format
-  const convertToSheetsUser = (appUser: User): GoogleSheetsUser => ({
-    id: appUser.id,
-    name: appUser.name,
-    email: appUser.email,
-    role: appUser.role,
-    temporaryPassword: appUser.temporaryPassword || '',
-    createdAt: appUser.createdAt,
-    lastLogin: appUser.lastLogin
-  });
-
-  // Load users from Google Sheets if configured
+  // Load users from local storage
   const loadUsers = async () => {
-    if (!googleSheetsService.isConfigured()) {
-      return;
-    }
-
     setIsLoading(true);
     try {
-      const sheetsUsers = await googleSheetsService.getUsers();
-      if (sheetsUsers.length >= 0) {
-        const convertedUsers = sheetsUsers.map(convertToAppUser);
-        setUsers(convertedUsers);
-        setUseGoogleSheets(true);
-      }
+      const localUsers = localDataService.getUsers();
+      setUsers(localUsers);
     } catch (error) {
-      console.error('Failed to load users from Google Sheets:', error);
-      toast.error('Failed to load users from Google Sheets');
+      console.error('Failed to load users:', error);
+      toast.error('Failed to load users');
     } finally {
       setIsLoading(false);
     }
@@ -78,51 +40,34 @@ export const UserManagement = () => {
       hasChangedPassword: false
     };
 
-    if (useGoogleSheets && googleSheetsService.isConfigured()) {
-      try {
-        await googleSheetsService.addUser(convertToSheetsUser(user));
-        await loadUsers(); // Reload from sheets
-        toast.success('User added to Google Sheets successfully');
-      } catch (error) {
-        toast.error('Failed to add user to Google Sheets');
-        // Fallback to local state
-        setUsers([...users, user]);
-      }
-    } else {
+    try {
+      localDataService.addUser(user);
+      await loadUsers();
+      toast.success('User added successfully');
+    } catch (error) {
+      toast.error('Failed to add user');
       setUsers([...users, user]);
     }
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (useGoogleSheets && googleSheetsService.isConfigured()) {
-      try {
-        await googleSheetsService.deleteUser(userId);
-        await loadUsers(); // Reload from sheets
-        toast.success('User deleted from Google Sheets successfully');
-      } catch (error) {
-        toast.error('Failed to delete user from Google Sheets');
-        // Fallback to local state
-        setUsers(users.filter(user => user.id !== userId));
-      }
-    } else {
+    try {
+      localDataService.deleteUser(userId);
+      await loadUsers();
+      toast.success('User deleted successfully');
+    } catch (error) {
+      toast.error('Failed to delete user');
       setUsers(users.filter(user => user.id !== userId));
     }
   };
 
   const handleUpdateUser = async (userId: string, updates: Partial<User>) => {
-    if (useGoogleSheets && googleSheetsService.isConfigured()) {
-      try {
-        await googleSheetsService.updateUser(userId, updates);
-        await loadUsers(); // Reload from sheets
-        toast.success('User updated in Google Sheets successfully');
-      } catch (error) {
-        toast.error('Failed to update user in Google Sheets');
-        // Fallback to local state
-        setUsers(users.map(user => 
-          user.id === userId ? { ...user, ...updates } : user
-        ));
-      }
-    } else {
+    try {
+      localDataService.updateUser(userId, updates);
+      await loadUsers();
+      toast.success('User updated successfully');
+    } catch (error) {
+      toast.error('Failed to update user');
       setUsers(users.map(user => 
         user.id === userId ? { ...user, ...updates } : user
       ));
@@ -136,23 +81,19 @@ export const UserManagement = () => {
           <CardTitle>User Management</CardTitle>
           <CardDescription>
             Manage user accounts, permissions, and organizational positions
-            {useGoogleSheets && (
-              <span className="text-green-600"> • Connected to Google Sheets</span>
-            )}
+            <span className="text-green-600"> • Using Local Storage</span>
           </CardDescription>
         </div>
         <div className="flex items-center gap-2">
-          {useGoogleSheets && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={loadUsers}
-              disabled={isLoading}
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-          )}
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={loadUsers}
+            disabled={isLoading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
           <Button onClick={() => setIsAddUserOpen(true)}>
             <UserPlus className="h-4 w-4 mr-2" />
             Add User
