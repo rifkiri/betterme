@@ -43,16 +43,16 @@ export const FeelingTracker = () => {
   };
 
   const moodOptions = [
-    { value: "1", label: "1 - Terrible", color: "text-red-600" },
-    { value: "2", label: "2 - Poor", color: "text-red-500" },
-    { value: "3", label: "3 - Not great", color: "text-orange-600" },
-    { value: "4", label: "4 - Meh", color: "text-yellow-600" },
-    { value: "5", label: "5 - Neutral", color: "text-yellow-500" },
-    { value: "6", label: "6 - Okay", color: "text-blue-500" },
-    { value: "7", label: "7 - Good", color: "text-blue-600" },
-    { value: "8", label: "8 - Great", color: "text-green-500" },
-    { value: "9", label: "9 - Amazing", color: "text-green-600" },
-    { value: "10", label: "10 - Amazing", color: "text-green-700" }
+    { value: "1", label: "1", color: "text-red-600" },
+    { value: "2", label: "2", color: "text-red-500" },
+    { value: "3", label: "3", color: "text-orange-600" },
+    { value: "4", label: "4", color: "text-yellow-600" },
+    { value: "5", label: "5", color: "text-yellow-500" },
+    { value: "6", label: "6", color: "text-blue-500" },
+    { value: "7", label: "7", color: "text-blue-600" },
+    { value: "8", label: "8", color: "text-green-500" },
+    { value: "9", label: "9", color: "text-green-600" },
+    { value: "10", label: "10", color: "text-green-700" }
   ];
 
   const currentValue = parseInt(feeling);
@@ -75,13 +75,13 @@ export const FeelingTracker = () => {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <RadioGroup value={feeling} onValueChange={setFeeling} className="space-y-2">
+        <RadioGroup value={feeling} onValueChange={setFeeling} className="grid grid-cols-5 gap-2 sm:grid-cols-10">
           {moodOptions.map((option) => (
-            <div key={option.value} className="flex items-center space-x-2">
-              <RadioGroupItem value={option.value} id={option.value} />
+            <div key={option.value} className="flex flex-col items-center space-y-1">
+              <RadioGroupItem value={option.value} id={option.value} className="mx-auto" />
               <Label 
                 htmlFor={option.value} 
-                className={`cursor-pointer ${option.color} hover:font-medium transition-all`}
+                className={`cursor-pointer text-xs ${option.color} hover:font-medium transition-all text-center`}
               >
                 {option.label}
               </Label>
