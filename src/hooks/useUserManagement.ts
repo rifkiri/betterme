@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { User } from '@/types/userTypes';
 import { supabaseDataService } from '@/services/SupabaseDataService';
@@ -143,6 +144,12 @@ export const useUserManagement = () => {
     }
 
     try {
+      // If updating with a new temporary password, also reset the password change status
+      if (updates.temporaryPassword) {
+        updates.hasChangedPassword = false;
+        updates.userStatus = 'pending';
+      }
+
       await supabaseDataService.updateUser(userId, updates);
       await loadUsers();
       toast.success('User updated successfully');

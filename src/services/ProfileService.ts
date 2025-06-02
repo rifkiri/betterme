@@ -62,7 +62,7 @@ export class ProfileService {
       .update({ 
         has_changed_password: true,
         user_status: 'active',
-        temporary_password: null // Clear temporary password after first login
+        temporary_password: null // Clear temporary password when user changes it
       })
       .eq('id', userId);
 
