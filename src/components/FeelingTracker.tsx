@@ -93,13 +93,19 @@ export const FeelingTracker = () => {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <RadioGroup value={feeling} onValueChange={setFeeling} className="grid grid-cols-5 gap-2 sm:grid-cols-10">
+        <RadioGroup value={feeling} onValueChange={setFeeling} className="grid grid-cols-5 gap-3 sm:grid-cols-10">
           {moodOptions.map((option) => (
-            <div key={option.value} className="flex flex-col items-center space-y-1">
-              <RadioGroupItem value={option.value} id={option.value} className="mx-auto" />
+            <div key={option.value} className="flex flex-col items-center space-y-2">
+              <div className="relative">
+                <RadioGroupItem 
+                  value={option.value} 
+                  id={option.value} 
+                  className="h-6 w-6 border-2 cursor-pointer hover:border-primary/50 transition-colors"
+                />
+              </div>
               <Label 
                 htmlFor={option.value} 
-                className={`cursor-pointer text-xs ${option.color} hover:font-medium transition-all text-center`}
+                className={`cursor-pointer text-sm font-medium ${option.color} hover:scale-110 transition-all text-center select-none`}
               >
                 {option.label}
               </Label>
