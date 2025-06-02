@@ -33,19 +33,19 @@ export const useUserManagement = () => {
         }
       }
     } catch (error) {
-      console.error('Error checking current user'); // No sensitive data logged
+      console.error('Error checking current user');
     }
   };
 
   const loadUsers = async () => {
     setIsLoading(true);
     try {
-      console.log('Loading users from Supabase'); // No sensitive data logged
+      console.log('Loading users from Supabase');
       const supabaseUsers = await supabaseDataService.getUsers();
       setUsers(supabaseUsers);
-      console.log('Users loaded successfully'); // No sensitive data logged
+      console.log('Users loaded successfully');
     } catch (error) {
-      console.error('Failed to load users'); // No sensitive data logged
+      console.error('Failed to load users');
       toast.error('Failed to load users from Supabase');
     } finally {
       setIsLoading(false);
@@ -174,18 +174,81 @@ export const useUserManagement = () => {
     }
 
     try {
-      // If updating with a new temporary password, also reset the password change status
-      if (updates.temporaryPassword) {
-        updates.hasChangedPassword = false;
-        updates.userStatus = 'pending';
+      console.log('=== UPDATE USER DEBUG ===');
+      console.log('User ID:', userId);
+      console.log('Updates:', updates);
+
+      // If updating email, sync with auth system
+      if (updates.email) {
+        console.log('Email update detected, syncing with auth system');
+        const { data, error } = await supabase.functions.invoke('update-user-email', {
+          body: {
+            userId: userId,
+            newEmail: updates.email
+          }
+        });
+
+        if (error) {
+          console.error('Failed to update email in auth system:', error);
+          toast.error('Failed to update email in authentication system');
+          return;
+        }
+
+        if (!data.success) {
+          console.error('Email update failed:', data.error);
+          toast.error('Failed to update email: ' + data.error);
+          return;
+        }
+
+        console.log('Email updated successfully in auth system');
       }
 
+      // If updating with a new password, reset the password in auth system
+      if (updates.temporaryPassword) {
+        console.log('Password reset detected, updating auth system password');
+        
+        // Use admin client to update password in auth system
+        const { data, error } = await supabase.functions.invoke('update-user-password', {
+          body: {
+            userId: userId,
+            newPassword: updates.temporaryPassword
+          }
+        });
+
+        if (error) {
+          console.error('Failed to update password in auth system:', error);
+          toast.error('Failed to update password in authentication system');
+          return;
+        }
+
+        if (!data.success) {
+          console.error('Password update failed:', data.error);
+          toast.error('Failed to update password: ' + data.error);
+          return;
+        }
+
+        console.log('Password updated successfully in auth system');
+        
+        // Clear temporary password and mark as pending for password change
+        updates.hasChangedPassword = false;
+        updates.userStatus = 'pending';
+        updates.temporaryPassword = undefined; // Clear from profile after setting in auth
+      }
+
+      // Update profile data
       await supabaseDataService.updateUser(userId, updates);
       await loadUsers();
-      toast.success('User updated successfully');
+      
+      if (updates.temporaryPassword) {
+        toast.success('User updated and password reset in authentication system');
+      } else if (updates.email) {
+        toast.success('User updated and email synced with authentication system');
+      } else {
+        toast.success('User updated successfully');
+      }
     } catch (error) {
       toast.error('Failed to update user');
-      console.error('Failed to update user'); // No sensitive data logged
+      console.error('Failed to update user:', error);
     }
   };
 
