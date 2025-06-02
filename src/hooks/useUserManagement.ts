@@ -108,6 +108,38 @@ export const useUserManagement = () => {
     }
   };
 
+  const handleDeleteAllNonAdminUsers = async () => {
+    if (!isAdmin) {
+      toast.error('Only admins can delete users');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const nonAdminUsers = users.filter(user => user.role !== 'admin');
+      
+      if (nonAdminUsers.length === 0) {
+        toast.info('No non-admin users to delete');
+        return;
+      }
+
+      console.log(`Deleting ${nonAdminUsers.length} non-admin users...`);
+
+      // Delete all non-admin users
+      for (const user of nonAdminUsers) {
+        await supabaseDataService.deleteUser(user.id);
+      }
+
+      await loadUsers();
+      toast.success(`Successfully deleted ${nonAdminUsers.length} non-admin users`);
+    } catch (error) {
+      toast.error('Failed to delete users');
+      console.error('Failed to delete users:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleUpdateUser = async (userId: string, updates: Partial<User>) => {
     if (!isAdmin) {
       toast.error('Only admins can update users');
@@ -132,6 +164,7 @@ export const useUserManagement = () => {
     loadUsers,
     handleAddUser,
     handleDeleteUser,
+    handleDeleteAllNonAdminUsers,
     handleUpdateUser
   };
 };
