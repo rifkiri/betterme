@@ -50,6 +50,18 @@ export const DemoCredentials = () => {
         return;
       }
 
+      // Check if user already exists
+      const { data: existingUser } = await supabase
+        .from('pending_users')
+        .select('email')
+        .eq('email', 'alinne.rosida@gmail.com')
+        .single();
+
+      if (existingUser) {
+        toast.info('Test user already exists in pending users table');
+        return;
+      }
+
       const { data, error } = await supabase
         .from('pending_users')
         .insert({
