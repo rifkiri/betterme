@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,6 @@ import { Separator } from '@/components/ui/separator';
 import { Database, Download, Loader2, Trash2 } from 'lucide-react';
 import { Habit, Task, WeeklyOutput } from '@/types/productivity';
 import { toast } from 'sonner';
-
 interface DataManagementSectionProps {
   habits: Habit[];
   tasks: Task[];
@@ -15,7 +13,6 @@ interface DataManagementSectionProps {
   onRefreshData: () => Promise<void>;
   userRole?: string;
 }
-
 export const DataManagementSection = ({
   habits,
   tasks,
@@ -25,7 +22,6 @@ export const DataManagementSection = ({
   userRole
 }: DataManagementSectionProps) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
-
   const handleRefreshData = async () => {
     setIsRefreshing(true);
     try {
@@ -37,7 +33,6 @@ export const DataManagementSection = ({
       setIsRefreshing(false);
     }
   };
-
   const handleExportData = () => {
     const data = {
       habits,
@@ -55,9 +50,7 @@ export const DataManagementSection = ({
     linkElement.click();
     toast.success('Data exported successfully');
   };
-
-  return (
-    <>
+  return <>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -105,27 +98,6 @@ export const DataManagementSection = ({
       </Card>
 
       {/* Danger Zone - Only for Admins */}
-      {userRole === 'admin' && (
-        <Card className="border-red-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-600">
-              <Trash2 className="h-5 w-5" />
-              Danger Zone
-            </CardTitle>
-            <CardDescription>
-              Irreversible actions - use with caution
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button variant="destructive" className="w-full">
-              Reset All Data
-            </Button>
-            <p className="text-xs text-gray-500 mt-2 text-center">
-              This action cannot be undone. All your data will be permanently deleted.
-            </p>
-          </CardContent>
-        </Card>
-      )}
-    </>
-  );
+      {userRole === 'admin'}
+    </>;
 };
