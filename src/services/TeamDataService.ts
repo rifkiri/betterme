@@ -6,17 +6,37 @@ class TeamDataService {
   // Get current manager's team data
   async getCurrentManagerTeamData(): Promise<TeamData> {
     try {
+      console.log('Starting to fetch team data...');
+      
       // Get all users (team members)
       const allUsers = await supabaseDataService.getUsers();
+      console.log('Fetched users:', allUsers);
+      
       const teamMembers = allUsers.filter(user => user.role === 'team-member');
+      console.log('Filtered team members:', teamMembers);
+      
+      if (teamMembers.length === 0) {
+        console.log('No team members found, returning empty data');
+        return this.getEmptyTeamData();
+      }
       
       // Generate team statistics
+      console.log('Calculating team stats...');
       const teamStats = await this.calculateTeamStats(teamMembers);
+      
+      console.log('Generating members summary...');
       const membersSummary = await this.generateMembersSummary(teamMembers);
+      
+      console.log('Generating overdue data...');
       const overdueData = await this.generateOverdueData(teamMembers);
+      
+      console.log('Calculating team trends...');
       const teamTrends = await this.calculateTeamTrends(teamMembers);
       
-      return {
+      console.log('Generating mood data...');
+      const moodData = await this.generateMoodData(teamMembers);
+
+      const result = {
         totalMembers: teamMembers.length,
         activeMembers: teamMembers.filter(member => member.lastLogin).length,
         teamStats,
@@ -24,12 +44,15 @@ class TeamDataService {
         overdueTasks: overdueData.tasks,
         overdueOutputs: overdueData.outputs,
         overdueStats: overdueData.stats,
-        moodData: await this.generateMoodData(teamMembers),
+        moodData,
         teamTrends
       };
+      
+      console.log('Team data assembled successfully:', result);
+      return result;
     } catch (error) {
       console.error('Error loading team data:', error);
-      return this.getEmptyTeamData();
+      throw error; // Re-throw to let the component handle it
     }
   }
 
