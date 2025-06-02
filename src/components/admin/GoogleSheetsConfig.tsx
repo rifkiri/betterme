@@ -7,17 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { googleSheetsService } from '@/services/GoogleSheetsService';
 import { toast } from 'sonner';
-import { Settings, ExternalLink, Shield, Copy, AlertTriangle } from 'lucide-react';
+import { Settings, Copy, AlertTriangle } from 'lucide-react';
 
 export const GoogleSheetsConfig = () => {
-  const [clientId, setClientId] = useState(localStorage.getItem('googleOAuthClientId') || '');
-  const [clientSecret, setClientSecret] = useState(localStorage.getItem('googleOAuthClientSecret') || '');
+  const [apiKey, setApiKey] = useState(localStorage.getItem('googleSheetsApiKey') || '');
   const [spreadsheetId, setSpreadsheetId] = useState(localStorage.getItem('googleSheetsId') || '');
   const [isConfigured, setIsConfigured] = useState(googleSheetsService.isConfigured());
-  const [isAuthenticated, setIsAuthenticated] = useState(googleSheetsService.isAuthenticated());
-
-  const redirectUri = `${window.location.origin}/oauth/callback`;
-  const currentOrigin = window.location.origin;
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -25,55 +20,20 @@ export const GoogleSheetsConfig = () => {
   };
 
   const handleSaveConfig = () => {
-    if (!clientId || !clientSecret || !spreadsheetId) {
+    if (!apiKey || !spreadsheetId) {
       toast.error('Please fill in all required fields');
       return;
     }
 
     try {
-      console.log('Saving Google Sheets configuration...');
-      googleSheetsService.setCredentials(clientId, clientSecret, spreadsheetId);
+      console.log('Saving Google Sheets API configuration...');
+      googleSheetsService.setCredentials(apiKey, spreadsheetId);
       setIsConfigured(true);
       toast.success('Google Sheets configuration saved successfully');
-      console.log('Configuration saved, checking authentication status...');
-      setIsAuthenticated(googleSheetsService.isAuthenticated());
+      console.log('Configuration saved successfully');
     } catch (error) {
       console.error('Failed to save configuration:', error);
       toast.error('Failed to save configuration');
-    }
-  };
-
-  const handleAuthenticate = () => {
-    if (!isConfigured) {
-      toast.error('Please save configuration first');
-      return;
-    }
-
-    try {
-      console.log('Starting OAuth flow...');
-      console.log('Current origin:', currentOrigin);
-      console.log('Redirect URI:', redirectUri);
-      
-      const authUrl = googleSheetsService.getAuthUrl();
-      console.log('Generated auth URL:', authUrl);
-      
-      // Add detailed logging for debugging
-      console.log('OAuth Configuration Check:');
-      console.log('- Client ID:', clientId ? `${clientId.substring(0, 20)}...` : 'Not set');
-      console.log('- Current domain:', window.location.hostname);
-      console.log('- Protocol:', window.location.protocol);
-      
-      // Check if we're on localhost or a development environment
-      if (window.location.hostname === 'localhost' || window.location.hostname.includes('127.0.0.1')) {
-        toast.error('OAuth authentication requires a proper domain. Development servers may not work with Google OAuth.');
-        return;
-      }
-      
-      // Open in same window to avoid popup blockers
-      window.location.href = authUrl;
-    } catch (error) {
-      console.error('Failed to start authentication:', error);
-      toast.error('Failed to start authentication - check console for details');
     }
   };
 
@@ -85,8 +45,16 @@ export const GoogleSheetsConfig = () => {
       console.log('Connection test passed');
     } catch (error) {
       console.error('Connection test failed:', error);
-      toast.error('Connection test failed. Please check your configuration and authentication.');
+      toast.error('Connection test failed. Please check your configuration.');
     }
+  };
+
+  const handleClearConfig = () => {
+    googleSheetsService.clearConfig();
+    setApiKey('');
+    setSpreadsheetId('');
+    setIsConfigured(false);
+    toast.success('Configuration cleared');
   };
 
   return (
@@ -94,69 +62,35 @@ export const GoogleSheetsConfig = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Settings className="h-5 w-5" />
-          Google Sheets OAuth2 Configuration
+          Google Sheets API Configuration
         </CardTitle>
         <CardDescription>
-          Connect your user management system to Google Sheets with OAuth2 authentication
+          Connect your user management system to Google Sheets using API key authentication
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <Alert>
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            <strong>Important Setup Requirements:</strong>
+            <strong>Setup Requirements:</strong>
             <div className="mt-2 space-y-2 text-sm">
-              <div>
-                <strong>1. Authorized JavaScript Origins:</strong>
-                <div className="flex items-center gap-2 mt-1">
-                  <code className="bg-gray-100 px-2 py-1 rounded text-sm flex-1">{currentOrigin}</code>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => copyToClipboard(currentOrigin)}
-                  >
-                    <Copy className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-              <div>
-                <strong>2. Authorized Redirect URIs:</strong>
-                <div className="flex items-center gap-2 mt-1">
-                  <code className="bg-gray-100 px-2 py-1 rounded text-sm flex-1">{redirectUri}</code>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => copyToClipboard(redirectUri)}
-                  >
-                    <Copy className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
+              <div>1. Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Google Cloud Console</a></div>
+              <div>2. Create an API key (not OAuth2 client)</div>
+              <div>3. Enable the Google Sheets API for your project</div>
+              <div>4. Restrict the API key to Google Sheets API (recommended)</div>
+              <div>5. Make sure your spreadsheet is shared publicly or with the service account</div>
             </div>
-            <p className="mt-2 text-sm">
-              Add BOTH URLs above to your OAuth2 client in Google Cloud Console.
-            </p>
           </AlertDescription>
         </Alert>
 
         <div className="space-y-2">
-          <Label htmlFor="client-id">OAuth2 Client ID</Label>
+          <Label htmlFor="api-key">Google Sheets API Key</Label>
           <Input
-            id="client-id"
-            value={clientId}
-            onChange={(e) => setClientId(e.target.value)}
-            placeholder="Enter your OAuth2 Client ID"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="client-secret">OAuth2 Client Secret</Label>
-          <Input
-            id="client-secret"
+            id="api-key"
             type="password"
-            value={clientSecret}
-            onChange={(e) => setClientSecret(e.target.value)}
-            placeholder="Enter your OAuth2 Client Secret"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            placeholder="Enter your Google Sheets API Key"
           />
         </div>
 
@@ -177,49 +111,44 @@ export const GoogleSheetsConfig = () => {
           <Button onClick={handleSaveConfig}>
             Save Configuration
           </Button>
-          {isConfigured && !isAuthenticated && (
-            <Button variant="outline" onClick={handleAuthenticate}>
-              <Shield className="h-4 w-4 mr-2" />
-              Authenticate with Google
-            </Button>
-          )}
-          {isAuthenticated && (
+          {isConfigured && (
             <Button variant="outline" onClick={handleTestConnection}>
               Test Connection
+            </Button>
+          )}
+          {isConfigured && (
+            <Button variant="destructive" onClick={handleClearConfig}>
+              Clear Config
             </Button>
           )}
         </div>
 
         {isConfigured && (
           <Alert>
-            <AlertDescription className={isAuthenticated ? "text-green-600" : "text-yellow-600"}>
-              {isAuthenticated ? (
-                <>✓ Google Sheets is configured and authenticated</>
-              ) : (
-                <>⚠ Configuration saved. Please authenticate with Google to enable write access.</>
-              )}
+            <AlertDescription className="text-green-600">
+              ✓ Google Sheets is configured with API key authentication
             </AlertDescription>
           </Alert>
         )}
 
         <Alert>
           <AlertDescription>
-            <strong>Setup Instructions:</strong>
+            <strong>API Key Setup Instructions:</strong>
             <ol className="list-decimal list-inside mt-2 space-y-1 text-sm">
-              <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Google Cloud Console</a></li>
-              <li>Create a new "Web application" OAuth 2.0 client</li>
-              <li>Add the JavaScript origin and redirect URI shown above</li>
-              <li>Enable the Google Sheets API in your project</li>
-              <li>Copy the Client ID and Client Secret here</li>
-              <li>Click "Save Configuration" then "Authenticate with Google"</li>
+              <li>Go to Google Cloud Console → APIs & Services → Credentials</li>
+              <li>Click "Create Credentials" → "API Key"</li>
+              <li>Copy the generated API key</li>
+              <li>Click "Restrict Key" and select "Google Sheets API"</li>
+              <li>Make sure your spreadsheet is publicly accessible or shared</li>
+              <li>Paste the API key and spreadsheet ID above</li>
             </ol>
             <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
-              <p className="text-sm font-medium text-yellow-800">Common Issues:</p>
+              <p className="text-sm font-medium text-yellow-800">Important Notes:</p>
               <ul className="text-xs text-yellow-700 mt-1 space-y-1">
-                <li>• Make sure both JavaScript origins AND redirect URIs are added</li>
-                <li>• Verify the OAuth client type is "Web application"</li>
-                <li>• Ensure Google Sheets API is enabled</li>
-                <li>• Check browser console for detailed error messages</li>
+                <li>• API key method is simpler but requires public spreadsheet access</li>
+                <li>• Make sure Google Sheets API is enabled in your project</li>
+                <li>• Consider restricting the API key to specific APIs for security</li>
+                <li>• Your spreadsheet must be accessible to "Anyone with the link"</li>
               </ul>
             </div>
           </AlertDescription>

@@ -7,21 +7,9 @@ import { googleWeeklyOutputsService } from './GoogleWeeklyOutputsService';
 import { googleMoodTrackingService } from './GoogleMoodTrackingService';
 
 class GoogleSheetsService {
-  // OAuth methods
-  setCredentials(clientId: string, clientSecret: string, spreadsheetId: string) {
-    return googleOAuthService.setCredentials(clientId, clientSecret, spreadsheetId);
-  }
-
-  getAuthUrl(): string {
-    return googleOAuthService.getAuthUrl();
-  }
-
-  async exchangeCodeForTokens(code: string) {
-    return googleOAuthService.exchangeCodeForTokens(code);
-  }
-
-  configure(accessToken: string, spreadsheetId: string) {
-    return googleOAuthService.configure(accessToken, spreadsheetId);
+  // API key configuration methods
+  setCredentials(apiKey: string, spreadsheetId: string) {
+    return googleOAuthService.setCredentials(apiKey, spreadsheetId);
   }
 
   isConfigured(): boolean {

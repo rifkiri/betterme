@@ -1,41 +1,38 @@
 
-export abstract class BaseGoogleSheetsService {
-  protected accessToken: string | null = null;
-  protected spreadsheetId: string | null = null;
+import { googleOAuthService } from './GoogleOAuthService';
 
-  constructor() {
-    this.loadConfig();
+export abstract class BaseGoogleSheetsService {
+  protected getApiKey(): string | null {
+    return googleOAuthService.getApiKey();
   }
 
-  protected loadConfig() {
-    this.spreadsheetId = localStorage.getItem('googleSheetsId');
-    const config = localStorage.getItem('googleSheetsConfig');
-    if (config) {
-      const { accessToken, spreadsheetId } = JSON.parse(config);
-      this.accessToken = accessToken;
-      if (!this.spreadsheetId) {
-        this.spreadsheetId = spreadsheetId;
-      }
-    }
+  protected getSpreadsheetId(): string | null {
+    return googleOAuthService.getSpreadsheetId();
   }
 
   isAuthenticated(): boolean {
-    return !!this.accessToken;
+    return googleOAuthService.isAuthenticated();
   }
 
   isConfigured(): boolean {
-    return !!this.spreadsheetId;
+    return googleOAuthService.isConfigured();
   }
 
   protected async makeRequest(endpoint: string, options: RequestInit = {}) {
-    if (!this.isAuthenticated() || !this.spreadsheetId) {
-      throw new Error('Not authenticated or spreadsheet not configured');
+    const apiKey = this.getApiKey();
+    const spreadsheetId = this.getSpreadsheetId();
+    
+    if (!apiKey || !spreadsheetId) {
+      throw new Error('API key or spreadsheet not configured');
     }
 
-    const response = await fetch(endpoint, {
+    // Add API key to the URL
+    const separator = endpoint.includes('?') ? '&' : '?';
+    const urlWithKey = `${endpoint}${separator}key=${apiKey}`;
+
+    const response = await fetch(urlWithKey, {
       ...options,
       headers: {
-        'Authorization': `Bearer ${this.accessToken}`,
         'Content-Type': 'application/json',
         ...options.headers,
       },
