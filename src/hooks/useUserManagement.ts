@@ -128,12 +128,42 @@ export const useUserManagement = () => {
     }
 
     try {
-      await supabaseDataService.deleteUser(userId);
+      console.log('Deleting user via Edge Function:', userId);
+      
+      // Call the Edge Function to delete the user from both profiles and auth.users
+      const { data, error } = await supabase.functions.invoke('delete-auth-users', {
+        body: {
+          userIds: [userId]
+        }
+      });
+
+      if (error) {
+        console.error('Edge function error:', error);
+        toast.error('Failed to delete user: ' + error.message);
+        return;
+      }
+
+      if (!data.success) {
+        console.error('User deletion failed:', data.error);
+        toast.error('Failed to delete user: ' + data.error);
+        return;
+      }
+
+      // Check deletion results
+      const results = data.results || [];
+      const failedDeletions = results.filter(r => !r.success);
+      
+      if (failedDeletions.length > 0) {
+        console.error('Some deletions failed:', failedDeletions);
+        toast.error('Failed to completely delete user from authentication system');
+      } else {
+        toast.success('User deleted successfully from both profile and authentication system');
+      }
+
       await loadUsers();
-      toast.success('User deleted successfully');
     } catch (error) {
       toast.error('Failed to delete user');
-      console.error('Failed to delete user'); // No sensitive data logged
+      console.error('Failed to delete user:', error);
     }
   };
 
