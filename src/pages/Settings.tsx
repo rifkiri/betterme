@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { AppNavigation } from "@/components/AppNavigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,42 +6,35 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Settings as SettingsIcon, 
-  Database, 
-  Moon, 
-  Sun, 
-  Bell, 
-  Shield,
-  Download,
-  Trash2,
-  Loader2,
-  Mail,
-  Users
-} from "lucide-react";
+import { Settings as SettingsIcon, Database, Moon, Sun, Bell, Shield, Download, Trash2, Loader2, Mail, Users } from "lucide-react";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useProductivity } from "@/hooks/useProductivity";
 import { useMoodTracking } from "@/hooks/useMoodTracking";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { toast } from "sonner";
-
 const Settings = () => {
-  const { profile, isLoading: profileLoading } = useUserProfile();
-  const { habits, tasks, weeklyOutputs, loadAllData } = useProductivity();
-  const { moodEntries, loadMoodData } = useMoodTracking();
-  
+  const {
+    profile,
+    isLoading: profileLoading
+  } = useUserProfile();
+  const {
+    habits,
+    tasks,
+    weeklyOutputs,
+    loadAllData
+  } = useProductivity();
+  const {
+    moodEntries,
+    loadMoodData
+  } = useMoodTracking();
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
   const [emailReminders, setEmailReminders] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-
   const handleRefreshData = async () => {
     setIsRefreshing(true);
     try {
-      await Promise.all([
-        loadAllData(),
-        loadMoodData()
-      ]);
+      await Promise.all([loadAllData(), loadMoodData()]);
       toast.success('Data refreshed successfully');
     } catch (error) {
       toast.error('Failed to refresh data');
@@ -50,7 +42,6 @@ const Settings = () => {
       setIsRefreshing(false);
     }
   };
-
   const handleExportData = () => {
     const data = {
       habits,
@@ -59,33 +50,24 @@ const Settings = () => {
       moodEntries,
       exportDate: new Date().toISOString()
     };
-    
     const dataStr = JSON.stringify(data, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
     const exportFileDefaultName = `productivity-data-${new Date().toISOString().split('T')[0]}.json`;
-    
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
     linkElement.setAttribute('download', exportFileDefaultName);
     linkElement.click();
-    
     toast.success('Data exported successfully');
   };
-
   if (profileLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
+    return <div className="min-h-screen bg-gray-50">
         <AppNavigation />
         <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-screen bg-gray-50">
+  return <div className="min-h-screen bg-gray-50">
       <AppNavigation />
       <div className="max-w-4xl mx-auto p-6">
         <div className="mb-6">
@@ -95,41 +77,10 @@ const Settings = () => {
 
         <div className="grid gap-6">
           {/* User Information */}
-          {profile && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Account Overview
-                </CardTitle>
-                <CardDescription>
-                  Current user information and role
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">{profile.name}</p>
-                    <p className="text-sm text-gray-600">{profile.email}</p>
-                    {profile.position && (
-                      <p className="text-sm text-gray-600">{profile.position}</p>
-                    )}
-                  </div>
-                  <Badge className={`
-                    ${profile.role === 'admin' ? 'bg-red-100 text-red-800' : 
-                      profile.role === 'manager' ? 'bg-blue-100 text-blue-800' : 
-                      'bg-green-100 text-green-800'}
-                  `}>
-                    {profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {profile}
 
           {/* User Management - Only for Admins */}
-          {profile?.role === 'admin' && (
-            <Card>
+          {profile?.role === 'admin' && <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
@@ -142,8 +93,7 @@ const Settings = () => {
               <CardContent>
                 <UserManagement />
               </CardContent>
-            </Card>
-          )}
+            </Card>}
 
           {/* Data Management */}
           <Card>
@@ -179,25 +129,12 @@ const Settings = () => {
               <Separator />
               
               <div className="flex flex-col sm:flex-row gap-3">
-                <Button 
-                  onClick={handleRefreshData} 
-                  variant="outline" 
-                  disabled={isRefreshing}
-                  className="flex-1"
-                >
-                  {isRefreshing ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Database className="h-4 w-4 mr-2" />
-                  )}
+                <Button onClick={handleRefreshData} variant="outline" disabled={isRefreshing} className="flex-1">
+                  {isRefreshing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Database className="h-4 w-4 mr-2" />}
                   Refresh Data
                 </Button>
                 
-                <Button 
-                  onClick={handleExportData} 
-                  variant="outline"
-                  className="flex-1"
-                >
+                <Button onClick={handleExportData} variant="outline" className="flex-1">
                   <Download className="h-4 w-4 mr-2" />
                   Export Data
                 </Button>
@@ -225,11 +162,7 @@ const Settings = () => {
                     <p className="text-sm text-gray-600">Receive notifications for important updates</p>
                   </div>
                 </div>
-                <Switch
-                  id="notifications"
-                  checked={notifications}
-                  onCheckedChange={setNotifications}
-                />
+                <Switch id="notifications" checked={notifications} onCheckedChange={setNotifications} />
               </div>
               
               <Separator />
@@ -242,39 +175,26 @@ const Settings = () => {
                     <p className="text-sm text-gray-600">Get email reminders for deadlines and tasks</p>
                   </div>
                 </div>
-                <Switch
-                  id="email-reminders"
-                  checked={emailReminders}
-                  onCheckedChange={setEmailReminders}
-                />
+                <Switch id="email-reminders" checked={emailReminders} onCheckedChange={setEmailReminders} />
               </div>
               
               <Separator />
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  {darkMode ? (
-                    <Moon className="h-5 w-5 text-gray-500" />
-                  ) : (
-                    <Sun className="h-5 w-5 text-gray-500" />
-                  )}
+                  {darkMode ? <Moon className="h-5 w-5 text-gray-500" /> : <Sun className="h-5 w-5 text-gray-500" />}
                   <div>
                     <Label htmlFor="dark-mode">Dark Mode</Label>
                     <p className="text-sm text-gray-600">Toggle dark/light theme</p>
                   </div>
                 </div>
-                <Switch
-                  id="dark-mode"
-                  checked={darkMode}
-                  onCheckedChange={setDarkMode}
-                />
+                <Switch id="dark-mode" checked={darkMode} onCheckedChange={setDarkMode} />
               </div>
             </CardContent>
           </Card>
 
           {/* Danger Zone */}
-          {profile?.role === 'admin' && (
-            <Card className="border-red-200">
+          {profile?.role === 'admin' && <Card className="border-red-200">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-red-600">
                   <Trash2 className="h-5 w-5" />
@@ -292,12 +212,9 @@ const Settings = () => {
                   This action cannot be undone. All your data will be permanently deleted.
                 </p>
               </CardContent>
-            </Card>
-          )}
+            </Card>}
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Settings;
