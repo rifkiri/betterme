@@ -45,11 +45,12 @@ export class UnifiedSignInService {
     console.log('Looking for user with email:', email);
     
     // Query the profiles table directly to check for temporary password users
-    // Use ilike for case-insensitive search
+    // Use eq for exact match with normalized email
+    const normalizedEmail = email.trim().toLowerCase();
     const { data: existingUserData, error: userError } = await supabase
       .from('profiles')
       .select('*')
-      .ilike('email', email.trim())
+      .eq('email', normalizedEmail)
       .maybeSingle();
     
     if (userError) {
