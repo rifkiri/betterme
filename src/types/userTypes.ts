@@ -13,6 +13,7 @@ export interface User {
   userStatus: UserStatus;
   createdAt: string;
   lastLogin?: string;
+  managerId?: string; // Added managerId field
 }
 
 export interface AuthUser {

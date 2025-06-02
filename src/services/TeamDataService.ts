@@ -1,6 +1,8 @@
+
 import { supabaseDataService } from './SupabaseDataService';
 import { TeamData, TeamMember, OverdueTask, OverdueOutput, TeamTrends } from '@/types/teamData';
 import { User } from '@/types/userTypes';
+import { supabase } from '@/integrations/supabase/client';
 
 class TeamDataService {
   // Get current manager's team data
@@ -8,15 +10,36 @@ class TeamDataService {
     try {
       console.log('Starting to fetch team data...');
       
-      // Get all users (team members)
-      const allUsers = await supabaseDataService.getUsers();
-      console.log('Fetched users:', allUsers);
+      // Get current manager's ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('No authenticated user found');
+      }
       
-      const teamMembers = allUsers.filter(user => user.role === 'team-member');
-      console.log('Filtered team members:', teamMembers);
+      // Get current manager's profile to verify they are a manager
+      const { data: managerProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      if (!managerProfile || managerProfile.role !== 'manager') {
+        throw new Error('User is not a manager');
+      }
+      
+      console.log('Manager profile:', managerProfile);
+      
+      // Get all users assigned to this manager
+      const allUsers = await supabaseDataService.getUsers();
+      console.log('All users:', allUsers);
+      
+      const teamMembers = allUsers.filter(user => 
+        user.role === 'team-member' && user.managerId === managerProfile.id
+      );
+      console.log('Filtered team members for manager:', teamMembers);
       
       if (teamMembers.length === 0) {
-        console.log('No team members found, returning empty data');
+        console.log('No team members found for this manager, returning empty data');
         return this.getEmptyTeamData();
       }
       

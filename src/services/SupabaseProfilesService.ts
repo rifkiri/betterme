@@ -29,7 +29,8 @@ export class SupabaseProfilesService {
           userStatus: profile.user_status || 'active',
           createdAt: profile.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
           lastLogin: profile.last_login?.split('T')[0],
-          temporaryPassword: profile.temporary_password
+          temporaryPassword: profile.temporary_password,
+          managerId: profile.manager_id // Map manager_id from database
         });
       });
     }
@@ -49,7 +50,8 @@ export class SupabaseProfilesService {
         position: user.position,
         temporary_password: user.temporaryPassword || 'temp123',
         user_status: 'pending',
-        has_changed_password: false
+        has_changed_password: false,
+        manager_id: user.managerId // Map managerId to manager_id
       });
 
     if (error) {
@@ -69,6 +71,7 @@ export class SupabaseProfilesService {
     if (updates.userStatus) supabaseUpdates.user_status = updates.userStatus;
     if (updates.temporaryPassword) supabaseUpdates.temporary_password = updates.temporaryPassword;
     if (updates.lastLogin) supabaseUpdates.last_login = updates.lastLogin;
+    if (updates.managerId !== undefined) supabaseUpdates.manager_id = updates.managerId; // Map managerId to manager_id
 
     const { error } = await supabase
       .from('profiles')
