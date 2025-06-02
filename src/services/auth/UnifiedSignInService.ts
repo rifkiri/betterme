@@ -42,12 +42,14 @@ export class UnifiedSignInService {
 
     // If regular sign in failed, check if user exists with temporary password
     console.log('Regular sign in failed, checking for user with temporary password');
+    console.log('Looking for user with email:', email);
     
     // Query the profiles table directly to check for temporary password users
+    // Use ilike for case-insensitive search
     const { data: existingUserData, error: userError } = await supabase
       .from('profiles')
       .select('*')
-      .eq('email', email.trim().toLowerCase())
+      .ilike('email', email.trim())
       .maybeSingle();
     
     if (userError) {
@@ -61,6 +63,12 @@ export class UnifiedSignInService {
       toast.error('Invalid email or password');
       return false;
     }
+
+    console.log('Found user data:', { 
+      email: existingUserData.email, 
+      status: existingUserData.user_status,
+      hasPassword: !!existingUserData.temporary_password 
+    });
 
     // Check if this is a temporary password login attempt
     if (existingUserData.temporary_password && existingUserData.temporary_password === password) {
