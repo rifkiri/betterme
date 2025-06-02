@@ -27,7 +27,8 @@ export class SupabaseTasksService {
       isDeleted: task.is_deleted,
       completedDate: task.completed_date ? new Date(task.completed_date) : undefined,
       deletedDate: task.deleted_date ? new Date(task.deleted_date) : undefined,
-      createdDate: new Date(task.created_date)
+      createdDate: new Date(task.created_date),
+      weeklyOutputId: task.weekly_output_id
     }));
   }
 
@@ -65,7 +66,8 @@ export class SupabaseTasksService {
         is_deleted: task.isDeleted,
         completed_date: task.completedDate?.toISOString(),
         deleted_date: task.deletedDate?.toISOString(),
-        created_date: task.createdDate.toISOString()
+        created_date: task.createdDate.toISOString(),
+        weekly_output_id: task.weeklyOutputId || null
       });
 
     if (error) {
@@ -87,6 +89,7 @@ export class SupabaseTasksService {
     if (updates.isDeleted !== undefined) supabaseUpdates.is_deleted = updates.isDeleted;
     if (updates.completedDate) supabaseUpdates.completed_date = updates.completedDate.toISOString();
     if (updates.deletedDate) supabaseUpdates.deleted_date = updates.deletedDate.toISOString();
+    if (updates.weeklyOutputId !== undefined) supabaseUpdates.weekly_output_id = updates.weeklyOutputId || null;
 
     const { error } = await supabase
       .from('tasks')

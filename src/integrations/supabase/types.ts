@@ -149,6 +149,7 @@ export type Database = {
           title: string
           updated_at: string
           user_id: string
+          weekly_output_id: string | null
         }
         Insert: {
           completed?: boolean
@@ -165,6 +166,7 @@ export type Database = {
           title: string
           updated_at?: string
           user_id: string
+          weekly_output_id?: string | null
         }
         Update: {
           completed?: boolean
@@ -181,6 +183,7 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+          weekly_output_id?: string | null
         }
         Relationships: [
           {
@@ -188,6 +191,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_weekly_output_id_fkey"
+            columns: ["weekly_output_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_outputs"
             referencedColumns: ["id"]
           },
         ]
