@@ -75,11 +75,11 @@ const SignIn = () => {
           // Update the profiles table with the pending user data
           const { error: profileError } = await supabase
             .from('profiles')
-            .upsert({
+            .insert({
               id: signUpData.user.id,
               name: pendingUser.name,
               email: pendingUser.email,
-              role: pendingUser.role,
+              role: pendingUser.role as 'admin' | 'manager' | 'team-member',
               position: pendingUser.position,
               has_changed_password: false
             });
