@@ -46,9 +46,9 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput }: AddWeeklyOutputDial
     setOpen(false);
   };
 
-  // Create yesterday's date to properly exclude only past dates
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
+  // Get today's date and set time to start of day for proper comparison
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -109,7 +109,11 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput }: AddWeeklyOutputDial
                         mode="single"
                         selected={field.value}
                         onSelect={field.onChange}
-                        disabled={(date) => date < yesterday}
+                        disabled={(date) => {
+                          const dateToCheck = new Date(date);
+                          dateToCheck.setHours(0, 0, 0, 0);
+                          return dateToCheck < today;
+                        }}
                         initialFocus
                         className={cn("p-3 pointer-events-auto")}
                       />
