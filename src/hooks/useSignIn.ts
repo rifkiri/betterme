@@ -90,15 +90,10 @@ export const useSignIn = () => {
 
       console.log('Found matching pending user:', matchingUser);
 
-      // Create auth user without email confirmation
-      const { data: signUpData, error: signUpError } = await supabase.auth.admin.createUser({
+      // Use regular signup for pending users
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: matchingUser.email,
         password: password,
-        email_confirm: true, // Auto-confirm email
-        user_metadata: {
-          name: matchingUser.name,
-          role: matchingUser.role
-        }
       });
 
       if (signUpError) {
@@ -150,35 +145,12 @@ export const useSignIn = () => {
           // Don't fail the whole process for this
         }
 
-        // Now sign them in automatically
-        console.log('Auto-signing in the new user...');
-        const { data: autoSignInData, error: autoSignInError } = await supabase.auth.signInWithPassword({
-          email: matchingUser.email,
-          password: password,
-        });
-
-        if (autoSignInError) {
-          console.error('Error auto-signing in user:', autoSignInError);
-          toast.success('Account created successfully! Please sign in with your credentials.');
-          // Clear the form so they can sign in
-          setEmail('');
-          setPassword('');
-          return;
-        }
-
-        if (autoSignInData.user) {
-          console.log('Auto sign-in successful');
-          toast.success('Account created and signed in successfully!');
-          
-          // Redirect based on role
-          if (matchingUser.role === 'admin') {
-            navigate('/settings');
-          } else if (matchingUser.role === 'manager') {
-            navigate('/manager');
-          } else {
-            navigate('/');
-          }
-        }
+        // Since email confirmation is required by default, inform user to check email
+        toast.success('Account created successfully! Please check your email to confirm your account, then sign in again.');
+        
+        // Clear the form so they can sign in after confirmation
+        setEmail('');
+        setPassword('');
       }
     } catch (error) {
       console.error('Authentication error:', error);
