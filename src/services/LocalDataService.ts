@@ -23,6 +23,7 @@ class LocalDataService {
           position: 'System Administrator',
           temporaryPassword: 'admin123',
           hasChangedPassword: true,
+          userStatus: 'active',
           createdAt: '2024-01-15',
           lastLogin: '2024-06-01'
         },
@@ -34,6 +35,7 @@ class LocalDataService {
           position: 'Team Lead',
           temporaryPassword: 'manager123',
           hasChangedPassword: true,
+          userStatus: 'active',
           createdAt: '2024-01-20',
           lastLogin: '2024-06-01'
         },
@@ -45,6 +47,7 @@ class LocalDataService {
           position: 'Senior Developer',
           temporaryPassword: 'dev123',
           hasChangedPassword: false,
+          userStatus: 'pending',
           createdAt: '2024-02-01',
           lastLogin: '2024-05-30'
         },
@@ -56,6 +59,7 @@ class LocalDataService {
           position: 'UI/UX Designer',
           temporaryPassword: 'design123',
           hasChangedPassword: true,
+          userStatus: 'active',
           createdAt: '2024-02-15',
           lastLogin: '2024-05-29'
         }

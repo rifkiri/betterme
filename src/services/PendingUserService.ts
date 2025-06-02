@@ -1,6 +1,14 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { PendingUser } from './ProfileService';
+
+interface PendingUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  position?: string;
+  temporary_password: string;
+}
 
 export class PendingUserService {
   static async getPendingUsers(email: string): Promise<{ data: PendingUser[] | null, error: any }> {

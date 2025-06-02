@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -6,11 +7,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { User, UserRole } from '@/types/userTypes';
 import { toast } from 'sonner';
+
 interface AddUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAddUser: (user: Omit<User, 'id' | 'createdAt'>) => void;
 }
+
 export const AddUserDialog = ({
   open,
   onOpenChange,
@@ -21,6 +24,7 @@ export const AddUserDialog = ({
   const [role, setRole] = useState<UserRole>('team-member');
   const [position, setPosition] = useState('');
   const [temporaryPassword, setTemporaryPassword] = useState('');
+
   const generatePassword = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
@@ -29,19 +33,22 @@ export const AddUserDialog = ({
     }
     setTemporaryPassword(result);
   };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !role || !temporaryPassword) {
       toast.error('Please fill in all required fields');
       return;
     }
+
     onAddUser({
       name,
       email,
       role,
       position: position || undefined,
       temporaryPassword,
-      hasChangedPassword: false
+      hasChangedPassword: false,
+      userStatus: 'pending'
     });
     toast.success('User added successfully');
 
@@ -53,6 +60,7 @@ export const AddUserDialog = ({
     setTemporaryPassword('');
     onOpenChange(false);
   };
+
   return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
