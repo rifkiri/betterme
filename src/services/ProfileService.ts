@@ -1,53 +1,55 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-export interface PendingUser {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  position: string;
-  temporary_password: string;
-}
-
 export class ProfileService {
   static async getProfile(userId: string) {
-    const { data: profile, error } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
 
-    return { profile, error };
+    return { profile: data, error };
   }
 
-  static async createProfile(userId: string, pendingUser: PendingUser) {
-    console.log('Creating profile for pending user...');
-    
-    const { error } = await supabase
+  static async createProfile(userId: string, userData: any) {
+    const { data, error } = await supabase
       .from('profiles')
       .insert({
         id: userId,
-        name: pendingUser.name,
-        email: pendingUser.email,
-        role: pendingUser.role as 'admin' | 'manager' | 'team-member',
-        position: pendingUser.position,
-        has_changed_password: false
+        name: userData.name,
+        email: userData.email,
+        role: userData.role,
+        position: userData.position,
+        user_status: 'pending',
+        has_changed_password: false,
+        temporary_password: userData.temporary_password || userData.temporaryPassword
       });
 
-    return { error };
+    return { data, error };
   }
 
-  static async updateProfileLogin(userId: string, isFirstTime: boolean = false) {
-    const updateData: any = { last_login: new Date().toISOString() };
-    
-    if (isFirstTime) {
-      updateData.has_changed_password = true;
-    }
-
-    await supabase
+  static async updateProfileLogin(userId: string, hasLoggedIn: boolean) {
+    const { data, error } = await supabase
       .from('profiles')
-      .update(updateData)
+      .update({ 
+        last_login: new Date().toISOString(),
+        user_status: hasLoggedIn ? 'active' : 'pending'
+      })
       .eq('id', userId);
+
+    return { data, error };
+  }
+
+  static async updatePasswordStatus(userId: string) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ 
+        has_changed_password: true,
+        user_status: 'active'
+      })
+      .eq('id', userId);
+
+    return { data, error };
   }
 }

@@ -1,7 +1,7 @@
 
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { SignInService } from '@/services/SignInService';
+import { UnifiedSignInService } from '@/services/auth/UnifiedSignInService';
 
 export const useAuthFlow = () => {
   const navigate = useNavigate();
@@ -14,11 +14,7 @@ export const useAuthFlow = () => {
     setIsLoading(true);
 
     try {
-      const regularSignInSuccess = await SignInService.handleRegularSignIn(email, password, navigate);
-      
-      if (!regularSignInSuccess) {
-        await SignInService.handlePendingUserFlow(email, password, navigate);
-      }
+      await UnifiedSignInService.handleSignIn(email, password, navigate);
     } catch (error) {
       console.error('Authentication error:', error);
       toast.error('Authentication failed. Please try again.');

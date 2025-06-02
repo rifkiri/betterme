@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { ProfileService } from '@/services/ProfileService';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { getRedirectPath } from '@/utils/navigationUtils';
@@ -47,13 +48,10 @@ export const PasswordChangeForm = ({ isFirstTime = false }: PasswordChangeFormPr
         return;
       }
 
-      // Update the profile to mark password as changed
+      // Update the profile to mark password as changed and set status to active
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        await supabase
-          .from('profiles')
-          .update({ has_changed_password: true })
-          .eq('id', user.id);
+        await ProfileService.updatePasswordStatus(user.id);
       }
 
       toast.success('Password updated successfully!');

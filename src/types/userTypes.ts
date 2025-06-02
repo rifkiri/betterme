@@ -1,5 +1,6 @@
 
 export type UserRole = 'admin' | 'manager' | 'team-member';
+export type UserStatus = 'pending' | 'active';
 
 export interface User {
   id: string;
@@ -9,6 +10,7 @@ export interface User {
   position?: string;
   temporaryPassword?: string;
   hasChangedPassword: boolean;
+  userStatus: UserStatus;
   createdAt: string;
   lastLogin?: string;
 }

@@ -28,6 +28,17 @@ const getRoleBadgeVariant = (role: UserRole) => {
   }
 };
 
+const getStatusBadgeVariant = (status: string) => {
+  switch (status) {
+    case 'active':
+      return 'default';
+    case 'pending':
+      return 'outline';
+    default:
+      return 'secondary';
+  }
+};
+
 export const UserTable = ({
   users,
   onDeleteUser,
@@ -37,7 +48,9 @@ export const UserTable = ({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const handleShowPassword = (user: User) => {
-    if (!user.hasChangedPassword) {
+    if (user.userStatus === 'pending' && user.temporaryPassword) {
+      toast.info(`User has temporary password: ${user.temporaryPassword}`);
+    } else if (user.userStatus === 'pending') {
       toast.info('User has temporary password: temp123');
     } else {
       toast.info('User has changed their password from the default');
@@ -91,8 +104,8 @@ export const UserTable = ({
                 </TableCell>
                 <TableCell>{user.position || '-'}</TableCell>
                 <TableCell>
-                  <Badge variant={user.hasChangedPassword ? 'default' : 'outline'}>
-                    {user.hasChangedPassword ? 'Active' : 'Pending'}
+                  <Badge variant={getStatusBadgeVariant(user.userStatus)}>
+                    {user.userStatus}
                   </Badge>
                 </TableCell>
                 <TableCell>{user.createdAt}</TableCell>

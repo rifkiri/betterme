@@ -1,13 +1,12 @@
-
-import { RegularSignInService } from '@/services/auth/RegularSignInService';
-import { PendingUserSignUpService } from '@/services/auth/PendingUserSignUpService';
+import { UnifiedSignInService } from '@/services/auth/UnifiedSignInService';
 
 export class SignInService {
   static async handleRegularSignIn(email: string, password: string, navigate: (path: string) => void): Promise<boolean> {
-    return await RegularSignInService.handleRegularSignIn(email, password, navigate);
+    return await UnifiedSignInService.handleSignIn(email, password, navigate);
   }
 
   static async handlePendingUserFlow(email: string, password: string, navigate: (path: string) => void): Promise<void> {
-    return await PendingUserSignUpService.handlePendingUserFlow(email, password, navigate);
+    // This is now handled by the unified service, but keeping for compatibility
+    await UnifiedSignInService.handleSignIn(email, password, navigate);
   }
 }

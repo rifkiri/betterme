@@ -18,7 +18,7 @@ export const UserManagementContent = ({ users, onDeleteUser, onUpdateUser }: Use
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          Adding a user creates a profile entry. The user will need to register with their email and temporary password to complete account setup.
+          Adding a user creates a profile with 'pending' status. The user will need to sign in with their temporary password and change it to activate their account.
         </AlertDescription>
       </Alert>
       
