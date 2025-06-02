@@ -32,19 +32,45 @@ export class SupabaseMoodService {
   }
 
   async addMoodEntry(moodEntry: MoodEntry): Promise<void> {
-    const { error } = await supabase
+    // First check if an entry already exists for this user and date
+    const { data: existingEntry } = await supabase
       .from('mood_entries')
-      .insert({
-        id: moodEntry.id,
-        user_id: moodEntry.userId,
-        date: moodEntry.date,
-        mood: moodEntry.mood,
-        notes: moodEntry.notes
-      });
+      .select('id')
+      .eq('user_id', moodEntry.userId)
+      .eq('date', moodEntry.date)
+      .single();
 
-    if (error) {
-      console.error('Error adding mood entry:', error);
-      throw error;
+    if (existingEntry) {
+      // Update existing entry
+      const { error } = await supabase
+        .from('mood_entries')
+        .update({
+          mood: moodEntry.mood,
+          notes: moodEntry.notes,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existingEntry.id);
+
+      if (error) {
+        console.error('Error updating mood entry:', error);
+        throw error;
+      }
+    } else {
+      // Insert new entry
+      const { error } = await supabase
+        .from('mood_entries')
+        .insert({
+          id: moodEntry.id,
+          user_id: moodEntry.userId,
+          date: moodEntry.date,
+          mood: moodEntry.mood,
+          notes: moodEntry.notes
+        });
+
+      if (error) {
+        console.error('Error adding mood entry:', error);
+        throw error;
+      }
     }
   }
 
@@ -53,6 +79,7 @@ export class SupabaseMoodService {
     
     if (updates.mood !== undefined) supabaseUpdates.mood = updates.mood;
     if (updates.notes !== undefined) supabaseUpdates.notes = updates.notes;
+    supabaseUpdates.updated_at = new Date().toISOString();
 
     const { error } = await supabase
       .from('mood_entries')

@@ -15,14 +15,13 @@ interface MoodEntry {
 export const useMoodTracking = () => {
   const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   // Get current user ID from Supabase auth
   const getCurrentUserId = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     return user?.id || null;
   };
-
-  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const initializeUser = async () => {
@@ -56,7 +55,7 @@ export const useMoodTracking = () => {
       }
     } catch (error) {
       console.error('Failed to load mood data from Supabase:', error);
-      toast.error('Failed to load mood data from Supabase');
+      toast.error('Failed to load mood data');
     } finally {
       setIsLoading(false);
     }
@@ -68,9 +67,12 @@ export const useMoodTracking = () => {
     }
   }, [userId]);
 
-  // Add new mood entry
+  // Add or update mood entry
   const addMoodEntry = async (date: string, mood: number, notes?: string) => {
-    if (!userId) return;
+    if (!userId) {
+      toast.error('Please sign in to save mood entries');
+      return;
+    }
 
     const newEntry: MoodEntry = {
       id: crypto.randomUUID(),
@@ -83,14 +85,21 @@ export const useMoodTracking = () => {
     try {
       if (isSupabaseAvailable()) {
         await supabaseDataService.addMoodEntry(newEntry);
-        await loadMoodData();
-        toast.success('Mood entry saved successfully');
+        await loadMoodData(); // Reload data to get the latest
+        
+        // Check if this was an update (entry already existed for today)
+        const existingEntryForToday = moodEntries.find(entry => entry.date === date);
+        if (existingEntryForToday) {
+          toast.success('Mood entry updated successfully');
+        } else {
+          toast.success('Mood entry saved successfully');
+        }
       } else {
         toast.error('Please sign in to save mood entries');
       }
     } catch (error) {
-      toast.error('Failed to save mood entry');
       console.error('Failed to save mood entry:', error);
+      toast.error('Failed to save mood entry. Please try again.');
     }
   };
 
