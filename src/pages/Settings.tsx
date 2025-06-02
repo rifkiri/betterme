@@ -17,11 +17,13 @@ import {
   Download,
   Trash2,
   Loader2,
-  Mail
+  Mail,
+  Users
 } from "lucide-react";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useProductivity } from "@/hooks/useProductivity";
 import { useMoodTracking } from "@/hooks/useMoodTracking";
+import { UserManagement } from "@/components/admin/UserManagement";
 import { toast } from "sonner";
 
 const Settings = () => {
@@ -121,6 +123,24 @@ const Settings = () => {
                     {profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}
                   </Badge>
                 </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* User Management - Only for Admins */}
+          {profile?.role === 'admin' && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  User Management
+                </CardTitle>
+                <CardDescription>
+                  Manage user accounts and permissions
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <UserManagement />
               </CardContent>
             </Card>
           )}
