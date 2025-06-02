@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,21 +8,12 @@ import { Heart, Smile, Meh, Frown, Save } from 'lucide-react';
 import { useMoodTracking } from '@/hooks/useMoodTracking';
 
 export const FeelingTracker = () => {
-  const [feeling, setFeeling] = useState("5");
-  const [hasLoadedTodaysMood, setHasLoadedTodaysMood] = useState(false);
   const { addMoodEntry, getMoodForDate } = useMoodTracking();
-
-  // Check for existing mood entry for today and update the feeling state only once
-  useEffect(() => {
-    if (!hasLoadedTodaysMood) {
-      const today = new Date().toISOString().split('T')[0];
-      const todaysMood = getMoodForDate(today);
-      if (todaysMood) {
-        setFeeling(todaysMood.mood.toString());
-      }
-      setHasLoadedTodaysMood(true);
-    }
-  }, [hasLoadedTodaysMood]);
+  
+  // Initialize feeling state based on today's mood immediately
+  const today = new Date().toISOString().split('T')[0];
+  const todaysMood = getMoodForDate(today);
+  const [feeling, setFeeling] = useState(todaysMood ? todaysMood.mood.toString() : "5");
 
   const getFeelingIcon = (value: number) => {
     if (value >= 8) return <Smile className="h-5 w-5 text-green-500" />;
@@ -50,7 +42,6 @@ export const FeelingTracker = () => {
   };
 
   const handleRecordMood = async () => {
-    const today = new Date().toISOString().split('T')[0];
     await addMoodEntry(today, parseInt(feeling));
   };
 
@@ -68,8 +59,6 @@ export const FeelingTracker = () => {
   ];
 
   const currentValue = parseInt(feeling);
-  const today = new Date().toISOString().split('T')[0];
-  const todaysMood = getMoodForDate(today);
 
   return (
     <Card>
