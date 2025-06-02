@@ -11,122 +11,6 @@ export const useSignIn = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleRegularSignIn = async () => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (!error && data.user) {
-      // Get user profile to determine role
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', data.user.id)
-        .single();
-
-      if (profileError) {
-        console.error('Error fetching profile:', profileError);
-        toast.error('Error loading user profile');
-        return false;
-      }
-
-      console.log('User profile:', profile);
-      toast.success('Sign in successful!');
-      
-      // Redirect based on role
-      if (profile.role === 'admin') {
-        navigate('/settings');
-      } else if (profile.role === 'manager') {
-        navigate('/manager');
-      } else {
-        navigate('/');
-      }
-      return true;
-    }
-
-    return { error };
-  };
-
-  const handlePendingUserSignIn = async () => {
-    console.log('Checking for pending user with email:', email);
-    
-    // Check for pending user with matching email and password
-    const { data: pendingUsers, error: pendingError } = await supabase
-      .from('pending_users')
-      .select('*')
-      .eq('email', email)
-      .eq('temporary_password', password);
-
-    console.log('Pending users query result:', pendingUsers, pendingError);
-
-    if (pendingError) {
-      console.error('Error querying pending users:', pendingError);
-      toast.error('Error checking user status');
-      return false;
-    }
-
-    if (!pendingUsers || pendingUsers.length === 0) {
-      console.log('No pending user found with matching email and password');
-      toast.error('Invalid email or password');
-      return false;
-    }
-
-    const pendingUser = pendingUsers[0];
-    console.log('Found pending user:', pendingUser);
-
-    // Try to create auth account
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email: pendingUser.email,
-      password: password,
-    });
-
-    if (signUpError) {
-      console.error('Error creating auth user:', signUpError);
-      toast.error('Failed to create account: ' + signUpError.message);
-      return false;
-    }
-
-    if (signUpData.user) {
-      // Create the profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: signUpData.user.id,
-          name: pendingUser.name,
-          email: pendingUser.email,
-          role: pendingUser.role as 'admin' | 'manager' | 'team-member',
-          position: pendingUser.position,
-          has_changed_password: false
-        });
-
-      if (profileError) {
-        console.error('Error creating profile:', profileError);
-        toast.error('Error creating profile: ' + profileError.message);
-        return false;
-      }
-
-      // Remove from pending_users table
-      const { error: deleteError } = await supabase
-        .from('pending_users')
-        .delete()
-        .eq('id', pendingUser.id);
-
-      if (deleteError) {
-        console.error('Error removing pending user:', deleteError);
-      }
-
-      console.log('Successfully created account from pending user');
-      toast.success('Account created successfully! Please change your password.');
-      
-      // Redirect to profile page to change password
-      navigate('/profile');
-      return true;
-    }
-
-    return false;
-  };
-
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -135,16 +19,133 @@ export const useSignIn = () => {
       console.log('Attempting to sign in with email:', email);
       
       // First, try regular sign in
-      const regularResult = await handleRegularSignIn();
-      
-      if (regularResult === true) {
-        return; // Successfully signed in
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (!signInError && signInData.user) {
+        console.log('Regular sign in successful');
+        
+        // Get user profile to determine role
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', signInData.user.id)
+          .single();
+
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
+          toast.error('Error loading user profile');
+          return;
+        }
+
+        console.log('User profile:', profile);
+        toast.success('Sign in successful!');
+        
+        // Redirect based on role
+        if (profile.role === 'admin') {
+          navigate('/settings');
+        } else if (profile.role === 'manager') {
+          navigate('/manager');
+        } else {
+          navigate('/');
+        }
+        return;
       }
+
+      console.log('Regular sign in failed, trying pending user flow');
+      console.log('Sign in error:', signInError);
       
-      // If regular sign in failed, try pending user flow
-      if (regularResult && regularResult.error) {
-        console.log('Regular sign in failed, trying pending user flow');
-        await handlePendingUserSignIn();
+      // If regular sign in failed, check for pending user
+      console.log('Checking for pending user with email:', email);
+      
+      const { data: pendingUsers, error: pendingError } = await supabase
+        .from('pending_users')
+        .select('*')
+        .eq('email', email);
+
+      console.log('Pending users query result:', pendingUsers, pendingError);
+
+      if (pendingError) {
+        console.error('Error querying pending users:', pendingError);
+        toast.error('Error checking user status: ' + pendingError.message);
+        return;
+      }
+
+      if (!pendingUsers || pendingUsers.length === 0) {
+        console.log('No pending user found with email:', email);
+        toast.error('Invalid email or password. User not found.');
+        return;
+      }
+
+      // Check if password matches any pending user
+      const matchingUser = pendingUsers.find(user => user.temporary_password === password);
+      
+      if (!matchingUser) {
+        console.log('No pending user found with matching password');
+        toast.error('Invalid temporary password');
+        return;
+      }
+
+      console.log('Found matching pending user:', matchingUser);
+
+      // Try to sign up the user
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: matchingUser.email,
+        password: password,
+      });
+
+      if (signUpError) {
+        console.error('Error creating auth user:', signUpError);
+        
+        // If user already exists, try to sign them in again
+        if (signUpError.message.includes('already registered')) {
+          console.log('User already exists, trying to sign in with temporary password');
+          toast.error('Account already exists. Please use your regular password or contact admin.');
+          return;
+        }
+        
+        toast.error('Failed to create account: ' + signUpError.message);
+        return;
+      }
+
+      if (signUpData.user) {
+        console.log('Successfully created auth user:', signUpData.user.id);
+        
+        // Create the profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: signUpData.user.id,
+            name: matchingUser.name,
+            email: matchingUser.email,
+            role: matchingUser.role as 'admin' | 'manager' | 'team-member',
+            position: matchingUser.position,
+            has_changed_password: false
+          });
+
+        if (profileError) {
+          console.error('Error creating profile:', profileError);
+          toast.error('Error creating profile: ' + profileError.message);
+          return;
+        }
+
+        // Remove from pending_users table
+        const { error: deleteError } = await supabase
+          .from('pending_users')
+          .delete()
+          .eq('id', matchingUser.id);
+
+        if (deleteError) {
+          console.error('Error removing pending user:', deleteError);
+        }
+
+        console.log('Successfully created account from pending user');
+        toast.success('Account created successfully! Please change your password.');
+        
+        // Redirect to profile page to change password
+        navigate('/profile');
       }
     } catch (error) {
       console.error('Authentication error:', error);
