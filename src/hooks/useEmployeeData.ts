@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import { EmployeeData } from '@/types/individualData';
-import { EmployeeDataService } from '@/services/EmployeeDataService';
+import { supabaseDataService } from '@/services/SupabaseDataService';
+import { transformToEmployeeData } from '@/utils/employeeDataTransformer';
 import { toast } from 'sonner';
 
 export const useEmployeeData = () => {
@@ -12,23 +13,30 @@ export const useEmployeeData = () => {
     const loadEmployeeData = async () => {
       setIsLoading(true);
       try {
-        const data = await EmployeeDataService.loadAllEmployeeData();
-        setEmployeeData(data);
-        console.log('Employee data loaded from Google Sheets:', data);
-      } catch (error) {
-        console.error('Failed to load employee data from Google Sheets:', error);
+        // Get all team members from Supabase
+        const users = await supabaseDataService.getUsers();
+        const teamMembers = users.filter(user => user.role === 'team-member');
         
-        if (error instanceof Error) {
-          if (error.message === 'Google Sheets not configured') {
-            toast.error('Google Sheets not configured. Please configure in Settings.');
-          } else if (error.message === 'Google Sheets not authenticated') {
-            toast.error('Google Sheets not authenticated. Please authenticate in Settings.');
-          } else {
-            toast.error('Failed to load data from Google Sheets. Please check your configuration.');
-          }
-        } else {
-          toast.error('Failed to load data from Google Sheets. Please check your configuration.');
+        console.log('Team members from Supabase:', teamMembers);
+        
+        const data: Record<string, EmployeeData> = {};
+        
+        // Load data for each team member from Supabase
+        for (const member of teamMembers) {
+          const [habits, tasks, outputs] = await Promise.all([
+            supabaseDataService.getHabits(member.id),
+            supabaseDataService.getTasks(member.id),
+            supabaseDataService.getWeeklyOutputs(member.id)
+          ]);
+          
+          data[member.id] = transformToEmployeeData(member, habits, tasks, outputs);
         }
+        
+        setEmployeeData(data);
+        console.log('Employee data loaded from Supabase:', data);
+      } catch (error) {
+        console.error('Failed to load employee data from Supabase:', error);
+        toast.error('Failed to load employee data. Please try again.');
       } finally {
         setIsLoading(false);
       }

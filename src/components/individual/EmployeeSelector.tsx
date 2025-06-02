@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { googleSheetsService } from '@/services/GoogleSheetsService';
+import { supabaseDataService } from '@/services/SupabaseDataService';
 import { User } from '@/types/userTypes';
 
 interface EmployeeSelectorProps {
@@ -18,13 +18,12 @@ export const EmployeeSelector = ({ selectedEmployee, onEmployeeChange }: Employe
     const loadTeamMembers = async () => {
       setIsLoading(true);
       try {
-        if (googleSheetsService.isConfigured() && googleSheetsService.isAuthenticated()) {
-          const users = await googleSheetsService.getUsers();
-          const members = users.filter(user => user.role === 'team-member');
-          setTeamMembers(members);
-        }
+        const users = await supabaseDataService.getUsers();
+        const members = users.filter(user => user.role === 'team-member');
+        setTeamMembers(members);
+        console.log('Team members loaded from Supabase:', members);
       } catch (error) {
-        console.error('Failed to load team members from Google Sheets:', error);
+        console.error('Failed to load team members from Supabase:', error);
       } finally {
         setIsLoading(false);
       }
@@ -39,7 +38,7 @@ export const EmployeeSelector = ({ selectedEmployee, onEmployeeChange }: Employe
         <CardTitle>Select Team Member</CardTitle>
         <CardDescription>
           Choose a team member to view their detailed performance
-          <span className="text-blue-600"> • Using Google Sheets</span>
+          <span className="text-blue-600"> • Using Supabase Database</span>
         </CardDescription>
       </CardHeader>
       <CardContent>
