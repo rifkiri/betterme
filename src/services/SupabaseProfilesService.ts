@@ -30,7 +30,7 @@ export class SupabaseProfilesService {
           createdAt: profile.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
           lastLogin: profile.last_login?.split('T')[0],
           temporaryPassword: profile.temporary_password,
-          managerId: profile.manager_id // Map manager_id from database
+          managerId: profile.manager_id || undefined // Safely map manager_id from database
         });
       });
     }
@@ -51,7 +51,7 @@ export class SupabaseProfilesService {
         temporary_password: user.temporaryPassword || 'temp123',
         user_status: 'pending',
         has_changed_password: false,
-        manager_id: user.managerId // Map managerId to manager_id
+        manager_id: user.managerId || null // Map managerId to manager_id
       });
 
     if (error) {
@@ -120,7 +120,8 @@ export class SupabaseProfilesService {
       userStatus: data.user_status || 'active',
       createdAt: data.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
       lastLogin: data.last_login?.split('T')[0],
-      temporaryPassword: data.temporary_password
+      temporaryPassword: data.temporary_password,
+      managerId: data.manager_id || undefined // Safely map manager_id from database
     };
   }
 }
