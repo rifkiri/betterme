@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -136,27 +135,27 @@ export const TeamMoodChart = ({ teamData }: TeamMoodChartProps) => {
           </div>
         </div>
 
-        {/* Mood Scale Reference - Made Vertical */}
+        {/* Mood Scale Reference - Made Horizontal */}
         <div className="bg-gray-50 p-4 rounded-lg">
           <h4 className="text-sm font-medium mb-4">Mood Scale Reference</h4>
-          <div className="flex flex-col space-y-3">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-wrap gap-4 justify-center">
+            <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-green-500 rounded-full flex-shrink-0"></div>
               <span className="text-sm">9-10: Amazing</span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-blue-500 rounded-full flex-shrink-0"></div>
               <span className="text-sm">7-8: Good/Great</span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-yellow-500 rounded-full flex-shrink-0"></div>
               <span className="text-sm">5-6: Neutral/Okay</span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-orange-500 rounded-full flex-shrink-0"></div>
               <span className="text-sm">3-4: Not great/Meh</span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-red-500 rounded-full flex-shrink-0"></div>
               <span className="text-sm">1-2: Terrible/Poor</span>
             </div>
