@@ -34,12 +34,74 @@ const SignIn = () => {
     try {
       console.log('Attempting to sign in with Supabase:', email);
       
+      // First, try regular sign in
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) {
+      if (error && error.message === 'Invalid login credentials') {
+        // Check if this is a pending user with temporary password
+        console.log('Regular sign in failed, checking for pending user...');
+        
+        const { data: pendingUser, error: pendingError } = await supabase
+          .from('pending_users')
+          .select('*')
+          .eq('email', email)
+          .eq('temporary_password', password)
+          .single();
+
+        if (pendingError || !pendingUser) {
+          console.error('No pending user found or invalid credentials:', pendingError);
+          toast.error('Invalid email or password');
+          return;
+        }
+
+        console.log('Found pending user, creating auth account...');
+        
+        // Create the actual Supabase auth user
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: pendingUser.email,
+          password: password, // Use the temporary password initially
+        });
+
+        if (signUpError) {
+          console.error('Error creating auth user:', signUpError);
+          toast.error('Failed to create account: ' + signUpError.message);
+          return;
+        }
+
+        if (signUpData.user) {
+          // Update the profiles table with the pending user data
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .upsert({
+              id: signUpData.user.id,
+              name: pendingUser.name,
+              email: pendingUser.email,
+              role: pendingUser.role,
+              position: pendingUser.position,
+              has_changed_password: false
+            });
+
+          if (profileError) {
+            console.error('Error creating profile:', profileError);
+          }
+
+          // Remove from pending_users table
+          await supabase
+            .from('pending_users')
+            .delete()
+            .eq('id', pendingUser.id);
+
+          console.log('Successfully created account from pending user');
+          toast.success('Account created successfully! Please change your password.');
+          
+          // Redirect to profile page to change password
+          navigate('/profile');
+          return;
+        }
+      } else if (error) {
         console.error('Supabase auth error:', error);
         toast.error(error.message);
         return;
@@ -138,7 +200,7 @@ const SignIn = () => {
             <h4 className="font-medium text-sm text-blue-900 mb-2">Demo Credentials:</h4>
             <div className="text-xs text-blue-700 space-y-1">
               <p><strong>Admin:</strong> rifkiri@gmail.com / [use your Supabase password]</p>
-              <p>Other users can be created through the admin panel</p>
+              <p>Users created by admin can sign in with their email and temporary password</p>
             </div>
           </div>
         </CardContent>
