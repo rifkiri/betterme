@@ -44,24 +44,49 @@ const SignIn = () => {
         // Check if this is a pending user with temporary password
         console.log('Regular sign in failed, checking for pending user...');
         
-        const { data: pendingUser, error: pendingError } = await supabase
+        // First, let's see if any pending users exist at all
+        const { data: allPendingUsers, error: listError } = await supabase
+          .from('pending_users')
+          .select('*');
+        
+        console.log('All pending users:', allPendingUsers);
+        
+        // Now check for this specific user
+        const { data: pendingUsers, error: pendingError } = await supabase
           .from('pending_users')
           .select('*')
-          .eq('email', email)
-          .eq('temporary_password', password)
-          .single();
+          .eq('email', email);
 
-        if (pendingError || !pendingUser) {
-          console.error('No pending user found or invalid credentials:', pendingError);
+        console.log('Pending users for email:', pendingUsers);
+
+        if (pendingError) {
+          console.error('Error querying pending users:', pendingError);
+          toast.error('Error checking user status');
+          return;
+        }
+
+        if (!pendingUsers || pendingUsers.length === 0) {
+          console.log('No pending user found for email:', email);
           toast.error('Invalid email or password');
           return;
         }
 
-        console.log('Found pending user, creating auth account...');
+        // Check if password matches any of the pending users (in case there are duplicates)
+        const matchingUser = pendingUsers.find(user => user.temporary_password === password);
+        
+        if (!matchingUser) {
+          console.log('No pending user with matching password found');
+          console.log('Expected password:', password);
+          console.log('Available users:', pendingUsers.map(u => ({ email: u.email, hasPassword: !!u.temporary_password })));
+          toast.error('Invalid email or password');
+          return;
+        }
+
+        console.log('Found matching pending user, creating auth account...');
         
         // Create the actual Supabase auth user
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email: pendingUser.email,
+          email: matchingUser.email,
           password: password, // Use the temporary password initially
         });
 
@@ -77,22 +102,29 @@ const SignIn = () => {
             .from('profiles')
             .insert({
               id: signUpData.user.id,
-              name: pendingUser.name,
-              email: pendingUser.email,
-              role: pendingUser.role as 'admin' | 'manager' | 'team-member',
-              position: pendingUser.position,
+              name: matchingUser.name,
+              email: matchingUser.email,
+              role: matchingUser.role as 'admin' | 'manager' | 'team-member',
+              position: matchingUser.position,
               has_changed_password: false
             });
 
           if (profileError) {
             console.error('Error creating profile:', profileError);
+            toast.error('Error creating profile: ' + profileError.message);
+            return;
           }
 
           // Remove from pending_users table
-          await supabase
+          const { error: deleteError } = await supabase
             .from('pending_users')
             .delete()
-            .eq('id', pendingUser.id);
+            .eq('id', matchingUser.id);
+
+          if (deleteError) {
+            console.error('Error removing pending user:', deleteError);
+            // Don't return here, as the user has been created successfully
+          }
 
           console.log('Successfully created account from pending user');
           toast.success('Account created successfully! Please change your password.');
