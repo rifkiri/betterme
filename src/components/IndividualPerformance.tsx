@@ -38,7 +38,8 @@ export const IndividualPerformance = () => {
             id: task.id,
             title: task.title,
             priority: task.priority as 'High' | 'Medium' | 'Low',
-            daysOverdue: Math.floor((today.getTime() - task.dueDate!.getTime()) / (1000 * 60 * 60 * 24))
+            daysOverdue: Math.floor((today.getTime() - task.dueDate!.getTime()) / (1000 * 60 * 60 * 24)),
+            originalDueDate: task.dueDate!.toISOString().split('T')[0]
           }));
           
           const overdueOutputs = outputs.filter(output => 
@@ -47,7 +48,8 @@ export const IndividualPerformance = () => {
             id: output.id,
             title: output.title,
             progress: output.progress,
-            daysOverdue: Math.floor((today.getTime() - output.dueDate!.getTime()) / (1000 * 60 * 60 * 24))
+            daysOverdue: Math.floor((today.getTime() - output.dueDate!.getTime()) / (1000 * 60 * 60 * 24)),
+            originalDueDate: output.dueDate!.toISOString().split('T')[0]
           }));
           
           // Recent tasks (last 10)
@@ -64,11 +66,6 @@ export const IndividualPerformance = () => {
             }));
           
           // Weekly outputs for current week
-          const startOfWeek = new Date();
-          startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-          const endOfWeek = new Date(startOfWeek);
-          endOfWeek.setDate(endOfWeek.getDate() + 6);
-          
           const weeklyOutputs = outputs
             .filter(output => !output.isDeleted)
             .map(output => ({
@@ -77,20 +74,42 @@ export const IndividualPerformance = () => {
               progress: output.progress,
               dueDate: output.dueDate?.toISOString().split('T')[0] || ''
             }));
+
+          // Calculate completion rates for stats
+          const completedHabits = habits.filter(h => h.completed && !h.archived).length;
+          const totalHabits = habits.filter(h => !h.archived).length;
+          const habitsCompletionRate = totalHabits > 0 ? Math.round((completedHabits / totalHabits) * 100) : 0;
+          
+          const completedTasks = tasks.filter(t => t.completed && !t.isDeleted).length;
+          const totalTasks = tasks.filter(t => !t.isDeleted).length;
+          const tasksCompletionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+          
+          const completedOutputs = outputs.filter(o => o.progress === 100 && !o.isDeleted).length;
+          const totalOutputs = outputs.filter(o => !o.isDeleted).length;
+          const outputsCompletionRate = totalOutputs > 0 ? Math.round((completedOutputs / totalOutputs) * 100) : 0;
+          
+          const maxStreak = Math.max(...habits.map(h => h.streak), 0);
+          const currentStreak = habits.filter(h => h.completed).reduce((sum, h) => sum + h.streak, 0) / Math.max(habits.filter(h => h.completed).length, 1);
           
           data[member.id] = {
             id: member.id,
             name: member.name,
             role: member.position || 'Team Member',
             email: member.email,
+            avatar: '',
+            stats: {
+              habitsCompletionRate,
+              tasksCompletionRate,
+              outputsCompletionRate,
+              bestStreak: Math.round(maxStreak),
+              currentStreak: Math.round(currentStreak)
+            },
             overdueTasks,
             overdueOutputs,
             habits: habits.filter(h => !h.archived).map(habit => ({
-              id: habit.id,
               name: habit.name,
               completed: habit.completed,
-              streak: habit.streak,
-              targetDays: habit.targetDays || []
+              streak: habit.streak
             })),
             recentTasks,
             weeklyOutputs

@@ -1,4 +1,3 @@
-
 import { localDataService } from './LocalDataService';
 import { TeamData, TeamMember, OverdueTask, OverdueOutput } from '@/types/teamData';
 import { User } from '@/types/userTypes';
@@ -221,7 +220,7 @@ class TeamDataService {
   }
 
   private generateMoodData(teamMembers: User[]) {
-    const moodData: { date: string; mood: number }[] = [];
+    const moodData: { date: string; mood: number; memberId: string }[] = [];
     const last30Days: string[] = [];
     
     // Generate last 30 days
@@ -231,26 +230,19 @@ class TeamDataService {
       last30Days.push(date.toISOString().split('T')[0]);
     }
     
-    // Calculate average mood for each day
+    // Get mood data for each day and member
     last30Days.forEach(date => {
-      let totalMood = 0;
-      let moodCount = 0;
-      
       teamMembers.forEach(member => {
         const moodEntries = localDataService.getMoodData(member.id);
         const dayMood = moodEntries.find(entry => entry.date === date);
         if (dayMood) {
-          totalMood += dayMood.mood;
-          moodCount++;
+          moodData.push({
+            date,
+            mood: dayMood.mood,
+            memberId: member.id
+          });
         }
       });
-      
-      if (moodCount > 0) {
-        moodData.push({
-          date,
-          mood: totalMood / moodCount
-        });
-      }
     });
     
     return moodData;

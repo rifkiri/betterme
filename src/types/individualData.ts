@@ -6,6 +6,7 @@ export interface EmployeeHabit {
 }
 
 export interface EmployeeTask {
+  id: string;
   title: string;
   priority: 'High' | 'Medium' | 'Low';
   completed: boolean;
@@ -13,12 +14,14 @@ export interface EmployeeTask {
 }
 
 export interface EmployeeWeeklyOutput {
+  id: string;
   title: string;
   progress: number;
   dueDate: string;
 }
 
 export interface OverdueTask {
+  id: string;
   title: string;
   priority: 'High' | 'Medium' | 'Low';
   daysOverdue: number;
@@ -26,6 +29,7 @@ export interface OverdueTask {
 }
 
 export interface OverdueOutput {
+  id: string;
   title: string;
   progress: number;
   daysOverdue: number;
@@ -41,8 +45,10 @@ export interface EmployeeStats {
 }
 
 export interface EmployeeData {
+  id: string;
   name: string;
   role: string;
+  email: string;
   avatar: string;
   stats: EmployeeStats;
   habits: EmployeeHabit[];
