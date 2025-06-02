@@ -17,7 +17,6 @@ export const UserManagement = () => {
     loadUsers,
     handleAddUser,
     handleDeleteUser,
-    handleDeleteAllNonAdminUsers,
     handleUpdateUser
   } = useUserManagement();
 
@@ -27,7 +26,6 @@ export const UserManagement = () => {
         <UserManagementHeader
           onRefresh={loadUsers}
           onAddUser={() => setIsAddUserOpen(true)}
-          onDeleteAllNonAdmin={handleDeleteAllNonAdminUsers}
           isLoading={isLoading}
         />
         <UserManagementContent
