@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { AppNavigation } from "@/components/AppNavigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,12 +7,13 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Settings as SettingsIcon, Database, Moon, Sun, Bell, Shield, Download, Trash2, Loader2, Mail, Users } from "lucide-react";
+import { Settings as SettingsIcon, Database, Moon, Sun, Bell, Shield, Download, Trash2, Loader2, Mail, Users, User } from "lucide-react";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useProductivity } from "@/hooks/useProductivity";
 import { useMoodTracking } from "@/hooks/useMoodTracking";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { toast } from "sonner";
+
 const Settings = () => {
   const {
     profile,
@@ -31,6 +33,7 @@ const Settings = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [emailReminders, setEmailReminders] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
   const handleRefreshData = async () => {
     setIsRefreshing(true);
     try {
@@ -42,6 +45,7 @@ const Settings = () => {
       setIsRefreshing(false);
     }
   };
+
   const handleExportData = () => {
     const data = {
       habits,
@@ -59,6 +63,7 @@ const Settings = () => {
     linkElement.click();
     toast.success('Data exported successfully');
   };
+
   if (profileLoading) {
     return <div className="min-h-screen bg-gray-50">
         <AppNavigation />
@@ -67,6 +72,7 @@ const Settings = () => {
         </div>
       </div>;
   }
+
   return <div className="min-h-screen bg-gray-50">
       <AppNavigation />
       <div className="max-w-4xl mx-auto p-6">
@@ -77,10 +83,47 @@ const Settings = () => {
 
         <div className="grid gap-6">
           {/* User Information */}
-          {profile}
+          {profile && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  User Information
+                </CardTitle>
+                <CardDescription>
+                  Your account details and role information
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">Name</Label>
+                    <p className="text-gray-900">{profile.name}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">Email</Label>
+                    <p className="text-gray-900">{profile.email}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">Role</Label>
+                    <Badge variant={profile.role === 'admin' ? 'destructive' : profile.role === 'manager' ? 'default' : 'secondary'}>
+                      {profile.role}
+                    </Badge>
+                  </div>
+                  {profile.position && (
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Position</Label>
+                      <p className="text-gray-900">{profile.position}</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* User Management - Only for Admins */}
-          {profile?.role === 'admin' && <Card>
+          {profile?.role === 'admin' && (
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
@@ -93,7 +136,8 @@ const Settings = () => {
               <CardContent>
                 <UserManagement />
               </CardContent>
-            </Card>}
+            </Card>
+          )}
 
           {/* Data Management */}
           <Card>
@@ -194,7 +238,8 @@ const Settings = () => {
           </Card>
 
           {/* Danger Zone */}
-          {profile?.role === 'admin' && <Card className="border-red-200">
+          {profile?.role === 'admin' && (
+            <Card className="border-red-200">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-red-600">
                   <Trash2 className="h-5 w-5" />
@@ -212,9 +257,11 @@ const Settings = () => {
                   This action cannot be undone. All your data will be permanently deleted.
                 </p>
               </CardContent>
-            </Card>}
+            </Card>
+          )}
         </div>
       </div>
     </div>;
 };
+
 export default Settings;
