@@ -39,81 +39,22 @@ export class UnifiedSignInService {
       // For pending users, use temporary_password as credential
       if (existingUserData.user_status === 'pending' && existingUserData.temporary_password) {
         if (existingUserData.temporary_password === password) {
-          console.log('Pending user with correct temporary password');
+          console.log('Pending user with correct temporary password - using temporary password as credential');
           
-          // Try to sign in with temporary password (if auth user already exists)
-          const { data: signInData, error: signInError } = await AuthService.signInWithPassword(existingUserData.email, password);
+          // Use temporary password as the actual login credential
+          const { data: signInData, error: signInError } = await AuthService.signInWithPassword(existingUserData.email, existingUserData.temporary_password);
           
           if (!signInError && signInData.user) {
-            console.log('Pending user signed in successfully');
+            console.log('Pending user signed in successfully with temporary password');
             
-            // Guide them to change password
-            toast.success('Welcome! Please change your temporary password.');
             await ProfileService.updateProfileLogin(signInData.user.id, true);
+            toast.success('Welcome! Please change your temporary password.');
             navigate('/profile');
             return true;
           } else {
-            console.log('Auth user does not exist yet, creating...');
-            
-            // Create auth user with temporary password
-            const { data: signUpData, error: signUpError } = await AuthService.signUpWithPassword(existingUserData.email, password);
-
-            if (signUpError) {
-              console.error('Error creating auth user:', signUpError);
-              
-              if (signUpError.message.includes('already registered') || signUpError.message.includes('already exists')) {
-                console.log('User already exists in auth - they should sign in normally');
-                toast.error('Account already exists. Please sign in with your regular credentials.');
-                return false;
-              }
-              
-              toast.error('Failed to create account: ' + signUpError.message);
-              return false;
-            }
-
-            if (signUpData.user) {
-              console.log('Successfully created auth user:', signUpData.user.id);
-              
-              // Update the existing profile with the new auth user ID
-              const { error: updateError } = await supabase
-                .from('profiles')
-                .update({
-                  id: signUpData.user.id,
-                  user_status: 'pending'
-                })
-                .eq('id', existingUserData.id);
-
-              if (updateError) {
-                console.error('Error updating profile:', updateError);
-                toast.error('Error updating profile: ' + updateError.message);
-                return false;
-              }
-
-              // Create new profile with auth user ID
-              const { error: profileError } = await ProfileService.createProfile(signUpData.user.id, {
-                name: existingUserData.name,
-                email: existingUserData.email,
-                role: existingUserData.role,
-                position: existingUserData.position,
-                temporaryPassword: existingUserData.temporary_password
-              });
-
-              if (!profileError) {
-                // Delete the old profile entry
-                await supabase
-                  .from('profiles')
-                  .delete()
-                  .eq('id', existingUserData.id);
-                
-                toast.success('Welcome! Please change your temporary password.');
-                navigate('/profile');
-                return true;
-              } else {
-                console.error('Error creating profile:', profileError);
-                toast.error('Error creating profile: ' + profileError.message);
-                return false;
-              }
-            }
+            console.error('Failed to sign in with temporary password:', signInError);
+            toast.error('Authentication failed. Please contact an administrator.');
+            return false;
           }
         } else {
           console.log('Pending user with incorrect temporary password');
