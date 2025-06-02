@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,16 +8,20 @@ import { useMoodTracking } from '@/hooks/useMoodTracking';
 
 export const FeelingTracker = () => {
   const [feeling, setFeeling] = useState("5");
+  const [hasInitialized, setHasInitialized] = useState(false);
   const { addMoodEntry, getMoodForDate } = useMoodTracking();
 
-  // Check for existing mood entry for today and update the feeling state
+  // Check for existing mood entry for today and update the feeling state only once
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
-    const todaysMood = getMoodForDate(today);
-    if (todaysMood) {
-      setFeeling(todaysMood.mood.toString());
+    if (!hasInitialized) {
+      const today = new Date().toISOString().split('T')[0];
+      const todaysMood = getMoodForDate(today);
+      if (todaysMood) {
+        setFeeling(todaysMood.mood.toString());
+      }
+      setHasInitialized(true);
     }
-  }, [getMoodForDate]);
+  }, [getMoodForDate, hasInitialized]);
 
   const getFeelingIcon = (value: number) => {
     if (value >= 8) return <Smile className="h-5 w-5 text-green-500" />;
