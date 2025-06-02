@@ -66,23 +66,54 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Create the profile using the auth user's ID
-    const { error: profileError } = await supabaseAdmin
+    // Check if profile already exists
+    const { data: existingProfile } = await supabaseAdmin
       .from('profiles')
-      .insert({
-        id: authData.user.id,
-        name,
-        email,
-        role,
-        position: position || null,
-        temporary_password: temporaryPassword,
-        user_status: 'pending',
-        has_changed_password: false
-      })
+      .select('id')
+      .eq('id', authData.user.id)
+      .maybeSingle()
+
+    let profileError = null
+
+    if (existingProfile) {
+      // Update existing profile
+      console.log('Updating existing profile for user:', email)
+      const { error } = await supabaseAdmin
+        .from('profiles')
+        .update({
+          name,
+          email,
+          role,
+          position: position || null,
+          temporary_password: temporaryPassword,
+          user_status: 'pending',
+          has_changed_password: false
+        })
+        .eq('id', authData.user.id)
+
+      profileError = error
+    } else {
+      // Create new profile
+      console.log('Creating new profile for user:', email)
+      const { error } = await supabaseAdmin
+        .from('profiles')
+        .insert({
+          id: authData.user.id,
+          name,
+          email,
+          role,
+          position: position || null,
+          temporary_password: temporaryPassword,
+          user_status: 'pending',
+          has_changed_password: false
+        })
+
+      profileError = error
+    }
 
     if (profileError) {
-      console.error('Error creating profile:', profileError)
-      // If profile creation fails, we should clean up the auth user
+      console.error('Error creating/updating profile:', profileError)
+      // If profile creation/update fails, we should clean up the auth user
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
       
       return new Response(
