@@ -166,9 +166,9 @@ export const useSignIn = () => {
         for (const user of pendingUsers) {
           await PendingUserService.removePendingUser(user.id);
         }
-        toast.success('Account created successfully! Please check your email to confirm your account, then sign in again.');
-        setEmail('');
-        setPassword('');
+        toast.success('Welcome! Please change your temporary password.');
+        navigate('/profile');
+        return;
       } else {
         console.log('Creating profile from pending user...');
         const { error: profileError } = await ProfileService.createProfile(signUpData.user.id, matchingUser);
@@ -179,9 +179,9 @@ export const useSignIn = () => {
           for (const user of pendingUsers) {
             await PendingUserService.removePendingUser(user.id);
           }
-          toast.success('Account created successfully! Please check your email to confirm your account, then sign in again.');
-          setEmail('');
-          setPassword('');
+          toast.success('Welcome! Please change your temporary password.');
+          navigate('/profile');
+          return;
         } else {
           console.error('Error creating profile:', profileError);
           toast.error('Error creating profile: ' + profileError.message);

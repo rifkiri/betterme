@@ -8,6 +8,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { getRedirectPath } from '@/utils/navigationUtils';
 
 interface PasswordChangeFormProps {
   isFirstTime?: boolean;
@@ -66,13 +67,7 @@ export const PasswordChangeForm = ({ isFirstTime = false }: PasswordChangeFormPr
           .single();
 
         if (profile) {
-          if (profile.role === 'admin') {
-            navigate('/settings');
-          } else if (profile.role === 'manager') {
-            navigate('/manager');
-          } else {
-            navigate('/');
-          }
+          navigate(getRedirectPath(profile.role));
         }
       }
     } catch (error) {
