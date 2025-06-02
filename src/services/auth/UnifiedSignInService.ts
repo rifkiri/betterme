@@ -2,7 +2,7 @@
 import { toast } from 'sonner';
 import { AuthService } from '@/services/AuthService';
 import { ProfileService } from '@/services/ProfileService';
-import { supabaseProfilesService } from '@/services/SupabaseProfilesService';
+import { supabase } from '@/integrations/supabase/client';
 import { getRedirectPath } from '@/utils/navigationUtils';
 
 export class UnifiedSignInService {
@@ -43,13 +43,38 @@ export class UnifiedSignInService {
     // If regular sign in failed, check if user exists with temporary password
     console.log('Regular sign in failed, checking for user with temporary password');
     
-    const existingUser = await supabaseProfilesService.getUserByEmail(email);
+    // Query the profiles table directly
+    const { data: existingUserData, error: userError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('email', email.trim().toLowerCase())
+      .maybeSingle();
     
-    if (!existingUser) {
-      console.log('No user found with email:', email);
-      toast.error('Invalid email or password. User not found.');
+    if (userError) {
+      console.error('Error fetching user by email:', userError);
+      toast.error('Error checking user credentials');
       return false;
     }
+
+    if (!existingUserData) {
+      console.log('No user found with email:', email);
+      toast.error('Invalid email or password');
+      return false;
+    }
+
+    const existingUser = {
+      id: existingUserData.id,
+      name: existingUserData.name || '',
+      email: existingUserData.email || '',
+      role: existingUserData.role || 'team-member',
+      position: existingUserData.position || '',
+      temporaryPassword: existingUserData.temporary_password || undefined,
+      hasChangedPassword: existingUserData.has_changed_password || false,
+      userStatus: existingUserData.user_status || 'active',
+      createdAt: existingUserData.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+      lastLogin: existingUserData.last_login?.split('T')[0],
+      managerId: existingUserData.manager_id || undefined
+    };
 
     // Check if this is a temporary password login attempt
     if (existingUser.temporaryPassword && existingUser.temporaryPassword === password) {
@@ -83,10 +108,19 @@ export class UnifiedSignInService {
           console.log('Successfully created auth user:', signUpData.user.id);
           
           // Update the existing profile with the new auth user ID
-          await supabaseProfilesService.updateUser(existingUser.id, {
-            id: signUpData.user.id,
-            userStatus: 'pending'
-          });
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({
+              id: signUpData.user.id,
+              user_status: 'pending'
+            })
+            .eq('id', existingUser.id);
+
+          if (updateError) {
+            console.error('Error updating profile:', updateError);
+            toast.error('Error updating profile: ' + updateError.message);
+            return false;
+          }
 
           // Create new profile with auth user ID
           const { error: profileError } = await ProfileService.createProfile(signUpData.user.id, {
@@ -94,12 +128,15 @@ export class UnifiedSignInService {
             email: existingUser.email,
             role: existingUser.role,
             position: existingUser.position,
-            temporary_password: existingUser.temporaryPassword
+            temporaryPassword: existingUser.temporaryPassword
           });
 
           if (!profileError) {
             // Delete the old profile entry
-            await supabaseProfilesService.deleteUser(existingUser.id);
+            await supabase
+              .from('profiles')
+              .delete()
+              .eq('id', existingUser.id);
             
             toast.success('Welcome! Please change your temporary password.');
             navigate('/profile');
@@ -114,7 +151,7 @@ export class UnifiedSignInService {
     }
 
     console.log('Invalid credentials provided');
-    toast.error('Invalid email or password.');
+    toast.error('Invalid email or password');
     return false;
   }
 }
