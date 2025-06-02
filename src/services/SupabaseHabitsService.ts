@@ -3,6 +3,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { Habit } from '@/types/productivity';
 
 export class SupabaseHabitsService {
+  private mapAppCategoryToDatabase(appCategory?: string): 'health' | 'productivity' | 'personal' | 'fitness' | 'learning' | 'other' {
+    if (!appCategory) return 'other';
+    
+    const validCategories = ['health', 'productivity', 'personal', 'fitness', 'learning', 'other'] as const;
+    const lowerCategory = appCategory.toLowerCase();
+    
+    if (validCategories.includes(lowerCategory as any)) {
+      return lowerCategory as 'health' | 'productivity' | 'personal' | 'fitness' | 'learning' | 'other';
+    }
+    
+    return 'other';
+  }
+
   async getHabits(userId: string): Promise<Habit[]> {
     const { data, error } = await supabase
       .from('habits')
@@ -37,7 +50,7 @@ export class SupabaseHabitsService {
         description: habit.description,
         completed: habit.completed,
         streak: habit.streak,
-        category: habit.category,
+        category: this.mapAppCategoryToDatabase(habit.category),
         archived: habit.archived,
         is_deleted: habit.isDeleted
       });
@@ -55,7 +68,7 @@ export class SupabaseHabitsService {
     if (updates.description !== undefined) supabaseUpdates.description = updates.description;
     if (updates.completed !== undefined) supabaseUpdates.completed = updates.completed;
     if (updates.streak !== undefined) supabaseUpdates.streak = updates.streak;
-    if (updates.category) supabaseUpdates.category = updates.category;
+    if (updates.category) supabaseUpdates.category = this.mapAppCategoryToDatabase(updates.category);
     if (updates.archived !== undefined) supabaseUpdates.archived = updates.archived;
     if (updates.isDeleted !== undefined) supabaseUpdates.is_deleted = updates.isDeleted;
 
