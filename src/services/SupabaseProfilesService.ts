@@ -23,15 +23,18 @@ export class SupabaseProfilesService {
       hasChangedPassword: profile.has_changed_password,
       createdAt: profile.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
       lastLogin: profile.last_login?.split('T')[0],
-      temporaryPassword: 'temp123' // Default for migration
+      temporaryPassword: profile.has_changed_password ? undefined : 'temp123' // Show temp password if not changed
     }));
   }
 
   async addUser(user: User): Promise<void> {
+    // Generate a temporary password for new users
+    const tempPassword = user.temporaryPassword || 'temp123';
+    
     // Create auth user first
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email: user.email,
-      password: user.temporaryPassword || 'temp123',
+      password: tempPassword,
       email_confirm: true,
       user_metadata: {
         name: user.name
@@ -52,7 +55,7 @@ export class SupabaseProfilesService {
         email: user.email,
         role: user.role,
         position: user.position,
-        has_changed_password: user.hasChangedPassword,
+        has_changed_password: false, // New users haven't changed their password yet
         last_login: user.lastLogin
       });
 
@@ -105,6 +108,12 @@ export class SupabaseProfilesService {
       if (passwordError) {
         console.error('Error updating password:', passwordError);
         // Don't throw here as the profile was already updated
+      } else {
+        // Mark that user needs to change password
+        await supabase
+          .from('profiles')
+          .update({ has_changed_password: false })
+          .eq('id', userId);
       }
     }
   }
