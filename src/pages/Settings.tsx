@@ -1,13 +1,14 @@
 
 import React from "react";
 import { AppNavigation } from "@/components/AppNavigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, Users, Database, Settings as SettingsIcon } from "lucide-react";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useProductivity } from "@/hooks/useProductivity";
 import { useMoodTracking } from "@/hooks/useMoodTracking";
 import { UserManagementSection } from "@/components/settings/UserManagementSection";
 import { DataManagementSection } from "@/components/settings/DataManagementSection";
 import { PreferencesSection } from "@/components/settings/PreferencesSection";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Settings = () => {
   const { profile, isLoading: profileLoading } = useUserProfile();
@@ -38,20 +39,45 @@ const Settings = () => {
           <p className="text-gray-600">Manage your application preferences and data</p>
         </div>
 
-        <div className="grid gap-6">
-          <UserManagementSection userRole={profile?.role} />
-          
-          <DataManagementSection
-            habits={habits}
-            tasks={tasks}
-            weeklyOutputs={weeklyOutputs}
-            moodEntries={moodEntries}
-            onRefreshData={handleRefreshData}
-            userRole={profile?.role}
-          />
-          
-          <PreferencesSection />
-        </div>
+        <Tabs defaultValue="preferences" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="preferences" className="flex items-center gap-2">
+              <SettingsIcon className="h-4 w-4" />
+              Preferences
+            </TabsTrigger>
+            <TabsTrigger value="data" className="flex items-center gap-2">
+              <Database className="h-4 w-4" />
+              Data Management
+            </TabsTrigger>
+            {profile?.role === 'admin' && (
+              <TabsTrigger value="users" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                User Management
+              </TabsTrigger>
+            )}
+          </TabsList>
+
+          <TabsContent value="preferences" className="mt-6">
+            <PreferencesSection />
+          </TabsContent>
+
+          <TabsContent value="data" className="mt-6">
+            <DataManagementSection
+              habits={habits}
+              tasks={tasks}
+              weeklyOutputs={weeklyOutputs}
+              moodEntries={moodEntries}
+              onRefreshData={handleRefreshData}
+              userRole={profile?.role}
+            />
+          </TabsContent>
+
+          {profile?.role === 'admin' && (
+            <TabsContent value="users" className="mt-6">
+              <UserManagementSection userRole={profile?.role} />
+            </TabsContent>
+          )}
+        </Tabs>
       </div>
     </div>
   );
