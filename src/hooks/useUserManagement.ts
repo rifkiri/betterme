@@ -59,18 +59,33 @@ export const useUserManagement = () => {
     }
 
     try {
-      // Create a pending user profile that they can use to sign up later
-      const user: User = {
-        ...newUser,
-        id: crypto.randomUUID(),
-        createdAt: new Date().toISOString().split('T')[0],
-        hasChangedPassword: false,
-        userStatus: 'pending'
-      };
+      console.log('Creating user via Edge Function...');
+      
+      // Call the Edge Function to create the user
+      const { data, error } = await supabase.functions.invoke('create-user', {
+        body: {
+          name: newUser.name,
+          email: newUser.email,
+          role: newUser.role,
+          position: newUser.position,
+          temporaryPassword: newUser.temporaryPassword || 'temp123'
+        }
+      });
 
-      await supabaseDataService.addUser(user);
+      if (error) {
+        console.error('Edge function error:', error);
+        toast.error('Failed to create user: ' + error.message);
+        return;
+      }
+
+      if (!data.success) {
+        console.error('User creation failed:', data.error);
+        toast.error('Failed to create user: ' + data.error);
+        return;
+      }
+
       await loadUsers();
-      toast.success(`User created successfully. They can sign up using email: ${newUser.email} and temporary password: ${newUser.temporaryPassword || 'temp123'}`);
+      toast.success(`User created successfully. They can sign in using email: ${newUser.email} and password: ${newUser.temporaryPassword || 'temp123'}`);
     } catch (error) {
       toast.error('Failed to add user');
       console.error('Failed to add user:', error);
