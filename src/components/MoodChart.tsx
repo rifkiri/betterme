@@ -12,10 +12,10 @@ interface MoodEntry {
 interface MoodChartProps {
   monthDays: Date[];
   selectedMonth: Date;
-  moodData?: MoodEntry[];
+  moodData: MoodEntry[];
 }
 
-export const MoodChart = ({ monthDays, selectedMonth, moodData = [] }: MoodChartProps) => {
+export const MoodChart = ({ monthDays, selectedMonth, moodData }: MoodChartProps) => {
   // Show empty state if no mood data
   if (!moodData.length) {
     return (

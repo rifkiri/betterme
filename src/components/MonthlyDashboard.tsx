@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Calendar, TrendingUp, Target, CheckCircle, Clock } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, addMonths, subMonths, eachDayOfInterval, isToday, isSameMonth } from 'date-fns';
 import { useProductivity } from '@/hooks/useProductivity';
+import { useMoodTracking } from '@/hooks/useMoodTracking';
 import { MonthlyStats } from './MonthlyStats';
 import { MonthlyChart } from './MonthlyChart';
 import { MonthlyHeatmap } from './MonthlyHeatmap';
@@ -17,6 +18,8 @@ export const MonthlyDashboard = () => {
     tasks,
     weeklyOutputs
   } = useProductivity();
+  
+  const { moodEntries } = useMoodTracking();
 
   const monthStart = startOfMonth(selectedMonth);
   const monthEnd = endOfMonth(selectedMonth);
@@ -39,6 +42,17 @@ export const MonthlyDashboard = () => {
   const completedTasks = monthlyTasks.filter(task => task.completed).length;
   const completedOutputs = monthlyOutputs.filter(output => output.progress === 100).length;
   const averageHabitStreak = habits.length > 0 ? Math.round(habits.reduce((sum, habit) => sum + habit.streak, 0) / habits.length) : 0;
+
+  // Filter mood data for the selected month
+  const monthlyMoodData = moodEntries
+    .filter(entry => {
+      const entryDate = new Date(entry.date);
+      return isSameMonth(entryDate, selectedMonth);
+    })
+    .map(entry => ({
+      date: new Date(entry.date),
+      mood: entry.mood
+    }));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 p-2 sm:p-4">
@@ -137,8 +151,8 @@ export const MonthlyDashboard = () => {
           </Card>
         </div>
 
-        {/* Mood Tracking */}
-        <MoodChart monthDays={monthDays} selectedMonth={selectedMonth} />
+        {/* Mood Tracking - Now connected to database */}
+        <MoodChart monthDays={monthDays} selectedMonth={selectedMonth} moodData={monthlyMoodData} />
 
         {/* Charts and Analytics */}
         <div className="grid lg:grid-cols-2 gap-6">
