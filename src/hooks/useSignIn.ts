@@ -90,7 +90,83 @@ export const useSignIn = () => {
 
       console.log('Found matching pending user:', matchingUser);
 
-      // Use regular signup for pending users
+      // Check if user already exists in auth but profile creation failed previously
+      const { data: existingSignIn, error: existingSignInError } = await supabase.auth.signInWithPassword({
+        email: matchingUser.email,
+        password: password,
+      });
+
+      if (!existingSignInError && existingSignIn.user) {
+        console.log('User auth account exists, checking for profile...');
+        
+        // Check if profile exists
+        const { data: existingProfile, error: profileCheckError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', existingSignIn.user.id)
+          .single();
+
+        if (!profileCheckError && existingProfile) {
+          console.log('Profile already exists, signing in...');
+          toast.success('Sign in successful!');
+          
+          // Remove from pending_users since they're now fully set up
+          await supabase
+            .from('pending_users')
+            .delete()
+            .eq('id', matchingUser.id);
+          
+          // Redirect based on role
+          if (existingProfile.role === 'admin') {
+            navigate('/settings');
+          } else if (existingProfile.role === 'manager') {
+            navigate('/manager');
+          } else {
+            navigate('/');
+          }
+          return;
+        } else {
+          console.log('Auth user exists but no profile, creating profile...');
+          // Create the missing profile
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: existingSignIn.user.id,
+              name: matchingUser.name,
+              email: matchingUser.email,
+              role: matchingUser.role as 'admin' | 'manager' | 'team-member',
+              position: matchingUser.position,
+              has_changed_password: false
+            });
+
+          if (profileError) {
+            console.error('Error creating profile:', profileError);
+            toast.error('Error creating profile: ' + profileError.message);
+            return;
+          }
+
+          // Remove from pending_users
+          await supabase
+            .from('pending_users')
+            .delete()
+            .eq('id', matchingUser.id);
+
+          toast.success('Account setup completed! You are now signed in.');
+          
+          // Redirect based on role
+          if (matchingUser.role === 'admin') {
+            navigate('/settings');
+          } else if (matchingUser.role === 'manager') {
+            navigate('/manager');
+          } else {
+            navigate('/');
+          }
+          return;
+        }
+      }
+
+      // If we get here, need to create a new auth user
+      console.log('Creating new auth user...');
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: matchingUser.email,
         password: password,
