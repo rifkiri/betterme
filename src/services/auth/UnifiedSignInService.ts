@@ -43,7 +43,7 @@ export class UnifiedSignInService {
     // If regular sign in failed, check if user exists with temporary password
     console.log('Regular sign in failed, checking for user with temporary password');
     
-    // Query the profiles table directly
+    // Query the profiles table directly to check for temporary password users
     const { data: existingUserData, error: userError } = await supabase
       .from('profiles')
       .select('*')
@@ -62,33 +62,20 @@ export class UnifiedSignInService {
       return false;
     }
 
-    const existingUser = {
-      id: existingUserData.id,
-      name: existingUserData.name || '',
-      email: existingUserData.email || '',
-      role: existingUserData.role || 'team-member',
-      position: existingUserData.position || '',
-      temporaryPassword: existingUserData.temporary_password || undefined,
-      hasChangedPassword: existingUserData.has_changed_password || false,
-      userStatus: existingUserData.user_status || 'active',
-      createdAt: existingUserData.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
-      lastLogin: existingUserData.last_login?.split('T')[0]
-    };
-
     // Check if this is a temporary password login attempt
-    if (existingUser.temporaryPassword && existingUser.temporaryPassword === password) {
+    if (existingUserData.temporary_password && existingUserData.temporary_password === password) {
       console.log('User attempting to sign in with temporary password');
       
       // If user has auth account but is using temp password, they need to change it
-      if (existingUser.userStatus === 'active') {
+      if (existingUserData.user_status === 'active') {
         toast.error('Please sign in with your regular password, not the temporary one. If you forgot your password, contact an administrator.');
         return false;
       }
       
       // This is a pending user trying to activate their account
-      if (existingUser.userStatus === 'pending') {
+      if (existingUserData.user_status === 'pending') {
         // Create auth user for pending user
-        const { data: signUpData, error: signUpError } = await AuthService.signUpWithPassword(existingUser.email, password);
+        const { data: signUpData, error: signUpError } = await AuthService.signUpWithPassword(existingUserData.email, password);
 
         if (signUpError) {
           console.error('Error creating auth user:', signUpError);
@@ -113,7 +100,7 @@ export class UnifiedSignInService {
               id: signUpData.user.id,
               user_status: 'pending'
             })
-            .eq('id', existingUser.id);
+            .eq('id', existingUserData.id);
 
           if (updateError) {
             console.error('Error updating profile:', updateError);
@@ -123,11 +110,11 @@ export class UnifiedSignInService {
 
           // Create new profile with auth user ID
           const { error: profileError } = await ProfileService.createProfile(signUpData.user.id, {
-            name: existingUser.name,
-            email: existingUser.email,
-            role: existingUser.role,
-            position: existingUser.position,
-            temporaryPassword: existingUser.temporaryPassword
+            name: existingUserData.name,
+            email: existingUserData.email,
+            role: existingUserData.role,
+            position: existingUserData.position,
+            temporaryPassword: existingUserData.temporary_password
           });
 
           if (!profileError) {
@@ -135,7 +122,7 @@ export class UnifiedSignInService {
             await supabase
               .from('profiles')
               .delete()
-              .eq('id', existingUser.id);
+              .eq('id', existingUserData.id);
             
             toast.success('Welcome! Please change your temporary password.');
             navigate('/profile');
