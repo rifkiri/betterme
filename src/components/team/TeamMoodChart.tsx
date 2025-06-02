@@ -136,29 +136,29 @@ export const TeamMoodChart = ({ teamData }: TeamMoodChartProps) => {
           </div>
         </div>
 
-        {/* Mood Scale Reference */}
+        {/* Mood Scale Reference - Made Vertical */}
         <div className="bg-gray-50 p-4 rounded-lg">
-          <h4 className="text-sm font-medium mb-2">Mood Scale Reference</h4>
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
-            <div className="text-center">
-              <div className="w-4 h-4 bg-red-500 rounded-full mx-auto mb-1"></div>
-              <span>1-2: Terrible/Poor</span>
+          <h4 className="text-sm font-medium mb-4">Mood Scale Reference</h4>
+          <div className="flex flex-col space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-4 h-4 bg-green-500 rounded-full flex-shrink-0"></div>
+              <span className="text-sm">9-10: Amazing</span>
             </div>
-            <div className="text-center">
-              <div className="w-4 h-4 bg-orange-500 rounded-full mx-auto mb-1"></div>
-              <span>3-4: Not great/Meh</span>
+            <div className="flex items-center gap-3">
+              <div className="w-4 h-4 bg-blue-500 rounded-full flex-shrink-0"></div>
+              <span className="text-sm">7-8: Good/Great</span>
             </div>
-            <div className="text-center">
-              <div className="w-4 h-4 bg-yellow-500 rounded-full mx-auto mb-1"></div>
-              <span>5-6: Neutral/Okay</span>
+            <div className="flex items-center gap-3">
+              <div className="w-4 h-4 bg-yellow-500 rounded-full flex-shrink-0"></div>
+              <span className="text-sm">5-6: Neutral/Okay</span>
             </div>
-            <div className="text-center">
-              <div className="w-4 h-4 bg-blue-500 rounded-full mx-auto mb-1"></div>
-              <span>7-8: Good/Great</span>
+            <div className="flex items-center gap-3">
+              <div className="w-4 h-4 bg-orange-500 rounded-full flex-shrink-0"></div>
+              <span className="text-sm">3-4: Not great/Meh</span>
             </div>
-            <div className="text-center">
-              <div className="w-4 h-4 bg-green-500 rounded-full mx-auto mb-1"></div>
-              <span>9-10: Amazing</span>
+            <div className="flex items-center gap-3">
+              <div className="w-4 h-4 bg-red-500 rounded-full flex-shrink-0"></div>
+              <span className="text-sm">1-2: Terrible/Poor</span>
             </div>
           </div>
         </div>
