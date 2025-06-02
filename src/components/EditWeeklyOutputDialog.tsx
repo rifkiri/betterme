@@ -39,12 +39,22 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
   });
 
   const handleSubmit = (values: WeeklyOutputFormValues) => {
+    // Ensure the due date is set to end of day in local time to avoid timezone issues
+    let dueDate = values.dueDate;
+    if (dueDate) {
+      dueDate = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate(), 23, 59, 59, 999);
+    }
+
     onSave(weeklyOutput.id, {
       title: values.title,
-      dueDate: values.dueDate
+      dueDate: dueDate
     });
     onOpenChange(false);
   };
+
+  // Get today's date and set time to start of day for proper comparison
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -100,11 +110,21 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
                       <Calendar
                         mode="single"
                         selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) =>
-                          date < new Date()
-                        }
+                        onSelect={(date) => {
+                          if (date) {
+                            // Create date in local timezone to avoid timezone conversion issues
+                            const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                            field.onChange(localDate);
+                          } else {
+                            field.onChange(date);
+                          }
+                        }}
+                        disabled={(date) => {
+                          const dateToCheck = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                          return dateToCheck < today;
+                        }}
                         initialFocus
+                        className={cn("p-3 pointer-events-auto")}
                       />
                     </PopoverContent>
                   </Popover>

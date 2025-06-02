@@ -37,10 +37,16 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput }: AddWeeklyOutputDial
   });
 
   const onSubmit = (data: FormData) => {
+    // Ensure the due date is set to end of day in local time to avoid timezone issues
+    let dueDate = data.dueDate;
+    if (dueDate) {
+      dueDate = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate(), 23, 59, 59, 999);
+    }
+
     onAddWeeklyOutput({
       title: data.title,
       progress: 0,
-      dueDate: data.dueDate,
+      dueDate: dueDate,
     });
     form.reset();
     setOpen(false);
@@ -108,10 +114,17 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput }: AddWeeklyOutputDial
                       <Calendar
                         mode="single"
                         selected={field.value}
-                        onSelect={field.onChange}
+                        onSelect={(date) => {
+                          if (date) {
+                            // Create date in local timezone to avoid timezone conversion issues
+                            const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                            field.onChange(localDate);
+                          } else {
+                            field.onChange(date);
+                          }
+                        }}
                         disabled={(date) => {
-                          const dateToCheck = new Date(date);
-                          dateToCheck.setHours(0, 0, 0, 0);
+                          const dateToCheck = new Date(date.getFullYear(), date.getMonth(), date.getDate());
                           return dateToCheck < today;
                         }}
                         initialFocus
