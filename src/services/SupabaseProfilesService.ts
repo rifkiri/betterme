@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types/userTypes';
 
@@ -25,7 +24,7 @@ export class SupabaseProfilesService {
           email: profile.email || '',
           role: profile.role || 'team-member',
           position: profile.position || '',
-          temporaryPassword: (profile as any).temporary_password || undefined,
+          temporaryPassword: profile.temporary_password || undefined,
           hasChangedPassword: profile.has_changed_password || false,
           userStatus: profile.user_status || 'active',
           createdAt: profile.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
@@ -179,7 +178,7 @@ export class SupabaseProfilesService {
       email: data.email || '',
       role: data.role || 'team-member',
       position: data.position || '',
-      temporaryPassword: (data as any).temporary_password || undefined,
+      temporaryPassword: data.temporary_password || undefined,
       hasChangedPassword: data.has_changed_password || false,
       userStatus: data.user_status || 'active',
       createdAt: data.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],

@@ -107,6 +107,7 @@ export type Database = {
           name: string
           position: string | null
           role: Database["public"]["Enums"]["user_role"]
+          temporary_password: string | null
           updated_at: string
           user_status: Database["public"]["Enums"]["user_status"] | null
         }
@@ -119,6 +120,7 @@ export type Database = {
           name: string
           position?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          temporary_password?: string | null
           updated_at?: string
           user_status?: Database["public"]["Enums"]["user_status"] | null
         }
@@ -131,6 +133,7 @@ export type Database = {
           name?: string
           position?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          temporary_password?: string | null
           updated_at?: string
           user_status?: Database["public"]["Enums"]["user_status"] | null
         }
