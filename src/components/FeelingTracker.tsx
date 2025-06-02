@@ -2,12 +2,13 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { Heart, Smile, Meh, Frown, Save } from 'lucide-react';
 import { useMoodTracking } from '@/hooks/useMoodTracking';
 
 export const FeelingTracker = () => {
-  const [feeling, setFeeling] = useState([5]);
+  const [feeling, setFeeling] = useState("5");
   const { addMoodEntry } = useMoodTracking();
 
   const getFeelingIcon = (value: number) => {
@@ -38,8 +39,23 @@ export const FeelingTracker = () => {
 
   const handleRecordMood = async () => {
     const today = new Date().toISOString().split('T')[0];
-    await addMoodEntry(today, feeling[0]);
+    await addMoodEntry(today, parseInt(feeling));
   };
+
+  const moodOptions = [
+    { value: "1", label: "1 - Terrible", color: "text-red-600" },
+    { value: "2", label: "2 - Poor", color: "text-red-500" },
+    { value: "3", label: "3 - Not great", color: "text-orange-600" },
+    { value: "4", label: "4 - Meh", color: "text-yellow-600" },
+    { value: "5", label: "5 - Neutral", color: "text-yellow-500" },
+    { value: "6", label: "6 - Okay", color: "text-blue-500" },
+    { value: "7", label: "7 - Good", color: "text-blue-600" },
+    { value: "8", label: "8 - Great", color: "text-green-500" },
+    { value: "9", label: "9 - Amazing", color: "text-green-600" },
+    { value: "10", label: "10 - Amazing", color: "text-green-700" }
+  ];
+
+  const currentValue = parseInt(feeling);
 
   return (
     <Card>
@@ -47,10 +63,10 @@ export const FeelingTracker = () => {
         <div className="flex items-start justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              {getFeelingIcon(feeling[0])}
+              {getFeelingIcon(currentValue)}
               How are you feeling today?
             </CardTitle>
-            <CardDescription>Track your mood on a scale of 1-10</CardDescription>
+            <CardDescription>Select your mood on a scale of 1-10</CardDescription>
           </div>
           <Button onClick={handleRecordMood} size="sm" className="px-4">
             <Save className="h-4 w-4 mr-2" />
@@ -59,27 +75,25 @@ export const FeelingTracker = () => {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">1 - Terrible</span>
-          <span className="text-sm text-gray-500">10 - Amazing</span>
-        </div>
+        <RadioGroup value={feeling} onValueChange={setFeeling} className="space-y-2">
+          {moodOptions.map((option) => (
+            <div key={option.value} className="flex items-center space-x-2">
+              <RadioGroupItem value={option.value} id={option.value} />
+              <Label 
+                htmlFor={option.value} 
+                className={`cursor-pointer ${option.color} hover:font-medium transition-all`}
+              >
+                {option.label}
+              </Label>
+            </div>
+          ))}
+        </RadioGroup>
         
-        <div className="px-2">
-          <Slider
-            value={feeling}
-            onValueChange={setFeeling}
-            max={10}
-            min={1}
-            step={1}
-            className="w-full"
-          />
-        </div>
-        
-        <div className="text-center">
+        <div className="text-center pt-4 border-t">
           <div className="flex items-center justify-center gap-2">
-            <span className="text-2xl font-bold">{feeling[0]}</span>
-            <span className={`text-lg font-medium ${getFeelingColor(feeling[0])}`}>
-              {getFeelingText(feeling[0])}
+            <span className="text-2xl font-bold">{currentValue}</span>
+            <span className={`text-lg font-medium ${getFeelingColor(currentValue)}`}>
+              {getFeelingText(currentValue)}
             </span>
           </div>
         </div>
