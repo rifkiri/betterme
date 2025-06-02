@@ -90,25 +90,24 @@ export const useSignIn = () => {
 
       console.log('Found matching pending user:', matchingUser);
 
-      // Try to sign up the user with email confirmation disabled
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      // Create auth user without email confirmation
+      const { data: signUpData, error: signUpError } = await supabase.auth.admin.createUser({
         email: matchingUser.email,
         password: password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            email_confirm: false
-          }
+        email_confirm: true, // Auto-confirm email
+        user_metadata: {
+          name: matchingUser.name,
+          role: matchingUser.role
         }
       });
 
       if (signUpError) {
         console.error('Error creating auth user:', signUpError);
         
-        // If user already exists, they may need to confirm their email first
-        if (signUpError.message.includes('already registered')) {
-          console.log('User already exists - checking if they need email confirmation');
-          toast.error('Account already exists but may need email confirmation. Please check your email or contact admin.');
+        // If user already exists, they may need to sign in normally
+        if (signUpError.message.includes('already registered') || signUpError.message.includes('already exists')) {
+          console.log('User already exists - they should sign in normally');
+          toast.error('Account already exists. Please sign in with your regular credentials.');
           return;
         }
         
@@ -119,11 +118,9 @@ export const useSignIn = () => {
       if (signUpData.user) {
         console.log('Successfully created auth user:', signUpData.user.id);
         
-        // For pending users, we'll create the profile even without email confirmation
-        // since they were pre-approved by admin
+        // Create the profile immediately
         console.log('Creating profile for pending user...');
         
-        // Create the profile using the user ID from signup
         const { error: profileError } = await supabase
           .from('profiles')
           .insert({
@@ -153,11 +150,35 @@ export const useSignIn = () => {
           // Don't fail the whole process for this
         }
 
-        toast.success('Account created successfully! Please check your email to confirm your account, then sign in again.');
-        
-        // Clear the form
-        setEmail('');
-        setPassword('');
+        // Now sign them in automatically
+        console.log('Auto-signing in the new user...');
+        const { data: autoSignInData, error: autoSignInError } = await supabase.auth.signInWithPassword({
+          email: matchingUser.email,
+          password: password,
+        });
+
+        if (autoSignInError) {
+          console.error('Error auto-signing in user:', autoSignInError);
+          toast.success('Account created successfully! Please sign in with your credentials.');
+          // Clear the form so they can sign in
+          setEmail('');
+          setPassword('');
+          return;
+        }
+
+        if (autoSignInData.user) {
+          console.log('Auto sign-in successful');
+          toast.success('Account created and signed in successfully!');
+          
+          // Redirect based on role
+          if (matchingUser.role === 'admin') {
+            navigate('/settings');
+          } else if (matchingUser.role === 'manager') {
+            navigate('/manager');
+          } else {
+            navigate('/');
+          }
+        }
       }
     } catch (error) {
       console.error('Authentication error:', error);
