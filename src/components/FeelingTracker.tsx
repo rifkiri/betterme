@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -9,7 +9,16 @@ import { useMoodTracking } from '@/hooks/useMoodTracking';
 
 export const FeelingTracker = () => {
   const [feeling, setFeeling] = useState("5");
-  const { addMoodEntry } = useMoodTracking();
+  const { addMoodEntry, getMoodForDate } = useMoodTracking();
+
+  // Check for existing mood entry for today and update the feeling state
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const todaysMood = getMoodForDate(today);
+    if (todaysMood) {
+      setFeeling(todaysMood.mood.toString());
+    }
+  }, [getMoodForDate]);
 
   const getFeelingIcon = (value: number) => {
     if (value >= 8) return <Smile className="h-5 w-5 text-green-500" />;
@@ -56,6 +65,8 @@ export const FeelingTracker = () => {
   ];
 
   const currentValue = parseInt(feeling);
+  const today = new Date().toISOString().split('T')[0];
+  const todaysMood = getMoodForDate(today);
 
   return (
     <Card>
@@ -66,7 +77,14 @@ export const FeelingTracker = () => {
               {getFeelingIcon(currentValue)}
               How are you feeling today?
             </CardTitle>
-            <CardDescription>Select your mood on a scale of 1-10</CardDescription>
+            <CardDescription>
+              Select your mood on a scale of 1-10
+              {todaysMood && (
+                <span className="block text-sm text-blue-600 mt-1">
+                  Previously recorded: {todaysMood.mood} - {getFeelingText(todaysMood.mood)}
+                </span>
+              )}
+            </CardDescription>
           </div>
           <Button onClick={handleRecordMood} size="sm" className="px-4">
             <Save className="h-4 w-4 mr-2" />
