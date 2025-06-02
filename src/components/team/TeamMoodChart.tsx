@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -9,8 +10,34 @@ interface TeamMoodChartProps {
 }
 
 export const TeamMoodChart = ({ teamData }: TeamMoodChartProps) => {
-  // Use real mood data from teamData or empty array
-  const chartData = teamData.moodData || [];
+  // Calculate daily team mood averages from individual member data
+  const calculateDailyAverages = () => {
+    if (!teamData.moodData || teamData.moodData.length === 0) {
+      return [];
+    }
+
+    // Group mood entries by date
+    const moodByDate: Record<string, number[]> = {};
+    
+    teamData.moodData.forEach(entry => {
+      if (!moodByDate[entry.date]) {
+        moodByDate[entry.date] = [];
+      }
+      moodByDate[entry.date].push(entry.mood);
+    });
+
+    // Calculate average for each date and sort by date
+    const dailyAverages = Object.entries(moodByDate)
+      .map(([date, moods]) => ({
+        date,
+        mood: moods.reduce((sum, mood) => sum + mood, 0) / moods.length
+      }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    return dailyAverages;
+  };
+
+  const chartData = calculateDailyAverages();
 
   const getMoodIcon = (trend?: string) => {
     if (trend === 'improving') return <TrendingUp className="h-4 w-4 text-green-500" />;
