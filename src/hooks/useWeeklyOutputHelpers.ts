@@ -1,14 +1,12 @@
 
 import { WeeklyOutput } from '@/types/productivity';
+import { isWeeklyOutputOverdue } from '@/utils/dateUtils';
 
 export const useWeeklyOutputHelpers = (weeklyOutputs: WeeklyOutput[]) => {
   const getOverdueWeeklyOutputs = () => {
-    const today = new Date();
-    today.setHours(23, 59, 59, 999);
     return weeklyOutputs.filter(output => 
       output.dueDate && 
-      output.dueDate < today && 
-      output.progress < 100 && 
+      isWeeklyOutputOverdue(output.dueDate, output.progress, output.completedDate) && 
       !output.completedDate
     );
   };

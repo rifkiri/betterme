@@ -1,3 +1,4 @@
+
 import { format, startOfWeek, endOfWeek, isToday, addDays, isWithinInterval, isPast, isBefore, isAfter } from 'date-fns';
 
 export const getToday = () => new Date();
@@ -17,15 +18,16 @@ export const isSameDate = (date1: Date, date2: Date) => {
 
 export const isTaskOverdue = (taskDate: Date) => {
   const today = getToday();
-  return taskDate < today && !isToday(taskDate);
+  // Only consider overdue if the date is before today (not including today)
+  return isBefore(taskDate, today) && !isToday(taskDate);
 };
 
 export const isWeeklyOutputOverdue = (dueDate: Date, progress: number = 0, completedDate?: Date) => {
   const today = getToday();
   
-  // If not completed yet, check if past due date
+  // If not completed yet, check if past due date (but not including today)
   if (progress < 100) {
-    return isPast(dueDate) && !isToday(dueDate);
+    return isBefore(dueDate, today) && !isToday(dueDate);
   }
   
   // If completed, check if it was completed after the due date

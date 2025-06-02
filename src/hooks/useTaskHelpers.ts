@@ -1,5 +1,6 @@
 
 import { Task } from '@/types/productivity';
+import { isTaskOverdue } from '@/utils/dateUtils';
 
 export const useTaskHelpers = (tasks: Task[]) => {
   // Helper methods for filtering data
@@ -12,12 +13,10 @@ export const useTaskHelpers = (tasks: Task[]) => {
   const getTodaysTasks = () => getTasksByDate(new Date());
   
   const getOverdueTasks = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
     return tasks.filter(task => 
       !task.completed && 
       task.dueDate && 
-      task.dueDate < today
+      isTaskOverdue(task.dueDate)
     );
   };
 

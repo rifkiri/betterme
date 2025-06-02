@@ -3,6 +3,7 @@ import { supabaseDataService } from './SupabaseDataService';
 import { TeamData, TeamMember, OverdueTask, OverdueOutput, TeamTrends } from '@/types/teamData';
 import { User } from '@/types/userTypes';
 import { supabase } from '@/integrations/supabase/client';
+import { isTaskOverdue, isWeeklyOutputOverdue } from '@/utils/dateUtils';
 
 class TeamDataService {
   // Get current manager's team data
@@ -365,7 +366,7 @@ class TeamDataService {
         const today = new Date();
         
         tasks.forEach(task => {
-          if (!task.completed && !task.isDeleted && task.dueDate && task.dueDate < today) {
+          if (!task.completed && !task.isDeleted && task.dueDate && isTaskOverdue(task.dueDate)) {
             const daysOverdue = Math.floor((today.getTime() - task.dueDate.getTime()) / (1000 * 60 * 60 * 24));
             overdueTasks.push({
               id: task.id,
@@ -381,7 +382,7 @@ class TeamDataService {
         // Get overdue outputs
         const outputs = await supabaseDataService.getWeeklyOutputs(member.id);
         outputs.forEach(output => {
-          if (output.progress < 100 && !output.isDeleted && output.dueDate && output.dueDate < today) {
+          if (!output.isDeleted && output.dueDate && isWeeklyOutputOverdue(output.dueDate, output.progress, output.completedDate)) {
             const daysOverdue = Math.floor((today.getTime() - output.dueDate.getTime()) / (1000 * 60 * 60 * 24));
             overdueOutputs.push({
               id: output.id,
