@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types/userTypes';
 
@@ -25,35 +24,44 @@ export class SupabaseProfilesService {
     }
 
     const users: User[] = [];
+    const existingEmails = new Set<string>();
 
-    // Add existing profiles
+    // Add existing profiles first
     if (profilesData) {
-      users.push(...profilesData.map(profile => ({
-        id: profile.id,
-        name: profile.name,
-        email: profile.email,
-        role: profile.role,
-        position: profile.position,
-        hasChangedPassword: profile.has_changed_password,
-        createdAt: profile.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
-        lastLogin: profile.last_login?.split('T')[0],
-        temporaryPassword: undefined // Don't show temp password for existing users
-      })));
+      profilesData.forEach(profile => {
+        existingEmails.add(profile.email);
+        users.push({
+          id: profile.id,
+          name: profile.name,
+          email: profile.email,
+          role: profile.role,
+          position: profile.position,
+          hasChangedPassword: profile.has_changed_password,
+          createdAt: profile.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+          lastLogin: profile.last_login?.split('T')[0],
+          temporaryPassword: undefined // Don't show temp password for existing users
+        });
+      });
     }
 
-    // Add pending users
+    // Add pending users only if they don't have an active profile
     if (pendingData) {
-      users.push(...pendingData.map((pending: any) => ({
-        id: pending.id,
-        name: pending.name,
-        email: pending.email,
-        role: pending.role,
-        position: pending.position,
-        hasChangedPassword: false,
-        createdAt: pending.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
-        lastLogin: undefined,
-        temporaryPassword: pending.temporary_password
-      })));
+      pendingData.forEach((pending: any) => {
+        // Only add pending users if there's no active profile with the same email
+        if (!existingEmails.has(pending.email)) {
+          users.push({
+            id: pending.id,
+            name: pending.name,
+            email: pending.email,
+            role: pending.role,
+            position: pending.position,
+            hasChangedPassword: false,
+            createdAt: pending.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+            lastLogin: undefined,
+            temporaryPassword: pending.temporary_password
+          });
+        }
+      });
     }
 
     return users;

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -24,6 +23,15 @@ export const useSignIn = () => {
 
       if (!profileError && profile) {
         console.log('User profile found:', profile);
+        
+        // Clean up any remaining pending user data for this email
+        const { data: pendingUsers } = await PendingUserService.getPendingUsers(signInData.user.email || '');
+        if (pendingUsers && pendingUsers.length > 0) {
+          console.log('Cleaning up remaining pending user data...');
+          for (const pendingUser of pendingUsers) {
+            await PendingUserService.removePendingUser(pendingUser.id);
+          }
+        }
         
         if (!profile.has_changed_password) {
           console.log('User needs to change password');
@@ -57,7 +65,11 @@ export const useSignIn = () => {
       const { error: createProfileError } = await ProfileService.createProfile(userId, pendingUser);
 
       if (!createProfileError) {
-        await PendingUserService.removePendingUser(pendingUser.id);
+        // Remove ALL pending user records for this email to prevent duplicates
+        console.log('Removing all pending user records for this email...');
+        for (const user of pendingUsers) {
+          await PendingUserService.removePendingUser(user.id);
+        }
         console.log('Profile created successfully from pending user');
         toast.success('Welcome! Please change your temporary password.');
         navigate('/profile');
@@ -122,7 +134,11 @@ export const useSignIn = () => {
       const { error: profileError } = await ProfileService.createProfile(signUpData.user.id, matchingUser);
 
       if (!profileError) {
-        await PendingUserService.removePendingUser(matchingUser.id);
+        // Remove ALL pending user records for this email to prevent duplicates
+        console.log('Removing all pending user records for this email...');
+        for (const user of pendingUsers) {
+          await PendingUserService.removePendingUser(user.id);
+        }
         toast.success('Account created successfully! Please check your email to confirm your account, then sign in again.');
         setEmail('');
         setPassword('');
