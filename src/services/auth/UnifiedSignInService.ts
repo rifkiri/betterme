@@ -7,16 +7,27 @@ import { getRedirectPath } from '@/utils/navigationUtils';
 
 export class UnifiedSignInService {
   static async handleSignIn(email: string, password: string, navigate: (path: string) => void): Promise<boolean> {
+    console.log('=== SIGN IN DEBUG START ===');
+    console.log('Email provided:', email);
+    console.log('Password length:', password.length);
+    
     // First, try regular sign in
     const { data: signInData, error: signInError } = await AuthService.signInWithPassword(email, password);
+    console.log('Regular sign in result:', { success: !signInError, error: signInError?.message });
 
     if (!signInError && signInData.user) {
-      console.log('Regular sign in successful');
+      console.log('Regular sign in successful for user:', signInData.user.id);
       
       const { profile, error: profileError } = await ProfileService.getProfile(signInData.user.id);
+      console.log('Profile lookup result:', { found: !!profile, error: profileError?.message });
 
       if (!profileError && profile) {
-        console.log('User profile found:', profile);
+        console.log('User profile found:', { 
+          email: profile.email, 
+          role: profile.role,
+          hasChangedPassword: profile.has_changed_password,
+          temporaryPassword: !!profile.temporary_password 
+        });
         
         // Check if user needs to change password (either first time or admin reset)
         if (!profile.has_changed_password || profile.temporary_password) {
@@ -41,17 +52,34 @@ export class UnifiedSignInService {
     }
 
     // If regular sign in failed, check if user exists with temporary password
-    console.log('Regular sign in failed, checking for user with temporary password');
-    console.log('Looking for user with email:', email);
+    console.log('=== CHECKING FOR TEMPORARY PASSWORD USER ===');
     
-    // Query the profiles table directly to check for temporary password users
-    // Use eq for exact match with normalized email
-    const normalizedEmail = email.trim().toLowerCase();
-    const { data: existingUserData, error: userError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('email', normalizedEmail)
-      .maybeSingle();
+    // Try multiple email formats to find the user
+    const emailVariants = [
+      email.trim().toLowerCase(),
+      email.trim(),
+      email.toLowerCase(),
+      email
+    ];
+    
+    let existingUserData = null;
+    let userError = null;
+    
+    for (const emailVariant of emailVariants) {
+      console.log('Checking email variant:', emailVariant);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('email', emailVariant)
+        .maybeSingle();
+      
+      if (data) {
+        existingUserData = data;
+        userError = error;
+        console.log('Found user with email variant:', emailVariant);
+        break;
+      }
+    }
     
     if (userError) {
       console.error('Error fetching user by email:', userError);
@@ -60,7 +88,8 @@ export class UnifiedSignInService {
     }
 
     if (!existingUserData) {
-      console.log('No user found with email:', email);
+      console.log('No user found with any email variant');
+      console.log('=== SIGN IN DEBUG END ===');
       toast.error('Invalid email or password');
       return false;
     }
@@ -68,7 +97,8 @@ export class UnifiedSignInService {
     console.log('Found user data:', { 
       email: existingUserData.email, 
       status: existingUserData.user_status,
-      hasPassword: !!existingUserData.temporary_password 
+      hasPassword: !!existingUserData.temporary_password,
+      hasChangedPassword: existingUserData.has_changed_password
     });
 
     // Check if this is a temporary password login attempt
@@ -83,6 +113,8 @@ export class UnifiedSignInService {
       
       // This is a pending user trying to activate their account
       if (existingUserData.user_status === 'pending') {
+        console.log('Creating auth user for pending user');
+        
         // Create auth user for pending user
         const { data: signUpData, error: signUpError } = await AuthService.signUpWithPassword(existingUserData.email, password);
 
@@ -146,6 +178,7 @@ export class UnifiedSignInService {
     }
 
     console.log('Invalid credentials provided');
+    console.log('=== SIGN IN DEBUG END ===');
     toast.error('Invalid email or password');
     return false;
   }
