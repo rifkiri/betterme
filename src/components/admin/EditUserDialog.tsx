@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -6,12 +7,14 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { User, UserRole } from '@/types/userTypes';
 import { toast } from 'sonner';
+
 interface EditUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user: User | null;
   onUpdateUser: (userId: string, updates: Partial<User>) => void;
 }
+
 export const EditUserDialog = ({
   open,
   onOpenChange,
@@ -22,20 +25,18 @@ export const EditUserDialog = ({
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<UserRole>('team-member');
   const [position, setPosition] = useState('');
-  const [department, setDepartment] = useState('');
-  const [manager, setManager] = useState('');
   const [newPassword, setNewPassword] = useState('');
+
   useEffect(() => {
     if (user) {
       setName(user.name);
       setEmail(user.email);
       setRole(user.role);
       setPosition(user.position || '');
-      setDepartment(user.department || '');
-      setManager(user.manager || '');
       setNewPassword('');
     }
   }, [user]);
+
   const generatePassword = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
@@ -44,19 +45,19 @@ export const EditUserDialog = ({
     }
     setNewPassword(result);
   };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !name || !email || !role) {
       toast.error('Please fill in all required fields');
       return;
     }
+
     const updates: Partial<User> = {
       name,
       email,
       role,
-      position: position || undefined,
-      department: department || undefined,
-      manager: manager || undefined
+      position: position || undefined
     };
 
     // If a new password is provided, reset the password
@@ -64,6 +65,7 @@ export const EditUserDialog = ({
       updates.temporaryPassword = newPassword;
       updates.hasChangedPassword = false;
     }
+
     onUpdateUser(user.id, updates);
     if (newPassword) {
       toast.success('User updated and password reset successfully');
@@ -72,8 +74,11 @@ export const EditUserDialog = ({
     }
     onOpenChange(false);
   };
+
   if (!user) return null;
-  return <Dialog open={open} onOpenChange={onOpenChange}>
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
@@ -86,12 +91,25 @@ export const EditUserDialog = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="edit-name">Full Name *</Label>
-              <Input id="edit-name" value={name} onChange={e => setName(e.target.value)} placeholder="Enter full name" required />
+              <Input 
+                id="edit-name" 
+                value={name} 
+                onChange={e => setName(e.target.value)} 
+                placeholder="Enter full name" 
+                required 
+              />
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="edit-email">Email *</Label>
-              <Input id="edit-email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Enter email address" required />
+              <Input 
+                id="edit-email" 
+                type="email" 
+                value={email} 
+                onChange={e => setEmail(e.target.value)} 
+                placeholder="Enter email address" 
+                required 
+              />
             </div>
           </div>
           
@@ -112,27 +130,33 @@ export const EditUserDialog = ({
 
             <div className="space-y-2">
               <Label htmlFor="edit-position">Position</Label>
-              <Input id="edit-position" value={position} onChange={e => setPosition(e.target.value)} placeholder="e.g. Senior Developer" />
+              <Input 
+                id="edit-position" 
+                value={position} 
+                onChange={e => setPosition(e.target.value)} 
+                placeholder="e.g. Senior Developer" 
+              />
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            
-
-            
           </div>
           
           <div className="space-y-2">
             <Label htmlFor="edit-password">Reset Password (Optional)</Label>
             <div className="flex gap-2">
-              <Input id="edit-password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Leave empty to keep current password" />
+              <Input 
+                id="edit-password" 
+                value={newPassword} 
+                onChange={e => setNewPassword(e.target.value)} 
+                placeholder="Leave empty to keep current password" 
+              />
               <Button type="button" variant="outline" onClick={generatePassword}>
                 Generate
               </Button>
             </div>
-            {newPassword && <p className="text-sm text-muted-foreground">
+            {newPassword && (
+              <p className="text-sm text-muted-foreground">
                 User will need to change this password on next login
-              </p>}
+              </p>
+            )}
           </div>
 
           <DialogFooter>
@@ -143,5 +167,6 @@ export const EditUserDialog = ({
           </DialogFooter>
         </form>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 };

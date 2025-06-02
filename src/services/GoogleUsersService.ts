@@ -6,7 +6,9 @@ interface User {
   name: string;
   email: string;
   role: 'admin' | 'manager' | 'team-member';
+  position?: string;
   temporaryPassword: string;
+  hasChangedPassword: boolean;
   createdAt: string;
   lastLogin?: string;
 }
@@ -28,9 +30,11 @@ class GoogleUsersService extends BaseGoogleSheetsService {
         name: row[1] || '',
         email: row[2] || '',
         role: row[3] as 'admin' | 'manager' | 'team-member',
-        temporaryPassword: row[4] || '',
-        createdAt: row[5] || '',
-        lastLogin: row[6] || undefined,
+        position: row[4] || undefined,
+        temporaryPassword: row[5] || '',
+        hasChangedPassword: row[6] === 'TRUE',
+        createdAt: row[7] || '',
+        lastLogin: row[8] || undefined,
       }));
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -44,7 +48,9 @@ class GoogleUsersService extends BaseGoogleSheetsService {
       user.name,
       user.email,
       user.role,
+      user.position || '',
       user.temporaryPassword,
+      user.hasChangedPassword ? 'TRUE' : 'FALSE',
       user.createdAt,
       user.lastLogin || ''
     ]];
@@ -74,14 +80,16 @@ class GoogleUsersService extends BaseGoogleSheetsService {
       updatedUser.name,
       updatedUser.email,
       updatedUser.role,
+      updatedUser.position || '',
       updatedUser.temporaryPassword,
+      updatedUser.hasChangedPassword ? 'TRUE' : 'FALSE',
       updatedUser.createdAt,
       updatedUser.lastLogin || ''
     ]];
 
     const rowNumber = userIndex + 2;
     return await this.makeRequest(
-      `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/Users!A${rowNumber}:G${rowNumber}?valueInputOption=RAW`,
+      `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/Users!A${rowNumber}:I${rowNumber}?valueInputOption=RAW`,
       {
         method: 'PUT',
         body: JSON.stringify({ values }),
