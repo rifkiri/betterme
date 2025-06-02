@@ -5,6 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Calendar } from 'lucide-react';
 import { OverdueTask, OverdueOutput } from '@/types/individualData';
+import { format } from 'date-fns';
 
 interface OverdueSectionProps {
   overdueTasks: OverdueTask[];
@@ -22,6 +23,17 @@ export const OverdueSection = ({ overdueTasks, overdueOutputs }: OverdueSectionP
         return <Badge className="bg-green-100 text-green-800">Low</Badge>;
       default:
         return <Badge>Unknown</Badge>;
+    }
+  };
+
+  const formatDueDate = (dueDate: string | Date) => {
+    if (!dueDate) return 'No due date';
+    
+    try {
+      const date = typeof dueDate === 'string' ? new Date(dueDate) : dueDate;
+      return format(date, 'MMM dd, yyyy');
+    } catch (error) {
+      return 'Invalid date';
     }
   };
 
@@ -43,7 +55,7 @@ export const OverdueSection = ({ overdueTasks, overdueOutputs }: OverdueSectionP
                 <div key={index} className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="text-sm font-medium">{task.title}</div>
-                    <div className="text-xs text-muted-foreground">Due: {task.originalDueDate}</div>
+                    <div className="text-xs text-muted-foreground">Due: {formatDueDate(task.originalDueDate)}</div>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-red-600">{task.daysOverdue}d late</span>
@@ -75,7 +87,7 @@ export const OverdueSection = ({ overdueTasks, overdueOutputs }: OverdueSectionP
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="text-sm font-medium">{output.title}</div>
-                      <div className="text-xs text-muted-foreground">Due: {output.originalDueDate}</div>
+                      <div className="text-xs text-muted-foreground">Due: {formatDueDate(output.originalDueDate)}</div>
                     </div>
                     <span className="text-xs text-orange-600">{output.daysOverdue}d late</span>
                   </div>
