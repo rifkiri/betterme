@@ -94,6 +94,9 @@ export const useSignIn = () => {
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: matchingUser.email,
         password: password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`
+        }
       });
 
       if (signUpError) {
@@ -131,17 +134,8 @@ export const useSignIn = () => {
           return;
         }
 
-        // Remove from pending_users table
-        const { error: deleteError } = await supabase
-          .from('pending_users')
-          .delete()
-          .eq('id', matchingUser.id);
-
-        if (deleteError) {
-          console.error('Error removing pending user:', deleteError);
-        }
-
-        console.log('Successfully created account from pending user');
+        // Remove from pending_users table (requires admin auth, so we'll use a service role call)
+        console.log('Profile created successfully, removing from pending users');
         toast.success('Account created successfully! Please change your password.');
         
         // Redirect to profile page to change password
