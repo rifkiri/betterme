@@ -20,3 +20,6 @@ enable_signup = true
 
 [functions.create-user]
 verify_jwt = true
+
+[functions.delete-auth-users]
+verify_jwt = true
