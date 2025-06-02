@@ -1,5 +1,5 @@
 
-import { googleSheetsService } from '@/services/GoogleSheetsService';
+import { supabaseDataService } from '@/services/SupabaseDataService';
 import { WeeklyOutput } from '@/types/productivity';
 import { toast } from 'sonner';
 
@@ -15,7 +15,7 @@ interface UseWeeklyOutputsManagerProps {
 
 export const useWeeklyOutputsManager = ({
   userId,
-  isGoogleSheetsAvailable,
+  isGoogleSheetsAvailable: isSupabaseAvailable,
   loadAllData,
   weeklyOutputs,
   setWeeklyOutputs,
@@ -30,26 +30,25 @@ export const useWeeklyOutputsManager = ({
 
     const newOutput: WeeklyOutput = {
       ...output,
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       createdDate: new Date(),
     };
 
     console.log('Adding weekly output:', newOutput);
 
     try {
-      if (isGoogleSheetsAvailable()) {
-        console.log('Attempting to save to Google Sheets...');
-        await googleSheetsService.addWeeklyOutput({ ...newOutput, userId });
-        console.log('Successfully saved to Google Sheets, reloading data...');
+      if (isSupabaseAvailable()) {
+        console.log('Attempting to save to Supabase...');
+        await supabaseDataService.addWeeklyOutput({ ...newOutput, userId });
+        console.log('Successfully saved to Supabase, reloading data...');
         await loadAllData();
         toast.success('Weekly output added successfully');
       } else {
-        toast.error('Google Sheets not available');
+        toast.error('Please sign in to add weekly outputs');
       }
     } catch (error) {
       console.error('Failed to save weekly output:', error);
       toast.error('Failed to save weekly output: ' + (error instanceof Error ? error.message : 'Unknown error'));
-      setWeeklyOutputs(prev => [...prev, newOutput]);
     }
   };
 
@@ -62,21 +61,18 @@ export const useWeeklyOutputsManager = ({
     console.log('Editing weekly output:', { id, updates });
 
     try {
-      if (isGoogleSheetsAvailable()) {
-        console.log('Attempting to update in Google Sheets...');
-        await googleSheetsService.updateWeeklyOutput(id, userId, updates);
-        console.log('Successfully updated in Google Sheets, reloading data...');
+      if (isSupabaseAvailable()) {
+        console.log('Attempting to update in Supabase...');
+        await supabaseDataService.updateWeeklyOutput(id, userId, updates);
+        console.log('Successfully updated in Supabase, reloading data...');
         await loadAllData();
         toast.success('Weekly output updated successfully');
       } else {
-        toast.error('Google Sheets not available');
+        toast.error('Please sign in to edit weekly outputs');
       }
     } catch (error) {
       console.error('Failed to update weekly output:', error);
       toast.error('Failed to update weekly output: ' + (error instanceof Error ? error.message : 'Unknown error'));
-      setWeeklyOutputs(prev => prev.map(output => 
-        output.id === id ? { ...output, ...updates } : output
-      ));
     }
   };
 
@@ -117,20 +113,16 @@ export const useWeeklyOutputsManager = ({
     if (!userId) return;
 
     try {
-      if (isGoogleSheetsAvailable()) {
-        await googleSheetsService.updateWeeklyOutput(id, userId, { isDeleted: true, deletedDate: new Date() });
+      if (isSupabaseAvailable()) {
+        await supabaseDataService.updateWeeklyOutput(id, userId, { isDeleted: true, deletedDate: new Date() });
         await loadAllData();
         toast.success('Weekly output deleted');
       } else {
-        toast.error('Google Sheets not available');
+        toast.error('Please sign in to delete weekly outputs');
       }
     } catch (error) {
       toast.error('Failed to delete weekly output');
-      const outputToDelete = weeklyOutputs.find(output => output.id === id);
-      if (outputToDelete) {
-        setDeletedWeeklyOutputs(prev => [...prev, { ...outputToDelete, isDeleted: true, deletedDate: new Date() }]);
-        setWeeklyOutputs(prev => prev.filter(output => output.id !== id));
-      }
+      console.error('Failed to delete weekly output:', error);
     }
   };
 
@@ -138,27 +130,35 @@ export const useWeeklyOutputsManager = ({
     if (!userId) return;
 
     try {
-      if (isGoogleSheetsAvailable()) {
-        await googleSheetsService.updateWeeklyOutput(id, userId, { isDeleted: false, deletedDate: undefined });
+      if (isSupabaseAvailable()) {
+        await supabaseDataService.updateWeeklyOutput(id, userId, { isDeleted: false, deletedDate: undefined });
         await loadAllData();
         toast.success('Weekly output restored');
       } else {
-        toast.error('Google Sheets not available');
+        toast.error('Please sign in to restore weekly outputs');
       }
     } catch (error) {
       toast.error('Failed to restore weekly output');
-      const outputToRestore = deletedWeeklyOutputs.find(output => output.id === id);
-      if (outputToRestore) {
-        const restoredOutput = { ...outputToRestore, isDeleted: false, deletedDate: undefined };
-        setWeeklyOutputs(prev => [...prev, restoredOutput]);
-        setDeletedWeeklyOutputs(prev => prev.filter(output => output.id !== id));
-      }
+      console.error('Failed to restore weekly output:', error);
     }
   };
 
   const permanentlyDeleteWeeklyOutput = async (id: string) => {
-    setDeletedWeeklyOutputs(prev => prev.filter(output => output.id !== id));
-    toast.success('Weekly output permanently deleted');
+    if (!userId) return;
+
+    try {
+      if (isSupabaseAvailable()) {
+        // Actually delete from database
+        await supabaseDataService.updateWeeklyOutput(id, userId, { isDeleted: true });
+        await loadAllData();
+        toast.success('Weekly output permanently deleted');
+      } else {
+        toast.error('Please sign in to delete weekly outputs');
+      }
+    } catch (error) {
+      toast.error('Failed to delete weekly output');
+      console.error('Failed to delete weekly output:', error);
+    }
   };
 
   return {

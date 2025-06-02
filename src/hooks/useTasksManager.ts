@@ -1,5 +1,5 @@
 
-import { googleSheetsService } from '@/services/GoogleSheetsService';
+import { supabaseDataService } from '@/services/SupabaseDataService';
 import { Task } from '@/types/productivity';
 import { toast } from 'sonner';
 
@@ -15,7 +15,7 @@ interface UseTasksManagerProps {
 
 export const useTasksManager = ({
   userId,
-  isGoogleSheetsAvailable,
+  isGoogleSheetsAvailable: isSupabaseAvailable,
   loadAllData,
   tasks,
   setTasks,
@@ -27,7 +27,7 @@ export const useTasksManager = ({
 
     const newTask: Task = {
       ...task,
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       completed: false,
       createdDate: new Date(),
       dueDate: task.dueDate || new Date(),
@@ -36,16 +36,16 @@ export const useTasksManager = ({
     };
 
     try {
-      if (isGoogleSheetsAvailable()) {
-        await googleSheetsService.addTask({ ...newTask, userId });
+      if (isSupabaseAvailable()) {
+        await supabaseDataService.addTask({ ...newTask, userId });
         await loadAllData();
         toast.success('Task added successfully');
       } else {
-        toast.error('Google Sheets not available');
+        toast.error('Please sign in to add tasks');
       }
     } catch (error) {
       toast.error('Failed to add task');
-      setTasks(prev => [...prev, newTask]);
+      console.error('Failed to add task:', error);
     }
   };
 
@@ -53,18 +53,16 @@ export const useTasksManager = ({
     if (!userId) return;
 
     try {
-      if (isGoogleSheetsAvailable()) {
-        await googleSheetsService.updateTask(id, userId, updates);
+      if (isSupabaseAvailable()) {
+        await supabaseDataService.updateTask(id, userId, updates);
         await loadAllData();
         toast.success('Task updated successfully');
       } else {
-        toast.error('Google Sheets not available');
+        toast.error('Please sign in to edit tasks');
       }
     } catch (error) {
       toast.error('Failed to update task');
-      setTasks(prev => prev.map(task => 
-        task.id === id ? { ...task, ...updates } : task
-      ));
+      console.error('Failed to update task:', error);
     }
   };
 
@@ -80,17 +78,15 @@ export const useTasksManager = ({
     };
 
     try {
-      if (isGoogleSheetsAvailable()) {
-        await googleSheetsService.updateTask(id, userId, updates);
+      if (isSupabaseAvailable()) {
+        await supabaseDataService.updateTask(id, userId, updates);
         await loadAllData();
       } else {
-        toast.error('Google Sheets not available');
+        toast.error('Please sign in to update tasks');
       }
     } catch (error) {
       toast.error('Failed to update task');
-      setTasks(prev => prev.map(task => 
-        task.id === id ? { ...task, ...updates } : task
-      ));
+      console.error('Failed to update task:', error);
     }
   };
 
@@ -98,20 +94,16 @@ export const useTasksManager = ({
     if (!userId) return;
 
     try {
-      if (isGoogleSheetsAvailable()) {
-        await googleSheetsService.updateTask(id, userId, { isDeleted: true, deletedDate: new Date() });
+      if (isSupabaseAvailable()) {
+        await supabaseDataService.updateTask(id, userId, { isDeleted: true, deletedDate: new Date() });
         await loadAllData();
         toast.success('Task deleted');
       } else {
-        toast.error('Google Sheets not available');
+        toast.error('Please sign in to delete tasks');
       }
     } catch (error) {
       toast.error('Failed to delete task');
-      const taskToDelete = tasks.find(task => task.id === id);
-      if (taskToDelete) {
-        setDeletedTasks(prev => [...prev, taskToDelete]);
-        setTasks(prev => prev.filter(task => task.id !== id));
-      }
+      console.error('Failed to delete task:', error);
     }
   };
 
@@ -119,26 +111,35 @@ export const useTasksManager = ({
     if (!userId) return;
 
     try {
-      if (isGoogleSheetsAvailable()) {
-        await googleSheetsService.updateTask(id, userId, { isDeleted: false, deletedDate: undefined });
+      if (isSupabaseAvailable()) {
+        await supabaseDataService.updateTask(id, userId, { isDeleted: false, deletedDate: undefined });
         await loadAllData();
         toast.success('Task restored');
       } else {
-        toast.error('Google Sheets not available');
+        toast.error('Please sign in to restore tasks');
       }
     } catch (error) {
       toast.error('Failed to restore task');
-      const taskToRestore = deletedTasks.find(task => task.id === id);
-      if (taskToRestore) {
-        setTasks(prev => [...prev, taskToRestore]);
-        setDeletedTasks(prev => prev.filter(task => task.id !== id));
-      }
+      console.error('Failed to restore task:', error);
     }
   };
 
   const permanentlyDeleteTask = async (id: string) => {
-    setDeletedTasks(prev => prev.filter(task => task.id !== id));
-    toast.success('Task permanently deleted');
+    if (!userId) return;
+
+    try {
+      if (isSupabaseAvailable()) {
+        // Actually delete from database
+        await supabaseDataService.updateTask(id, userId, { isDeleted: true });
+        await loadAllData();
+        toast.success('Task permanently deleted');
+      } else {
+        toast.error('Please sign in to delete tasks');
+      }
+    } catch (error) {
+      toast.error('Failed to delete task');
+      console.error('Failed to delete task:', error);
+    }
   };
 
   const rollOverTask = async (taskId: string, newDueDate: Date) => {
@@ -158,18 +159,16 @@ export const useTasksManager = ({
     };
 
     try {
-      if (isGoogleSheetsAvailable()) {
-        await googleSheetsService.updateTask(taskId, userId, updates);
+      if (isSupabaseAvailable()) {
+        await supabaseDataService.updateTask(taskId, userId, updates);
         await loadAllData();
         toast.success('Task moved successfully');
       } else {
-        toast.error('Google Sheets not available');
+        toast.error('Please sign in to move tasks');
       }
     } catch (error) {
       toast.error('Failed to move task');
-      setTasks(prev => prev.map(task => 
-        task.id === taskId ? { ...task, ...updates } : task
-      ));
+      console.error('Failed to move task:', error);
     }
   };
 

@@ -1,8 +1,9 @@
 
 import { useState, useEffect } from 'react';
-import { googleSheetsService } from '@/services/GoogleSheetsService';
+import { supabaseDataService } from '@/services/SupabaseDataService';
 import { Habit, Task, WeeklyOutput } from '@/types/productivity';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useProductivityData = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -13,33 +14,42 @@ export const useProductivityData = () => {
   const [deletedWeeklyOutputs, setDeletedWeeklyOutputs] = useState<WeeklyOutput[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Get current user ID from localStorage
-  const getCurrentUserId = () => {
-    const authUser = localStorage.getItem('authUser');
-    return authUser ? JSON.parse(authUser).id : null;
+  // Get current user ID from Supabase auth
+  const getCurrentUserId = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    return user?.id || null;
   };
 
-  const userId = getCurrentUserId();
+  const [userId, setUserId] = useState<string | null>(null);
 
-  // Check if Google Sheets is available
-  const isGoogleSheetsAvailable = () => {
-    return googleSheetsService.isConfigured() && googleSheetsService.isAuthenticated();
+  useEffect(() => {
+    const initializeUser = async () => {
+      const currentUserId = await getCurrentUserId();
+      setUserId(currentUserId);
+    };
+    initializeUser();
+  }, []);
+
+  // Check if Supabase is available
+  const isSupabaseAvailable = () => {
+    return supabaseDataService.isConfigured() && userId !== null;
   };
 
-  // Load all data from Google Sheets
+  // Load all data from Supabase
   const loadAllData = async () => {
     if (!userId) {
+      console.log('No user ID found, cannot load data');
       return;
     }
 
     setIsLoading(true);
     try {
-      if (isGoogleSheetsAvailable()) {
-        console.log('Loading data from Google Sheets...');
+      if (isSupabaseAvailable()) {
+        console.log('Loading data from Supabase...');
         const [habitsData, tasksData, weeklyOutputsData] = await Promise.all([
-          googleSheetsService.getHabits(userId),
-          googleSheetsService.getTasks(userId),
-          googleSheetsService.getWeeklyOutputs(userId)
+          supabaseDataService.getHabits(userId),
+          supabaseDataService.getTasks(userId),
+          supabaseDataService.getWeeklyOutputs(userId)
         ]);
 
         setHabits(habitsData.filter(h => !h.archived && !h.isDeleted));
@@ -49,21 +59,23 @@ export const useProductivityData = () => {
         setWeeklyOutputs(weeklyOutputsData.filter(w => !w.isDeleted));
         setDeletedWeeklyOutputs(weeklyOutputsData.filter(w => w.isDeleted));
         
-        console.log('Data loaded from Google Sheets successfully');
+        console.log('Data loaded from Supabase successfully');
       } else {
-        console.log('Google Sheets not available, data will be empty');
-        toast.error('Google Sheets not configured. Please configure in Settings.');
+        console.log('Supabase not available or user not authenticated');
+        toast.error('Please sign in to access your data');
       }
     } catch (error) {
-      console.error('Failed to load data from Google Sheets:', error);
-      toast.error('Failed to load data from Google Sheets');
+      console.error('Failed to load data from Supabase:', error);
+      toast.error('Failed to load data from Supabase');
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    loadAllData();
+    if (userId) {
+      loadAllData();
+    }
   }, [userId]);
 
   return {
@@ -84,7 +96,7 @@ export const useProductivityData = () => {
     
     // Utils
     userId,
-    isGoogleSheetsAvailable,
+    isGoogleSheetsAvailable: isSupabaseAvailable, // Keep same interface
     loadAllData,
   };
 };

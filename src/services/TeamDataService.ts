@@ -1,35 +1,35 @@
-import { localDataService } from './LocalDataService';
+
+import { supabaseDataService } from './SupabaseDataService';
 import { TeamData, TeamMember, OverdueTask, OverdueOutput } from '@/types/teamData';
 import { User } from '@/types/userTypes';
 
 class TeamDataService {
   // Get current manager's team data
-  getCurrentManagerTeamData(): TeamData {
-    const authUser = JSON.parse(localStorage.getItem('authUser') || '{}');
-    
-    if (authUser.role !== 'manager') {
+  async getCurrentManagerTeamData(): Promise<TeamData> {
+    try {
+      // Get all users (team members)
+      const allUsers = await supabaseDataService.getUsers();
+      const teamMembers = allUsers.filter(user => user.role === 'team-member');
+      
+      // Generate team statistics
+      const teamStats = await this.calculateTeamStats(teamMembers);
+      const membersSummary = await this.generateMembersSummary(teamMembers);
+      const overdueData = await this.generateOverdueData(teamMembers);
+      
+      return {
+        totalMembers: teamMembers.length,
+        activeMembers: teamMembers.filter(member => member.lastLogin).length,
+        teamStats,
+        membersSummary,
+        overdueTasks: overdueData.tasks,
+        overdueOutputs: overdueData.outputs,
+        overdueStats: overdueData.stats,
+        moodData: await this.generateMoodData(teamMembers)
+      };
+    } catch (error) {
+      console.error('Error loading team data:', error);
       return this.getEmptyTeamData();
     }
-
-    // Get all users (team members under this manager)
-    const allUsers = localDataService.getUsers();
-    const teamMembers = allUsers.filter(user => user.role === 'team-member');
-    
-    // Generate team statistics
-    const teamStats = this.calculateTeamStats(teamMembers);
-    const membersSummary = this.generateMembersSummary(teamMembers);
-    const overdueData = this.generateOverdueData(teamMembers);
-    
-    return {
-      totalMembers: teamMembers.length,
-      activeMembers: teamMembers.filter(member => member.lastLogin).length,
-      teamStats,
-      membersSummary,
-      overdueTasks: overdueData.tasks,
-      overdueOutputs: overdueData.outputs,
-      overdueStats: overdueData.stats,
-      moodData: this.generateMoodData(teamMembers)
-    };
   }
 
   private getEmptyTeamData(): TeamData {
@@ -59,7 +59,7 @@ class TeamDataService {
     };
   }
 
-  private calculateTeamStats(teamMembers: User[]) {
+  private async calculateTeamStats(teamMembers: User[]) {
     if (teamMembers.length === 0) {
       return {
         habitsCompletionRate: 0,
@@ -78,41 +78,45 @@ class TeamDataService {
     let totalMood = 0;
     let membersWithMood = 0;
 
-    teamMembers.forEach(member => {
-      // Get member's habits
-      const habits = localDataService.getHabits(member.id);
-      const completedHabits = habits.filter(h => h.completed && !h.archived).length;
-      const totalHabits = habits.filter(h => !h.archived).length;
-      const habitsRate = totalHabits > 0 ? (completedHabits / totalHabits) * 100 : 0;
-      
-      // Get member's tasks
-      const tasks = localDataService.getTasks(member.id);
-      const completedTasks = tasks.filter(t => t.completed && !t.isDeleted).length;
-      const totalTasks = tasks.filter(t => !t.isDeleted).length;
-      const tasksRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
-      
-      // Get member's weekly outputs
-      const outputs = localDataService.getWeeklyOutputs(member.id);
-      const completedOutputs = outputs.filter(o => o.progress === 100 && !o.isDeleted).length;
-      const totalOutputs = outputs.filter(o => !o.isDeleted).length;
-      const outputsRate = totalOutputs > 0 ? (completedOutputs / totalOutputs) * 100 : 0;
-      
-      // Calculate average habit streak
-      const avgStreak = habits.length > 0 ? habits.reduce((sum, h) => sum + h.streak, 0) / habits.length : 0;
-      
-      // Get recent mood data
-      const moodEntries = localDataService.getMoodData(member.id);
-      if (moodEntries.length > 0) {
-        const recentMood = moodEntries[moodEntries.length - 1]?.mood || 0;
-        totalMood += recentMood;
-        membersWithMood++;
+    for (const member of teamMembers) {
+      try {
+        // Get member's habits
+        const habits = await supabaseDataService.getHabits(member.id);
+        const completedHabits = habits.filter(h => h.completed && !h.archived).length;
+        const totalHabits = habits.filter(h => !h.archived).length;
+        const habitsRate = totalHabits > 0 ? (completedHabits / totalHabits) * 100 : 0;
+        
+        // Get member's tasks
+        const tasks = await supabaseDataService.getTasks(member.id);
+        const completedTasks = tasks.filter(t => t.completed && !t.isDeleted).length;
+        const totalTasks = tasks.filter(t => !t.isDeleted).length;
+        const tasksRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+        
+        // Get member's weekly outputs
+        const outputs = await supabaseDataService.getWeeklyOutputs(member.id);
+        const completedOutputs = outputs.filter(o => o.progress === 100 && !o.isDeleted).length;
+        const totalOutputs = outputs.filter(o => !o.isDeleted).length;
+        const outputsRate = totalOutputs > 0 ? (completedOutputs / totalOutputs) * 100 : 0;
+        
+        // Calculate average habit streak
+        const avgStreak = habits.length > 0 ? habits.reduce((sum, h) => sum + h.streak, 0) / habits.length : 0;
+        
+        // Get recent mood data
+        const moodEntries = await supabaseDataService.getMoodData(member.id);
+        if (moodEntries.length > 0) {
+          const recentMood = moodEntries[moodEntries.length - 1]?.mood || 0;
+          totalMood += recentMood;
+          membersWithMood++;
+        }
+        
+        totalHabitsRate += habitsRate;
+        totalTasksRate += tasksRate;
+        totalOutputsRate += outputsRate;
+        totalHabitStreak += avgStreak;
+      } catch (error) {
+        console.error(`Error calculating stats for member ${member.id}:`, error);
       }
-      
-      totalHabitsRate += habitsRate;
-      totalTasksRate += tasksRate;
-      totalOutputsRate += outputsRate;
-      totalHabitStreak += avgStreak;
-    });
+    }
 
     return {
       habitsCompletionRate: Math.round(totalHabitsRate / teamMembers.length),
@@ -124,86 +128,98 @@ class TeamDataService {
     };
   }
 
-  private generateMembersSummary(teamMembers: User[]): TeamMember[] {
-    return teamMembers.map(member => {
-      // Get member's data
-      const habits = localDataService.getHabits(member.id);
-      const tasks = localDataService.getTasks(member.id);
-      const outputs = localDataService.getWeeklyOutputs(member.id);
-      
-      // Calculate rates
-      const completedHabits = habits.filter(h => h.completed && !h.archived).length;
-      const totalHabits = habits.filter(h => !h.archived).length;
-      const habitsRate = totalHabits > 0 ? Math.round((completedHabits / totalHabits) * 100) : 0;
-      
-      const completedTasks = tasks.filter(t => t.completed && !t.isDeleted).length;
-      const totalTasks = tasks.filter(t => !t.isDeleted).length;
-      const tasksRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-      
-      const completedOutputs = outputs.filter(o => o.progress === 100 && !o.isDeleted).length;
-      const totalOutputs = outputs.filter(o => !o.isDeleted).length;
-      const outputsRate = totalOutputs > 0 ? Math.round((completedOutputs / totalOutputs) * 100) : 0;
-      
-      // Determine status based on average performance
-      const avgPerformance = (habitsRate + tasksRate + outputsRate) / 3;
-      let status: 'excellent' | 'good' | 'average' | 'needs-attention';
-      
-      if (avgPerformance >= 90) status = 'excellent';
-      else if (avgPerformance >= 75) status = 'good';
-      else if (avgPerformance >= 60) status = 'average';
-      else status = 'needs-attention';
-      
-      return {
-        id: member.id,
-        name: member.name,
-        role: member.position || 'Team Member',
-        habitsRate,
-        tasksRate,
-        outputsRate,
-        status
-      };
-    });
+  private async generateMembersSummary(teamMembers: User[]): Promise<TeamMember[]> {
+    const membersSummary: TeamMember[] = [];
+
+    for (const member of teamMembers) {
+      try {
+        // Get member's data
+        const habits = await supabaseDataService.getHabits(member.id);
+        const tasks = await supabaseDataService.getTasks(member.id);
+        const outputs = await supabaseDataService.getWeeklyOutputs(member.id);
+        
+        // Calculate rates
+        const completedHabits = habits.filter(h => h.completed && !h.archived).length;
+        const totalHabits = habits.filter(h => !h.archived).length;
+        const habitsRate = totalHabits > 0 ? Math.round((completedHabits / totalHabits) * 100) : 0;
+        
+        const completedTasks = tasks.filter(t => t.completed && !t.isDeleted).length;
+        const totalTasks = tasks.filter(t => !t.isDeleted).length;
+        const tasksRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+        
+        const completedOutputs = outputs.filter(o => o.progress === 100 && !o.isDeleted).length;
+        const totalOutputs = outputs.filter(o => !o.isDeleted).length;
+        const outputsRate = totalOutputs > 0 ? Math.round((completedOutputs / totalOutputs) * 100) : 0;
+        
+        // Determine status based on average performance
+        const avgPerformance = (habitsRate + tasksRate + outputsRate) / 3;
+        let status: 'excellent' | 'good' | 'average' | 'needs-attention';
+        
+        if (avgPerformance >= 90) status = 'excellent';
+        else if (avgPerformance >= 75) status = 'good';
+        else if (avgPerformance >= 60) status = 'average';
+        else status = 'needs-attention';
+        
+        membersSummary.push({
+          id: member.id,
+          name: member.name,
+          role: member.position || 'Team Member',
+          habitsRate,
+          tasksRate,
+          outputsRate,
+          status
+        });
+      } catch (error) {
+        console.error(`Error generating summary for member ${member.id}:`, error);
+      }
+    }
+
+    return membersSummary;
   }
 
-  private generateOverdueData(teamMembers: User[]) {
+  private async generateOverdueData(teamMembers: User[]) {
     const overdueTasks: OverdueTask[] = [];
     const overdueOutputs: OverdueOutput[] = [];
     
-    teamMembers.forEach(member => {
-      // Get overdue tasks
-      const tasks = localDataService.getTasks(member.id);
-      const today = new Date();
-      
-      tasks.forEach(task => {
-        if (!task.completed && !task.isDeleted && task.dueDate && task.dueDate < today) {
-          const daysOverdue = Math.floor((today.getTime() - task.dueDate.getTime()) / (1000 * 60 * 60 * 24));
-          overdueTasks.push({
-            id: task.id,
-            title: task.title,
-            assignee: member.name,
-            priority: task.priority as 'High' | 'Medium' | 'Low',
-            daysOverdue,
-            originalDueDate: task.dueDate.toISOString().split('T')[0]
-          });
-        }
-      });
-      
-      // Get overdue outputs
-      const outputs = localDataService.getWeeklyOutputs(member.id);
-      outputs.forEach(output => {
-        if (output.progress < 100 && !output.isDeleted && output.dueDate && output.dueDate < today) {
-          const daysOverdue = Math.floor((today.getTime() - output.dueDate.getTime()) / (1000 * 60 * 60 * 24));
-          overdueOutputs.push({
-            id: output.id,
-            title: output.title,
-            assignee: member.name,
-            progress: output.progress,
-            daysOverdue,
-            originalDueDate: output.dueDate.toISOString().split('T')[0]
-          });
-        }
-      });
-    });
+    for (const member of teamMembers) {
+      try {
+        // Get overdue tasks
+        const tasks = await supabaseDataService.getTasks(member.id);
+        const today = new Date();
+        
+        tasks.forEach(task => {
+          if (!task.completed && !task.isDeleted && task.dueDate && task.dueDate < today) {
+            const daysOverdue = Math.floor((today.getTime() - task.dueDate.getTime()) / (1000 * 60 * 60 * 24));
+            overdueTasks.push({
+              id: task.id,
+              title: task.title,
+              assignee: member.name,
+              priority: task.priority as 'High' | 'Medium' | 'Low',
+              daysOverdue,
+              originalDueDate: task.dueDate.toISOString().split('T')[0]
+            });
+          }
+        });
+        
+        // Get overdue outputs
+        const outputs = await supabaseDataService.getWeeklyOutputs(member.id);
+        outputs.forEach(output => {
+          if (output.progress < 100 && !output.isDeleted && output.dueDate && output.dueDate < today) {
+            const daysOverdue = Math.floor((today.getTime() - output.dueDate.getTime()) / (1000 * 60 * 60 * 24));
+            overdueOutputs.push({
+              id: output.id,
+              title: output.title,
+              assignee: member.name,
+              progress: output.progress,
+              daysOverdue,
+              originalDueDate: output.dueDate.toISOString().split('T')[0]
+            });
+          }
+        });
+      } catch (error) {
+        console.error(`Error generating overdue data for member ${member.id}:`, error);
+      }
+    }
     
     return {
       tasks: overdueTasks.slice(0, 10), // Limit to 10 most recent
@@ -219,7 +235,7 @@ class TeamDataService {
     };
   }
 
-  private generateMoodData(teamMembers: User[]) {
+  private async generateMoodData(teamMembers: User[]) {
     const moodData: { date: string; mood: number; memberId: string }[] = [];
     const last30Days: string[] = [];
     
@@ -231,19 +247,24 @@ class TeamDataService {
     }
     
     // Get mood data for each day and member
-    last30Days.forEach(date => {
-      teamMembers.forEach(member => {
-        const moodEntries = localDataService.getMoodData(member.id);
-        const dayMood = moodEntries.find(entry => entry.date === date);
-        if (dayMood) {
-          moodData.push({
-            date,
-            mood: dayMood.mood,
-            memberId: member.id
-          });
-        }
-      });
-    });
+    for (const member of teamMembers) {
+      try {
+        const moodEntries = await supabaseDataService.getMoodData(member.id);
+        
+        last30Days.forEach(date => {
+          const dayMood = moodEntries.find(entry => entry.date === date);
+          if (dayMood) {
+            moodData.push({
+              date,
+              mood: dayMood.mood,
+              memberId: member.id
+            });
+          }
+        });
+      } catch (error) {
+        console.error(`Error generating mood data for member ${member.id}:`, error);
+      }
+    }
     
     return moodData;
   }

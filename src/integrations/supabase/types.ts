@@ -9,7 +9,245 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      habits: {
+        Row: {
+          archived: boolean
+          category: Database["public"]["Enums"]["habit_category"] | null
+          completed: boolean
+          created_at: string
+          description: string | null
+          id: string
+          is_deleted: boolean
+          name: string
+          streak: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          archived?: boolean
+          category?: Database["public"]["Enums"]["habit_category"] | null
+          completed?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_deleted?: boolean
+          name: string
+          streak?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          archived?: boolean
+          category?: Database["public"]["Enums"]["habit_category"] | null
+          completed?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_deleted?: boolean
+          name?: string
+          streak?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mood_entries: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          mood: number
+          notes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          mood: number
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          mood?: number
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mood_entries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          has_changed_password: boolean
+          id: string
+          last_login: string | null
+          name: string
+          position: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          has_changed_password?: boolean
+          id: string
+          last_login?: string | null
+          name: string
+          position?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          has_changed_password?: boolean
+          id?: string
+          last_login?: string | null
+          name?: string
+          position?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          completed: boolean
+          completed_date: string | null
+          created_date: string
+          deleted_date: string | null
+          description: string | null
+          due_date: string
+          id: string
+          is_deleted: boolean
+          is_moved: boolean
+          original_due_date: string | null
+          priority: Database["public"]["Enums"]["task_priority"] | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_date?: string | null
+          created_date?: string
+          deleted_date?: string | null
+          description?: string | null
+          due_date: string
+          id?: string
+          is_deleted?: boolean
+          is_moved?: boolean
+          original_due_date?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"] | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          completed_date?: string | null
+          created_date?: string
+          deleted_date?: string | null
+          description?: string | null
+          due_date?: string
+          id?: string
+          is_deleted?: boolean
+          is_moved?: boolean
+          original_due_date?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weekly_outputs: {
+        Row: {
+          completed_date: string | null
+          created_date: string
+          deleted_date: string | null
+          description: string | null
+          due_date: string
+          id: string
+          is_deleted: boolean
+          is_moved: boolean
+          original_due_date: string | null
+          progress: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_date?: string | null
+          created_date?: string
+          deleted_date?: string | null
+          description?: string | null
+          due_date: string
+          id?: string
+          is_deleted?: boolean
+          is_moved?: boolean
+          original_due_date?: string | null
+          progress?: number
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_date?: string | null
+          created_date?: string
+          deleted_date?: string | null
+          description?: string | null
+          due_date?: string
+          id?: string
+          is_deleted?: boolean
+          is_moved?: boolean
+          original_due_date?: string | null
+          progress?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_outputs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +256,15 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      habit_category:
+        | "health"
+        | "productivity"
+        | "personal"
+        | "fitness"
+        | "learning"
+        | "other"
+      task_priority: "low" | "medium" | "high" | "urgent"
+      user_role: "admin" | "manager" | "team-member"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +379,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      habit_category: [
+        "health",
+        "productivity",
+        "personal",
+        "fitness",
+        "learning",
+        "other",
+      ],
+      task_priority: ["low", "medium", "high", "urgent"],
+      user_role: ["admin", "manager", "team-member"],
+    },
   },
 } as const

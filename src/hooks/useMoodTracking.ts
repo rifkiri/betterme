@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from 'react';
-import { googleSheetsService } from '@/services/GoogleSheetsService';
+import { supabaseDataService } from '@/services/SupabaseDataService';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface MoodEntry {
   id: string;
@@ -15,20 +16,28 @@ export const useMoodTracking = () => {
   const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Get current user ID from localStorage
-  const getCurrentUserId = () => {
-    const authUser = localStorage.getItem('authUser');
-    return authUser ? JSON.parse(authUser).id : null;
+  // Get current user ID from Supabase auth
+  const getCurrentUserId = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    return user?.id || null;
   };
 
-  const userId = getCurrentUserId();
+  const [userId, setUserId] = useState<string | null>(null);
 
-  // Check if Google Sheets is available
-  const isGoogleSheetsAvailable = () => {
-    return googleSheetsService.isConfigured() && googleSheetsService.isAuthenticated();
+  useEffect(() => {
+    const initializeUser = async () => {
+      const currentUserId = await getCurrentUserId();
+      setUserId(currentUserId);
+    };
+    initializeUser();
+  }, []);
+
+  // Check if Supabase is available
+  const isSupabaseAvailable = () => {
+    return supabaseDataService.isConfigured() && userId !== null;
   };
 
-  // Load mood data from Google Sheets
+  // Load mood data from Supabase
   const loadMoodData = async () => {
     if (!userId) {
       return;
@@ -36,25 +45,27 @@ export const useMoodTracking = () => {
 
     setIsLoading(true);
     try {
-      if (isGoogleSheetsAvailable()) {
-        console.log('Loading mood data from Google Sheets...');
-        const moodData = await googleSheetsService.getMoodData(userId);
+      if (isSupabaseAvailable()) {
+        console.log('Loading mood data from Supabase...');
+        const moodData = await supabaseDataService.getMoodData(userId);
         setMoodEntries(moodData);
-        console.log('Mood data loaded from Google Sheets successfully');
+        console.log('Mood data loaded from Supabase successfully');
       } else {
-        console.log('Google Sheets not available for mood data');
-        toast.error('Google Sheets not configured for mood tracking');
+        console.log('Supabase not available for mood data');
+        toast.error('Please sign in to access mood tracking');
       }
     } catch (error) {
-      console.error('Failed to load mood data from Google Sheets:', error);
-      toast.error('Failed to load mood data from Google Sheets');
+      console.error('Failed to load mood data from Supabase:', error);
+      toast.error('Failed to load mood data from Supabase');
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    loadMoodData();
+    if (userId) {
+      loadMoodData();
+    }
   }, [userId]);
 
   // Add new mood entry
@@ -62,7 +73,7 @@ export const useMoodTracking = () => {
     if (!userId) return;
 
     const newEntry: MoodEntry = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       userId,
       date,
       mood,
@@ -70,17 +81,16 @@ export const useMoodTracking = () => {
     };
 
     try {
-      if (isGoogleSheetsAvailable()) {
-        await googleSheetsService.addMoodEntry(newEntry);
+      if (isSupabaseAvailable()) {
+        await supabaseDataService.addMoodEntry(newEntry);
         await loadMoodData();
         toast.success('Mood entry saved successfully');
       } else {
-        toast.error('Google Sheets not available');
+        toast.error('Please sign in to save mood entries');
       }
     } catch (error) {
       toast.error('Failed to save mood entry');
-      // Fallback to local state
-      setMoodEntries(prev => [...prev, newEntry]);
+      console.error('Failed to save mood entry:', error);
     }
   };
 
@@ -89,19 +99,16 @@ export const useMoodTracking = () => {
     if (!userId) return;
 
     try {
-      if (isGoogleSheetsAvailable()) {
-        await googleSheetsService.updateMoodEntry(id, userId, { mood, notes });
+      if (isSupabaseAvailable()) {
+        await supabaseDataService.updateMoodEntry(id, userId, { mood, notes });
         await loadMoodData();
         toast.success('Mood entry updated successfully');
       } else {
-        toast.error('Google Sheets not available');
+        toast.error('Please sign in to update mood entries');
       }
     } catch (error) {
       toast.error('Failed to update mood entry');
-      // Fallback to local state
-      setMoodEntries(prev => prev.map(entry => 
-        entry.id === id ? { ...entry, mood, notes } : entry
-      ));
+      console.error('Failed to update mood entry:', error);
     }
   };
 

@@ -1,5 +1,5 @@
 
-import { googleSheetsService } from '@/services/GoogleSheetsService';
+import { supabaseDataService } from '@/services/SupabaseDataService';
 import { Habit } from '@/types/productivity';
 import { toast } from 'sonner';
 
@@ -15,7 +15,7 @@ interface UseHabitsManagerProps {
 
 export const useHabitsManager = ({
   userId,
-  isGoogleSheetsAvailable,
+  isGoogleSheetsAvailable: isSupabaseAvailable,
   loadAllData,
   habits,
   setHabits,
@@ -27,22 +27,22 @@ export const useHabitsManager = ({
 
     const newHabit: Habit = {
       ...habit,
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       completed: false,
       streak: 0,
     };
 
     try {
-      if (isGoogleSheetsAvailable()) {
-        await googleSheetsService.addHabit({ ...newHabit, userId });
+      if (isSupabaseAvailable()) {
+        await supabaseDataService.addHabit({ ...newHabit, userId });
         await loadAllData();
         toast.success('Habit added successfully');
       } else {
-        toast.error('Google Sheets not available');
+        toast.error('Please sign in to add habits');
       }
     } catch (error) {
       toast.error('Failed to add habit');
-      setHabits(prev => [...prev, newHabit]);
+      console.error('Failed to add habit:', error);
     }
   };
 
@@ -50,18 +50,16 @@ export const useHabitsManager = ({
     if (!userId) return;
 
     try {
-      if (isGoogleSheetsAvailable()) {
-        await googleSheetsService.updateHabit(id, userId, updates);
+      if (isSupabaseAvailable()) {
+        await supabaseDataService.updateHabit(id, userId, updates);
         await loadAllData();
         toast.success('Habit updated successfully');
       } else {
-        toast.error('Google Sheets not available');
+        toast.error('Please sign in to edit habits');
       }
     } catch (error) {
       toast.error('Failed to update habit');
-      setHabits(prev => prev.map(habit => 
-        habit.id === id ? { ...habit, ...updates } : habit
-      ));
+      console.error('Failed to update habit:', error);
     }
   };
 
@@ -77,17 +75,15 @@ export const useHabitsManager = ({
     };
 
     try {
-      if (isGoogleSheetsAvailable()) {
-        await googleSheetsService.updateHabit(id, userId, updates);
+      if (isSupabaseAvailable()) {
+        await supabaseDataService.updateHabit(id, userId, updates);
         await loadAllData();
       } else {
-        toast.error('Google Sheets not available');
+        toast.error('Please sign in to update habits');
       }
     } catch (error) {
       toast.error('Failed to update habit');
-      setHabits(prev => prev.map(habit => 
-        habit.id === id ? { ...habit, ...updates } : habit
-      ));
+      console.error('Failed to update habit:', error);
     }
   };
 
@@ -95,20 +91,16 @@ export const useHabitsManager = ({
     if (!userId) return;
 
     try {
-      if (isGoogleSheetsAvailable()) {
-        await googleSheetsService.updateHabit(id, userId, { archived: true });
+      if (isSupabaseAvailable()) {
+        await supabaseDataService.updateHabit(id, userId, { archived: true });
         await loadAllData();
         toast.success('Habit archived');
       } else {
-        toast.error('Google Sheets not available');
+        toast.error('Please sign in to archive habits');
       }
     } catch (error) {
       toast.error('Failed to archive habit');
-      const habitToArchive = habits.find(habit => habit.id === id);
-      if (habitToArchive) {
-        setArchivedHabits(prev => [...prev, { ...habitToArchive, archived: true }]);
-        setHabits(prev => prev.filter(habit => habit.id !== id));
-      }
+      console.error('Failed to archive habit:', error);
     }
   };
 
@@ -116,26 +108,34 @@ export const useHabitsManager = ({
     if (!userId) return;
 
     try {
-      if (isGoogleSheetsAvailable()) {
-        await googleSheetsService.updateHabit(id, userId, { archived: false });
+      if (isSupabaseAvailable()) {
+        await supabaseDataService.updateHabit(id, userId, { archived: false });
         await loadAllData();
         toast.success('Habit restored');
       } else {
-        toast.error('Google Sheets not available');
+        toast.error('Please sign in to restore habits');
       }
     } catch (error) {
       toast.error('Failed to restore habit');
-      const habitToRestore = archivedHabits.find(habit => habit.id === id);
-      if (habitToRestore) {
-        setHabits(prev => [...prev, { ...habitToRestore, archived: false }]);
-        setArchivedHabits(prev => prev.filter(habit => habit.id !== id));
-      }
+      console.error('Failed to restore habit:', error);
     }
   };
 
   const permanentlyDeleteHabit = async (id: string) => {
-    setArchivedHabits(prev => prev.filter(habit => habit.id !== id));
-    toast.success('Habit permanently deleted');
+    if (!userId) return;
+
+    try {
+      if (isSupabaseAvailable()) {
+        await supabaseDataService.updateHabit(id, userId, { isDeleted: true });
+        await loadAllData();
+        toast.success('Habit permanently deleted');
+      } else {
+        toast.error('Please sign in to delete habits');
+      }
+    } catch (error) {
+      toast.error('Failed to delete habit');
+      console.error('Failed to delete habit:', error);
+    }
   };
 
   return {
