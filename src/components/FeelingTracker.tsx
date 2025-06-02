@@ -8,20 +8,20 @@ import { useMoodTracking } from '@/hooks/useMoodTracking';
 
 export const FeelingTracker = () => {
   const [feeling, setFeeling] = useState("5");
-  const [hasInitialized, setHasInitialized] = useState(false);
+  const [hasLoadedTodaysMood, setHasLoadedTodaysMood] = useState(false);
   const { addMoodEntry, getMoodForDate } = useMoodTracking();
 
   // Check for existing mood entry for today and update the feeling state only once
   useEffect(() => {
-    if (!hasInitialized) {
+    if (!hasLoadedTodaysMood) {
       const today = new Date().toISOString().split('T')[0];
       const todaysMood = getMoodForDate(today);
       if (todaysMood) {
         setFeeling(todaysMood.mood.toString());
       }
-      setHasInitialized(true);
+      setHasLoadedTodaysMood(true);
     }
-  }, [getMoodForDate, hasInitialized]);
+  }, [getMoodForDate, hasLoadedTodaysMood]);
 
   const getFeelingIcon = (value: number) => {
     if (value >= 8) return <Smile className="h-5 w-5 text-green-500" />;
