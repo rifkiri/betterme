@@ -27,15 +27,22 @@ interface DeleteResult {
 }
 
 Deno.serve(async (req) => {
+  console.log(`Received ${req.method} request`);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
+    // Parse the request body first
+    const requestBody = await req.json()
+    console.log('Request body:', requestBody);
+
     // Verify the request is from an authenticated admin
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
+      console.error('No authorization header provided');
       return new Response(
         JSON.stringify({ error: 'Authorization header required' }),
         { 
@@ -47,6 +54,8 @@ Deno.serve(async (req) => {
 
     // Extract JWT token and verify admin status
     const token = authHeader.replace('Bearer ', '')
+    console.log('Verifying user token...');
+    
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
     
     if (authError || !user) {
@@ -60,15 +69,28 @@ Deno.serve(async (req) => {
       )
     }
 
+    console.log('User authenticated:', user.email);
+
     // Check if user is admin
-    const { data: profile } = await supabaseAdmin
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single()
 
+    if (profileError) {
+      console.error('Error fetching user profile:', profileError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to verify admin status' }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
     if (!profile || profile.role !== 'admin') {
-      console.error('User is not admin:', user.email)
+      console.error('User is not admin:', user.email, 'Role:', profile?.role)
       return new Response(
         JSON.stringify({ error: 'Admin access required' }),
         { 
@@ -78,7 +100,9 @@ Deno.serve(async (req) => {
       )
     }
 
-    const { userIds, emails, deleteAllNonAdmins }: DeleteUserRequest = await req.json()
+    console.log('Admin access verified for:', user.email);
+
+    const { userIds, emails, deleteAllNonAdmins }: DeleteUserRequest = requestBody
     const results: DeleteResult[] = []
 
     if (deleteAllNonAdmins) {
@@ -101,6 +125,8 @@ Deno.serve(async (req) => {
         )
       }
 
+      console.log(`Found ${nonAdminProfiles?.length || 0} non-admin users to delete`);
+
       // Delete each non-admin user
       for (const profile of nonAdminProfiles || []) {
         const result = await deleteUser(profile.id, profile.email)
@@ -111,6 +137,7 @@ Deno.serve(async (req) => {
       const usersToDelete: Array<{ id: string; email: string }> = []
 
       if (userIds && userIds.length > 0) {
+        console.log('Fetching users by IDs:', userIds);
         // Get user details for the provided IDs
         const { data: userProfiles } = await supabaseAdmin
           .from('profiles')
@@ -123,6 +150,7 @@ Deno.serve(async (req) => {
       }
 
       if (emails && emails.length > 0) {
+        console.log('Fetching users by emails:', emails);
         // Get user details for the provided emails
         const { data: userProfiles } = await supabaseAdmin
           .from('profiles')
@@ -133,6 +161,8 @@ Deno.serve(async (req) => {
           usersToDelete.push(...userProfiles)
         }
       }
+
+      console.log(`Found ${usersToDelete.length} users to delete`);
 
       // Delete each specified user
       for (const userToDelete of usersToDelete) {
@@ -159,7 +189,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Unexpected error:', error)
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ error: 'Internal server error', details: error.message }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -187,6 +217,8 @@ async function deleteUser(userId: string, email: string): Promise<DeleteResult> 
         error: `Failed to delete profile: ${profileError.message}`
       }
     }
+
+    console.log(`Profile deleted for: ${email}`);
 
     // Then, delete from auth.users
     const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId)
