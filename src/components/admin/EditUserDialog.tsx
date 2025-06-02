@@ -46,12 +46,17 @@ export const EditUserDialog = ({
     setNewPassword(result);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !name || !email || !role) {
       toast.error('Please fill in all required fields');
       return;
     }
+
+    console.log('=== EDIT USER SUBMIT DEBUG ===');
+    console.log('Original user email:', user.email);
+    console.log('New email:', email);
+    console.log('Email changed:', user.email !== email);
 
     const updates: Partial<User> = {
       name,
@@ -66,13 +71,21 @@ export const EditUserDialog = ({
       updates.hasChangedPassword = false;
     }
 
-    onUpdateUser(user.id, updates);
-    if (newPassword) {
-      toast.success('User updated and password reset successfully');
-    } else {
-      toast.success('User updated successfully');
+    try {
+      await onUpdateUser(user.id, updates);
+      
+      if (newPassword) {
+        toast.success('User updated and password reset successfully');
+      } else if (user.email !== email) {
+        toast.success('User updated and email synced with authentication system');
+      } else {
+        toast.success('User updated successfully');
+      }
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error updating user:', error);
+      toast.error('Failed to update user');
     }
-    onOpenChange(false);
   };
 
   if (!user) return null;
@@ -83,7 +96,7 @@ export const EditUserDialog = ({
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
           <DialogDescription>
-            Update user information and organizational position.
+            Update user information and organizational position. Email changes will be synced with the authentication system.
           </DialogDescription>
         </DialogHeader>
         
@@ -110,6 +123,11 @@ export const EditUserDialog = ({
                 placeholder="Enter email address" 
                 required 
               />
+              {user.email !== email && (
+                <p className="text-sm text-blue-600">
+                  ⚠️ Email will be updated in both profile and authentication system
+                </p>
+              )}
             </div>
           </div>
           
