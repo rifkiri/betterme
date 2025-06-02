@@ -7,6 +7,7 @@ interface PendingUser {
   email: string;
   role: string;
   position?: string;
+  temporaryPassword?: string;
 }
 
 export class PendingUserService {
@@ -28,16 +29,16 @@ export class PendingUserService {
       name: profile.name,
       email: profile.email,
       role: profile.role,
-      position: profile.position
+      position: profile.position,
+      temporaryPassword: profile.temporary_password
     })) || [];
 
     return { data: pendingUsers, error: null };
   }
 
   static findMatchingPendingUser(pendingUsers: PendingUser[], password: string): PendingUser | null {
-    // Since we removed temporary passwords for security, we'll need to handle pending users differently
-    // For now, return the first pending user if one exists (this will need to be updated based on your business logic)
-    return pendingUsers.length > 0 ? pendingUsers[0] : null;
+    // Find the pending user that matches the provided password
+    return pendingUsers.find(user => user.temporaryPassword === password) || null;
   }
 
   static async removePendingUser(pendingUserId: string) {

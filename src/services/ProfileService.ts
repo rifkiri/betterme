@@ -19,6 +19,7 @@ export class ProfileService {
       email: userData.email?.trim().toLowerCase().slice(0, 255) || '',
       role: userData.role || 'team-member',
       position: userData.position?.trim().slice(0, 100) || null,
+      temporaryPassword: userData.temporaryPassword || null,
     };
 
     // Validate email format
@@ -35,6 +36,7 @@ export class ProfileService {
         email: sanitizedData.email,
         role: sanitizedData.role,
         position: sanitizedData.position,
+        temporary_password: sanitizedData.temporaryPassword,
         user_status: 'pending',
         has_changed_password: false
       });
@@ -59,7 +61,8 @@ export class ProfileService {
       .from('profiles')
       .update({ 
         has_changed_password: true,
-        user_status: 'active'
+        user_status: 'active',
+        temporary_password: null // Clear temporary password after first login
       })
       .eq('id', userId);
 

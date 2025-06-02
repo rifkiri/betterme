@@ -49,9 +49,12 @@ export const UserTable = ({
 
   const handleShowPassword = (user: User) => {
     if (user.userStatus === 'pending' && user.temporaryPassword) {
-      toast.info(`User has temporary password: ${user.temporaryPassword}`);
+      toast.info(`Temporary password: ${user.temporaryPassword}`, {
+        duration: 10000,
+        description: 'Password will be cleared after first login'
+      });
     } else if (user.userStatus === 'pending') {
-      toast.info('User has temporary password: temp123');
+      toast.info('No temporary password set for this user');
     } else {
       toast.info('User has changed their password from the default');
     }

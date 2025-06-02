@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types/userTypes';
 
@@ -25,6 +24,7 @@ export class SupabaseProfilesService {
           email: profile.email || '',
           role: profile.role || 'team-member',
           position: profile.position || '',
+          temporaryPassword: profile.temporary_password || undefined,
           hasChangedPassword: profile.has_changed_password || false,
           userStatus: profile.user_status || 'active',
           createdAt: profile.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
@@ -45,6 +45,7 @@ export class SupabaseProfilesService {
       email: user.email?.trim().toLowerCase().slice(0, 255) || '',
       role: user.role || 'team-member',
       position: user.position?.trim().slice(0, 100) || null,
+      temporaryPassword: user.temporaryPassword || null,
       managerId: user.managerId || null
     };
 
@@ -68,6 +69,7 @@ export class SupabaseProfilesService {
         email: sanitizedUser.email,
         role: sanitizedUser.role,
         position: sanitizedUser.position,
+        temporary_password: sanitizedUser.temporaryPassword,
         user_status: 'pending',
         has_changed_password: false,
         manager_id: sanitizedUser.managerId
@@ -103,6 +105,9 @@ export class SupabaseProfilesService {
     }
     if (updates.position !== undefined) {
       supabaseUpdates.position = updates.position?.trim().slice(0, 100) || null;
+    }
+    if (updates.temporaryPassword !== undefined) {
+      supabaseUpdates.temporary_password = updates.temporaryPassword;
     }
     if (updates.hasChangedPassword !== undefined) {
       supabaseUpdates.has_changed_password = updates.hasChangedPassword;
@@ -173,6 +178,7 @@ export class SupabaseProfilesService {
       email: data.email || '',
       role: data.role || 'team-member',
       position: data.position || '',
+      temporaryPassword: data.temporary_password || undefined,
       hasChangedPassword: data.has_changed_password || false,
       userStatus: data.user_status || 'active',
       createdAt: data.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],

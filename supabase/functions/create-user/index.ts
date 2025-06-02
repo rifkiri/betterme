@@ -85,6 +85,7 @@ Deno.serve(async (req) => {
           email,
           role,
           position: position || null,
+          temporary_password: temporaryPassword,
           user_status: 'pending',
           has_changed_password: false
         })
@@ -102,6 +103,7 @@ Deno.serve(async (req) => {
           email,
           role,
           position: position || null,
+          temporary_password: temporaryPassword,
           user_status: 'pending',
           has_changed_password: false
         })
@@ -133,7 +135,8 @@ Deno.serve(async (req) => {
           email,
           name,
           role,
-          position
+          position,
+          temporaryPassword
         }
       }),
       { 
