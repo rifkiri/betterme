@@ -34,7 +34,6 @@ export class SupabaseWeeklyOutputsService {
     const { error } = await supabase
       .from('weekly_outputs')
       .insert({
-        id: output.id,
         user_id: output.userId,
         title: output.title,
         description: output.description,

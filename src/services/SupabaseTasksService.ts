@@ -20,7 +20,7 @@ export class SupabaseTasksService {
       title: task.title,
       description: task.description,
       completed: task.completed,
-      priority: task.priority,
+      priority: this.mapDatabasePriorityToApp(task.priority),
       dueDate: new Date(task.due_date),
       originalDueDate: task.original_due_date ? new Date(task.original_due_date) : undefined,
       isMoved: task.is_moved,
@@ -31,16 +31,34 @@ export class SupabaseTasksService {
     }));
   }
 
+  private mapDatabasePriorityToApp(dbPriority: string | null): 'Low' | 'Medium' | 'High' {
+    switch (dbPriority) {
+      case 'low': return 'Low';
+      case 'medium': return 'Medium';
+      case 'high': 
+      case 'urgent': return 'High';
+      default: return 'Medium';
+    }
+  }
+
+  private mapAppPriorityToDatabase(appPriority: 'Low' | 'Medium' | 'High'): 'low' | 'medium' | 'high' {
+    switch (appPriority) {
+      case 'Low': return 'low';
+      case 'Medium': return 'medium';
+      case 'High': return 'high';
+      default: return 'medium';
+    }
+  }
+
   async addTask(task: Task & { userId: string }): Promise<void> {
     const { error } = await supabase
       .from('tasks')
       .insert({
-        id: task.id,
         user_id: task.userId,
         title: task.title,
         description: task.description,
         completed: task.completed,
-        priority: task.priority,
+        priority: this.mapAppPriorityToDatabase(task.priority),
         due_date: task.dueDate.toISOString().split('T')[0],
         original_due_date: task.originalDueDate?.toISOString().split('T')[0],
         is_moved: task.isMoved,
@@ -62,7 +80,7 @@ export class SupabaseTasksService {
     if (updates.title) supabaseUpdates.title = updates.title;
     if (updates.description !== undefined) supabaseUpdates.description = updates.description;
     if (updates.completed !== undefined) supabaseUpdates.completed = updates.completed;
-    if (updates.priority) supabaseUpdates.priority = updates.priority;
+    if (updates.priority) supabaseUpdates.priority = this.mapAppPriorityToDatabase(updates.priority);
     if (updates.dueDate) supabaseUpdates.due_date = updates.dueDate.toISOString().split('T')[0];
     if (updates.originalDueDate) supabaseUpdates.original_due_date = updates.originalDueDate.toISOString().split('T')[0];
     if (updates.isMoved !== undefined) supabaseUpdates.is_moved = updates.isMoved;

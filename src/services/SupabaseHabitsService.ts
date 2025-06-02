@@ -32,7 +32,6 @@ export class SupabaseHabitsService {
     const { error } = await supabase
       .from('habits')
       .insert({
-        id: habit.id,
         user_id: habit.userId,
         name: habit.name,
         description: habit.description,

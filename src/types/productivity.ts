@@ -47,6 +47,7 @@ export interface WeeklyOutput {
   id: string;
   userId?: string;
   title: string;
+  description?: string;
   progress: number;
   createdDate: Date;
   dueDate: Date;

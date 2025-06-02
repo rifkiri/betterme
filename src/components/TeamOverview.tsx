@@ -13,10 +13,10 @@ export const TeamOverview = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadTeamData = () => {
+    const loadTeamData = async () => {
       setIsLoading(true);
       try {
-        const data = teamDataService.getCurrentManagerTeamData();
+        const data = await teamDataService.getCurrentManagerTeamData();
         setTeamData(data);
         console.log('Team data loaded:', data);
       } catch (error) {
