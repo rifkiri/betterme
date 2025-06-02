@@ -14,7 +14,7 @@ export class PendingUserService {
     return { data: pendingUsers, error };
   }
 
-  static async findMatchingPendingUser(pendingUsers: PendingUser[], password: string): PendingUser | null {
+  static async findMatchingPendingUser(pendingUsers: PendingUser[], password: string): Promise<PendingUser | null> {
     return pendingUsers.find(user => user.temporary_password === password) || null;
   }
 
