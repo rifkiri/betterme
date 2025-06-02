@@ -44,11 +44,19 @@ export const FeelingTracker = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          {getFeelingIcon(feeling[0])}
-          How are you feeling today?
-        </CardTitle>
-        <CardDescription>Track your mood on a scale of 1-10</CardDescription>
+        <div className="flex items-start justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              {getFeelingIcon(feeling[0])}
+              How are you feeling today?
+            </CardTitle>
+            <CardDescription>Track your mood on a scale of 1-10</CardDescription>
+          </div>
+          <Button onClick={handleRecordMood} size="sm" className="px-4">
+            <Save className="h-4 w-4 mr-2" />
+            Record Mood
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
@@ -74,13 +82,6 @@ export const FeelingTracker = () => {
               {getFeelingText(feeling[0])}
             </span>
           </div>
-        </div>
-
-        <div className="flex justify-center mt-4">
-          <Button onClick={handleRecordMood} size="sm" className="px-6">
-            <Save className="h-4 w-4 mr-2" />
-            Record Mood
-          </Button>
         </div>
       </CardContent>
     </Card>
