@@ -30,7 +30,7 @@ export class SupabaseProfilesService {
           createdAt: profile.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
           lastLogin: profile.last_login?.split('T')[0],
           temporaryPassword: profile.temporary_password,
-          managerId: profile.manager_id || undefined // Safely map manager_id from database
+          managerId: (profile as any).manager_id || undefined // Safely access manager_id
         });
       });
     }
@@ -121,7 +121,7 @@ export class SupabaseProfilesService {
       createdAt: data.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
       lastLogin: data.last_login?.split('T')[0],
       temporaryPassword: data.temporary_password,
-      managerId: data.manager_id || undefined // Safely map manager_id from database
+      managerId: (data as any).manager_id || undefined // Safely access manager_id
     };
   }
 }
