@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { UserTable } from './UserTable';
 import { AddUserDialog } from './AddUserDialog';
 import { User } from '@/types/userTypes';
-import { UserPlus, RefreshCw, AlertCircle } from 'lucide-react';
+import { UserPlus, RefreshCw, AlertCircle, Info } from 'lucide-react';
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -75,7 +76,7 @@ export const UserManagement = () => {
     try {
       await supabaseDataService.addUser(user);
       await loadUsers();
-      toast.success('User added successfully');
+      toast.success('User profile created successfully. User can now register with their email and temporary password.');
     } catch (error) {
       toast.error('Failed to add user');
       console.error('Failed to add user:', error);
@@ -180,7 +181,14 @@ export const UserManagement = () => {
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertDescription>
+            Adding a user creates a profile entry. The user will need to register with their email and temporary password to complete account setup.
+          </AlertDescription>
+        </Alert>
+        
         <UserTable
           users={users}
           onDeleteUser={handleDeleteUser}
