@@ -36,7 +36,33 @@ export const useSignIn = () => {
 
         if (!profileError && profile) {
           console.log('User profile found:', profile);
-          toast.success('Sign in successful!');
+          
+          // Check if user needs to change password (first time login)
+          if (!profile.has_changed_password) {
+            console.log('User needs to change password');
+            toast.success('Welcome! Please change your temporary password.');
+            
+            // Update profile to mark that they've logged in
+            await supabase
+              .from('profiles')
+              .update({ 
+                last_login: new Date().toISOString(),
+                has_changed_password: true // Set to true since they'll be prompted to change it
+              })
+              .eq('id', signInData.user.id);
+            
+            // Navigate to profile page to change password
+            navigate('/profile');
+            return;
+          }
+          
+          // Update last login for returning users
+          await supabase
+            .from('profiles')
+            .update({ last_login: new Date().toISOString() })
+            .eq('id', signInData.user.id);
+          
+          toast.success('Welcome back!');
           
           // Redirect based on role
           if (profile.role === 'admin') {
@@ -79,22 +105,22 @@ export const useSignIn = () => {
             }
 
             // Remove from pending_users since they're now set up
-            await supabase
+            const { error: deleteError } = await supabase
               .from('pending_users')
               .delete()
               .eq('id', pendingUser.id);
 
-            console.log('Profile created successfully from pending user');
-            toast.success('Account setup completed! You are now signed in.');
-            
-            // Redirect based on role
-            if (pendingUser.role === 'admin') {
-              navigate('/settings');
-            } else if (pendingUser.role === 'manager') {
-              navigate('/manager');
+            if (deleteError) {
+              console.warn('Could not remove pending user:', deleteError);
             } else {
-              navigate('/');
+              console.log('Successfully removed pending user data');
             }
+
+            console.log('Profile created successfully from pending user');
+            toast.success('Welcome! Please change your temporary password.');
+            
+            // Navigate to profile page to change password
+            navigate('/profile');
             return;
           } else {
             console.error('No profile and no pending user found');
@@ -194,6 +220,8 @@ export const useSignIn = () => {
         if (deleteError) {
           console.warn('Could not remove pending user:', deleteError);
           // Don't fail the whole process for this
+        } else {
+          console.log('Successfully removed pending user data');
         }
 
         // Since email confirmation is required by default, inform user to check email
