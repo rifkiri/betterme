@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle } from 'lucide-react';
 import { EmployeeTask } from '@/types/individualData';
+import { format } from 'date-fns';
 
 interface RecentTasksCardProps {
   tasks: EmployeeTask[];
@@ -23,6 +24,17 @@ export const RecentTasksCard = ({ tasks }: RecentTasksCardProps) => {
     }
   };
 
+  const formatDueDate = (dueDate: string | Date) => {
+    if (!dueDate) return 'No due date';
+    
+    try {
+      const date = typeof dueDate === 'string' ? new Date(dueDate) : dueDate;
+      return format(date, 'MMM dd, yyyy');
+    } catch (error) {
+      return 'Invalid date';
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -39,7 +51,7 @@ export const RecentTasksCard = ({ tasks }: RecentTasksCardProps) => {
                 <div className={`w-3 h-3 rounded-full ${task.completed ? 'bg-green-500' : 'bg-yellow-500'}`} />
                 <div>
                   <div className="text-sm font-medium">{task.title}</div>
-                  <div className="text-xs text-muted-foreground">Due: {task.dueDate}</div>
+                  <div className="text-xs text-muted-foreground">Due: {formatDueDate(task.dueDate)}</div>
                 </div>
               </div>
               {getPriorityBadge(task.priority)}
