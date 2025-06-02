@@ -62,12 +62,13 @@ export const useUserManagement = () => {
       name: newUser.name?.trim().slice(0, 100) || '',
       email: newUser.email?.trim().toLowerCase().slice(0, 255) || '',
       role: newUser.role || 'team-member',
-      position: newUser.position?.trim().slice(0, 100) || ''
+      position: newUser.position?.trim().slice(0, 100) || '',
+      temporaryPassword: newUser.temporaryPassword || ''
     };
 
     // Validate required fields
-    if (!sanitizedUser.name || !sanitizedUser.email) {
-      toast.error('Name and email are required');
+    if (!sanitizedUser.name || !sanitizedUser.email || !sanitizedUser.temporaryPassword) {
+      toast.error('Name, email, and temporary password are required');
       return;
     }
 
@@ -88,17 +89,14 @@ export const useUserManagement = () => {
     try {
       console.log('Creating user via Edge Function');
       
-      // Generate a secure default password for the user
-      const defaultPassword = 'TempPass123!';
-      
-      // Call the Edge Function to create the user
+      // Call the Edge Function to create the user with the provided temporary password
       const { data, error } = await supabase.functions.invoke('create-user', {
         body: {
           name: sanitizedUser.name,
           email: sanitizedUser.email,
           role: sanitizedUser.role,
           position: sanitizedUser.position,
-          temporaryPassword: defaultPassword
+          temporaryPassword: sanitizedUser.temporaryPassword
         }
       });
 
