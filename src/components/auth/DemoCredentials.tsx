@@ -1,7 +1,9 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
 export const DemoCredentials = () => {
   const checkPendingUsers = async () => {
     console.log('Checking profiles table for pending users...');
@@ -23,6 +25,7 @@ export const DemoCredentials = () => {
       toast.error('Unexpected error occurred');
     }
   };
+
   const addTestPendingUser = async () => {
     console.log('Adding test pending user...');
     try {
@@ -78,5 +81,33 @@ export const DemoCredentials = () => {
       toast.error('Unexpected error occurred');
     }
   };
-  return;
+
+  return (
+    <div className="mt-6 space-y-4">
+      <div className="text-center">
+        <p className="text-sm text-gray-600 mb-4">Demo Credentials (Admin)</p>
+        <div className="bg-gray-50 p-4 rounded-lg text-sm">
+          <p><strong>Email:</strong> rifkiri@gmail.com</p>
+          <p><strong>Password:</strong> 123456</p>
+        </div>
+      </div>
+      
+      <div className="space-y-2">
+        <Button 
+          onClick={checkPendingUsers}
+          variant="outline" 
+          className="w-full"
+        >
+          Check Pending Users
+        </Button>
+        <Button 
+          onClick={addTestPendingUser}
+          variant="outline" 
+          className="w-full"
+        >
+          Add Test Pending User
+        </Button>
+      </div>
+    </div>
+  );
 };
