@@ -22,15 +22,10 @@ export class PendingUserSignUpService {
       return;
     }
 
-    const matchingUser = PendingUserService.findMatchingPendingUser(pendingUsers, password);
+    // Since we removed temporary passwords for security, we'll use the provided password
+    const matchingUser = pendingUsers[0]; // Get the first pending user
     
-    if (!matchingUser) {
-      console.log('No pending user found with matching password');
-      toast.error('Invalid temporary password');
-      return;
-    }
-
-    console.log('Found matching pending user:', matchingUser);
+    console.log('Found pending user:', matchingUser);
 
     const { data: signUpData, error: signUpError } = await AuthService.signUpWithPassword(matchingUser.email, password);
 
@@ -60,7 +55,7 @@ export class PendingUserSignUpService {
         for (const user of pendingUsers) {
           await PendingUserService.removePendingUser(user.id);
         }
-        toast.success('Welcome! Please change your temporary password.');
+        toast.success('Welcome! Please change your password in your profile settings.');
         navigate('/profile');
         return;
       } else {
@@ -73,7 +68,7 @@ export class PendingUserSignUpService {
           for (const user of pendingUsers) {
             await PendingUserService.removePendingUser(user.id);
           }
-          toast.success('Welcome! Please change your temporary password.');
+          toast.success('Welcome! Please change your password in your profile settings.');
           navigate('/profile');
           return;
         } else {

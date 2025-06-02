@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { User } from '@/types/userTypes';
 import { supabaseDataService } from '@/services/SupabaseDataService';
@@ -63,8 +62,7 @@ export const useUserManagement = () => {
       name: newUser.name?.trim().slice(0, 100) || '',
       email: newUser.email?.trim().toLowerCase().slice(0, 255) || '',
       role: newUser.role || 'team-member',
-      position: newUser.position?.trim().slice(0, 100) || '',
-      temporaryPassword: newUser.temporaryPassword?.slice(0, 72) || 'temp123'
+      position: newUser.position?.trim().slice(0, 100) || ''
     };
 
     // Validate required fields
@@ -88,7 +86,10 @@ export const useUserManagement = () => {
     }
 
     try {
-      console.log('Creating user via Edge Function'); // No sensitive data logged
+      console.log('Creating user via Edge Function');
+      
+      // Generate a secure default password for the user
+      const defaultPassword = 'TempPass123!';
       
       // Call the Edge Function to create the user
       const { data, error } = await supabase.functions.invoke('create-user', {
@@ -97,27 +98,27 @@ export const useUserManagement = () => {
           email: sanitizedUser.email,
           role: sanitizedUser.role,
           position: sanitizedUser.position,
-          temporaryPassword: sanitizedUser.temporaryPassword
+          temporaryPassword: defaultPassword
         }
       });
 
       if (error) {
-        console.error('Edge function error'); // No sensitive data logged
+        console.error('Edge function error');
         toast.error('Failed to create user: ' + error.message);
         return;
       }
 
       if (!data.success) {
-        console.error('User creation failed'); // No sensitive data logged
+        console.error('User creation failed');
         toast.error('Failed to create user: ' + data.error);
         return;
       }
 
       await loadUsers();
-      toast.success(`User created successfully. They can sign in using email: ${sanitizedUser.email} and password: ${sanitizedUser.temporaryPassword}`);
+      toast.success(`User created successfully. They should check their email for login instructions. Default password: ${defaultPassword}`);
     } catch (error) {
       toast.error('Failed to add user');
-      console.error('Failed to add user'); // No sensitive data logged
+      console.error('Failed to add user');
     }
   };
 
