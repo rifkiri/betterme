@@ -59,33 +59,10 @@ export const useUserManagement = () => {
     }
 
     try {
-      // Create the user account first using Supabase auth
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: newUser.email,
-        password: newUser.temporaryPassword || 'temp123',
-        email_confirm: true,
-        user_metadata: {
-          name: newUser.name,
-          role: newUser.role,
-          position: newUser.position
-        }
-      });
-
-      if (authError) {
-        console.error('Error creating auth user:', authError);
-        toast.error('Failed to create user account: ' + authError.message);
-        return;
-      }
-
-      if (!authData.user) {
-        toast.error('Failed to create user account');
-        return;
-      }
-
-      // Now create the profile with the auth user's ID
+      // Create a pending user profile that they can use to sign up later
       const user: User = {
         ...newUser,
-        id: authData.user.id,
+        id: crypto.randomUUID(),
         createdAt: new Date().toISOString().split('T')[0],
         hasChangedPassword: false,
         userStatus: 'pending'
@@ -93,7 +70,7 @@ export const useUserManagement = () => {
 
       await supabaseDataService.addUser(user);
       await loadUsers();
-      toast.success('User profile created successfully. User can now sign in with their email and temporary password.');
+      toast.success(`User created successfully. They can sign up using email: ${newUser.email} and temporary password: ${newUser.temporaryPassword || 'temp123'}`);
     } catch (error) {
       toast.error('Failed to add user');
       console.error('Failed to add user:', error);

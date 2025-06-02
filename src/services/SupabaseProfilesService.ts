@@ -38,15 +38,11 @@ export class SupabaseProfilesService {
   }
 
   async addUser(user: User): Promise<void> {
-    // Since we can't create auth users directly, we'll create a profile without the foreign key constraint
-    // Generate a proper UUID that won't violate constraints
-    const userId = crypto.randomUUID();
-    
-    // Insert without the id field to avoid foreign key constraint issues
+    // Create a pending user profile that can be used for sign up
     const { error } = await supabase
       .from('profiles')
       .insert({
-        id: userId,
+        id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
