@@ -1,11 +1,99 @@
-import { Habit, Task, WeeklyOutput, MoodEntry } from '@/types/productivity';
+import { Habit, Task, WeeklyOutput } from '@/types/productivity';
+
+interface MoodEntry {
+  id: string;
+  userId: string;
+  date: string;
+  mood: number;
+  notes?: string;
+}
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'manager' | 'team-member';
+  temporaryPassword: string;
+  createdAt: string;
+  lastLogin?: string;
+}
 
 class GoogleSheetsService {
   private accessToken: string | null = null;
   private spreadsheetId: string | null = null;
+  private clientId: string | null = null;
+  private clientSecret: string | null = null;
 
   constructor() {
     this.loadConfig();
+  }
+
+  setCredentials(clientId: string, clientSecret: string, spreadsheetId: string) {
+    this.clientId = clientId;
+    this.clientSecret = clientSecret;
+    this.spreadsheetId = spreadsheetId;
+    
+    // Store credentials in localStorage
+    localStorage.setItem('googleOAuthClientId', clientId);
+    localStorage.setItem('googleOAuthClientSecret', clientSecret);
+    localStorage.setItem('googleSheetsId', spreadsheetId);
+  }
+
+  getAuthUrl(): string {
+    if (!this.clientId) {
+      throw new Error('OAuth client ID not configured');
+    }
+
+    const redirectUri = `${window.location.origin}/oauth/callback`;
+    const scope = 'https://www.googleapis.com/auth/spreadsheets';
+    
+    const params = new URLSearchParams({
+      client_id: this.clientId,
+      redirect_uri: redirectUri,
+      scope: scope,
+      response_type: 'code',
+      access_type: 'offline',
+      prompt: 'consent'
+    });
+
+    return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+  }
+
+  async exchangeCodeForTokens(code: string) {
+    if (!this.clientId || !this.clientSecret) {
+      throw new Error('OAuth credentials not configured');
+    }
+
+    const redirectUri = `${window.location.origin}/oauth/callback`;
+    
+    const response = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        client_id: this.clientId,
+        client_secret: this.clientSecret,
+        code: code,
+        grant_type: 'authorization_code',
+        redirect_uri: redirectUri,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Token exchange failed:', errorText);
+      throw new Error(`Token exchange failed: ${response.status} ${errorText}`);
+    }
+
+    const data = await response.json();
+    this.accessToken = data.access_token;
+    
+    // Store the access token
+    localStorage.setItem('googleSheetsConfig', JSON.stringify({ 
+      accessToken: this.accessToken, 
+      spreadsheetId: this.spreadsheetId 
+    }));
   }
 
   configure(accessToken: string, spreadsheetId: string) {
@@ -15,16 +103,24 @@ class GoogleSheetsService {
   }
 
   loadConfig() {
+    // Load OAuth credentials
+    this.clientId = localStorage.getItem('googleOAuthClientId');
+    this.clientSecret = localStorage.getItem('googleOAuthClientSecret');
+    this.spreadsheetId = localStorage.getItem('googleSheetsId');
+
+    // Load access token
     const config = localStorage.getItem('googleSheetsConfig');
     if (config) {
       const { accessToken, spreadsheetId } = JSON.parse(config);
       this.accessToken = accessToken;
-      this.spreadsheetId = spreadsheetId;
+      if (!this.spreadsheetId) {
+        this.spreadsheetId = spreadsheetId;
+      }
     }
   }
 
   isConfigured(): boolean {
-    return !!this.spreadsheetId;
+    return !!(this.clientId && this.clientSecret && this.spreadsheetId);
   }
 
   isAuthenticated(): boolean {
@@ -34,7 +130,195 @@ class GoogleSheetsService {
   clearConfig() {
     this.accessToken = null;
     this.spreadsheetId = null;
+    this.clientId = null;
+    this.clientSecret = null;
     localStorage.removeItem('googleSheetsConfig');
+    localStorage.removeItem('googleOAuthClientId');
+    localStorage.removeItem('googleOAuthClientSecret');
+    localStorage.removeItem('googleSheetsId');
+  }
+
+  // User Management methods
+  async getUsers(): Promise<User[]> {
+    if (!this.isAuthenticated() || !this.spreadsheetId) {
+      return [];
+    }
+
+    try {
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/Users`,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.error('Failed to fetch users:', response.status);
+        return [];
+      }
+
+      const data = await response.json();
+      const rows = data.values || [];
+
+      return rows.slice(1).map((row: string[]) => ({
+        id: row[0] || '',
+        name: row[1] || '',
+        email: row[2] || '',
+        role: row[3] as 'admin' | 'manager' | 'team-member',
+        temporaryPassword: row[4] || '',
+        createdAt: row[5] || '',
+        lastLogin: row[6] || undefined,
+      }));
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      return [];
+    }
+  }
+
+  async addUser(user: User) {
+    if (!this.isAuthenticated() || !this.spreadsheetId) {
+      throw new Error('Not authenticated or spreadsheet not configured');
+    }
+
+    try {
+      const values = [[
+        user.id,
+        user.name,
+        user.email,
+        user.role,
+        user.temporaryPassword,
+        user.createdAt,
+        user.lastLogin || ''
+      ]];
+
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/Users:append?valueInputOption=RAW`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            values: values
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to add user: ${response.status} ${errorText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error adding user:', error);
+      throw error;
+    }
+  }
+
+  async updateUser(userId: string, updates: Partial<User>) {
+    if (!this.isAuthenticated() || !this.spreadsheetId) {
+      throw new Error('Not authenticated or spreadsheet not configured');
+    }
+
+    try {
+      const users = await this.getUsers();
+      const userIndex = users.findIndex(user => user.id === userId);
+      
+      if (userIndex === -1) {
+        throw new Error('User not found');
+      }
+
+      const existingUser = users[userIndex];
+      const updatedUser = { ...existingUser, ...updates };
+
+      const values = [[
+        updatedUser.id,
+        updatedUser.name,
+        updatedUser.email,
+        updatedUser.role,
+        updatedUser.temporaryPassword,
+        updatedUser.createdAt,
+        updatedUser.lastLogin || ''
+      ]];
+
+      const rowNumber = userIndex + 2;
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/Users!A${rowNumber}:G${rowNumber}?valueInputOption=RAW`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            values: values
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to update user: ${response.status} ${errorText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating user:', error);
+      throw error;
+    }
+  }
+
+  async deleteUser(userId: string) {
+    if (!this.isAuthenticated() || !this.spreadsheetId) {
+      throw new Error('Not authenticated or spreadsheet not configured');
+    }
+
+    try {
+      const users = await this.getUsers();
+      const userIndex = users.findIndex(user => user.id === userId);
+      
+      if (userIndex === -1) {
+        throw new Error('User not found');
+      }
+
+      const rowNumber = userIndex + 2;
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}:batchUpdate`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            requests: [{
+              deleteDimension: {
+                range: {
+                  sheetId: 0, // Assuming Users sheet is the first sheet
+                  dimension: 'ROWS',
+                  startIndex: rowNumber - 1,
+                  endIndex: rowNumber
+                }
+              }
+            }]
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to delete user: ${response.status} ${errorText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      throw error;
+    }
   }
 
   // Habits methods
