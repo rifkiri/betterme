@@ -96,7 +96,7 @@ export const IndividualPerformance = () => {
             name: member.name,
             role: member.position || 'Team Member',
             email: member.email,
-            avatar: '',
+            avatar: member.name.charAt(0).toUpperCase(),
             stats: {
               habitsCompletionRate,
               tasksCompletionRate,
@@ -118,12 +118,13 @@ export const IndividualPerformance = () => {
         
         setEmployeeData(data);
         
-        // Auto-select first employee if none selected
+        // Auto-select first employee if none selected and there are team members
         if (!selectedEmployee && teamMembers.length > 0) {
           setSelectedEmployee(teamMembers[0].id);
         }
         
         console.log('Employee data loaded:', data);
+        console.log('Selected employee:', selectedEmployee);
       } catch (error) {
         console.error('Failed to load employee data:', error);
       } finally {
@@ -132,9 +133,14 @@ export const IndividualPerformance = () => {
     };
 
     loadEmployeeData();
+  }, []); // Remove selectedEmployee from dependency array to prevent infinite loops
+
+  // Update selected employee when it changes
+  useEffect(() => {
+    console.log('Selected employee changed to:', selectedEmployee);
   }, [selectedEmployee]);
 
-  const employee = employeeData[selectedEmployee];
+  const employee = selectedEmployee ? employeeData[selectedEmployee] : null;
 
   if (isLoading) {
     return (
@@ -144,10 +150,30 @@ export const IndividualPerformance = () => {
     );
   }
 
+  if (Object.keys(employeeData).length === 0) {
+    return (
+      <div className="space-y-6">
+        <EmployeeSelector 
+          selectedEmployee={selectedEmployee} 
+          onEmployeeChange={setSelectedEmployee} 
+        />
+        <div className="text-center py-8">
+          <p className="text-gray-500">No team members available. Please add team members to view individual performance.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!employee) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">No employee data available. Please add team members to view individual performance.</p>
+      <div className="space-y-6">
+        <EmployeeSelector 
+          selectedEmployee={selectedEmployee} 
+          onEmployeeChange={setSelectedEmployee} 
+        />
+        <div className="text-center py-8">
+          <p className="text-gray-500">Please select a team member to view their performance.</p>
+        </div>
       </div>
     );
   }
