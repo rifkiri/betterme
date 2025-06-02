@@ -30,7 +30,7 @@ export class PendingUserService {
       email: profile.email,
       role: profile.role,
       position: profile.position,
-      temporaryPassword: profile.temporary_password
+      temporaryPassword: (profile as any).temporary_password
     })) || [];
 
     return { data: pendingUsers, error: null };
