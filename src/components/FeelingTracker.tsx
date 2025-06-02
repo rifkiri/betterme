@@ -1,11 +1,14 @@
 
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Heart, Smile, Meh, Frown } from 'lucide-react';
+import { useMoodTracking } from '@/hooks/useMoodTracking';
 
 export const FeelingTracker = () => {
   const [feeling, setFeeling] = useState([5]);
+  const { addMoodEntry } = useMoodTracking();
 
   const getFeelingIcon = (value: number) => {
     if (value >= 8) return <Smile className="h-5 w-5 text-green-500" />;
@@ -31,6 +34,11 @@ export const FeelingTracker = () => {
     if (value >= 6) return "text-blue-600";
     if (value >= 4) return "text-yellow-600";
     return "text-red-600";
+  };
+
+  const handleRecordMood = async () => {
+    const today = new Date().toISOString().split('T')[0];
+    await addMoodEntry(today, feeling[0]);
   };
 
   return (
@@ -66,6 +74,12 @@ export const FeelingTracker = () => {
               {getFeelingText(feeling[0])}
             </span>
           </div>
+        </div>
+
+        <div className="flex justify-center mt-4">
+          <Button onClick={handleRecordMood} className="w-full">
+            Record Mood
+          </Button>
         </div>
       </CardContent>
     </Card>
