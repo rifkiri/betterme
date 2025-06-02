@@ -116,11 +116,25 @@ export const useSignIn = () => {
       if (signUpData.user) {
         console.log('Successfully created auth user:', signUpData.user.id);
         
-        // Create the profile
+        // Wait a moment to ensure the user session is established
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Verify the user is authenticated before creating profile
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session || !session.user) {
+          console.error('User not properly authenticated after signup');
+          toast.error('Authentication issue. Please try signing in again.');
+          return;
+        }
+        
+        console.log('User session confirmed, creating profile...');
+        
+        // Create the profile with the authenticated user
         const { error: profileError } = await supabase
           .from('profiles')
           .insert({
-            id: signUpData.user.id,
+            id: session.user.id,
             name: matchingUser.name,
             email: matchingUser.email,
             role: matchingUser.role as 'admin' | 'manager' | 'team-member',
@@ -134,8 +148,18 @@ export const useSignIn = () => {
           return;
         }
 
-        // Remove from pending_users table (requires admin auth, so we'll use a service role call)
+        // Remove from pending_users table
         console.log('Profile created successfully, removing from pending users');
+        const { error: deleteError } = await supabase
+          .from('pending_users')
+          .delete()
+          .eq('id', matchingUser.id);
+
+        if (deleteError) {
+          console.warn('Could not remove pending user:', deleteError);
+          // Don't fail the whole process for this
+        }
+
         toast.success('Account created successfully! Please change your password.');
         
         // Redirect to profile page to change password
