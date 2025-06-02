@@ -14,17 +14,11 @@ export class SupabaseProfilesService {
       console.error('Error fetching profiles:', profilesError);
     }
 
-    // Get pending users - using rpc or direct query with proper type casting
-    const { data: pendingData, error: pendingError } = await supabase
-      .rpc('get_pending_users')
-      .catch(async () => {
-        // Fallback to direct query if RPC doesn't exist
-        const { data, error } = await (supabase as any)
-          .from('pending_users')
-          .select('*')
-          .order('created_at', { ascending: false });
-        return { data, error };
-      });
+    // Get pending users - direct query to pending_users table
+    const { data: pendingData, error: pendingError } = await (supabase as any)
+      .from('pending_users')
+      .select('*')
+      .order('created_at', { ascending: false });
 
     if (pendingError) {
       console.error('Error fetching pending users:', pendingError);
