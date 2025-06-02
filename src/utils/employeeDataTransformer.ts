@@ -35,7 +35,8 @@ export const transformToEmployeeData = (
     id: t.id,
     title: t.title,
     daysOverdue: Math.floor((today.getTime() - new Date(t.dueDate).getTime()) / (1000 * 60 * 60 * 24)),
-    priority: t.priority || 'Medium'
+    priority: t.priority || 'Medium',
+    originalDueDate: t.originalDueDate || t.dueDate
   }));
 
   const overdueOutputs = outputs.filter(o => 
@@ -44,7 +45,8 @@ export const transformToEmployeeData = (
     id: o.id,
     title: o.title,
     progress: o.progress,
-    daysOverdue: Math.floor((today.getTime() - new Date(o.dueDate).getTime()) / (1000 * 60 * 60 * 24))
+    daysOverdue: Math.floor((today.getTime() - new Date(o.dueDate).getTime()) / (1000 * 60 * 60 * 24)),
+    originalDueDate: o.originalDueDate || o.dueDate
   }));
 
   // Transform mood data for the chart

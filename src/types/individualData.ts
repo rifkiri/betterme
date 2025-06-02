@@ -12,6 +12,7 @@ export interface OverdueTask {
   title: string;
   daysOverdue: number;
   priority: string;
+  originalDueDate?: string;
 }
 
 export interface OverdueOutput {
@@ -19,6 +20,7 @@ export interface OverdueOutput {
   title: string;
   progress: number;
   daysOverdue: number;
+  originalDueDate?: string;
 }
 
 export interface Habit {
@@ -46,6 +48,11 @@ export interface MoodData {
   date: string;
   mood: number;
 }
+
+// Additional type aliases for component props
+export type EmployeeHabit = Habit;
+export type EmployeeTask = Task;
+export type EmployeeWeeklyOutput = WeeklyOutput;
 
 export interface EmployeeData {
   id: string;
