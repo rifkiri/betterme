@@ -115,7 +115,7 @@ export const useUserManagement = () => {
       }
 
       await loadUsers();
-      toast.success(`User created successfully. They should check their email for login instructions. Default password: ${defaultPassword}`);
+      toast.success('User created successfully');
     } catch (error) {
       toast.error('Failed to add user');
       console.error('Failed to add user');
