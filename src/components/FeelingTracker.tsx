@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { Heart, Smile, Meh, Frown } from 'lucide-react';
+import { Heart, Smile, Meh, Frown, Save } from 'lucide-react';
 import { useMoodTracking } from '@/hooks/useMoodTracking';
 
 export const FeelingTracker = () => {
@@ -77,7 +77,8 @@ export const FeelingTracker = () => {
         </div>
 
         <div className="flex justify-center mt-4">
-          <Button onClick={handleRecordMood} className="w-full">
+          <Button onClick={handleRecordMood} size="sm" className="px-6">
+            <Save className="h-4 w-4 mr-2" />
             Record Mood
           </Button>
         </div>
