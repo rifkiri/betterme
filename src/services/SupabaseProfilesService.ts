@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types/userTypes';
+import { AuthEmailService } from './AuthEmailService';
 
 export class SupabaseProfilesService {
   async getUsers(): Promise<User[]> {
@@ -83,6 +84,8 @@ export class SupabaseProfilesService {
 
   async updateUser(userId: string, updates: Partial<User>): Promise<void> {
     const supabaseUpdates: any = {};
+    let emailChanged = false;
+    let newEmail = '';
     
     // Sanitize and validate updates
     if (updates.name !== undefined) {
@@ -95,6 +98,8 @@ export class SupabaseProfilesService {
         throw new Error('Invalid email format');
       }
       supabaseUpdates.email = sanitizedEmail;
+      emailChanged = true;
+      newEmail = sanitizedEmail;
     }
     if (updates.role !== undefined) {
       const validRoles = ['admin', 'manager', 'team-member'];
@@ -134,6 +139,16 @@ export class SupabaseProfilesService {
     if (error) {
       console.error('Error updating user'); // No sensitive data logged
       throw error;
+    }
+
+    // If email was changed, also update it in Supabase Auth
+    if (emailChanged) {
+      const { success, error: emailError } = await AuthEmailService.updateUserEmail(userId, newEmail);
+      if (!success) {
+        console.error('Failed to update email in auth system:', emailError);
+        // Don't throw here as the profile was already updated successfully
+        // The admin can manually sync this later if needed
+      }
     }
   }
 
