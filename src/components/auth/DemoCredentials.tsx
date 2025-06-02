@@ -6,11 +6,12 @@ import { toast } from 'sonner';
 
 export const DemoCredentials = () => {
   const checkPendingUsers = async () => {
-    console.log('Checking pending users table...');
+    console.log('Checking profiles table for pending users...');
     try {
       const { data, error } = await supabase
-        .from('pending_users')
-        .select('*');
+        .from('profiles')
+        .select('*')
+        .eq('user_status', 'pending');
       
       console.log('Pending users data:', data);
       console.log('Pending users error:', error);
@@ -52,24 +53,27 @@ export const DemoCredentials = () => {
 
       // Check if user already exists
       const { data: existingUser } = await supabase
-        .from('pending_users')
+        .from('profiles')
         .select('email')
         .eq('email', 'alinne.rosida@gmail.com')
         .single();
 
       if (existingUser) {
-        toast.info('Test user already exists in pending users table');
+        toast.info('Test user already exists in profiles table');
         return;
       }
 
       const { data, error } = await supabase
-        .from('pending_users')
+        .from('profiles')
         .insert({
+          id: crypto.randomUUID(),
           name: 'Alinne Rosida',
           email: 'alinne.rosida@gmail.com',
           role: 'team-member',
           position: 'Test Position',
-          temporary_password: 'temp123'
+          temporary_password: 'temp123',
+          user_status: 'pending',
+          has_changed_password: false
         })
         .select();
       

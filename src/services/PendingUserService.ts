@@ -14,12 +14,26 @@ export class PendingUserService {
   static async getPendingUsers(email: string): Promise<{ data: PendingUser[] | null, error: any }> {
     console.log('Checking for pending user with email:', email);
     
-    const { data: pendingUsers, error } = await supabase
-      .from('pending_users')
+    const { data: profiles, error } = await supabase
+      .from('profiles')
       .select('*')
-      .eq('email', email);
+      .eq('email', email)
+      .eq('user_status', 'pending');
 
-    return { data: pendingUsers, error };
+    if (error) {
+      return { data: null, error };
+    }
+
+    const pendingUsers: PendingUser[] = profiles?.map(profile => ({
+      id: profile.id,
+      name: profile.name,
+      email: profile.email,
+      role: profile.role,
+      position: profile.position,
+      temporary_password: profile.temporary_password || ''
+    })) || [];
+
+    return { data: pendingUsers, error: null };
   }
 
   static findMatchingPendingUser(pendingUsers: PendingUser[], password: string): PendingUser | null {
@@ -30,7 +44,7 @@ export class PendingUserService {
     console.log('Removing pending user data...');
     
     const { error } = await supabase
-      .from('pending_users')
+      .from('profiles')
       .delete()
       .eq('id', pendingUserId);
 
