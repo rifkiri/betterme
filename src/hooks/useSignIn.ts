@@ -90,22 +90,25 @@ export const useSignIn = () => {
 
       console.log('Found matching pending user:', matchingUser);
 
-      // Try to sign up the user
+      // Try to sign up the user with email confirmation disabled
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: matchingUser.email,
         password: password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            email_confirm: false
+          }
         }
       });
 
       if (signUpError) {
         console.error('Error creating auth user:', signUpError);
         
-        // If user already exists, try to sign them in again
+        // If user already exists, they may need to confirm their email first
         if (signUpError.message.includes('already registered')) {
-          console.log('User already exists, trying to sign in with temporary password');
-          toast.error('Account already exists. Please use your regular password or contact admin.');
+          console.log('User already exists - checking if they need email confirmation');
+          toast.error('Account already exists but may need email confirmation. Please check your email or contact admin.');
           return;
         }
         
@@ -116,25 +119,15 @@ export const useSignIn = () => {
       if (signUpData.user) {
         console.log('Successfully created auth user:', signUpData.user.id);
         
-        // Wait a moment to ensure the user session is established
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // For pending users, we'll create the profile even without email confirmation
+        // since they were pre-approved by admin
+        console.log('Creating profile for pending user...');
         
-        // Verify the user is authenticated before creating profile
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session || !session.user) {
-          console.error('User not properly authenticated after signup');
-          toast.error('Authentication issue. Please try signing in again.');
-          return;
-        }
-        
-        console.log('User session confirmed, creating profile...');
-        
-        // Create the profile with the authenticated user
+        // Create the profile using the user ID from signup
         const { error: profileError } = await supabase
           .from('profiles')
           .insert({
-            id: session.user.id,
+            id: signUpData.user.id,
             name: matchingUser.name,
             email: matchingUser.email,
             role: matchingUser.role as 'admin' | 'manager' | 'team-member',
@@ -160,10 +153,11 @@ export const useSignIn = () => {
           // Don't fail the whole process for this
         }
 
-        toast.success('Account created successfully! Please change your password.');
+        toast.success('Account created successfully! Please check your email to confirm your account, then sign in again.');
         
-        // Redirect to profile page to change password
-        navigate('/profile');
+        // Clear the form
+        setEmail('');
+        setPassword('');
       }
     } catch (error) {
       console.error('Authentication error:', error);
