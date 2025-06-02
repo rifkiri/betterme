@@ -23,13 +23,14 @@ export const useEmployeeData = () => {
         
         // Load data for each team member from Supabase
         for (const member of teamMembers) {
-          const [habits, tasks, outputs] = await Promise.all([
+          const [habits, tasks, outputs, moodData] = await Promise.all([
             supabaseDataService.getHabits(member.id),
             supabaseDataService.getTasks(member.id),
-            supabaseDataService.getWeeklyOutputs(member.id)
+            supabaseDataService.getWeeklyOutputs(member.id),
+            supabaseDataService.getMoodData(member.id)
           ]);
           
-          data[member.id] = transformToEmployeeData(member, habits, tasks, outputs);
+          data[member.id] = transformToEmployeeData(member, habits, tasks, outputs, moodData);
         }
         
         setEmployeeData(data);

@@ -17,7 +17,10 @@ export const IndividualPerformanceContent = ({ employee }: IndividualPerformance
     <>
       <EmployeeOverview employee={employee} />
 
-      <IndividualMoodChart employeeName={employee.name} />
+      <IndividualMoodChart 
+        employeeName={employee.name} 
+        moodData={employee.moodData || []} 
+      />
 
       <OverdueSection 
         overdueTasks={employee.overdueTasks} 

@@ -1,31 +1,17 @@
 
-export interface EmployeeHabit {
-  name: string;
-  completed: boolean;
-  streak: number;
-}
-
-export interface EmployeeTask {
-  id: string;
-  title: string;
-  priority: 'High' | 'Medium' | 'Low';
-  completed: boolean;
-  dueDate: string;
-}
-
-export interface EmployeeWeeklyOutput {
-  id: string;
-  title: string;
-  progress: number;
-  dueDate: string;
+export interface EmployeeStats {
+  habitsCompletionRate: number;
+  tasksCompletionRate: number;
+  outputsCompletionRate: number;
+  bestStreak: number;
+  currentStreak: number;
 }
 
 export interface OverdueTask {
   id: string;
   title: string;
-  priority: 'High' | 'Medium' | 'Low';
   daysOverdue: number;
-  originalDueDate: string;
+  priority: string;
 }
 
 export interface OverdueOutput {
@@ -33,15 +19,32 @@ export interface OverdueOutput {
   title: string;
   progress: number;
   daysOverdue: number;
-  originalDueDate: string;
 }
 
-export interface EmployeeStats {
-  habitsCompletionRate: number;
-  tasksCompletionRate: number;
-  outputsCompletionRate: number;
-  bestStreak: number;
-  currentStreak: number;
+export interface Habit {
+  name: string;
+  completed: boolean;
+  streak: number;
+}
+
+export interface Task {
+  id: string;
+  title: string;
+  completed: boolean;
+  dueDate: string;
+  priority: string;
+}
+
+export interface WeeklyOutput {
+  id: string;
+  title: string;
+  progress: number;
+  dueDate: string;
+}
+
+export interface MoodData {
+  date: string;
+  mood: number;
 }
 
 export interface EmployeeData {
@@ -51,9 +54,10 @@ export interface EmployeeData {
   email: string;
   avatar: string;
   stats: EmployeeStats;
-  habits: EmployeeHabit[];
-  recentTasks: EmployeeTask[];
-  weeklyOutputs: EmployeeWeeklyOutput[];
   overdueTasks: OverdueTask[];
   overdueOutputs: OverdueOutput[];
+  habits: Habit[];
+  recentTasks: Task[];
+  weeklyOutputs: WeeklyOutput[];
+  moodData?: MoodData[];
 }
