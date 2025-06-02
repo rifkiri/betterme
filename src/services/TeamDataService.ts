@@ -1,6 +1,6 @@
 
 import { supabaseDataService } from './SupabaseDataService';
-import { TeamData, TeamMember, OverdueTask, OverdueOutput } from '@/types/teamData';
+import { TeamData, TeamMember, OverdueTask, OverdueOutput, TeamTrends } from '@/types/teamData';
 import { User } from '@/types/userTypes';
 
 class TeamDataService {
@@ -15,6 +15,7 @@ class TeamDataService {
       const teamStats = await this.calculateTeamStats(teamMembers);
       const membersSummary = await this.generateMembersSummary(teamMembers);
       const overdueData = await this.generateOverdueData(teamMembers);
+      const teamTrends = await this.calculateTeamTrends(teamMembers);
       
       return {
         totalMembers: teamMembers.length,
@@ -24,11 +25,170 @@ class TeamDataService {
         overdueTasks: overdueData.tasks,
         overdueOutputs: overdueData.outputs,
         overdueStats: overdueData.stats,
-        moodData: await this.generateMoodData(teamMembers)
+        moodData: await this.generateMoodData(teamMembers),
+        teamTrends
       };
     } catch (error) {
       console.error('Error loading team data:', error);
       return this.getEmptyTeamData();
+    }
+  }
+
+  private getEmptyTeamData(): TeamData {
+    return {
+      totalMembers: 0,
+      activeMembers: 0,
+      teamStats: {
+        habitsCompletionRate: 0,
+        tasksCompletionRate: 0,
+        outputsCompletionRate: 0,
+        avgHabitStreak: 0,
+        teamAverageMood: 0,
+        teamMoodTrend: 'stable'
+      },
+      membersSummary: [],
+      overdueTasks: [],
+      overdueOutputs: [],
+      overdueStats: {
+        tasksCount: 0,
+        outputsCount: 0,
+        tasksTrend: 'down',
+        outputsTrend: 'down',
+        tasksChange: '0',
+        outputsChange: '0'
+      },
+      moodData: [],
+      teamTrends: {
+        habitsTrend: 'stable',
+        habitsChange: 0,
+        tasksTrend: 'stable',
+        tasksChange: 0,
+        outputsTrend: 'stable',
+        outputsChange: 0
+      }
+    };
+  }
+
+  private async calculateTeamTrends(teamMembers: User[]): Promise<TeamTrends> {
+    if (teamMembers.length === 0) {
+      return {
+        habitsTrend: 'stable',
+        habitsChange: 0,
+        tasksTrend: 'stable',
+        tasksChange: 0,
+        outputsTrend: 'stable',
+        outputsChange: 0
+      };
+    }
+
+    try {
+      // Calculate current period (last 2 weeks) vs previous period (2 weeks before that)
+      const now = new Date();
+      const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+      const fourWeeksAgo = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000);
+
+      let currentHabitsRate = 0;
+      let previousHabitsRate = 0;
+      let currentTasksRate = 0;
+      let previousTasksRate = 0;
+      let currentOutputsRate = 0;
+      let previousOutputsRate = 0;
+
+      for (const member of teamMembers) {
+        try {
+          // Get member's data
+          const habits = await supabaseDataService.getHabits(member.id);
+          const tasks = await supabaseDataService.getTasks(member.id);
+          const outputs = await supabaseDataService.getWeeklyOutputs(member.id);
+
+          // Filter by date periods
+          const currentTasks = tasks.filter(t => 
+            t.dueDate && t.dueDate >= twoWeeksAgo && t.dueDate <= now && !t.isDeleted
+          );
+          const previousTasks = tasks.filter(t => 
+            t.dueDate && t.dueDate >= fourWeeksAgo && t.dueDate < twoWeeksAgo && !t.isDeleted
+          );
+
+          const currentOutputs = outputs.filter(o => 
+            o.dueDate && o.dueDate >= twoWeeksAgo && o.dueDate <= now && !o.isDeleted
+          );
+          const previousOutputs = outputs.filter(o => 
+            o.dueDate && o.dueDate >= fourWeeksAgo && o.dueDate < twoWeeksAgo && !o.isDeleted
+          );
+
+          // Calculate rates for current period
+          const currentTasksCompleted = currentTasks.filter(t => t.completed).length;
+          const currentTasksTotal = currentTasks.length;
+          const currentTaskRate = currentTasksTotal > 0 ? (currentTasksCompleted / currentTasksTotal) * 100 : 0;
+
+          const currentOutputsCompleted = currentOutputs.filter(o => o.progress === 100).length;
+          const currentOutputsTotal = currentOutputs.length;
+          const currentOutputRate = currentOutputsTotal > 0 ? (currentOutputsCompleted / currentOutputsTotal) * 100 : 0;
+
+          // Calculate rates for previous period
+          const previousTasksCompleted = previousTasks.filter(t => t.completed).length;
+          const previousTasksTotal = previousTasks.length;
+          const previousTaskRate = previousTasksTotal > 0 ? (previousTasksCompleted / previousTasksTotal) * 100 : 0;
+
+          const previousOutputsCompleted = previousOutputs.filter(o => o.progress === 100).length;
+          const previousOutputsTotal = previousOutputs.length;
+          const previousOutputRate = previousOutputsTotal > 0 ? (previousOutputsCompleted / previousOutputsTotal) * 100 : 0;
+
+          // For habits, we'll use a simple current vs previous streak comparison
+          const activeHabits = habits.filter(h => !h.archived && !h.isDeleted);
+          const currentHabitRate = activeHabits.length > 0 ? 
+            (activeHabits.filter(h => h.completed).length / activeHabits.length) * 100 : 0;
+          const previousHabitRate = activeHabits.length > 0 ? 
+            (activeHabits.reduce((sum, h) => sum + Math.max(0, h.streak - 7), 0) / activeHabits.length) * 10 : 0; // Rough estimate
+
+          currentHabitsRate += currentHabitRate;
+          previousHabitsRate += Math.min(100, previousHabitRate);
+          currentTasksRate += currentTaskRate;
+          previousTasksRate += previousTaskRate;
+          currentOutputsRate += currentOutputRate;
+          previousOutputsRate += previousOutputRate;
+        } catch (error) {
+          console.error(`Error calculating trends for member ${member.id}:`, error);
+        }
+      }
+
+      // Average the rates
+      const avgCurrentHabits = currentHabitsRate / teamMembers.length;
+      const avgPreviousHabits = previousHabitsRate / teamMembers.length;
+      const avgCurrentTasks = currentTasksRate / teamMembers.length;
+      const avgPreviousTasks = previousTasksRate / teamMembers.length;
+      const avgCurrentOutputs = currentOutputsRate / teamMembers.length;
+      const avgPreviousOutputs = previousOutputsRate / teamMembers.length;
+
+      // Calculate changes and trends
+      const habitsChange = Math.round(avgCurrentHabits - avgPreviousHabits);
+      const tasksChange = Math.round(avgCurrentTasks - avgPreviousTasks);
+      const outputsChange = Math.round(avgCurrentOutputs - avgPreviousOutputs);
+
+      const getTrend = (change: number): 'up' | 'down' | 'stable' => {
+        if (change > 2) return 'up';
+        if (change < -2) return 'down';
+        return 'stable';
+      };
+
+      return {
+        habitsTrend: getTrend(habitsChange),
+        habitsChange,
+        tasksTrend: getTrend(tasksChange),
+        tasksChange,
+        outputsTrend: getTrend(outputsChange),
+        outputsChange
+      };
+    } catch (error) {
+      console.error('Error calculating team trends:', error);
+      return {
+        habitsTrend: 'stable',
+        habitsChange: 0,
+        tasksTrend: 'stable',
+        tasksChange: 0,
+        outputsTrend: 'stable',
+        outputsChange: 0
+      };
     }
   }
 

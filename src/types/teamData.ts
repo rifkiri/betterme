@@ -1,3 +1,4 @@
+
 export interface TeamMember {
   id: string;
   name: string;
@@ -34,6 +35,15 @@ export interface OverdueOutput {
   originalDueDate: string;
 }
 
+export interface TeamTrends {
+  habitsTrend: 'up' | 'down' | 'stable';
+  habitsChange: number;
+  tasksTrend: 'up' | 'down' | 'stable';
+  tasksChange: number;
+  outputsTrend: 'up' | 'down' | 'stable';
+  outputsChange: number;
+}
+
 export interface TeamData {
   totalMembers: number;
   activeMembers: number;
@@ -57,4 +67,5 @@ export interface TeamData {
     outputsChange: string;
   };
   moodData?: MoodEntry[];
+  teamTrends?: TeamTrends;
 }
