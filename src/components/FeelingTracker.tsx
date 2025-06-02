@@ -21,7 +21,7 @@ export const FeelingTracker = () => {
       }
       setHasLoadedTodaysMood(true);
     }
-  }, [getMoodForDate, hasLoadedTodaysMood]);
+  }, [hasLoadedTodaysMood]);
 
   const getFeelingIcon = (value: number) => {
     if (value >= 8) return <Smile className="h-5 w-5 text-green-500" />;
