@@ -1,3 +1,4 @@
+
 import { supabaseDataService } from './SupabaseDataService';
 import { TeamData, TeamMember, OverdueTask, OverdueOutput, TeamTrends } from '@/types/teamData';
 import { User } from '@/types/userTypes';
@@ -15,18 +16,18 @@ class TeamDataService {
         throw new Error('No authenticated user found');
       }
       
-      // Get current manager's profile to verify they are a manager
+      // Get current manager's profile to verify they are a manager or admin
       const { data: managerProfile } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
       
-      if (!managerProfile || managerProfile.role !== 'manager') {
-        throw new Error('User is not a manager');
+      if (!managerProfile || !['manager', 'admin'].includes(managerProfile.role)) {
+        throw new Error('User must be a manager or admin to access team data');
       }
       
-      console.log('Manager profile:', managerProfile);
+      console.log('Manager/Admin profile:', managerProfile);
       
       // Get all team members (RLS will handle filtering)
       const allUsers = await supabaseDataService.getUsers();
