@@ -39,27 +39,29 @@ const Settings = () => {
           <p className="text-gray-600">Manage your application preferences and data</p>
         </div>
 
-        <Tabs defaultValue="preferences" className="w-full">
+        <Tabs defaultValue={profile?.role === 'admin' ? 'users' : 'data'} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="preferences" className="flex items-center gap-2">
-              <SettingsIcon className="h-4 w-4" />
-              Preferences
-            </TabsTrigger>
-            <TabsTrigger value="data" className="flex items-center gap-2">
-              <Database className="h-4 w-4" />
-              Data Management
-            </TabsTrigger>
             {profile?.role === 'admin' && (
               <TabsTrigger value="users" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 User Management
               </TabsTrigger>
             )}
+            <TabsTrigger value="data" className="flex items-center gap-2">
+              <Database className="h-4 w-4" />
+              Data Management
+            </TabsTrigger>
+            <TabsTrigger value="preferences" className="flex items-center gap-2">
+              <SettingsIcon className="h-4 w-4" />
+              Preferences
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="preferences" className="mt-6">
-            <PreferencesSection />
-          </TabsContent>
+          {profile?.role === 'admin' && (
+            <TabsContent value="users" className="mt-6">
+              <UserManagementSection userRole={profile?.role} />
+            </TabsContent>
+          )}
 
           <TabsContent value="data" className="mt-6">
             <DataManagementSection
@@ -72,11 +74,9 @@ const Settings = () => {
             />
           </TabsContent>
 
-          {profile?.role === 'admin' && (
-            <TabsContent value="users" className="mt-6">
-              <UserManagementSection userRole={profile?.role} />
-            </TabsContent>
-          )}
+          <TabsContent value="preferences" className="mt-6">
+            <PreferencesSection />
+          </TabsContent>
         </Tabs>
       </div>
     </div>
