@@ -26,6 +26,17 @@ export const SignInForm = ({
   isLoading,
   onSubmit
 }: SignInFormProps) => {
+  // Input sanitization
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const sanitizedEmail = e.target.value.trim().toLowerCase().slice(0, 255);
+    setEmail(sanitizedEmail);
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const sanitizedPassword = e.target.value.slice(0, 72); // Max password length
+    setPassword(sanitizedPassword);
+  };
+
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-2">
@@ -35,8 +46,10 @@ export const SignInForm = ({
           type="email"
           placeholder="Enter your email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={handleEmailChange}
           required
+          maxLength={255}
+          autoComplete="email"
         />
       </div>
       
@@ -48,8 +61,10 @@ export const SignInForm = ({
             type={showPassword ? 'text' : 'password'}
             placeholder="Enter your password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={handlePasswordChange}
             required
+            maxLength={72}
+            autoComplete="current-password"
           />
           <Button
             type="button"
@@ -66,7 +81,7 @@ export const SignInForm = ({
       <Button 
         type="submit" 
         className="w-full" 
-        disabled={isLoading}
+        disabled={isLoading || !email.trim() || !password.trim()}
       >
         {isLoading ? 'Signing in...' : 'Sign In'}
       </Button>

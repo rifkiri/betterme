@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Check, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { ProfileService } from '@/services/ProfileService';
 import { toast } from 'sonner';
@@ -15,6 +15,13 @@ interface PasswordChangeFormProps {
   isFirstTime?: boolean;
 }
 
+interface PasswordStrength {
+  minLength: boolean;
+  hasNumber: boolean;
+  hasUppercase: boolean;
+  hasLowercase: boolean;
+}
+
 export const PasswordChangeForm = ({ isFirstTime = false }: PasswordChangeFormProps) => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -23,16 +30,41 @@ export const PasswordChangeForm = ({ isFirstTime = false }: PasswordChangeFormPr
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Password strength validation
+  const getPasswordStrength = (password: string): PasswordStrength => ({
+    minLength: password.length >= 8,
+    hasNumber: /[0-9]/.test(password),
+    hasUppercase: /[A-Z]/.test(password),
+    hasLowercase: /[a-z]/.test(password),
+  });
+
+  const passwordStrength = getPasswordStrength(newPassword);
+  const isPasswordValid = Object.values(passwordStrength).every(Boolean);
+
+  // Sanitize input to prevent XSS
+  const sanitizeInput = (input: string): string => {
+    return input.trim().replace(/[<>]/g, '');
+  };
+
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (newPassword !== confirmPassword) {
+    // Input validation
+    const sanitizedNewPassword = sanitizeInput(newPassword);
+    const sanitizedConfirmPassword = sanitizeInput(confirmPassword);
+    
+    if (sanitizedNewPassword !== sanitizedConfirmPassword) {
       toast.error('Passwords do not match');
       return;
     }
 
-    if (newPassword.length < 6) {
-      toast.error('Password must be at least 6 characters long');
+    if (!isPasswordValid) {
+      toast.error('Password does not meet security requirements');
+      return;
+    }
+
+    if (sanitizedNewPassword.length > 72) {
+      toast.error('Password is too long (maximum 72 characters)');
       return;
     }
 
@@ -40,11 +72,12 @@ export const PasswordChangeForm = ({ isFirstTime = false }: PasswordChangeFormPr
 
     try {
       const { error } = await supabase.auth.updateUser({
-        password: newPassword
+        password: sanitizedNewPassword
       });
 
       if (error) {
-        toast.error('Error updating password: ' + error.message);
+        console.error('Password update failed'); // No sensitive data logged
+        toast.error('Error updating password. Please try again.');
         return;
       }
 
@@ -69,12 +102,19 @@ export const PasswordChangeForm = ({ isFirstTime = false }: PasswordChangeFormPr
         }
       }
     } catch (error) {
-      console.error('Password change error:', error);
+      console.error('Password change error occurred'); // No sensitive data logged
       toast.error('Failed to update password');
     } finally {
       setIsLoading(false);
     }
   };
+
+  const StrengthIndicator = ({ isValid, text }: { isValid: boolean; text: string }) => (
+    <div className={`flex items-center gap-2 text-sm ${isValid ? 'text-green-600' : 'text-red-500'}`}>
+      {isValid ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+      <span>{text}</span>
+    </div>
+  );
 
   return (
     <Card className="w-full max-w-md mx-auto">
@@ -101,7 +141,9 @@ export const PasswordChangeForm = ({ isFirstTime = false }: PasswordChangeFormPr
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Enter new password"
                 required
-                minLength={6}
+                minLength={8}
+                maxLength={72}
+                autoComplete="new-password"
               />
               <Button
                 type="button"
@@ -117,6 +159,17 @@ export const PasswordChangeForm = ({ isFirstTime = false }: PasswordChangeFormPr
                 )}
               </Button>
             </div>
+            
+            {/* Password strength indicators */}
+            {newPassword && (
+              <div className="space-y-1 p-3 bg-gray-50 rounded-md">
+                <p className="text-sm font-medium text-gray-700">Password Requirements:</p>
+                <StrengthIndicator isValid={passwordStrength.minLength} text="At least 8 characters" />
+                <StrengthIndicator isValid={passwordStrength.hasNumber} text="Contains a number" />
+                <StrengthIndicator isValid={passwordStrength.hasUppercase} text="Contains uppercase letter" />
+                <StrengthIndicator isValid={passwordStrength.hasLowercase} text="Contains lowercase letter" />
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -129,7 +182,9 @@ export const PasswordChangeForm = ({ isFirstTime = false }: PasswordChangeFormPr
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm new password"
                 required
-                minLength={6}
+                minLength={8}
+                maxLength={72}
+                autoComplete="new-password"
               />
               <Button
                 type="button"
@@ -147,7 +202,11 @@ export const PasswordChangeForm = ({ isFirstTime = false }: PasswordChangeFormPr
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isLoading || !isPasswordValid || newPassword !== confirmPassword}
+          >
             {isLoading ? 'Updating...' : 'Update Password'}
           </Button>
         </form>

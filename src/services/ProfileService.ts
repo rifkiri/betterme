@@ -13,17 +13,30 @@ export class ProfileService {
   }
 
   static async createProfile(userId: string, userData: any) {
+    // Sanitize input data
+    const sanitizedData = {
+      name: userData.name?.trim().slice(0, 100) || '',
+      email: userData.email?.trim().toLowerCase().slice(0, 255) || '',
+      role: userData.role || 'team-member',
+      position: userData.position?.trim().slice(0, 100) || null,
+    };
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(sanitizedData.email)) {
+      return { data: null, error: { message: 'Invalid email format' } };
+    }
+
     const { data, error } = await supabase
       .from('profiles')
       .insert({
         id: userId,
-        name: userData.name,
-        email: userData.email,
-        role: userData.role,
-        position: userData.position,
+        name: sanitizedData.name,
+        email: sanitizedData.email,
+        role: sanitizedData.role,
+        position: sanitizedData.position,
         user_status: 'pending',
-        has_changed_password: false,
-        temporary_password: userData.temporary_password || userData.temporaryPassword
+        has_changed_password: false
       });
 
     return { data, error };

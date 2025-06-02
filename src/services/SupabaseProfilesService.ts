@@ -11,7 +11,7 @@ export class SupabaseProfilesService {
       .order('created_at', { ascending: false });
 
     if (profilesError) {
-      console.error('Error fetching profiles:', profilesError);
+      console.error('Error fetching profiles'); // No sensitive data logged
       throw profilesError;
     }
 
@@ -21,16 +21,15 @@ export class SupabaseProfilesService {
       profilesData.forEach(profile => {
         users.push({
           id: profile.id,
-          name: profile.name,
-          email: profile.email,
-          role: profile.role,
-          position: profile.position,
-          hasChangedPassword: profile.has_changed_password,
+          name: profile.name || '',
+          email: profile.email || '',
+          role: profile.role || 'team-member',
+          position: profile.position || '',
+          hasChangedPassword: profile.has_changed_password || false,
           userStatus: profile.user_status || 'active',
           createdAt: profile.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
           lastLogin: profile.last_login?.split('T')[0],
-          temporaryPassword: profile.temporary_password,
-          managerId: (profile as any).manager_id || undefined // Safely access manager_id
+          managerId: (profile as any).manager_id || undefined
         });
       });
     }
@@ -39,23 +38,43 @@ export class SupabaseProfilesService {
   }
 
   async addUser(user: User): Promise<void> {
-    // Create a pending user profile that can be used for sign up
+    // Sanitize and validate input
+    const sanitizedUser = {
+      id: user.id,
+      name: user.name?.trim().slice(0, 100) || '',
+      email: user.email?.trim().toLowerCase().slice(0, 255) || '',
+      role: user.role || 'team-member',
+      position: user.position?.trim().slice(0, 100) || null,
+      managerId: user.managerId || null
+    };
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(sanitizedUser.email)) {
+      throw new Error('Invalid email format');
+    }
+
+    // Validate role
+    const validRoles = ['admin', 'manager', 'team-member'];
+    if (!validRoles.includes(sanitizedUser.role)) {
+      throw new Error('Invalid role');
+    }
+
     const { error } = await supabase
       .from('profiles')
       .insert({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        position: user.position,
-        temporary_password: user.temporaryPassword || 'temp123',
+        id: sanitizedUser.id,
+        name: sanitizedUser.name,
+        email: sanitizedUser.email,
+        role: sanitizedUser.role,
+        position: sanitizedUser.position,
         user_status: 'pending',
         has_changed_password: false,
-        manager_id: user.managerId || null // Map managerId to manager_id
+        manager_id: sanitizedUser.managerId
       });
 
     if (error) {
-      console.error('Error adding user:', error);
+      console.error('Error adding user'); // No sensitive data logged
       throw error;
     }
   }
@@ -63,15 +82,44 @@ export class SupabaseProfilesService {
   async updateUser(userId: string, updates: Partial<User>): Promise<void> {
     const supabaseUpdates: any = {};
     
-    if (updates.name) supabaseUpdates.name = updates.name;
-    if (updates.email) supabaseUpdates.email = updates.email;
-    if (updates.role) supabaseUpdates.role = updates.role;
-    if (updates.position !== undefined) supabaseUpdates.position = updates.position;
-    if (updates.hasChangedPassword !== undefined) supabaseUpdates.has_changed_password = updates.hasChangedPassword;
-    if (updates.userStatus) supabaseUpdates.user_status = updates.userStatus;
-    if (updates.temporaryPassword) supabaseUpdates.temporary_password = updates.temporaryPassword;
-    if (updates.lastLogin) supabaseUpdates.last_login = updates.lastLogin;
-    if (updates.managerId !== undefined) supabaseUpdates.manager_id = updates.managerId; // Map managerId to manager_id
+    // Sanitize and validate updates
+    if (updates.name !== undefined) {
+      supabaseUpdates.name = updates.name.trim().slice(0, 100);
+    }
+    if (updates.email !== undefined) {
+      const sanitizedEmail = updates.email.trim().toLowerCase().slice(0, 255);
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(sanitizedEmail)) {
+        throw new Error('Invalid email format');
+      }
+      supabaseUpdates.email = sanitizedEmail;
+    }
+    if (updates.role !== undefined) {
+      const validRoles = ['admin', 'manager', 'team-member'];
+      if (!validRoles.includes(updates.role)) {
+        throw new Error('Invalid role');
+      }
+      supabaseUpdates.role = updates.role;
+    }
+    if (updates.position !== undefined) {
+      supabaseUpdates.position = updates.position?.trim().slice(0, 100) || null;
+    }
+    if (updates.hasChangedPassword !== undefined) {
+      supabaseUpdates.has_changed_password = updates.hasChangedPassword;
+    }
+    if (updates.userStatus !== undefined) {
+      const validStatuses = ['pending', 'active'];
+      if (!validStatuses.includes(updates.userStatus)) {
+        throw new Error('Invalid user status');
+      }
+      supabaseUpdates.user_status = updates.userStatus;
+    }
+    if (updates.lastLogin !== undefined) {
+      supabaseUpdates.last_login = updates.lastLogin;
+    }
+    if (updates.managerId !== undefined) {
+      supabaseUpdates.manager_id = updates.managerId;
+    }
 
     const { error } = await supabase
       .from('profiles')
@@ -79,7 +127,7 @@ export class SupabaseProfilesService {
       .eq('id', userId);
 
     if (error) {
-      console.error('Error updating user:', error);
+      console.error('Error updating user'); // No sensitive data logged
       throw error;
     }
   }
@@ -91,20 +139,29 @@ export class SupabaseProfilesService {
       .eq('id', userId);
 
     if (error) {
-      console.error('Error deleting user:', error);
+      console.error('Error deleting user'); // No sensitive data logged
       throw error;
     }
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
+    // Sanitize email input
+    const sanitizedEmail = email.trim().toLowerCase().slice(0, 255);
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(sanitizedEmail)) {
+      return null;
+    }
+
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('email', email)
+      .eq('email', sanitizedEmail)
       .maybeSingle();
 
     if (error) {
-      console.error('Error fetching user by email:', error);
+      console.error('Error fetching user by email'); // No sensitive data logged
       return null;
     }
 
@@ -112,16 +169,15 @@ export class SupabaseProfilesService {
 
     return {
       id: data.id,
-      name: data.name,
-      email: data.email,
-      role: data.role,
-      position: data.position,
-      hasChangedPassword: data.has_changed_password,
+      name: data.name || '',
+      email: data.email || '',
+      role: data.role || 'team-member',
+      position: data.position || '',
+      hasChangedPassword: data.has_changed_password || false,
       userStatus: data.user_status || 'active',
       createdAt: data.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
       lastLogin: data.last_login?.split('T')[0],
-      temporaryPassword: data.temporary_password,
-      managerId: (data as any).manager_id || undefined // Safely access manager_id
+      managerId: (data as any).manager_id || undefined
     };
   }
 }

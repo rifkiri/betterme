@@ -4,22 +4,42 @@ import { toast } from 'sonner';
 
 export class AuthService {
   static async signInWithPassword(email: string, password: string) {
-    console.log('Attempting to sign in with email:', email);
+    // Sanitize inputs
+    const sanitizedEmail = email.trim().toLowerCase().slice(0, 255);
+    const sanitizedPassword = password.slice(0, 72); // Max password length
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(sanitizedEmail)) {
+      return { data: null, error: { message: 'Invalid email format' } };
+    }
+    
+    console.log('Authentication attempt'); // No sensitive data logged
     
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+      email: sanitizedEmail,
+      password: sanitizedPassword,
     });
 
     return { data: signInData, error: signInError };
   }
 
   static async signUpWithPassword(email: string, password: string) {
-    console.log('Creating new auth user...');
+    // Sanitize inputs
+    const sanitizedEmail = email.trim().toLowerCase().slice(0, 255);
+    const sanitizedPassword = password.slice(0, 72);
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(sanitizedEmail)) {
+      return { data: null, error: { message: 'Invalid email format' } };
+    }
+    
+    console.log('Creating new auth user'); // No sensitive data logged
     
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
+      email: sanitizedEmail,
+      password: sanitizedPassword,
     });
 
     return { data: signUpData, error: signUpError };

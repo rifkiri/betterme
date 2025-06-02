@@ -107,7 +107,6 @@ export type Database = {
           name: string
           position: string | null
           role: Database["public"]["Enums"]["user_role"]
-          temporary_password: string | null
           updated_at: string
           user_status: Database["public"]["Enums"]["user_status"] | null
         }
@@ -120,7 +119,6 @@ export type Database = {
           name: string
           position?: string | null
           role?: Database["public"]["Enums"]["user_role"]
-          temporary_password?: string | null
           updated_at?: string
           user_status?: Database["public"]["Enums"]["user_status"] | null
         }
@@ -133,7 +131,6 @@ export type Database = {
           name?: string
           position?: string | null
           role?: Database["public"]["Enums"]["user_role"]
-          temporary_password?: string | null
           updated_at?: string
           user_status?: Database["public"]["Enums"]["user_status"] | null
         }
@@ -275,6 +272,10 @@ export type Database = {
       }
       is_admin: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      validate_password_strength: {
+        Args: { password: string }
         Returns: boolean
       }
     }

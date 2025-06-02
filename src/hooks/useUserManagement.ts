@@ -33,19 +33,19 @@ export const useUserManagement = () => {
         }
       }
     } catch (error) {
-      console.error('Error checking current user:', error);
+      console.error('Error checking current user'); // No sensitive data logged
     }
   };
 
   const loadUsers = async () => {
     setIsLoading(true);
     try {
-      console.log('Loading users from Supabase...');
+      console.log('Loading users from Supabase'); // No sensitive data logged
       const supabaseUsers = await supabaseDataService.getUsers();
       setUsers(supabaseUsers);
-      console.log('Users loaded from Supabase successfully');
+      console.log('Users loaded successfully'); // No sensitive data logged
     } catch (error) {
-      console.error('Failed to load users from Supabase:', error);
+      console.error('Failed to load users'); // No sensitive data logged
       toast.error('Failed to load users from Supabase');
     } finally {
       setIsLoading(false);
@@ -58,37 +58,66 @@ export const useUserManagement = () => {
       return;
     }
 
+    // Input validation and sanitization
+    const sanitizedUser = {
+      name: newUser.name?.trim().slice(0, 100) || '',
+      email: newUser.email?.trim().toLowerCase().slice(0, 255) || '',
+      role: newUser.role || 'team-member',
+      position: newUser.position?.trim().slice(0, 100) || '',
+      temporaryPassword: newUser.temporaryPassword?.slice(0, 72) || 'temp123'
+    };
+
+    // Validate required fields
+    if (!sanitizedUser.name || !sanitizedUser.email) {
+      toast.error('Name and email are required');
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(sanitizedUser.email)) {
+      toast.error('Invalid email format');
+      return;
+    }
+
+    // Validate role
+    const validRoles = ['admin', 'manager', 'team-member'];
+    if (!validRoles.includes(sanitizedUser.role)) {
+      toast.error('Invalid role');
+      return;
+    }
+
     try {
-      console.log('Creating user via Edge Function...');
+      console.log('Creating user via Edge Function'); // No sensitive data logged
       
       // Call the Edge Function to create the user
       const { data, error } = await supabase.functions.invoke('create-user', {
         body: {
-          name: newUser.name,
-          email: newUser.email,
-          role: newUser.role,
-          position: newUser.position,
-          temporaryPassword: newUser.temporaryPassword || 'temp123'
+          name: sanitizedUser.name,
+          email: sanitizedUser.email,
+          role: sanitizedUser.role,
+          position: sanitizedUser.position,
+          temporaryPassword: sanitizedUser.temporaryPassword
         }
       });
 
       if (error) {
-        console.error('Edge function error:', error);
+        console.error('Edge function error'); // No sensitive data logged
         toast.error('Failed to create user: ' + error.message);
         return;
       }
 
       if (!data.success) {
-        console.error('User creation failed:', data.error);
+        console.error('User creation failed'); // No sensitive data logged
         toast.error('Failed to create user: ' + data.error);
         return;
       }
 
       await loadUsers();
-      toast.success(`User created successfully. They can sign in using email: ${newUser.email} and password: ${newUser.temporaryPassword || 'temp123'}`);
+      toast.success(`User created successfully. They can sign in using email: ${sanitizedUser.email} and password: ${sanitizedUser.temporaryPassword}`);
     } catch (error) {
       toast.error('Failed to add user');
-      console.error('Failed to add user:', error);
+      console.error('Failed to add user'); // No sensitive data logged
     }
   };
 
@@ -104,7 +133,7 @@ export const useUserManagement = () => {
       toast.success('User deleted successfully');
     } catch (error) {
       toast.error('Failed to delete user');
-      console.error('Failed to delete user:', error);
+      console.error('Failed to delete user'); // No sensitive data logged
     }
   };
 
@@ -120,7 +149,7 @@ export const useUserManagement = () => {
       toast.success('User updated successfully');
     } catch (error) {
       toast.error('Failed to update user');
-      console.error('Failed to update user:', error);
+      console.error('Failed to update user'); // No sensitive data logged
     }
   };
 
