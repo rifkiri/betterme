@@ -28,10 +28,26 @@ export class SupabaseProfilesService {
   }
 
   async addUser(user: User): Promise<void> {
-    const { error } = await supabase
+    // Create auth user first
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email: user.email,
+      password: user.temporaryPassword || 'temp123',
+      email_confirm: true,
+      user_metadata: {
+        name: user.name
+      }
+    });
+
+    if (authError) {
+      console.error('Error creating auth user:', authError);
+      throw authError;
+    }
+
+    // Then create the profile
+    const { error: profileError } = await supabase
       .from('profiles')
       .insert({
-        id: user.id,
+        id: authData.user.id,
         name: user.name,
         email: user.email,
         role: user.role,
@@ -40,9 +56,11 @@ export class SupabaseProfilesService {
         last_login: user.lastLogin
       });
 
-    if (error) {
-      console.error('Error adding user:', error);
-      throw error;
+    if (profileError) {
+      console.error('Error adding user profile:', profileError);
+      // Try to clean up auth user if profile creation failed
+      await supabase.auth.admin.deleteUser(authData.user.id);
+      throw profileError;
     }
   }
 
@@ -65,17 +83,50 @@ export class SupabaseProfilesService {
       console.error('Error updating user:', error);
       throw error;
     }
+
+    // If email is being updated, also update it in auth
+    if (updates.email) {
+      const { error: authError } = await supabase.auth.admin.updateUserById(userId, {
+        email: updates.email
+      });
+      
+      if (authError) {
+        console.error('Error updating auth email:', authError);
+        // Don't throw here as the profile was already updated
+      }
+    }
+
+    // If password is being reset
+    if (updates.temporaryPassword) {
+      const { error: passwordError } = await supabase.auth.admin.updateUserById(userId, {
+        password: updates.temporaryPassword
+      });
+      
+      if (passwordError) {
+        console.error('Error updating password:', passwordError);
+        // Don't throw here as the profile was already updated
+      }
+    }
   }
 
   async deleteUser(userId: string): Promise<void> {
-    const { error } = await supabase
+    // Delete the profile first
+    const { error: profileError } = await supabase
       .from('profiles')
       .delete()
       .eq('id', userId);
 
-    if (error) {
-      console.error('Error deleting user:', error);
-      throw error;
+    if (profileError) {
+      console.error('Error deleting user profile:', profileError);
+      throw profileError;
+    }
+
+    // Then delete the auth user
+    const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+    
+    if (authError) {
+      console.error('Error deleting auth user:', authError);
+      // Don't throw here as the profile was already deleted
     }
   }
 }
