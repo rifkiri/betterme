@@ -5,6 +5,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Heart, Smile, Meh, Frown, Save } from 'lucide-react';
 import { useMoodTracking } from '@/hooks/useMoodTracking';
+
 export const FeelingTracker = () => {
   const {
     addMoodEntry,
@@ -32,6 +33,7 @@ export const FeelingTracker = () => {
       setFeeling("5");
     }
   }, [getMoodForDate, currentDate]);
+
   const getFeelingIcon = (value: number) => {
     if (value >= 8) return <Smile className="h-5 w-5 text-green-500" />;
     if (value >= 6) return <Heart className="h-5 w-5 text-blue-500" />;
@@ -100,9 +102,9 @@ export const FeelingTracker = () => {
     label: "10",
     color: "text-green-700"
   }];
+
   const currentValue = parseInt(feeling);
-  const today = new Date().toISOString().split('T')[0];
-  const todaysMood = getMoodForDate(today);
+
   return <Card>
       <CardHeader>
         <div className="flex items-start justify-between">
@@ -113,7 +115,6 @@ export const FeelingTracker = () => {
             </CardTitle>
             <CardDescription>
               Select your mood on a scale of 1-10
-              {todaysMood}
             </CardDescription>
           </div>
           <Button onClick={handleRecordMood} size="sm" className="px-4">
