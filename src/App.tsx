@@ -10,7 +10,6 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import SignIn from "./pages/SignIn";
 import NotFound from "./pages/NotFound";
-import { OAuthCallback } from "./components/OAuthCallback";
 
 const queryClient = new QueryClient();
 
@@ -26,7 +25,6 @@ const App = () => (
           <Route path="/manager" element={<Manager />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="/oauth/callback" element={<OAuthCallback />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

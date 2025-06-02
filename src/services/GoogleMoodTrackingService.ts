@@ -1,4 +1,3 @@
-
 import { BaseGoogleSheetsService } from './BaseGoogleSheetsService';
 
 interface MoodEntry {
@@ -11,13 +10,14 @@ interface MoodEntry {
 
 class GoogleMoodTrackingService extends BaseGoogleSheetsService {
   async getMoodData(userId: string): Promise<MoodEntry[]> {
-    if (!this.isAuthenticated() || !this.spreadsheetId) {
+    if (!this.isAuthenticated()) {
       return [];
     }
 
     try {
+      const spreadsheetId = this.getSpreadsheetId();
       const data = await this.makeRequest(
-        `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/MoodTracking`
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/MoodTracking`
       );
 
       const rows = data.values || [];
@@ -37,6 +37,7 @@ class GoogleMoodTrackingService extends BaseGoogleSheetsService {
   }
 
   async addMoodEntry(moodEntry: MoodEntry) {
+    const spreadsheetId = this.getSpreadsheetId();
     const values = [[
       moodEntry.id,
       moodEntry.userId,
@@ -46,7 +47,7 @@ class GoogleMoodTrackingService extends BaseGoogleSheetsService {
     ]];
 
     return await this.makeRequest(
-      `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/MoodTracking:append?valueInputOption=RAW`,
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/MoodTracking:append?valueInputOption=RAW`,
       {
         method: 'POST',
         body: JSON.stringify({ values }),
@@ -64,6 +65,7 @@ class GoogleMoodTrackingService extends BaseGoogleSheetsService {
 
     const existingEntry = moodEntries[moodEntryIndex];
     const updatedEntry = { ...existingEntry, ...updates };
+    const spreadsheetId = this.getSpreadsheetId();
 
     const values = [[
       updatedEntry.id,
@@ -75,7 +77,7 @@ class GoogleMoodTrackingService extends BaseGoogleSheetsService {
 
     const rowNumber = moodEntryIndex + 2;
     return await this.makeRequest(
-      `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/MoodTracking!A${rowNumber}:E${rowNumber}?valueInputOption=RAW`,
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/MoodTracking!A${rowNumber}:E${rowNumber}?valueInputOption=RAW`,
       {
         method: 'PUT',
         body: JSON.stringify({ values }),

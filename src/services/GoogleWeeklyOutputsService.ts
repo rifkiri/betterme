@@ -1,16 +1,16 @@
-
 import { BaseGoogleSheetsService } from './BaseGoogleSheetsService';
 import { WeeklyOutput } from '@/types/productivity';
 
 class GoogleWeeklyOutputsService extends BaseGoogleSheetsService {
   async getWeeklyOutputs(userId: string): Promise<WeeklyOutput[]> {
-    if (!this.isAuthenticated() || !this.spreadsheetId) {
+    if (!this.isAuthenticated()) {
       return [];
     }
 
     try {
+      const spreadsheetId = this.getSpreadsheetId();
       const data = await this.makeRequest(
-        `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/WeeklyOutputs`
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/WeeklyOutputs`
       );
 
       const rows = data.values || [];
@@ -37,6 +37,7 @@ class GoogleWeeklyOutputsService extends BaseGoogleSheetsService {
   async addWeeklyOutput(output: WeeklyOutput & { userId: string }) {
     console.log('Adding weekly output to Google Sheets:', output);
 
+    const spreadsheetId = this.getSpreadsheetId();
     const values = [[
       output.id,
       output.userId,
@@ -52,7 +53,7 @@ class GoogleWeeklyOutputsService extends BaseGoogleSheetsService {
     ]];
 
     const result = await this.makeRequest(
-      `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/WeeklyOutputs:append?valueInputOption=RAW`,
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/WeeklyOutputs:append?valueInputOption=RAW`,
       {
         method: 'POST',
         body: JSON.stringify({ values }),
@@ -75,6 +76,7 @@ class GoogleWeeklyOutputsService extends BaseGoogleSheetsService {
 
     const existingOutput = outputs[outputIndex];
     const updatedOutput = { ...existingOutput, ...updates };
+    const spreadsheetId = this.getSpreadsheetId();
 
     const values = [[
       updatedOutput.id,
@@ -92,7 +94,7 @@ class GoogleWeeklyOutputsService extends BaseGoogleSheetsService {
 
     const rowNumber = outputIndex + 2;
     const result = await this.makeRequest(
-      `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/WeeklyOutputs!A${rowNumber}:K${rowNumber}?valueInputOption=RAW`,
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/WeeklyOutputs!A${rowNumber}:K${rowNumber}?valueInputOption=RAW`,
       {
         method: 'PUT',
         body: JSON.stringify({ values }),

@@ -1,16 +1,16 @@
-
 import { BaseGoogleSheetsService } from './BaseGoogleSheetsService';
 import { Task } from '@/types/productivity';
 
 class GoogleTasksService extends BaseGoogleSheetsService {
   async getTasks(userId: string): Promise<Task[]> {
-    if (!this.isAuthenticated() || !this.spreadsheetId) {
+    if (!this.isAuthenticated()) {
       return [];
     }
 
     try {
+      const spreadsheetId = this.getSpreadsheetId();
       const data = await this.makeRequest(
-        `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/Tasks`
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Tasks`
       );
 
       const rows = data.values || [];
@@ -39,6 +39,7 @@ class GoogleTasksService extends BaseGoogleSheetsService {
   }
 
   async addTask(task: Task & { userId: string }) {
+    const spreadsheetId = this.getSpreadsheetId();
     const values = [[
       task.id,
       task.userId,
@@ -58,7 +59,7 @@ class GoogleTasksService extends BaseGoogleSheetsService {
     ]];
 
     return await this.makeRequest(
-      `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/Tasks:append?valueInputOption=RAW`,
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Tasks:append?valueInputOption=RAW`,
       {
         method: 'POST',
         body: JSON.stringify({ values }),
@@ -76,6 +77,7 @@ class GoogleTasksService extends BaseGoogleSheetsService {
 
     const existingTask = tasks[taskIndex];
     const updatedTask = { ...existingTask, ...updates };
+    const spreadsheetId = this.getSpreadsheetId();
 
     const values = [[
       updatedTask.id,
@@ -97,7 +99,7 @@ class GoogleTasksService extends BaseGoogleSheetsService {
 
     const rowNumber = taskIndex + 2;
     return await this.makeRequest(
-      `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/Tasks!A${rowNumber}:O${rowNumber}?valueInputOption=RAW`,
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Tasks!A${rowNumber}:O${rowNumber}?valueInputOption=RAW`,
       {
         method: 'PUT',
         body: JSON.stringify({ values }),

@@ -1,16 +1,16 @@
-
 import { BaseGoogleSheetsService } from './BaseGoogleSheetsService';
 import { Habit } from '@/types/productivity';
 
 class GoogleHabitsService extends BaseGoogleSheetsService {
   async getHabits(userId: string): Promise<Habit[]> {
-    if (!this.isAuthenticated() || !this.spreadsheetId) {
+    if (!this.isAuthenticated()) {
       return [];
     }
 
     try {
+      const spreadsheetId = this.getSpreadsheetId();
       const data = await this.makeRequest(
-        `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/Habits`
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Habits`
       );
 
       const rows = data.values || [];
@@ -34,6 +34,7 @@ class GoogleHabitsService extends BaseGoogleSheetsService {
   }
 
   async addHabit(habit: Habit & { userId: string }) {
+    const spreadsheetId = this.getSpreadsheetId();
     const values = [[
       habit.id,
       habit.userId,
@@ -48,7 +49,7 @@ class GoogleHabitsService extends BaseGoogleSheetsService {
     ]];
 
     return await this.makeRequest(
-      `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/Habits:append?valueInputOption=RAW`,
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Habits:append?valueInputOption=RAW`,
       {
         method: 'POST',
         body: JSON.stringify({ values }),
@@ -66,6 +67,7 @@ class GoogleHabitsService extends BaseGoogleSheetsService {
 
     const existingHabit = habits[habitIndex];
     const updatedHabit = { ...existingHabit, ...updates };
+    const spreadsheetId = this.getSpreadsheetId();
 
     const values = [[
       updatedHabit.id,
@@ -82,7 +84,7 @@ class GoogleHabitsService extends BaseGoogleSheetsService {
 
     const rowNumber = habitIndex + 2;
     return await this.makeRequest(
-      `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/Habits!A${rowNumber}:J${rowNumber}?valueInputOption=RAW`,
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Habits!A${rowNumber}:J${rowNumber}?valueInputOption=RAW`,
       {
         method: 'PUT',
         body: JSON.stringify({ values }),

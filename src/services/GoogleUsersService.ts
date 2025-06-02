@@ -1,4 +1,3 @@
-
 import { BaseGoogleSheetsService } from './BaseGoogleSheetsService';
 
 interface User {
@@ -15,13 +14,14 @@ interface User {
 
 class GoogleUsersService extends BaseGoogleSheetsService {
   async getUsers(): Promise<User[]> {
-    if (!this.isAuthenticated() || !this.spreadsheetId) {
+    if (!this.isAuthenticated()) {
       return [];
     }
 
     try {
+      const spreadsheetId = this.getSpreadsheetId();
       const data = await this.makeRequest(
-        `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/Users`
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Users`
       );
 
       const rows = data.values || [];
@@ -43,6 +43,7 @@ class GoogleUsersService extends BaseGoogleSheetsService {
   }
 
   async addUser(user: User) {
+    const spreadsheetId = this.getSpreadsheetId();
     const values = [[
       user.id,
       user.name,
@@ -56,7 +57,7 @@ class GoogleUsersService extends BaseGoogleSheetsService {
     ]];
 
     return await this.makeRequest(
-      `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/Users:append?valueInputOption=RAW`,
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Users:append?valueInputOption=RAW`,
       {
         method: 'POST',
         body: JSON.stringify({ values }),
@@ -74,6 +75,7 @@ class GoogleUsersService extends BaseGoogleSheetsService {
 
     const existingUser = users[userIndex];
     const updatedUser = { ...existingUser, ...updates };
+    const spreadsheetId = this.getSpreadsheetId();
 
     const values = [[
       updatedUser.id,
@@ -89,7 +91,7 @@ class GoogleUsersService extends BaseGoogleSheetsService {
 
     const rowNumber = userIndex + 2;
     return await this.makeRequest(
-      `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/Users!A${rowNumber}:I${rowNumber}?valueInputOption=RAW`,
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Users!A${rowNumber}:I${rowNumber}?valueInputOption=RAW`,
       {
         method: 'PUT',
         body: JSON.stringify({ values }),
@@ -105,9 +107,10 @@ class GoogleUsersService extends BaseGoogleSheetsService {
       throw new Error('User not found');
     }
 
+    const spreadsheetId = this.getSpreadsheetId();
     const rowNumber = userIndex + 2;
     return await this.makeRequest(
-      `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}:batchUpdate`,
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`,
       {
         method: 'POST',
         body: JSON.stringify({
