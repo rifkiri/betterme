@@ -58,17 +58,42 @@ export const useUserManagement = () => {
       return;
     }
 
-    const user: User = {
-      ...newUser,
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString().split('T')[0],
-      hasChangedPassword: false
-    };
-
     try {
+      // Create the user account first using Supabase auth
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: newUser.email,
+        password: newUser.temporaryPassword || 'temp123',
+        email_confirm: true,
+        user_metadata: {
+          name: newUser.name,
+          role: newUser.role,
+          position: newUser.position
+        }
+      });
+
+      if (authError) {
+        console.error('Error creating auth user:', authError);
+        toast.error('Failed to create user account: ' + authError.message);
+        return;
+      }
+
+      if (!authData.user) {
+        toast.error('Failed to create user account');
+        return;
+      }
+
+      // Now create the profile with the auth user's ID
+      const user: User = {
+        ...newUser,
+        id: authData.user.id,
+        createdAt: new Date().toISOString().split('T')[0],
+        hasChangedPassword: false,
+        userStatus: 'pending'
+      };
+
       await supabaseDataService.addUser(user);
       await loadUsers();
-      toast.success('User profile created successfully. User can now register with their email and temporary password.');
+      toast.success('User profile created successfully. User can now sign in with their email and temporary password.');
     } catch (error) {
       toast.error('Failed to add user');
       console.error('Failed to add user:', error);
