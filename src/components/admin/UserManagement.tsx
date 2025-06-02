@@ -9,11 +9,40 @@ import { UserPlus, RefreshCw } from 'lucide-react';
 import { googleSheetsService } from '@/services/GoogleSheetsService';
 import { toast } from 'sonner';
 
+// Local interface that matches Google Sheets structure
+interface GoogleSheetsUser {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'manager' | 'team-member';
+  temporaryPassword: string;
+  createdAt: string;
+  lastLogin?: string;
+}
+
 export const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [useGoogleSheets, setUseGoogleSheets] = useState(googleSheetsService.isConfigured());
+
+  // Convert Google Sheets user to app user format
+  const convertToAppUser = (sheetsUser: GoogleSheetsUser): User => ({
+    ...sheetsUser,
+    temporaryPassword: sheetsUser.temporaryPassword || '',
+    hasChangedPassword: false // Default value for new users from sheets
+  });
+
+  // Convert app user to Google Sheets format
+  const convertToSheetsUser = (appUser: User): GoogleSheetsUser => ({
+    id: appUser.id,
+    name: appUser.name,
+    email: appUser.email,
+    role: appUser.role,
+    temporaryPassword: appUser.temporaryPassword || '',
+    createdAt: appUser.createdAt,
+    lastLogin: appUser.lastLogin
+  });
 
   // Load users from Google Sheets if configured
   const loadUsers = async () => {
@@ -24,8 +53,9 @@ export const UserManagement = () => {
     setIsLoading(true);
     try {
       const sheetsUsers = await googleSheetsService.getUsers();
-      if (sheetsUsers.length >= 0) { // Changed from > 0 to >= 0 to handle empty sheets
-        setUsers(sheetsUsers);
+      if (sheetsUsers.length >= 0) {
+        const convertedUsers = sheetsUsers.map(convertToAppUser);
+        setUsers(convertedUsers);
         setUseGoogleSheets(true);
       }
     } catch (error) {
@@ -44,12 +74,13 @@ export const UserManagement = () => {
     const user: User = {
       ...newUser,
       id: Date.now().toString(),
-      createdAt: new Date().toISOString().split('T')[0]
+      createdAt: new Date().toISOString().split('T')[0],
+      hasChangedPassword: false
     };
 
     if (useGoogleSheets && googleSheetsService.isConfigured()) {
       try {
-        await googleSheetsService.addUser(user);
+        await googleSheetsService.addUser(convertToSheetsUser(user));
         await loadUsers(); // Reload from sheets
         toast.success('User added to Google Sheets successfully');
       } catch (error) {

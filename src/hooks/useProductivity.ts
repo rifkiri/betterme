@@ -1,5 +1,9 @@
+
 import { useState, useEffect } from 'react';
-import { googleSheetsService } from '@/services/GoogleSheetsService';
+import { googleHabitsService } from '@/services/GoogleHabitsService';
+import { googleTasksService } from '@/services/GoogleTasksService';
+import { googleWeeklyOutputsService } from '@/services/GoogleWeeklyOutputsService';
+import { googleOAuthService } from '@/services/GoogleOAuthService';
 import { Habit, Task, WeeklyOutput } from '@/types/productivity';
 import { toast } from 'sonner';
 
@@ -22,16 +26,16 @@ export const useProductivity = () => {
 
   // Load all data from Google Sheets
   const loadAllData = async () => {
-    if (!userId || !googleSheetsService.isConfigured() || !googleSheetsService.isAuthenticated()) {
+    if (!userId || !googleOAuthService.isConfigured() || !googleOAuthService.isAuthenticated()) {
       return;
     }
 
     setIsLoading(true);
     try {
       const [habitsData, tasksData, weeklyOutputsData] = await Promise.all([
-        googleSheetsService.getHabits(userId),
-        googleSheetsService.getTasks(userId),
-        googleSheetsService.getWeeklyOutputs(userId)
+        googleHabitsService.getHabits(userId),
+        googleTasksService.getTasks(userId),
+        googleWeeklyOutputsService.getWeeklyOutputs(userId)
       ]);
 
       setHabits(habitsData.filter(h => !h.archived && !h.isDeleted));
@@ -63,9 +67,9 @@ export const useProductivity = () => {
       streak: 0,
     };
 
-    if (googleSheetsService.isConfigured() && googleSheetsService.isAuthenticated()) {
+    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
       try {
-        await googleSheetsService.addHabit({ ...newHabit, userId });
+        await googleHabitsService.addHabit({ ...newHabit, userId });
         await loadAllData();
       } catch (error) {
         toast.error('Failed to save habit to Google Sheets');
@@ -79,9 +83,9 @@ export const useProductivity = () => {
   const editHabit = async (id: string, updates: Partial<Habit>) => {
     if (!userId) return;
 
-    if (googleSheetsService.isConfigured() && googleSheetsService.isAuthenticated()) {
+    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
       try {
-        await googleSheetsService.updateHabit(id, userId, updates);
+        await googleHabitsService.updateHabit(id, userId, updates);
         await loadAllData();
       } catch (error) {
         toast.error('Failed to update habit in Google Sheets');
@@ -107,9 +111,9 @@ export const useProductivity = () => {
       streak: !habit.completed ? habit.streak + 1 : Math.max(0, habit.streak - 1)
     };
 
-    if (googleSheetsService.isConfigured() && googleSheetsService.isAuthenticated()) {
+    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
       try {
-        await googleSheetsService.updateHabit(id, userId, updates);
+        await googleHabitsService.updateHabit(id, userId, updates);
         await loadAllData();
       } catch (error) {
         toast.error('Failed to update habit in Google Sheets');
@@ -127,9 +131,9 @@ export const useProductivity = () => {
   const archiveHabit = async (id: string) => {
     if (!userId) return;
 
-    if (googleSheetsService.isConfigured() && googleSheetsService.isAuthenticated()) {
+    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
       try {
-        await googleSheetsService.updateHabit(id, userId, { archived: true });
+        await googleHabitsService.updateHabit(id, userId, { archived: true });
         await loadAllData();
       } catch (error) {
         toast.error('Failed to archive habit in Google Sheets');
@@ -151,9 +155,9 @@ export const useProductivity = () => {
   const restoreHabit = async (id: string) => {
     if (!userId) return;
 
-    if (googleSheetsService.isConfigured() && googleSheetsService.isAuthenticated()) {
+    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
       try {
-        await googleSheetsService.updateHabit(id, userId, { archived: false });
+        await googleHabitsService.updateHabit(id, userId, { archived: false });
         await loadAllData();
       } catch (error) {
         toast.error('Failed to restore habit in Google Sheets');
@@ -190,9 +194,9 @@ export const useProductivity = () => {
       isMoved: false,
     };
 
-    if (googleSheetsService.isConfigured() && googleSheetsService.isAuthenticated()) {
+    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
       try {
-        await googleSheetsService.addTask({ ...newTask, userId });
+        await googleTasksService.addTask({ ...newTask, userId });
         await loadAllData();
       } catch (error) {
         toast.error('Failed to save task to Google Sheets');
@@ -206,9 +210,9 @@ export const useProductivity = () => {
   const editTask = async (id: string, updates: Partial<Task>) => {
     if (!userId) return;
 
-    if (googleSheetsService.isConfigured() && googleSheetsService.isAuthenticated()) {
+    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
       try {
-        await googleSheetsService.updateTask(id, userId, updates);
+        await googleTasksService.updateTask(id, userId, updates);
         await loadAllData();
       } catch (error) {
         toast.error('Failed to update task in Google Sheets');
@@ -234,9 +238,9 @@ export const useProductivity = () => {
       completedDate: !task.completed ? new Date() : undefined
     };
 
-    if (googleSheetsService.isConfigured() && googleSheetsService.isAuthenticated()) {
+    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
       try {
-        await googleSheetsService.updateTask(id, userId, updates);
+        await googleTasksService.updateTask(id, userId, updates);
         await loadAllData();
       } catch (error) {
         toast.error('Failed to update task in Google Sheets');
@@ -254,9 +258,9 @@ export const useProductivity = () => {
   const deleteTask = async (id: string) => {
     if (!userId) return;
 
-    if (googleSheetsService.isConfigured() && googleSheetsService.isAuthenticated()) {
+    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
       try {
-        await googleSheetsService.updateTask(id, userId, { isDeleted: true, deletedDate: new Date() });
+        await googleTasksService.updateTask(id, userId, { isDeleted: true, deletedDate: new Date() });
         await loadAllData();
       } catch (error) {
         toast.error('Failed to delete task in Google Sheets');
@@ -278,9 +282,9 @@ export const useProductivity = () => {
   const restoreTask = async (id: string) => {
     if (!userId) return;
 
-    if (googleSheetsService.isConfigured() && googleSheetsService.isAuthenticated()) {
+    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
       try {
-        await googleSheetsService.updateTask(id, userId, { isDeleted: false, deletedDate: undefined });
+        await googleTasksService.updateTask(id, userId, { isDeleted: false, deletedDate: undefined });
         await loadAllData();
       } catch (error) {
         toast.error('Failed to restore task in Google Sheets');
@@ -319,9 +323,9 @@ export const useProductivity = () => {
       isMoved: !isMovedBackToOriginal
     };
 
-    if (googleSheetsService.isConfigured() && googleSheetsService.isAuthenticated()) {
+    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
       try {
-        await googleSheetsService.updateTask(taskId, userId, updates);
+        await googleTasksService.updateTask(taskId, userId, updates);
         await loadAllData();
       } catch (error) {
         toast.error('Failed to update task in Google Sheets');
@@ -350,13 +354,13 @@ export const useProductivity = () => {
     };
 
     console.log('Adding weekly output:', newOutput);
-    console.log('Google Sheets configured:', googleSheetsService.isConfigured());
-    console.log('Google Sheets authenticated:', googleSheetsService.isAuthenticated());
+    console.log('Google Sheets configured:', googleOAuthService.isConfigured());
+    console.log('Google Sheets authenticated:', googleOAuthService.isAuthenticated());
 
-    if (googleSheetsService.isConfigured() && googleSheetsService.isAuthenticated()) {
+    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
       try {
         console.log('Attempting to save to Google Sheets...');
-        await googleSheetsService.addWeeklyOutput({ ...newOutput, userId });
+        await googleWeeklyOutputsService.addWeeklyOutput({ ...newOutput, userId });
         console.log('Successfully saved to Google Sheets, reloading data...');
         await loadAllData();
         toast.success('Weekly output saved to Google Sheets');
@@ -380,10 +384,10 @@ export const useProductivity = () => {
 
     console.log('Editing weekly output:', { id, updates });
 
-    if (googleSheetsService.isConfigured() && googleSheetsService.isAuthenticated()) {
+    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
       try {
         console.log('Attempting to update in Google Sheets...');
-        await googleSheetsService.updateWeeklyOutput(id, userId, updates);
+        await googleWeeklyOutputsService.updateWeeklyOutput(id, userId, updates);
         console.log('Successfully updated in Google Sheets, reloading data...');
         await loadAllData();
         toast.success('Weekly output updated in Google Sheets');
@@ -439,9 +443,9 @@ export const useProductivity = () => {
   const deleteWeeklyOutput = async (id: string) => {
     if (!userId) return;
 
-    if (googleSheetsService.isConfigured() && googleSheetsService.isAuthenticated()) {
+    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
       try {
-        await googleSheetsService.updateWeeklyOutput(id, userId, { isDeleted: true, deletedDate: new Date() });
+        await googleWeeklyOutputsService.updateWeeklyOutput(id, userId, { isDeleted: true, deletedDate: new Date() });
         await loadAllData();
       } catch (error) {
         toast.error('Failed to delete weekly output in Google Sheets');
@@ -463,9 +467,9 @@ export const useProductivity = () => {
   const restoreWeeklyOutput = async (id: string) => {
     if (!userId) return;
 
-    if (googleSheetsService.isConfigured() && googleSheetsService.isAuthenticated()) {
+    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
       try {
-        await googleSheetsService.updateWeeklyOutput(id, userId, { isDeleted: false, deletedDate: undefined });
+        await googleWeeklyOutputsService.updateWeeklyOutput(id, userId, { isDeleted: false, deletedDate: undefined });
         await loadAllData();
       } catch (error) {
         toast.error('Failed to restore weekly output in Google Sheets');

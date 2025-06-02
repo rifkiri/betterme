@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
-import { googleSheetsService } from '@/services/GoogleSheetsService';
+import { googleMoodTrackingService } from '@/services/GoogleMoodTrackingService';
+import { googleOAuthService } from '@/services/GoogleOAuthService';
 import { toast } from 'sonner';
 
 interface MoodEntry {
@@ -25,13 +26,13 @@ export const useMoodTracking = () => {
 
   // Load mood data from Google Sheets
   const loadMoodData = async () => {
-    if (!userId || !googleSheetsService.isConfigured() || !googleSheetsService.isAuthenticated()) {
+    if (!userId || !googleOAuthService.isConfigured() || !googleOAuthService.isAuthenticated()) {
       return;
     }
 
     setIsLoading(true);
     try {
-      const moodData = await googleSheetsService.getMoodData(userId);
+      const moodData = await googleMoodTrackingService.getMoodData(userId);
       setMoodEntries(moodData);
     } catch (error) {
       console.error('Failed to load mood data from Google Sheets:', error);
@@ -57,9 +58,9 @@ export const useMoodTracking = () => {
       notes
     };
 
-    if (googleSheetsService.isConfigured() && googleSheetsService.isAuthenticated()) {
+    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
       try {
-        await googleSheetsService.addMoodEntry(newEntry);
+        await googleMoodTrackingService.addMoodEntry(newEntry);
         await loadMoodData();
         toast.success('Mood entry saved to Google Sheets');
       } catch (error) {
@@ -78,9 +79,9 @@ export const useMoodTracking = () => {
   const updateMoodEntry = async (id: string, mood: number, notes?: string) => {
     if (!userId) return;
 
-    if (googleSheetsService.isConfigured() && googleSheetsService.isAuthenticated()) {
+    if (googleOAuthService.isConfigured() && googleOAuthService.isAuthenticated()) {
       try {
-        await googleSheetsService.updateMoodEntry(id, userId, { mood, notes });
+        await googleMoodTrackingService.updateMoodEntry(id, userId, { mood, notes });
         await loadMoodData();
         toast.success('Mood entry updated in Google Sheets');
       } catch (error) {
