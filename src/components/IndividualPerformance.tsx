@@ -8,7 +8,8 @@ import { RecentTasksCard } from './individual/RecentTasksCard';
 import { WeeklyOutputsProgress } from './individual/WeeklyOutputsProgress';
 import { IndividualMoodChart } from './individual/IndividualMoodChart';
 import { EmployeeData } from '@/types/individualData';
-import { localDataService } from '@/services/LocalDataService';
+import { googleSheetsService } from '@/services/GoogleSheetsService';
+import { toast } from 'sonner';
 
 export const IndividualPerformance = () => {
   const [selectedEmployee, setSelectedEmployee] = useState('');
@@ -16,19 +17,35 @@ export const IndividualPerformance = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadEmployeeData = () => {
+    const loadEmployeeData = async () => {
       setIsLoading(true);
       try {
-        // Get all team members
-        const users = localDataService.getUsers();
+        // Check if Google Sheets is configured and authenticated
+        if (!googleSheetsService.isConfigured()) {
+          toast.error('Google Sheets not configured. Please configure in Settings.');
+          setIsLoading(false);
+          return;
+        }
+
+        if (!googleSheetsService.isAuthenticated()) {
+          toast.error('Google Sheets not authenticated. Please authenticate in Settings.');
+          setIsLoading(false);
+          return;
+        }
+
+        // Get all team members from Google Sheets
+        const users = await googleSheetsService.getUsers();
         const teamMembers = users.filter(user => user.role === 'team-member');
         
         const data: Record<string, EmployeeData> = {};
         
-        teamMembers.forEach(member => {
-          const habits = localDataService.getHabits(member.id);
-          const tasks = localDataService.getTasks(member.id);
-          const outputs = localDataService.getWeeklyOutputs(member.id);
+        // Load data for each team member from Google Sheets
+        for (const member of teamMembers) {
+          const [habits, tasks, outputs] = await Promise.all([
+            googleSheetsService.getHabits(member.id),
+            googleSheetsService.getTasks(member.id),
+            googleSheetsService.getWeeklyOutputs(member.id)
+          ]);
           
           // Generate overdue items
           const today = new Date();
@@ -114,7 +131,7 @@ export const IndividualPerformance = () => {
             recentTasks,
             weeklyOutputs
           };
-        });
+        }
         
         setEmployeeData(data);
         
@@ -123,17 +140,18 @@ export const IndividualPerformance = () => {
           setSelectedEmployee(teamMembers[0].id);
         }
         
-        console.log('Employee data loaded:', data);
+        console.log('Employee data loaded from Google Sheets:', data);
         console.log('Selected employee:', selectedEmployee);
       } catch (error) {
-        console.error('Failed to load employee data:', error);
+        console.error('Failed to load employee data from Google Sheets:', error);
+        toast.error('Failed to load data from Google Sheets. Please check your configuration.');
       } finally {
         setIsLoading(false);
       }
     };
 
     loadEmployeeData();
-  }, []); // Remove selectedEmployee from dependency array to prevent infinite loops
+  }, []);
 
   // Update selected employee when it changes
   useEffect(() => {
@@ -145,7 +163,21 @@ export const IndividualPerformance = () => {
   if (isLoading) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-500">Loading employee data...</p>
+        <p className="text-gray-500">Loading employee data from Google Sheets...</p>
+      </div>
+    );
+  }
+
+  if (!googleSheetsService.isConfigured() || !googleSheetsService.isAuthenticated()) {
+    return (
+      <div className="space-y-6">
+        <EmployeeSelector 
+          selectedEmployee={selectedEmployee} 
+          onEmployeeChange={setSelectedEmployee} 
+        />
+        <div className="text-center py-8">
+          <p className="text-gray-500">Google Sheets not configured or authenticated. Please configure in Settings.</p>
+        </div>
       </div>
     );
   }
@@ -158,7 +190,7 @@ export const IndividualPerformance = () => {
           onEmployeeChange={setSelectedEmployee} 
         />
         <div className="text-center py-8">
-          <p className="text-gray-500">No team members available. Please add team members to view individual performance.</p>
+          <p className="text-gray-500">No team members available in Google Sheets. Please add team members to view individual performance.</p>
         </div>
       </div>
     );

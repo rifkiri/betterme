@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { localDataService } from '@/services/LocalDataService';
+import { googleSheetsService } from '@/services/GoogleSheetsService';
 import { Habit, Task, WeeklyOutput } from '@/types/productivity';
 import { toast } from 'sonner';
 
@@ -21,7 +21,12 @@ export const useProductivity = () => {
 
   const userId = getCurrentUserId();
 
-  // Load all data from local storage
+  // Check if Google Sheets is available
+  const isGoogleSheetsAvailable = () => {
+    return googleSheetsService.isConfigured() && googleSheetsService.isAuthenticated();
+  };
+
+  // Load all data from Google Sheets
   const loadAllData = async () => {
     if (!userId) {
       return;
@@ -29,21 +34,29 @@ export const useProductivity = () => {
 
     setIsLoading(true);
     try {
-      const [habitsData, tasksData, weeklyOutputsData] = await Promise.all([
-        Promise.resolve(localDataService.getHabits(userId)),
-        Promise.resolve(localDataService.getTasks(userId)),
-        Promise.resolve(localDataService.getWeeklyOutputs(userId))
-      ]);
+      if (isGoogleSheetsAvailable()) {
+        console.log('Loading data from Google Sheets...');
+        const [habitsData, tasksData, weeklyOutputsData] = await Promise.all([
+          googleSheetsService.getHabits(userId),
+          googleSheetsService.getTasks(userId),
+          googleSheetsService.getWeeklyOutputs(userId)
+        ]);
 
-      setHabits(habitsData.filter(h => !h.archived && !h.isDeleted));
-      setArchivedHabits(habitsData.filter(h => h.archived));
-      setTasks(tasksData.filter(t => !t.isDeleted));
-      setDeletedTasks(tasksData.filter(t => t.isDeleted));
-      setWeeklyOutputs(weeklyOutputsData.filter(w => !w.isDeleted));
-      setDeletedWeeklyOutputs(weeklyOutputsData.filter(w => w.isDeleted));
+        setHabits(habitsData.filter(h => !h.archived && !h.isDeleted));
+        setArchivedHabits(habitsData.filter(h => h.archived));
+        setTasks(tasksData.filter(t => !t.isDeleted));
+        setDeletedTasks(tasksData.filter(t => t.isDeleted));
+        setWeeklyOutputs(weeklyOutputsData.filter(w => !w.isDeleted));
+        setDeletedWeeklyOutputs(weeklyOutputsData.filter(w => w.isDeleted));
+        
+        console.log('Data loaded from Google Sheets successfully');
+      } else {
+        console.log('Google Sheets not available, data will be empty');
+        toast.error('Google Sheets not configured. Please configure in Settings.');
+      }
     } catch (error) {
-      console.error('Failed to load data:', error);
-      toast.error('Failed to load data');
+      console.error('Failed to load data from Google Sheets:', error);
+      toast.error('Failed to load data from Google Sheets');
     } finally {
       setIsLoading(false);
     }
@@ -65,9 +78,13 @@ export const useProductivity = () => {
     };
 
     try {
-      localDataService.addHabit({ ...newHabit, userId });
-      await loadAllData();
-      toast.success('Habit added successfully');
+      if (isGoogleSheetsAvailable()) {
+        await googleSheetsService.addHabit({ ...newHabit, userId });
+        await loadAllData();
+        toast.success('Habit added successfully');
+      } else {
+        toast.error('Google Sheets not available');
+      }
     } catch (error) {
       toast.error('Failed to add habit');
       setHabits(prev => [...prev, newHabit]);
@@ -78,9 +95,13 @@ export const useProductivity = () => {
     if (!userId) return;
 
     try {
-      localDataService.updateHabit(id, userId, updates);
-      await loadAllData();
-      toast.success('Habit updated successfully');
+      if (isGoogleSheetsAvailable()) {
+        await googleSheetsService.updateHabit(id, userId, updates);
+        await loadAllData();
+        toast.success('Habit updated successfully');
+      } else {
+        toast.error('Google Sheets not available');
+      }
     } catch (error) {
       toast.error('Failed to update habit');
       setHabits(prev => prev.map(habit => 
@@ -101,8 +122,12 @@ export const useProductivity = () => {
     };
 
     try {
-      localDataService.updateHabit(id, userId, updates);
-      await loadAllData();
+      if (isGoogleSheetsAvailable()) {
+        await googleSheetsService.updateHabit(id, userId, updates);
+        await loadAllData();
+      } else {
+        toast.error('Google Sheets not available');
+      }
     } catch (error) {
       toast.error('Failed to update habit');
       setHabits(prev => prev.map(habit => 
@@ -115,9 +140,13 @@ export const useProductivity = () => {
     if (!userId) return;
 
     try {
-      localDataService.updateHabit(id, userId, { archived: true });
-      await loadAllData();
-      toast.success('Habit archived');
+      if (isGoogleSheetsAvailable()) {
+        await googleSheetsService.updateHabit(id, userId, { archived: true });
+        await loadAllData();
+        toast.success('Habit archived');
+      } else {
+        toast.error('Google Sheets not available');
+      }
     } catch (error) {
       toast.error('Failed to archive habit');
       const habitToArchive = habits.find(habit => habit.id === id);
@@ -132,9 +161,13 @@ export const useProductivity = () => {
     if (!userId) return;
 
     try {
-      localDataService.updateHabit(id, userId, { archived: false });
-      await loadAllData();
-      toast.success('Habit restored');
+      if (isGoogleSheetsAvailable()) {
+        await googleSheetsService.updateHabit(id, userId, { archived: false });
+        await loadAllData();
+        toast.success('Habit restored');
+      } else {
+        toast.error('Google Sheets not available');
+      }
     } catch (error) {
       toast.error('Failed to restore habit');
       const habitToRestore = archivedHabits.find(habit => habit.id === id);
@@ -165,9 +198,13 @@ export const useProductivity = () => {
     };
 
     try {
-      localDataService.addTask({ ...newTask, userId });
-      await loadAllData();
-      toast.success('Task added successfully');
+      if (isGoogleSheetsAvailable()) {
+        await googleSheetsService.addTask({ ...newTask, userId });
+        await loadAllData();
+        toast.success('Task added successfully');
+      } else {
+        toast.error('Google Sheets not available');
+      }
     } catch (error) {
       toast.error('Failed to add task');
       setTasks(prev => [...prev, newTask]);
@@ -178,9 +215,13 @@ export const useProductivity = () => {
     if (!userId) return;
 
     try {
-      localDataService.updateTask(id, userId, updates);
-      await loadAllData();
-      toast.success('Task updated successfully');
+      if (isGoogleSheetsAvailable()) {
+        await googleSheetsService.updateTask(id, userId, updates);
+        await loadAllData();
+        toast.success('Task updated successfully');
+      } else {
+        toast.error('Google Sheets not available');
+      }
     } catch (error) {
       toast.error('Failed to update task');
       setTasks(prev => prev.map(task => 
@@ -201,8 +242,12 @@ export const useProductivity = () => {
     };
 
     try {
-      localDataService.updateTask(id, userId, updates);
-      await loadAllData();
+      if (isGoogleSheetsAvailable()) {
+        await googleSheetsService.updateTask(id, userId, updates);
+        await loadAllData();
+      } else {
+        toast.error('Google Sheets not available');
+      }
     } catch (error) {
       toast.error('Failed to update task');
       setTasks(prev => prev.map(task => 
@@ -215,9 +260,13 @@ export const useProductivity = () => {
     if (!userId) return;
 
     try {
-      localDataService.updateTask(id, userId, { isDeleted: true, deletedDate: new Date() });
-      await loadAllData();
-      toast.success('Task deleted');
+      if (isGoogleSheetsAvailable()) {
+        await googleSheetsService.updateTask(id, userId, { isDeleted: true, deletedDate: new Date() });
+        await loadAllData();
+        toast.success('Task deleted');
+      } else {
+        toast.error('Google Sheets not available');
+      }
     } catch (error) {
       toast.error('Failed to delete task');
       const taskToDelete = tasks.find(task => task.id === id);
@@ -232,9 +281,13 @@ export const useProductivity = () => {
     if (!userId) return;
 
     try {
-      localDataService.updateTask(id, userId, { isDeleted: false, deletedDate: undefined });
-      await loadAllData();
-      toast.success('Task restored');
+      if (isGoogleSheetsAvailable()) {
+        await googleSheetsService.updateTask(id, userId, { isDeleted: false, deletedDate: undefined });
+        await loadAllData();
+        toast.success('Task restored');
+      } else {
+        toast.error('Google Sheets not available');
+      }
     } catch (error) {
       toast.error('Failed to restore task');
       const taskToRestore = deletedTasks.find(task => task.id === id);
@@ -267,9 +320,13 @@ export const useProductivity = () => {
     };
 
     try {
-      localDataService.updateTask(taskId, userId, updates);
-      await loadAllData();
-      toast.success('Task moved successfully');
+      if (isGoogleSheetsAvailable()) {
+        await googleSheetsService.updateTask(taskId, userId, updates);
+        await loadAllData();
+        toast.success('Task moved successfully');
+      } else {
+        toast.error('Google Sheets not available');
+      }
     } catch (error) {
       toast.error('Failed to move task');
       setTasks(prev => prev.map(task => 
@@ -294,11 +351,15 @@ export const useProductivity = () => {
     console.log('Adding weekly output:', newOutput);
 
     try {
-      console.log('Attempting to save locally...');
-      localDataService.addWeeklyOutput({ ...newOutput, userId });
-      console.log('Successfully saved locally, reloading data...');
-      await loadAllData();
-      toast.success('Weekly output added successfully');
+      if (isGoogleSheetsAvailable()) {
+        console.log('Attempting to save to Google Sheets...');
+        await googleSheetsService.addWeeklyOutput({ ...newOutput, userId });
+        console.log('Successfully saved to Google Sheets, reloading data...');
+        await loadAllData();
+        toast.success('Weekly output added successfully');
+      } else {
+        toast.error('Google Sheets not available');
+      }
     } catch (error) {
       console.error('Failed to save weekly output:', error);
       toast.error('Failed to save weekly output: ' + (error instanceof Error ? error.message : 'Unknown error'));
@@ -315,11 +376,15 @@ export const useProductivity = () => {
     console.log('Editing weekly output:', { id, updates });
 
     try {
-      console.log('Attempting to update locally...');
-      localDataService.updateWeeklyOutput(id, userId, updates);
-      console.log('Successfully updated locally, reloading data...');
-      await loadAllData();
-      toast.success('Weekly output updated successfully');
+      if (isGoogleSheetsAvailable()) {
+        console.log('Attempting to update in Google Sheets...');
+        await googleSheetsService.updateWeeklyOutput(id, userId, updates);
+        console.log('Successfully updated in Google Sheets, reloading data...');
+        await loadAllData();
+        toast.success('Weekly output updated successfully');
+      } else {
+        toast.error('Google Sheets not available');
+      }
     } catch (error) {
       console.error('Failed to update weekly output:', error);
       toast.error('Failed to update weekly output: ' + (error instanceof Error ? error.message : 'Unknown error'));
@@ -366,9 +431,13 @@ export const useProductivity = () => {
     if (!userId) return;
 
     try {
-      localDataService.updateWeeklyOutput(id, userId, { isDeleted: true, deletedDate: new Date() });
-      await loadAllData();
-      toast.success('Weekly output deleted');
+      if (isGoogleSheetsAvailable()) {
+        await googleSheetsService.updateWeeklyOutput(id, userId, { isDeleted: true, deletedDate: new Date() });
+        await loadAllData();
+        toast.success('Weekly output deleted');
+      } else {
+        toast.error('Google Sheets not available');
+      }
     } catch (error) {
       toast.error('Failed to delete weekly output');
       const outputToDelete = weeklyOutputs.find(output => output.id === id);
@@ -383,9 +452,13 @@ export const useProductivity = () => {
     if (!userId) return;
 
     try {
-      localDataService.updateWeeklyOutput(id, userId, { isDeleted: false, deletedDate: undefined });
-      await loadAllData();
-      toast.success('Weekly output restored');
+      if (isGoogleSheetsAvailable()) {
+        await googleSheetsService.updateWeeklyOutput(id, userId, { isDeleted: false, deletedDate: undefined });
+        await loadAllData();
+        toast.success('Weekly output restored');
+      } else {
+        toast.error('Google Sheets not available');
+      }
     } catch (error) {
       toast.error('Failed to restore weekly output');
       const outputToRestore = deletedWeeklyOutputs.find(output => output.id === id);
