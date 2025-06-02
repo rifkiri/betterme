@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,7 @@ export const FeelingTracker = () => {
     if (value >= 4) return <Meh className="h-5 w-5 text-yellow-500" />;
     return <Frown className="h-5 w-5 text-red-500" />;
   };
+  
   const getFeelingText = (value: number) => {
     if (value >= 9) return "Amazing";
     if (value >= 8) return "Great";
@@ -51,16 +53,25 @@ export const FeelingTracker = () => {
     if (value >= 2) return "Poor";
     return "Terrible";
   };
+  
   const getFeelingColor = (value: number) => {
     if (value >= 8) return "text-green-600";
     if (value >= 6) return "text-blue-600";
     if (value >= 4) return "text-yellow-600";
     return "text-red-600";
   };
+  
   const handleRecordMood = async () => {
     const today = new Date().toISOString().split('T')[0];
+    console.log('Recording mood:', parseInt(feeling), 'for date:', today);
     await addMoodEntry(today, parseInt(feeling));
   };
+
+  const handleMoodChange = (value: string) => {
+    console.log('Mood selection changed to:', value);
+    setFeeling(value);
+  };
+  
   const moodOptions = [{
     value: "1",
     label: "1",
@@ -141,7 +152,7 @@ export const FeelingTracker = () => {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <RadioGroup value={feeling} onValueChange={setFeeling} className="grid grid-cols-5 gap-3 sm:grid-cols-10">
+        <RadioGroup value={feeling} onValueChange={handleMoodChange} className="grid grid-cols-5 gap-3 sm:grid-cols-10">
           {moodOptions.map(option => <div key={option.value} className="flex flex-col items-center space-y-2">
               <div className="relative">
                 <RadioGroupItem value={option.value} id={option.value} className="h-6 w-6 border-2 cursor-pointer hover:border-primary/50 transition-colors" />
