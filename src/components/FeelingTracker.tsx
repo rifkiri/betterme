@@ -136,7 +136,7 @@ export const FeelingTracker = () => {
               Select your mood on a scale of 1-10
               {hasRecordedMood && (
                 <span className="block mt-1 text-xs text-blue-600">
-                  You can change your recorded mood by selecting a new value
+                  
                 </span>
               )}
             </CardDescription>
