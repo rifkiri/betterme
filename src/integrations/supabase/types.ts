@@ -97,6 +97,39 @@ export type Database = {
           },
         ]
       }
+      pending_users: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          position: string | null
+          role: string
+          temporary_password: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          position?: string | null
+          role?: string
+          temporary_password: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          position?: string | null
+          role?: string
+          temporary_password?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

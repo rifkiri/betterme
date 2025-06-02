@@ -14,11 +14,17 @@ export class SupabaseProfilesService {
       console.error('Error fetching profiles:', profilesError);
     }
 
-    // Get pending users
+    // Get pending users - using rpc or direct query with proper type casting
     const { data: pendingData, error: pendingError } = await supabase
-      .from('pending_users')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .rpc('get_pending_users')
+      .catch(async () => {
+        // Fallback to direct query if RPC doesn't exist
+        const { data, error } = await (supabase as any)
+          .from('pending_users')
+          .select('*')
+          .order('created_at', { ascending: false });
+        return { data, error };
+      });
 
     if (pendingError) {
       console.error('Error fetching pending users:', pendingError);
@@ -43,7 +49,7 @@ export class SupabaseProfilesService {
 
     // Add pending users
     if (pendingData) {
-      users.push(...pendingData.map(pending => ({
+      users.push(...pendingData.map((pending: any) => ({
         id: pending.id,
         name: pending.name,
         email: pending.email,
@@ -61,7 +67,7 @@ export class SupabaseProfilesService {
 
   async addUser(user: User): Promise<void> {
     // Create a pending user entry that will be converted to a profile when they register
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('pending_users')
       .insert({
         id: user.id,
@@ -94,7 +100,7 @@ export class SupabaseProfilesService {
 
     // If not found in profiles, try pending_users
     if (profileError) {
-      const { error: pendingError } = await supabase
+      const { error: pendingError } = await (supabase as any)
         .from('pending_users')
         .update({
           ...(updates.name && { name: updates.name }),
@@ -121,7 +127,7 @@ export class SupabaseProfilesService {
 
     // If not found in profiles, try pending_users
     if (profileError) {
-      const { error: pendingError } = await supabase
+      const { error: pendingError } = await (supabase as any)
         .from('pending_users')
         .delete()
         .eq('id', userId);
