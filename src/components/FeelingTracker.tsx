@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Heart, Smile, Meh, Frown, Save } from 'lucide-react';
+import { Heart, Smile, Meh, Frown, Save, Edit } from 'lucide-react';
 import { useMoodTracking } from '@/hooks/useMoodTracking';
 
 export const FeelingTracker = () => {
@@ -104,6 +104,9 @@ export const FeelingTracker = () => {
   }];
 
   const currentValue = parseInt(feeling);
+  const today = new Date().toISOString().split('T')[0];
+  const todaysMood = getMoodForDate(today);
+  const hasRecordedMood = !!todaysMood;
 
   return <Card>
       <CardHeader>
@@ -115,11 +118,25 @@ export const FeelingTracker = () => {
             </CardTitle>
             <CardDescription>
               Select your mood on a scale of 1-10
+              {hasRecordedMood && (
+                <span className="block mt-1 text-xs text-blue-600">
+                  You can change your recorded mood by selecting a new value
+                </span>
+              )}
             </CardDescription>
           </div>
           <Button onClick={handleRecordMood} size="sm" className="px-4">
-            <Save className="h-4 w-4 mr-2" />
-            Record Mood
+            {hasRecordedMood ? (
+              <>
+                <Edit className="h-4 w-4 mr-2" />
+                Update Mood
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Record Mood
+              </>
+            )}
           </Button>
         </div>
       </CardHeader>
