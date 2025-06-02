@@ -37,6 +37,10 @@ export const OverdueSection = ({ overdueTasks, overdueOutputs }: OverdueSectionP
     }
   };
 
+  // Filter out items that are not actually overdue (0 days late)
+  const actuallyOverdueTasks = overdueTasks.filter(task => task.daysOverdue > 0);
+  const actuallyOverdueOutputs = overdueOutputs.filter(output => output.daysOverdue > 0);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Overdue Tasks */}
@@ -49,9 +53,9 @@ export const OverdueSection = ({ overdueTasks, overdueOutputs }: OverdueSectionP
           <CardDescription>Tasks that are past their due date</CardDescription>
         </CardHeader>
         <CardContent>
-          {overdueTasks.length > 0 ? (
+          {actuallyOverdueTasks.length > 0 ? (
             <div className="space-y-3">
-              {overdueTasks.map((task, index) => (
+              {actuallyOverdueTasks.map((task, index) => (
                 <div key={index} className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="text-sm font-medium">{task.title}</div>
@@ -80,9 +84,9 @@ export const OverdueSection = ({ overdueTasks, overdueOutputs }: OverdueSectionP
           <CardDescription>Weekly outputs that are past their due date</CardDescription>
         </CardHeader>
         <CardContent>
-          {overdueOutputs.length > 0 ? (
+          {actuallyOverdueOutputs.length > 0 ? (
             <div className="space-y-3">
-              {overdueOutputs.map((output, index) => (
+              {actuallyOverdueOutputs.map((output, index) => (
                 <div key={index} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
