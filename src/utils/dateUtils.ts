@@ -1,4 +1,4 @@
-import { format, startOfWeek, endOfWeek, isToday, addDays, isWithinInterval, isPast } from 'date-fns';
+import { format, startOfWeek, endOfWeek, isToday, addDays, isWithinInterval, isPast, isBefore, isAfter } from 'date-fns';
 
 export const getToday = () => new Date();
 
@@ -30,7 +30,9 @@ export const isWeeklyOutputOverdue = (dueDate: Date, progress: number = 0, compl
   
   // If completed, check if it was completed after the due date
   if (completedDate) {
-    return completedDate > dueDate;
+    // Use isBefore to check if due date is before completion date (meaning it's overdue)
+    // But don't mark as overdue if completed on the same day as due date
+    return isAfter(completedDate, dueDate) && !isSameDate(completedDate, dueDate);
   }
   
   // If completed but no completion date recorded, assume not overdue
