@@ -1,4 +1,3 @@
-
 import { supabaseDataService } from './SupabaseDataService';
 import { TeamData, TeamMember, OverdueTask, OverdueOutput, TeamTrends } from '@/types/teamData';
 import { User } from '@/types/userTypes';
@@ -190,33 +189,6 @@ class TeamDataService {
         outputsChange: 0
       };
     }
-  }
-
-  private getEmptyTeamData(): TeamData {
-    return {
-      totalMembers: 0,
-      activeMembers: 0,
-      teamStats: {
-        habitsCompletionRate: 0,
-        tasksCompletionRate: 0,
-        outputsCompletionRate: 0,
-        avgHabitStreak: 0,
-        teamAverageMood: 0,
-        teamMoodTrend: 'stable'
-      },
-      membersSummary: [],
-      overdueTasks: [],
-      overdueOutputs: [],
-      overdueStats: {
-        tasksCount: 0,
-        outputsCount: 0,
-        tasksTrend: 'down',
-        outputsTrend: 'down',
-        tasksChange: '0',
-        outputsChange: '0'
-      },
-      moodData: []
-    };
   }
 
   private async calculateTeamStats(teamMembers: User[]) {

@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppNavigation } from "@/components/AppNavigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,30 +7,50 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LogOut, User, Mail, Shield } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const Profile = () => {
   const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Get current user from localStorage
-  const getCurrentUser = () => {
-    const authUser = localStorage.getItem('authUser');
-    if (authUser) {
-      return JSON.parse(authUser);
+  useEffect(() => {
+    getCurrentUser();
+  }, []);
+
+  const getCurrentUser = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        navigate('/signin');
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      setCurrentUser(profile);
+    } catch (error) {
+      console.error('Error getting current user:', error);
+      navigate('/signin');
+    } finally {
+      setIsLoading(false);
     }
-    return null;
   };
 
-  const currentUser = getCurrentUser();
-
-  const handleSignOut = () => {
-    // Clear authentication data
-    localStorage.removeItem('authUser');
-    
-    // Show success message
-    toast.success('Signed out successfully');
-    
-    // Redirect to sign-in page
-    navigate('/signin');
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success('Signed out successfully');
+      navigate('/signin');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast.error('Error signing out');
+    }
   };
 
   const getRoleBadgeVariant = (role: string) => {
@@ -49,6 +69,14 @@ const Profile = () => {
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div>Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -103,6 +131,18 @@ const Profile = () => {
                     </Badge>
                   </div>
                 </div>
+
+                {currentUser.position && (
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-gray-500" />
+                        <span className="font-medium">Position</span>
+                      </div>
+                      <p className="text-gray-900">{currentUser.position}</p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
