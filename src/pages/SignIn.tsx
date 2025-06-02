@@ -84,35 +84,70 @@ const SignIn = () => {
 
         console.log('Found matching pending user, creating auth account...');
         
-        // Create the actual Supabase auth user
+        // Try to sign up first
+        let authUser = null;
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: matchingUser.email,
-          password: password, // Use the temporary password initially
+          password: password,
         });
 
         if (signUpError) {
-          console.error('Error creating auth user:', signUpError);
-          toast.error('Failed to create account: ' + signUpError.message);
-          return;
-        }
-
-        if (signUpData.user) {
-          // Update the profiles table with the pending user data
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert({
-              id: signUpData.user.id,
-              name: matchingUser.name,
+          if (signUpError.message.includes('already registered')) {
+            console.log('User already exists in auth, trying to update password...');
+            
+            // If user already exists, try to sign them in directly with admin override
+            // We'll need to update their password in the auth system
+            const { data: adminSignInData, error: adminSignInError } = await supabase.auth.signInWithPassword({
               email: matchingUser.email,
-              role: matchingUser.role as 'admin' | 'manager' | 'team-member',
-              position: matchingUser.position,
-              has_changed_password: false
+              password: password,
             });
 
-          if (profileError) {
-            console.error('Error creating profile:', profileError);
-            toast.error('Error creating profile: ' + profileError.message);
+            if (!adminSignInError && adminSignInData.user) {
+              authUser = adminSignInData.user;
+              console.log('Successfully signed in existing auth user');
+            } else {
+              console.error('Failed to sign in existing user:', adminSignInError);
+              toast.error('Account setup failed. Please contact admin.');
+              return;
+            }
+          } else {
+            console.error('Error creating auth user:', signUpError);
+            toast.error('Failed to create account: ' + signUpError.message);
             return;
+          }
+        } else if (signUpData.user) {
+          authUser = signUpData.user;
+          console.log('Successfully created new auth user');
+        }
+
+        if (authUser) {
+          // Check if profile already exists
+          const { data: existingProfile, error: profileCheckError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', authUser.id)
+            .single();
+
+          if (!existingProfile) {
+            // Create the profile
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .insert({
+                id: authUser.id,
+                name: matchingUser.name,
+                email: matchingUser.email,
+                role: matchingUser.role as 'admin' | 'manager' | 'team-member',
+                position: matchingUser.position,
+                has_changed_password: false
+              });
+
+            if (profileError) {
+              console.error('Error creating profile:', profileError);
+              toast.error('Error creating profile: ' + profileError.message);
+              return;
+            }
+          } else {
+            console.log('Profile already exists for user');
           }
 
           // Remove from pending_users table
