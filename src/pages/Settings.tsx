@@ -1,4 +1,3 @@
-
 import React from "react";
 import { AppNavigation } from "@/components/AppNavigation";
 import { Loader2, Users, Database, Settings as SettingsIcon } from "lucide-react";
@@ -40,11 +39,11 @@ const Settings = () => {
         </div>
 
         <Tabs defaultValue={profile?.role === 'admin' ? 'users' : 'data'} className="w-full">
-          <TabsList className="grid w-full h-auto p-1 bg-gray-100 rounded-lg">
+          <TabsList className="flex w-full h-auto p-1 bg-gray-100 rounded-lg overflow-x-auto">
             {profile?.role === 'admin' && (
               <TabsTrigger 
                 value="users" 
-                className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm whitespace-nowrap flex-shrink-0"
               >
                 <Users className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="hidden sm:inline">User Management</span>
@@ -53,7 +52,7 @@ const Settings = () => {
             )}
             <TabsTrigger 
               value="data" 
-              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm whitespace-nowrap flex-shrink-0"
             >
               <Database className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Data Management</span>
@@ -61,7 +60,7 @@ const Settings = () => {
             </TabsTrigger>
             <TabsTrigger 
               value="preferences" 
-              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm whitespace-nowrap flex-shrink-0"
             >
               <SettingsIcon className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Preferences</span>
