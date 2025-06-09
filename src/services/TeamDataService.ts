@@ -1,3 +1,4 @@
+
 import { supabaseDataService } from './SupabaseDataService';
 import { TeamData, TeamMember, OverdueTask, OverdueOutput, TeamTrends } from '@/types/teamData';
 import { User } from '@/types/userTypes';
@@ -29,13 +30,13 @@ class TeamDataService {
       
       console.log('User profile:', userProfile);
       
-      // Get all team members (RLS will handle filtering)
+      // Get all users (RLS will handle filtering)
       const allUsers = await supabaseDataService.getUsers();
       console.log('All users:', allUsers);
       
-      // Filter for team members only (no manager-specific filtering needed due to RLS)
-      const teamMembers = allUsers.filter(user => user.role === 'team-member');
-      console.log('Team members:', teamMembers);
+      // Include all users (managers, admins, and team members)
+      const teamMembers = allUsers.filter(user => ['manager', 'admin', 'team-member'].includes(user.role));
+      console.log('Team members (all roles):', teamMembers);
       
       if (teamMembers.length === 0) {
         console.log('No team members found, returning empty data');
