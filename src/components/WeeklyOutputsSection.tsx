@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -52,14 +53,8 @@ export const WeeklyOutputsSection = ({
   // Enhanced filtering for outputs in the selected week
   const getOutputsForSelectedWeek = () => {
     return weeklyOutputs.filter(output => {
-      // Show outputs due in this week
+      // Show outputs due in this week (regardless of completion status)
       if (output.dueDate && isWithinInterval(output.dueDate, { start: weekStart, end: weekEnd })) {
-        return true;
-      }
-      
-      // Show completed outputs that were completed in this week (even if they were originally due in a different week)
-      if (output.progress === 100 && output.completedDate && 
-          isWithinInterval(output.completedDate, { start: weekStart, end: weekEnd })) {
         return true;
       }
       
