@@ -19,6 +19,7 @@ export const SimpleEmployeeDashboard = () => {
     tasks,
     deletedTasks,
     weeklyOutputs,
+    deletedWeeklyOutputs,
     isLoading,
     handleDateChange,
     toggleHabit,
@@ -32,14 +33,18 @@ export const SimpleEmployeeDashboard = () => {
     permanentlyDeleteTask,
     addWeeklyOutput,
     editWeeklyOutput,
+    updateWeeklyOutputProgress,
     deleteWeeklyOutput,
+    restoreWeeklyOutput,
+    permanentlyDeleteWeeklyOutput,
     rollOverTask,
     moveWeeklyOutput,
     archiveHabit,
     restoreHabit,
     permanentlyDeleteHabit,
     getTasksByDate,
-    getOverdueTasks
+    getOverdueTasks,
+    getOverdueWeeklyOutputs
   } = useProductivity();
 
   const { profile } = useUserProfile();
@@ -140,10 +145,16 @@ export const SimpleEmployeeDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <WeeklyOutputsSection
           weeklyOutputs={weeklyOutputs}
+          deletedWeeklyOutputs={deletedWeeklyOutputs}
+          overdueWeeklyOutputs={getOverdueWeeklyOutputs()}
+          tasks={tasks}
           onAddWeeklyOutput={addWeeklyOutput}
           onEditWeeklyOutput={editWeeklyOutput}
-          onDeleteWeeklyOutput={deleteWeeklyOutput}
+          onUpdateProgress={updateWeeklyOutputProgress}
           onMoveWeeklyOutput={moveWeeklyOutput}
+          onDeleteWeeklyOutput={deleteWeeklyOutput}
+          onRestoreWeeklyOutput={restoreWeeklyOutput}
+          onPermanentlyDeleteWeeklyOutput={permanentlyDeleteWeeklyOutput}
         />
         
         <FeelingTracker />
