@@ -16,6 +16,7 @@ export const SimpleEmployeeDashboard = () => {
     habits,
     archivedHabits,
     tasks,
+    deletedTasks,
     weeklyOutputs,
     isLoading,
     handleDateChange,
@@ -26,14 +27,18 @@ export const SimpleEmployeeDashboard = () => {
     addTask,
     editTask,
     deleteTask,
+    restoreTask,
+    permanentlyDeleteTask,
     addWeeklyOutput,
     editWeeklyOutput,
     deleteWeeklyOutput,
-    moveTask,
+    rollOverTask,
     moveWeeklyOutput,
     archiveHabit,
     restoreHabit,
-    permanentlyDeleteHabit
+    permanentlyDeleteHabit,
+    getTasksByDate,
+    getOverdueTasks
   } = useProductivity();
 
   const { profile } = useUserProfile();
@@ -92,12 +97,16 @@ export const SimpleEmployeeDashboard = () => {
         
         <TasksSection
           tasks={tasks}
-          onToggleTask={toggleTask}
+          deletedTasks={deletedTasks}
+          overdueTasks={getOverdueTasks()}
           onAddTask={addTask}
           onEditTask={editTask}
+          onToggleTask={toggleTask}
+          onMoveTask={rollOverTask}
           onDeleteTask={deleteTask}
-          onMoveTask={moveTask}
-          selectedDate={selectedDate}
+          onRestoreTask={restoreTask}
+          onPermanentlyDeleteTask={permanentlyDeleteTask}
+          getTasksByDate={getTasksByDate}
           weeklyOutputs={weeklyOutputs}
         />
       </div>
