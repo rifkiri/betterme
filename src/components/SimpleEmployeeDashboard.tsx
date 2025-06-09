@@ -33,7 +33,7 @@ export const SimpleEmployeeDashboard = () => {
     permanentlyDeleteTask,
     addWeeklyOutput,
     editWeeklyOutput,
-    updateWeeklyOutputProgress,
+    updateProgress,
     deleteWeeklyOutput,
     restoreWeeklyOutput,
     permanentlyDeleteWeeklyOutput,
@@ -150,7 +150,7 @@ export const SimpleEmployeeDashboard = () => {
           tasks={tasks}
           onAddWeeklyOutput={addWeeklyOutput}
           onEditWeeklyOutput={editWeeklyOutput}
-          onUpdateProgress={updateWeeklyOutputProgress}
+          onUpdateProgress={updateProgress}
           onMoveWeeklyOutput={moveWeeklyOutput}
           onDeleteWeeklyOutput={deleteWeeklyOutput}
           onRestoreWeeklyOutput={restoreWeeklyOutput}
