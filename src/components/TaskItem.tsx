@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -31,11 +30,17 @@ export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteT
   useEffect(() => {
     if (task.taggedUsers && task.taggedUsers.length > 0) {
       fetchTaggedUsers();
+    } else {
+      // Clear tagged users if no tagged users exist
+      setTaggedUsers([]);
     }
-  }, [task.taggedUsers]);
+  }, [task.taggedUsers]); // Add task.taggedUsers as dependency to react to changes
 
   const fetchTaggedUsers = async () => {
-    if (!task.taggedUsers) return;
+    if (!task.taggedUsers || task.taggedUsers.length === 0) {
+      setTaggedUsers([]);
+      return;
+    }
 
     try {
       const { data, error } = await supabase
