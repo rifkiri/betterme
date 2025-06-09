@@ -29,22 +29,28 @@ class TeamDataService {
         throw new Error('User must be a manager, admin, or team member to access team data');
       }
       
-      console.log('User profile:', userProfile);
+      console.log('Current user profile:', userProfile);
       
       // Get all users (RLS will handle filtering)
       const allUsers = await supabaseDataService.getUsers();
-      console.log('All users:', allUsers);
+      console.log('All users fetched:', allUsers);
+      console.log('Number of users:', allUsers.length);
+      console.log('User roles in data:', allUsers.map(u => ({ id: u.id, name: u.name, role: u.role })));
       
       // Filter users based on current user's role
       let teamMembers: User[];
       if (userProfile.role === 'admin') {
         // Admins can see everyone including other admins
         teamMembers = allUsers.filter(user => ['manager', 'admin', 'team-member'].includes(user.role));
+        console.log('Admin view - showing all users');
       } else {
         // Managers and team members can see each other but not admins
         teamMembers = allUsers.filter(user => ['manager', 'team-member'].includes(user.role));
+        console.log('Manager/Team Member view - filtering out admins');
       }
-      console.log('Team members (filtered by role):', teamMembers);
+      
+      console.log('Final filtered team members:', teamMembers.map(u => ({ id: u.id, name: u.name, role: u.role })));
+      console.log('Number of team members after filtering:', teamMembers.length);
       
       if (teamMembers.length === 0) {
         console.log('No team members found, returning empty data');
@@ -80,6 +86,7 @@ class TeamDataService {
       };
       
       console.log('Team data assembled successfully:', result);
+      console.log('Members in summary:', result.membersSummary.map(m => ({ id: m.id, name: m.name, role: m.role })));
       return result;
     } catch (error) {
       console.error('Error loading team data:', error);
