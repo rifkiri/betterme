@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -77,8 +76,8 @@ export const WeeklyOutputsSection = ({
 
   // For current week, show incomplete rolled over outputs from previous weeks
   const rolledOverOutputs = isCurrentWeek ? overdueWeeklyOutputs.filter(output => {
-    // Only include outputs that are NOT from the current week AND not completed
-    if (!output.dueDate || output.progress === 100) return false;
+    // Only include outputs that are NOT from the current week AND not completed AND progress < 100%
+    if (!output.dueDate || output.progress >= 100) return false;
     return !isWithinInterval(output.dueDate, {
       start: weekStart,
       end: weekEnd
