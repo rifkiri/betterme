@@ -2,10 +2,11 @@
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Circle, Clock, ArrowRight, Trash2, Target } from 'lucide-react';
+import { CheckCircle, Circle, Clock, ArrowRight, Trash2, Target, Calendar } from 'lucide-react';
 import { Task, WeeklyOutput } from '@/types/productivity';
 import { MoveTaskDialog } from './MoveTaskDialog';
 import { EditTaskDialog } from './EditTaskDialog';
+import { format, isToday, isTomorrow, isPast } from 'date-fns';
 
 interface TaskItemProps {
   task: Task;
@@ -19,6 +20,23 @@ interface TaskItemProps {
 export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteTask, weeklyOutputs = [] }: TaskItemProps) => {
   const [editingTask, setEditingTask] = useState(false);
   const linkedOutput = task.weeklyOutputId ? weeklyOutputs.find(output => output.id === task.weeklyOutputId) : null;
+
+  const formatDueDate = (dueDate: Date) => {
+    if (isToday(dueDate)) {
+      return 'Today';
+    } else if (isTomorrow(dueDate)) {
+      return 'Tomorrow';
+    } else {
+      return format(dueDate, 'MMM dd');
+    }
+  };
+
+  const getDueDateColor = (dueDate: Date, completed: boolean) => {
+    if (completed) return 'text-gray-500';
+    if (isPast(dueDate) && !isToday(dueDate)) return 'text-red-500';
+    if (isToday(dueDate)) return 'text-orange-500';
+    return 'text-gray-500';
+  };
 
   return (
     <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
@@ -57,6 +75,12 @@ export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteT
             <Badge variant={task.priority === 'High' ? 'destructive' : task.priority === 'Medium' ? 'default' : 'secondary'} className="text-xs">
               {task.priority}
             </Badge>
+            {task.dueDate && (
+              <span className={`text-xs flex items-center ${getDueDateColor(task.dueDate, task.completed)}`}>
+                <Calendar className="h-3 w-3 mr-1" />
+                {formatDueDate(task.dueDate)}
+              </span>
+            )}
             {task.estimatedTime && (
               <span className="text-xs text-gray-500 flex items-center">
                 <Clock className="h-3 w-3 mr-1" />
