@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Check, X, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -113,33 +113,36 @@ export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-full p-0">
-          <Command>
+          <Command shouldFilter={false}>
             <CommandInput placeholder="Search users..." />
-            <CommandEmpty>
-              {loading ? "Loading users..." : 
-               error ? error : 
-               safeUsers.length === 0 ? "No other users found. Make sure other users are registered in the system." : 
-               "No users found."}
-            </CommandEmpty>
-            <CommandGroup className="max-h-64 overflow-auto">
-              {safeUsers.map((user) => (
-                <CommandItem
-                  key={user.id}
-                  onSelect={() => toggleUser(user.id)}
-                  className="cursor-pointer"
-                >
-                  <Check
-                    className={`mr-2 h-4 w-4 ${
-                      safeSelectedUserIds.includes(user.id) ? "opacity-100" : "opacity-0"
-                    }`}
-                  />
-                  <div className="flex flex-col">
-                    <span className="font-medium">{user.name || 'Unknown User'}</span>
-                    <span className="text-sm text-gray-500">{user.email || ''}</span>
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
+            <CommandList>
+              <CommandEmpty>
+                {loading ? "Loading users..." : 
+                 error ? error : 
+                 safeUsers.length === 0 ? "No other users found. Make sure other users are registered in the system." : 
+                 "No users found."}
+              </CommandEmpty>
+              <CommandGroup>
+                {safeUsers.map((user) => (
+                  <CommandItem
+                    key={user.id}
+                    value={user.name || 'Unknown User'}
+                    onSelect={() => toggleUser(user.id)}
+                    className="cursor-pointer"
+                  >
+                    <Check
+                      className={`mr-2 h-4 w-4 ${
+                        safeSelectedUserIds.includes(user.id) ? "opacity-100" : "opacity-0"
+                      }`}
+                    />
+                    <div className="flex flex-col">
+                      <span className="font-medium">{user.name || 'Unknown User'}</span>
+                      <span className="text-sm text-gray-500">{user.email || ''}</span>
+                    </div>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
           </Command>
         </PopoverContent>
       </Popover>
