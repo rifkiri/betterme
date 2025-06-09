@@ -23,7 +23,11 @@ export const useHabitsManager = ({
   setArchivedHabits,
 }: UseHabitsManagerProps) => {
   const addHabit = async (habit: Omit<Habit, 'id' | 'completed' | 'streak'>) => {
-    if (!userId) return;
+    if (!userId) {
+      console.log('No user ID for adding habit');
+      toast.error('Please sign in to add habits');
+      return;
+    }
 
     const newHabit: Habit = {
       ...habit,
@@ -31,6 +35,8 @@ export const useHabitsManager = ({
       completed: false,
       streak: 0,
     };
+
+    console.log('Adding habit:', newHabit);
 
     try {
       if (isSupabaseAvailable()) {
@@ -41,13 +47,19 @@ export const useHabitsManager = ({
         toast.error('Please sign in to add habits');
       }
     } catch (error) {
-      toast.error('Failed to add habit');
       console.error('Failed to add habit:', error);
+      toast.error('Failed to add habit');
     }
   };
 
   const editHabit = async (id: string, updates: Partial<Habit>) => {
-    if (!userId) return;
+    if (!userId) {
+      console.log('No user ID for editing habit');
+      toast.error('Please sign in to edit habits');
+      return;
+    }
+
+    console.log('Editing habit:', id, updates);
 
     try {
       if (isSupabaseAvailable()) {
@@ -58,32 +70,42 @@ export const useHabitsManager = ({
         toast.error('Please sign in to edit habits');
       }
     } catch (error) {
-      toast.error('Failed to update habit');
       console.error('Failed to update habit:', error);
+      toast.error('Failed to update habit');
     }
   };
 
   const toggleHabit = async (id: string) => {
-    if (!userId) return;
+    if (!userId) {
+      console.log('No user ID for toggling habit');
+      toast.error('Please sign in to update habits');
+      return;
+    }
 
     const habit = habits.find(h => h.id === id);
-    if (!habit) return;
+    if (!habit) {
+      console.log('Habit not found:', id);
+      return;
+    }
 
     const updates = {
       completed: !habit.completed,
       streak: !habit.completed ? habit.streak + 1 : Math.max(0, habit.streak - 1)
     };
 
+    console.log('Toggling habit:', id, 'from', habit.completed, 'to', updates.completed);
+
     try {
       if (isSupabaseAvailable()) {
         await supabaseDataService.updateHabit(id, userId, updates);
         await loadAllData();
+        console.log('Habit toggled successfully');
       } else {
         toast.error('Please sign in to update habits');
       }
     } catch (error) {
-      toast.error('Failed to update habit');
       console.error('Failed to update habit:', error);
+      toast.error('Failed to update habit');
     }
   };
 

@@ -16,7 +16,12 @@ export const useProductivityData = () => {
 
   // Get current user ID from Supabase auth
   const getCurrentUserId = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error) {
+      console.error('Error getting user:', error);
+      return null;
+    }
+    console.log('Current user:', user?.id);
     return user?.id || null;
   };
 
@@ -25,6 +30,7 @@ export const useProductivityData = () => {
   useEffect(() => {
     const initializeUser = async () => {
       const currentUserId = await getCurrentUserId();
+      console.log('Initialized user ID:', currentUserId);
       setUserId(currentUserId);
     };
     initializeUser();
@@ -32,7 +38,9 @@ export const useProductivityData = () => {
 
   // Check if Supabase is available
   const isSupabaseAvailable = () => {
-    return supabaseDataService.isConfigured() && userId !== null;
+    const available = supabaseDataService.isConfigured() && userId !== null;
+    console.log('Supabase available:', available, 'User ID:', userId);
+    return available;
   };
 
   // Load all data from Supabase
@@ -42,6 +50,7 @@ export const useProductivityData = () => {
       return;
     }
 
+    console.log('Loading data for user:', userId);
     setIsLoading(true);
     try {
       if (isSupabaseAvailable()) {
@@ -51,6 +60,10 @@ export const useProductivityData = () => {
           supabaseDataService.getTasks(userId),
           supabaseDataService.getWeeklyOutputs(userId)
         ]);
+
+        console.log('Loaded habits:', habitsData);
+        console.log('Loaded tasks:', tasksData);
+        console.log('Loaded weekly outputs:', weeklyOutputsData);
 
         setHabits(habitsData.filter(h => !h.archived && !h.isDeleted));
         setArchivedHabits(habitsData.filter(h => h.archived));
@@ -74,6 +87,7 @@ export const useProductivityData = () => {
 
   useEffect(() => {
     if (userId) {
+      console.log('User ID changed, loading data:', userId);
       loadAllData();
     }
   }, [userId]);
