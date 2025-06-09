@@ -1,4 +1,3 @@
-
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Calendar as CalendarIcon } from 'lucide-react';
@@ -154,7 +153,7 @@ export const TaskForm = ({
               <FormControl>
                 <UserSelector
                   selectedUserIds={field.value || []}
-                  onSelectionChange={field.onChange}
+                  onSelectionChange={(userIds) => field.onChange(userIds)}
                   currentUserId={profile?.id}
                 />
               </FormControl>

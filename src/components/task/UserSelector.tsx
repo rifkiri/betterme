@@ -14,16 +14,19 @@ interface User {
 }
 
 interface UserSelectorProps {
-  selectedUserIds: string[];
+  selectedUserIds?: string[];
   onSelectionChange: (userIds: string[]) => void;
   currentUserId?: string;
 }
 
-export const UserSelector = ({ selectedUserIds = [], onSelectionChange, currentUserId }: UserSelectorProps) => {
+export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId }: UserSelectorProps) => {
   const [open, setOpen] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Ensure selectedUserIds is always an array at the component level
+  const safeSelectedUserIds = Array.isArray(selectedUserIds) ? selectedUserIds : [];
 
   useEffect(() => {
     fetchUsers();
@@ -72,7 +75,6 @@ export const UserSelector = ({ selectedUserIds = [], onSelectionChange, currentU
   };
 
   const toggleUser = (userId: string) => {
-    const safeSelectedUserIds = Array.isArray(selectedUserIds) ? selectedUserIds : [];
     const newSelection = safeSelectedUserIds.includes(userId)
       ? safeSelectedUserIds.filter(id => id !== userId)
       : [...safeSelectedUserIds, userId];
@@ -82,7 +84,6 @@ export const UserSelector = ({ selectedUserIds = [], onSelectionChange, currentU
   };
 
   const removeUser = (userId: string) => {
-    const safeSelectedUserIds = Array.isArray(selectedUserIds) ? selectedUserIds : [];
     const newSelection = safeSelectedUserIds.filter(id => id !== userId);
     console.log('User removed:', userId, 'New selection:', newSelection);
     onSelectionChange(newSelection);
@@ -90,7 +91,6 @@ export const UserSelector = ({ selectedUserIds = [], onSelectionChange, currentU
 
   // Ensure arrays are always defined
   const safeUsers = Array.isArray(users) ? users : [];
-  const safeSelectedUserIds = Array.isArray(selectedUserIds) ? selectedUserIds : [];
   const selectedUsers = safeUsers.filter(user => safeSelectedUserIds.includes(user.id));
 
   return (
