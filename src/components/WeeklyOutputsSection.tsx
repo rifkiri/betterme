@@ -7,7 +7,7 @@ import { AddWeeklyOutputDialog } from './AddWeeklyOutputDialog';
 import { WeeklyOutputCard } from './WeeklyOutputCard';
 import { WeekNavigator } from './WeekNavigator';
 import { WeeklyOutput, Task } from '@/types/productivity';
-import { format, startOfWeek, endOfWeek, addWeeks, isWithinInterval, isSameWeek } from 'date-fns';
+import { format, startOfWeek, endOfWeek, addWeeks, isWithinInterval, isSameWeek, isBefore } from 'date-fns';
 
 interface WeeklyOutputsSectionProps {
   weeklyOutputs: WeeklyOutput[];
@@ -74,10 +74,15 @@ export const WeeklyOutputsSection = ({
 
   const weekOutputs = getOutputsForSelectedWeek();
 
-  // For current week, show incomplete rolled over outputs from previous weeks
-  const rolledOverOutputs = isCurrentWeek ? overdueWeeklyOutputs.filter(output => {
-    // Only include outputs that are NOT from the current week AND not completed AND progress < 100%
+  // For current week, show incomplete outputs from previous weeks that are truly overdue
+  const rolledOverOutputs = isCurrentWeek ? weeklyOutputs.filter(output => {
+    // Must have a due date and progress must be less than 100%
     if (!output.dueDate || output.progress >= 100) return false;
+    
+    // Must be due before today (overdue)
+    if (!isBefore(output.dueDate, today)) return false;
+    
+    // Must NOT be from the current week
     return !isWithinInterval(output.dueDate, {
       start: weekStart,
       end: weekEnd
