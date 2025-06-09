@@ -8,6 +8,7 @@ import { Habit } from '@/types/productivity';
 import { AddHabitDialog } from './AddHabitDialog';
 import { ArchivedHabitsDialog } from './ArchivedHabitsDialog';
 import { EditHabitDialog } from './EditHabitDialog';
+import { StreakDatesDialog } from './StreakDatesDialog';
 import { DateNavigator } from './DateNavigator';
 import { format, isToday } from 'date-fns';
 
@@ -38,6 +39,7 @@ export const HabitsSection = ({
 }: HabitsSectionProps) => {
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [togglingHabitId, setTogglingHabitId] = useState<string | null>(null);
+  const [streakDialogHabit, setStreakDialogHabit] = useState<Habit | null>(null);
 
   console.log('HabitsSection rendering with habits:', habits);
 
@@ -48,6 +50,12 @@ export const HabitsSection = ({
       await onToggleHabit(id);
     } finally {
       setTogglingHabitId(null);
+    }
+  };
+
+  const handleStreakClick = (habit: Habit) => {
+    if (habit.streak > 0) {
+      setStreakDialogHabit(habit);
     }
   };
 
@@ -111,7 +119,11 @@ export const HabitsSection = ({
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant={habit.streak > 0 ? 'default' : 'secondary'} className="text-xs">
+                <Badge 
+                  variant={habit.streak > 0 ? 'default' : 'secondary'} 
+                  className={`text-xs ${habit.streak > 0 ? 'cursor-pointer hover:bg-primary/80' : ''}`}
+                  onClick={() => handleStreakClick(habit)}
+                >
                   {habit.streak} day streak
                 </Badge>
                 <Button
@@ -134,6 +146,16 @@ export const HabitsSection = ({
           open={true}
           onOpenChange={(open) => !open && setEditingHabit(null)}
           onSave={onEditHabit}
+        />
+      )}
+
+      {streakDialogHabit && (
+        <StreakDatesDialog
+          habitId={streakDialogHabit.id}
+          habitName={streakDialogHabit.name}
+          streak={streakDialogHabit.streak}
+          open={true}
+          onOpenChange={(open) => !open && setStreakDialogHabit(null)}
         />
       )}
     </Card>
