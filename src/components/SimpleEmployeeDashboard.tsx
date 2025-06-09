@@ -1,163 +1,155 @@
 
-import React from "react";
-import { useProductivity } from "@/hooks/useProductivity";
-import { HabitsSection } from "./HabitsSection";
-import { TasksSection } from "./TasksSection";
-import { WeeklyOutputsSection } from "./WeeklyOutputsSection";
-import { FeelingTracker } from "./FeelingTracker";
-import { DateNavigator } from "./DateNavigator";
-import { QuickStatsCard } from "./QuickStatsCard";
-import { TeamMemberOverview } from "./team/TeamMemberOverview";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { Target, CheckSquare, TrendingUp } from "lucide-react";
+import { Target, CheckCircle, Clock, Award, Calendar } from 'lucide-react';
+import { useProductivity } from '@/hooks/useProductivity';
+import { QuickStatsCard } from './QuickStatsCard';
+import { FeelingTracker } from './FeelingTracker';
+import { HabitsSection } from './HabitsSection';
+import { WeeklyOutputsSection } from './WeeklyOutputsSection';
+import { TasksSection } from './TasksSection';
 
 export const SimpleEmployeeDashboard = () => {
+  console.log('SimpleEmployeeDashboard rendering...');
+  
   const {
-    selectedDate,
     habits,
     archivedHabits,
     tasks,
     deletedTasks,
     weeklyOutputs,
     deletedWeeklyOutputs,
-    isLoading,
+    selectedDate,
     handleDateChange,
-    toggleHabit,
-    toggleTask,
     addHabit,
     editHabit,
     addTask,
     editTask,
+    addWeeklyOutput,
+    editWeeklyOutput,
+    toggleHabit,
+    toggleTask,
     deleteTask,
     restoreTask,
     permanentlyDeleteTask,
-    addWeeklyOutput,
-    editWeeklyOutput,
-    updateProgress,
-    deleteWeeklyOutput,
-    restoreWeeklyOutput,
-    permanentlyDeleteWeeklyOutput,
-    rollOverTask,
-    moveWeeklyOutput,
     archiveHabit,
     restoreHabit,
     permanentlyDeleteHabit,
-    getTasksByDate,
+    rollOverTask,
+    getTodaysTasks,
     getOverdueTasks,
+    getTasksByDate,
+    updateProgress,
+    moveWeeklyOutput,
+    deleteWeeklyOutput,
+    restoreWeeklyOutput,
+    permanentlyDeleteWeeklyOutput,
     getOverdueWeeklyOutputs
   } = useProductivity();
 
-  const { profile } = useUserProfile();
+  console.log('Dashboard data:', {
+    habitsCount: habits.length,
+    tasksCount: tasks.length,
+    weeklyOutputsCount: weeklyOutputs.length
+  });
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your productivity data...</p>
-        </div>
-      </div>
-    );
-  }
+  const completedHabits = habits.filter(habit => habit.completed).length;
+  const todaysTasks = getTodaysTasks();
+  const overdueTasks = getOverdueTasks();
+  const overdueWeeklyOutputs = getOverdueWeeklyOutputs();
 
-  // Calculate stats for QuickStatsCard components
-  const completedHabits = habits.filter(h => h.completed).length;
-  const totalHabits = habits.length;
-  const habitCompletionRate = totalHabits > 0 ? Math.round((completedHabits / totalHabits) * 100) : 0;
+  console.log('Today tasks:', todaysTasks.length, 'Overdue tasks:', overdueTasks.length, 'Overdue weekly outputs:', overdueWeeklyOutputs.length);
 
-  const todayTasks = getTasksByDate(selectedDate);
-  const completedTasks = todayTasks.filter(t => t.completed).length;
-  const totalTasks = todayTasks.length;
-  const taskCompletionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-  const weeklyOutputsCount = weeklyOutputs.length;
+  const handleRollOver = (taskId: string, targetDate: Date) => {
+    rollOverTask(taskId, targetDate);
+  };
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">My Productivity</h1>
-        <p className="text-gray-600">Track your daily habits, tasks, and weekly outputs</p>
-      </div>
-
-      {/* Team Overview Section for Team Members */}
-      {profile?.role === 'team-member' && (
-        <div className="mb-8">
-          <TeamMemberOverview />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 p-1 sm:p-2 lg:p-4">
+      <div className="max-w-full mx-auto space-y-2 sm:space-y-4">
+        {/* Header */}
+        <div className="text-center mb-2 sm:mb-4 px-2">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">My Productivity</h1>
+          <p className="text-gray-600 text-xs sm:text-sm lg:text-base">Track your habits, manage tasks, and plan your week</p>
         </div>
-      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-        <div className="lg:col-span-3">
-          <DateNavigator selectedDate={selectedDate} onDateChange={handleDateChange} />
-        </div>
-        <div className="lg:col-span-1 grid grid-cols-1 gap-2">
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-1 sm:gap-2 lg:gap-4 mb-2 sm:mb-4 px-1 sm:px-2">
           <QuickStatsCard 
-            title="Habits"
-            value={`${habitCompletionRate}%`}
-            icon={Target}
-            gradient="bg-gradient-to-r from-green-50 to-green-100"
+            title="Habits Today" 
+            value={`${completedHabits}/${habits.length}`} 
+            icon={Target} 
+            gradient="bg-gradient-to-r from-blue-50 to-blue-100" 
           />
           <QuickStatsCard 
-            title="Tasks"
-            value={`${taskCompletionRate}%`}
-            icon={CheckSquare}
-            gradient="bg-gradient-to-r from-blue-50 to-blue-100"
+            title="Best Streak" 
+            value={Math.max(...habits.map(h => h.streak), 0).toString()} 
+            icon={Award} 
+            gradient="bg-gradient-to-r from-purple-50 to-purple-100" 
           />
           <QuickStatsCard 
-            title="Outputs"
-            value={weeklyOutputsCount.toString()}
-            icon={TrendingUp}
-            gradient="bg-gradient-to-r from-purple-50 to-purple-100"
+            title="Today's Tasks" 
+            value={`${todaysTasks.filter(t => t.completed).length}/${todaysTasks.length}`} 
+            icon={CheckCircle} 
+            gradient="bg-gradient-to-r from-green-50 to-green-100" 
+          />
+          <QuickStatsCard 
+            title="Overdue" 
+            value={(overdueTasks.length + overdueWeeklyOutputs.length).toString()} 
+            icon={Clock} 
+            gradient="bg-gradient-to-r from-orange-50 to-orange-100" 
           />
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <HabitsSection
-          habits={habits}
-          archivedHabits={archivedHabits}
-          selectedDate={selectedDate}
-          onDateChange={handleDateChange}
-          onToggleHabit={toggleHabit}
-          onAddHabit={addHabit}
-          onEditHabit={editHabit}
-          onArchiveHabit={archiveHabit}
-          onRestoreHabit={restoreHabit}
-          onPermanentlyDeleteHabit={permanentlyDeleteHabit}
-        />
-        
-        <TasksSection
-          tasks={tasks}
-          deletedTasks={deletedTasks}
-          overdueTasks={getOverdueTasks()}
-          onAddTask={addTask}
-          onEditTask={editTask}
-          onToggleTask={toggleTask}
-          onMoveTask={rollOverTask}
-          onDeleteTask={deleteTask}
-          onRestoreTask={restoreTask}
-          onPermanentlyDeleteTask={permanentlyDeleteTask}
-          getTasksByDate={getTasksByDate}
-          weeklyOutputs={weeklyOutputs}
-        />
-      </div>
+        {/* Mobile-first responsive grid */}
+        <div className="space-y-2 sm:space-y-4 lg:grid lg:grid-cols-3 lg:gap-3 xl:gap-6 lg:space-y-0">
+          <div className="lg:col-span-1 space-y-2 sm:space-y-4">
+            <FeelingTracker />
+            <HabitsSection 
+              habits={habits}
+              archivedHabits={archivedHabits}
+              selectedDate={selectedDate}
+              onDateChange={handleDateChange}
+              onAddHabit={addHabit}
+              onEditHabit={editHabit}
+              onToggleHabit={toggleHabit}
+              onArchiveHabit={archiveHabit}
+              onRestoreHabit={restoreHabit}
+              onPermanentlyDeleteHabit={permanentlyDeleteHabit}
+            />
+          </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <WeeklyOutputsSection
-          weeklyOutputs={weeklyOutputs}
-          deletedWeeklyOutputs={deletedWeeklyOutputs}
-          overdueWeeklyOutputs={getOverdueWeeklyOutputs()}
-          tasks={tasks}
-          onAddWeeklyOutput={addWeeklyOutput}
-          onEditWeeklyOutput={editWeeklyOutput}
-          onUpdateProgress={updateProgress}
-          onMoveWeeklyOutput={moveWeeklyOutput}
-          onDeleteWeeklyOutput={deleteWeeklyOutput}
-          onRestoreWeeklyOutput={restoreWeeklyOutput}
-          onPermanentlyDeleteWeeklyOutput={permanentlyDeleteWeeklyOutput}
-        />
-        
-        <FeelingTracker />
+          <div className="lg:col-span-1">
+            <WeeklyOutputsSection 
+              weeklyOutputs={weeklyOutputs}
+              deletedWeeklyOutputs={deletedWeeklyOutputs}
+              overdueWeeklyOutputs={overdueWeeklyOutputs}
+              tasks={tasks}
+              onAddWeeklyOutput={addWeeklyOutput}
+              onEditWeeklyOutput={editWeeklyOutput}
+              onUpdateProgress={updateProgress}
+              onMoveWeeklyOutput={moveWeeklyOutput}
+              onDeleteWeeklyOutput={deleteWeeklyOutput}
+              onRestoreWeeklyOutput={restoreWeeklyOutput}
+              onPermanentlyDeleteWeeklyOutput={permanentlyDeleteWeeklyOutput}
+            />
+          </div>
+
+          <div className="lg:col-span-1">
+            <TasksSection 
+              tasks={tasks}
+              deletedTasks={deletedTasks}
+              overdueTasks={overdueTasks}
+              onAddTask={addTask}
+              onEditTask={editTask}
+              onToggleTask={toggleTask}
+              onMoveTask={handleRollOver}
+              onDeleteTask={deleteTask}
+              onRestoreTask={restoreTask}
+              onPermanentlyDeleteTask={permanentlyDeleteTask}
+              getTasksByDate={getTasksByDate}
+              weeklyOutputs={weeklyOutputs}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
