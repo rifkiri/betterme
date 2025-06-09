@@ -19,7 +19,7 @@ interface UserSelectorProps {
   currentUserId?: string;
 }
 
-export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId }: UserSelectorProps) => {
+export const UserSelector = ({ selectedUserIds = [], onSelectionChange, currentUserId }: UserSelectorProps) => {
   const [open, setOpen] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
@@ -53,37 +53,44 @@ export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId
         return;
       }
 
-      // Filter out current user if provided
+      // Ensure data is an array and filter out current user if provided
+      const safeData = Array.isArray(data) ? data : [];
       const filteredUsers = currentUserId ? 
-        (data || []).filter(user => user.id !== currentUserId) : 
-        (data || []);
+        safeData.filter(user => user.id !== currentUserId) : 
+        safeData;
       
       console.log('Filtered users:', filteredUsers);
       setUsers(filteredUsers);
     } catch (error) {
       console.error('Error fetching users:', error);
       setError('Failed to load users');
+      setUsers([]); // Ensure users is always an array
     } finally {
       setLoading(false);
     }
   };
 
   const toggleUser = (userId: string) => {
-    const newSelection = selectedUserIds.includes(userId)
-      ? selectedUserIds.filter(id => id !== userId)
-      : [...selectedUserIds, userId];
+    const safeSelectedUserIds = Array.isArray(selectedUserIds) ? selectedUserIds : [];
+    const newSelection = safeSelectedUserIds.includes(userId)
+      ? safeSelectedUserIds.filter(id => id !== userId)
+      : [...safeSelectedUserIds, userId];
     
     console.log('User selection changed:', newSelection);
     onSelectionChange(newSelection);
   };
 
   const removeUser = (userId: string) => {
-    const newSelection = selectedUserIds.filter(id => id !== userId);
+    const safeSelectedUserIds = Array.isArray(selectedUserIds) ? selectedUserIds : [];
+    const newSelection = safeSelectedUserIds.filter(id => id !== userId);
     console.log('User removed:', userId, 'New selection:', newSelection);
     onSelectionChange(newSelection);
   };
 
-  const selectedUsers = users.filter(user => selectedUserIds.includes(user.id));
+  // Ensure arrays are always defined
+  const safeUsers = Array.isArray(users) ? users : [];
+  const safeSelectedUserIds = Array.isArray(selectedUserIds) ? selectedUserIds : [];
+  const selectedUsers = safeUsers.filter(user => safeSelectedUserIds.includes(user.id));
 
   return (
     <div className="space-y-2">
@@ -97,9 +104,9 @@ export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId
           >
             <span className="flex items-center gap-2">
               <Users className="h-4 w-4" />
-              {selectedUserIds.length === 0 
+              {safeSelectedUserIds.length === 0 
                 ? "Tag users for support..." 
-                : `${selectedUserIds.length} user${selectedUserIds.length > 1 ? 's' : ''} tagged`
+                : `${safeSelectedUserIds.length} user${safeSelectedUserIds.length > 1 ? 's' : ''} tagged`
               }
             </span>
           </Button>
@@ -110,28 +117,30 @@ export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId
             <CommandEmpty>
               {loading ? "Loading users..." : 
                error ? error : 
-               users.length === 0 ? "No other users found. Make sure other users are registered in the system." : 
+               safeUsers.length === 0 ? "No other users found. Make sure other users are registered in the system." : 
                "No users found."}
             </CommandEmpty>
-            <CommandGroup className="max-h-64 overflow-auto">
-              {users.map((user) => (
-                <CommandItem
-                  key={user.id}
-                  onSelect={() => toggleUser(user.id)}
-                  className="cursor-pointer"
-                >
-                  <Check
-                    className={`mr-2 h-4 w-4 ${
-                      selectedUserIds.includes(user.id) ? "opacity-100" : "opacity-0"
-                    }`}
-                  />
-                  <div className="flex flex-col">
-                    <span className="font-medium">{user.name}</span>
-                    <span className="text-sm text-gray-500">{user.email}</span>
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
+            {safeUsers.length > 0 && (
+              <CommandGroup className="max-h-64 overflow-auto">
+                {safeUsers.map((user) => (
+                  <CommandItem
+                    key={user.id}
+                    onSelect={() => toggleUser(user.id)}
+                    className="cursor-pointer"
+                  >
+                    <Check
+                      className={`mr-2 h-4 w-4 ${
+                        safeSelectedUserIds.includes(user.id) ? "opacity-100" : "opacity-0"
+                      }`}
+                    />
+                    <div className="flex flex-col">
+                      <span className="font-medium">{user.name || 'Unknown User'}</span>
+                      <span className="text-sm text-gray-500">{user.email || ''}</span>
+                    </div>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
           </Command>
         </PopoverContent>
       </Popover>
@@ -141,7 +150,7 @@ export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId
           {selectedUsers.map((user) => (
             <Badge key={user.id} variant="secondary" className="flex items-center gap-1">
               <Users className="h-3 w-3" />
-              {user.name}
+              {user.name || 'Unknown User'}
               <Button
                 variant="ghost"
                 size="sm"
