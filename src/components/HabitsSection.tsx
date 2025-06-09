@@ -8,10 +8,14 @@ import { Habit } from '@/types/productivity';
 import { AddHabitDialog } from './AddHabitDialog';
 import { ArchivedHabitsDialog } from './ArchivedHabitsDialog';
 import { EditHabitDialog } from './EditHabitDialog';
+import { DateNavigator } from './DateNavigator';
+import { format, isToday } from 'date-fns';
 
 interface HabitsSectionProps {
   habits: Habit[];
   archivedHabits: Habit[];
+  selectedDate: Date;
+  onDateChange: (date: Date) => void;
   onAddHabit: (habit: { name: string; description?: string; category?: string }) => void;
   onEditHabit: (id: string, updates: Partial<Habit>) => void;
   onToggleHabit: (id: string) => void;
@@ -23,6 +27,8 @@ interface HabitsSectionProps {
 export const HabitsSection = ({ 
   habits, 
   archivedHabits,
+  selectedDate,
+  onDateChange,
   onAddHabit,
   onEditHabit,
   onToggleHabit, 
@@ -45,12 +51,18 @@ export const HabitsSection = ({
     }
   };
 
+  const today = isToday(selectedDate);
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Daily Habits</CardTitle>
-          <CardDescription>Build your streaks</CardDescription>
+          <CardTitle>
+            {today ? 'Daily Habits' : `Habits for ${format(selectedDate, 'MMM d, yyyy')}`}
+          </CardTitle>
+          <CardDescription>
+            {today ? 'Build your streaks' : 'View and track past habits'}
+          </CardDescription>
         </div>
         <div className="flex items-center gap-2">
           <ArchivedHabitsDialog 
@@ -62,6 +74,11 @@ export const HabitsSection = ({
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
+        <DateNavigator 
+          selectedDate={selectedDate} 
+          onDateChange={onDateChange} 
+        />
+        
         {habits.length === 0 ? (
           <div className="text-center py-4 text-gray-500">
             <p>No habits yet. Add your first habit to start building streaks!</p>

@@ -1,4 +1,3 @@
-
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { Habit } from '@/types/productivity';
 import { toast } from 'sonner';
@@ -6,11 +5,12 @@ import { toast } from 'sonner';
 interface UseHabitsManagerProps {
   userId: string | null;
   isGoogleSheetsAvailable: () => boolean;
-  loadAllData: () => Promise<void>;
+  loadAllData: (date?: Date) => Promise<void>;
   habits: Habit[];
   setHabits: (habits: Habit[] | ((prev: Habit[]) => Habit[])) => void;
   archivedHabits: Habit[];
   setArchivedHabits: (habits: Habit[] | ((prev: Habit[]) => Habit[])) => void;
+  selectedDate: Date;
 }
 
 export const useHabitsManager = ({
@@ -21,6 +21,7 @@ export const useHabitsManager = ({
   setHabits,
   archivedHabits,
   setArchivedHabits,
+  selectedDate,
 }: UseHabitsManagerProps) => {
   const addHabit = async (habit: Omit<Habit, 'id' | 'completed' | 'streak'>) => {
     if (!userId) {
@@ -88,17 +89,14 @@ export const useHabitsManager = ({
       return;
     }
 
-    const updates = {
-      completed: !habit.completed,
-      streak: !habit.completed ? habit.streak + 1 : Math.max(0, habit.streak - 1)
-    };
+    const newCompleted = !habit.completed;
 
-    console.log('Toggling habit:', id, 'from', habit.completed, 'to', updates.completed);
+    console.log('Toggling habit:', id, 'from', habit.completed, 'to', newCompleted, 'for date:', selectedDate);
 
     try {
       if (isSupabaseAvailable()) {
-        await supabaseDataService.updateHabit(id, userId, updates);
-        await loadAllData();
+        await supabaseDataService.toggleHabitForDate(id, userId, selectedDate, newCompleted);
+        await loadAllData(selectedDate);
         console.log('Habit toggled successfully');
       } else {
         toast.error('Please sign in to update habits');

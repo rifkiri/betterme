@@ -17,6 +17,8 @@ export const SimpleEmployeeDashboard = () => {
     deletedTasks,
     weeklyOutputs,
     deletedWeeklyOutputs,
+    selectedDate,
+    handleDateChange,
     addHabit,
     editHabit,
     addTask,
@@ -104,6 +106,8 @@ export const SimpleEmployeeDashboard = () => {
             <HabitsSection 
               habits={habits}
               archivedHabits={archivedHabits}
+              selectedDate={selectedDate}
+              onDateChange={handleDateChange}
               onAddHabit={addHabit}
               onEditHabit={editHabit}
               onToggleHabit={toggleHabit}

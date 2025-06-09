@@ -1,4 +1,3 @@
-
 import { supabaseProfilesService } from './SupabaseProfilesService';
 import { supabaseHabitsService } from './SupabaseHabitsService';
 import { supabaseTasksService } from './SupabaseTasksService';
@@ -28,12 +27,20 @@ export class SupabaseDataService {
     return await supabaseHabitsService.getHabits(userId);
   }
 
+  async getHabitsForDate(userId: string, date: Date) {
+    return await supabaseHabitsService.getHabitsForDate(userId, date);
+  }
+
   async addHabit(habit: any) {
     return await supabaseHabitsService.addHabit(habit);
   }
 
   async updateHabit(id: string, userId: string, updates: any) {
     return await supabaseHabitsService.updateHabit(id, userId, updates);
+  }
+
+  async toggleHabitForDate(habitId: string, userId: string, date: Date, completed: boolean) {
+    return await supabaseHabitsService.toggleHabitForDate(habitId, userId, date, completed);
   }
 
   // Tasks management

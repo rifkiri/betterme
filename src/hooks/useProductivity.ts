@@ -1,4 +1,3 @@
-
 import { useProductivityData } from './useProductivityData';
 import { useHabitsManager } from './useHabitsManager';
 import { useTasksManager } from './useTasksManager';
@@ -17,6 +16,7 @@ export const useProductivity = () => {
     setHabits: productivityData.setHabits,
     archivedHabits: productivityData.archivedHabits,
     setArchivedHabits: productivityData.setArchivedHabits,
+    selectedDate: productivityData.selectedDate,
   });
 
   const tasksManager = useTasksManager({
@@ -51,9 +51,11 @@ export const useProductivity = () => {
     weeklyOutputs: productivityData.weeklyOutputs,
     deletedWeeklyOutputs: productivityData.deletedWeeklyOutputs,
     isLoading: productivityData.isLoading,
+    selectedDate: productivityData.selectedDate,
     
     // Methods
     loadAllData: productivityData.loadAllData,
+    handleDateChange: productivityData.handleDateChange,
     
     // Habits
     ...habitsManager,

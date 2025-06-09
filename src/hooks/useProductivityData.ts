@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { Habit, Task, WeeklyOutput } from '@/types/productivity';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
 
 export const useProductivityData = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -13,6 +13,7 @@ export const useProductivityData = () => {
   const [deletedTasks, setDeletedTasks] = useState<Task[]>([]);
   const [deletedWeeklyOutputs, setDeletedWeeklyOutputs] = useState<WeeklyOutput[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   // Get current user ID from Supabase auth
   const getCurrentUserId = async () => {
@@ -44,24 +45,25 @@ export const useProductivityData = () => {
   };
 
   // Load all data from Supabase
-  const loadAllData = async () => {
+  const loadAllData = async (date?: Date) => {
     if (!userId) {
       console.log('No user ID found, cannot load data');
       return;
     }
 
-    console.log('Loading data for user:', userId);
+    const targetDate = date || selectedDate;
+    console.log('Loading data for user:', userId, 'date:', format(targetDate, 'yyyy-MM-dd'));
     setIsLoading(true);
     try {
       if (isSupabaseAvailable()) {
         console.log('Loading data from Supabase...');
         const [habitsData, tasksData, weeklyOutputsData] = await Promise.all([
-          supabaseDataService.getHabits(userId),
+          supabaseDataService.getHabitsForDate(userId, targetDate),
           supabaseDataService.getTasks(userId),
           supabaseDataService.getWeeklyOutputs(userId)
         ]);
 
-        console.log('Loaded habits:', habitsData);
+        console.log('Loaded habits for date:', habitsData);
         console.log('Loaded tasks:', tasksData);
         console.log('Loaded weekly outputs:', weeklyOutputsData);
 
@@ -87,10 +89,14 @@ export const useProductivityData = () => {
 
   useEffect(() => {
     if (userId) {
-      console.log('User ID changed, loading data:', userId);
-      loadAllData();
+      console.log('User ID or date changed, loading data:', userId, format(selectedDate, 'yyyy-MM-dd'));
+      loadAllData(selectedDate);
     }
-  }, [userId]);
+  }, [userId, selectedDate]);
+
+  const handleDateChange = (date: Date) => {
+    setSelectedDate(date);
+  };
 
   return {
     // State
@@ -107,10 +113,12 @@ export const useProductivityData = () => {
     deletedWeeklyOutputs,
     setDeletedWeeklyOutputs,
     isLoading,
+    selectedDate,
     
     // Utils
     userId,
     isGoogleSheetsAvailable: isSupabaseAvailable, // Keep same interface
     loadAllData,
+    handleDateChange,
   };
 };
