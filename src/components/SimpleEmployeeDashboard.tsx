@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useProductivityData } from "@/hooks/useProductivityData";
+import { useProductivity } from "@/hooks/useProductivity";
 import { HabitsSection } from "./HabitsSection";
 import { TasksSection } from "./TasksSection";
 import { WeeklyOutputsSection } from "./WeeklyOutputsSection";
@@ -12,12 +12,13 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 
 export const SimpleEmployeeDashboard = () => {
   const {
-    currentDate,
+    selectedDate,
     habits,
+    archivedHabits,
     tasks,
     weeklyOutputs,
     isLoading,
-    navigateDate,
+    handleDateChange,
     toggleHabit,
     toggleTask,
     addHabit,
@@ -29,8 +30,11 @@ export const SimpleEmployeeDashboard = () => {
     editWeeklyOutput,
     deleteWeeklyOutput,
     moveTask,
-    moveWeeklyOutput
-  } = useProductivityData();
+    moveWeeklyOutput,
+    archiveHabit,
+    restoreHabit,
+    permanentlyDeleteHabit
+  } = useProductivity();
 
   const { profile } = useUserProfile();
 
@@ -61,7 +65,7 @@ export const SimpleEmployeeDashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
         <div className="lg:col-span-3">
-          <DateNavigator currentDate={currentDate} onNavigate={navigateDate} />
+          <DateNavigator selectedDate={selectedDate} onDateChange={handleDateChange} />
         </div>
         <div className="lg:col-span-1">
           <QuickStatsCard 
@@ -75,10 +79,15 @@ export const SimpleEmployeeDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <HabitsSection
           habits={habits}
+          archivedHabits={archivedHabits}
+          selectedDate={selectedDate}
+          onDateChange={handleDateChange}
           onToggleHabit={toggleHabit}
           onAddHabit={addHabit}
           onEditHabit={editHabit}
-          currentDate={currentDate}
+          onArchiveHabit={archiveHabit}
+          onRestoreHabit={restoreHabit}
+          onPermanentlyDeleteHabit={permanentlyDeleteHabit}
         />
         
         <TasksSection
@@ -88,7 +97,7 @@ export const SimpleEmployeeDashboard = () => {
           onEditTask={editTask}
           onDeleteTask={deleteTask}
           onMoveTask={moveTask}
-          currentDate={currentDate}
+          selectedDate={selectedDate}
           weeklyOutputs={weeklyOutputs}
         />
       </div>
@@ -100,10 +109,10 @@ export const SimpleEmployeeDashboard = () => {
           onEditWeeklyOutput={editWeeklyOutput}
           onDeleteWeeklyOutput={deleteWeeklyOutput}
           onMoveWeeklyOutput={moveWeeklyOutput}
-          currentDate={currentDate}
+          selectedDate={selectedDate}
         />
         
-        <FeelingTracker currentDate={currentDate} />
+        <FeelingTracker selectedDate={selectedDate} />
       </div>
     </div>
   );
