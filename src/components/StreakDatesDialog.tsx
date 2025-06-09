@@ -40,9 +40,9 @@ export const StreakDatesDialog = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Get the last 'streak' number of days to find completion dates
+      // Get completion data for a wider range to find the most recent completion and work backwards
       const endDate = new Date();
-      const startDate = subDays(endDate, streak + 5); // Get a few extra days to be safe
+      const startDate = subDays(endDate, streak + 10); // Get extra days to be safe
 
       const { data, error } = await supabase
         .from('habit_completions')
@@ -58,9 +58,31 @@ export const StreakDatesDialog = ({
         return;
       }
 
-      // Calculate consecutive days from today backwards
+      // Find the most recent completion date and work backwards
+      let mostRecentCompletionDate: Date | null = null;
+      
+      // First, find the most recent completion (could be today or in the past)
+      for (let i = 0; i <= 365; i++) {
+        const checkDate = subDays(new Date(), i);
+        const dateStr = format(checkDate, 'yyyy-MM-dd');
+        const hasCompletion = data?.some((completion: CompletionDate) => 
+          completion.completed_date === dateStr
+        );
+        
+        if (hasCompletion) {
+          mostRecentCompletionDate = checkDate;
+          break;
+        }
+      }
+
+      if (!mostRecentCompletionDate) {
+        setStreakDates([]);
+        return;
+      }
+
+      // Now calculate consecutive days backwards from the most recent completion
       const dates: Date[] = [];
-      let currentDate = new Date(); // Start from today
+      let currentDate = new Date(mostRecentCompletionDate);
       
       for (let i = 0; i < streak; i++) {
         const dateStr = format(currentDate, 'yyyy-MM-dd');
