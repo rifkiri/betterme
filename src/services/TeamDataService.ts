@@ -1,4 +1,5 @@
 
+
 import { supabaseDataService } from './SupabaseDataService';
 import { TeamData, TeamMember, OverdueTask, OverdueOutput, TeamTrends } from '@/types/teamData';
 import { User } from '@/types/userTypes';
@@ -34,9 +35,16 @@ class TeamDataService {
       const allUsers = await supabaseDataService.getUsers();
       console.log('All users:', allUsers);
       
-      // Include all users (managers, admins, and team members)
-      const teamMembers = allUsers.filter(user => ['manager', 'admin', 'team-member'].includes(user.role));
-      console.log('Team members (all roles):', teamMembers);
+      // Filter users based on current user's role
+      let teamMembers: User[];
+      if (userProfile.role === 'admin') {
+        // Admins can see everyone including other admins
+        teamMembers = allUsers.filter(user => ['manager', 'admin', 'team-member'].includes(user.role));
+      } else {
+        // Managers and team members can see each other but not admins
+        teamMembers = allUsers.filter(user => ['manager', 'team-member'].includes(user.role));
+      }
+      console.log('Team members (filtered by role):', teamMembers);
       
       if (teamMembers.length === 0) {
         console.log('No team members found, returning empty data');
