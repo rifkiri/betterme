@@ -23,6 +23,7 @@ export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId
   const [open, setOpen] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -30,21 +31,38 @@ export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId
 
   const fetchUsers = async () => {
     setLoading(true);
+    setError(null);
+    
     try {
+      console.log('Fetching users for tagging...');
+      
+      // First try to get current user to check if we have access
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      console.log('Current user:', currentUser?.id);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('id, name, email')
-        .eq('user_status', 'active')
-        .neq('id', currentUserId || ''); // Exclude current user
+        .eq('user_status', 'active');
+
+      console.log('Profiles query result:', { data, error });
 
       if (error) {
         console.error('Error fetching users:', error);
+        setError(`Failed to load users: ${error.message}`);
         return;
       }
 
-      setUsers(data || []);
+      // Filter out current user if provided
+      const filteredUsers = currentUserId ? 
+        (data || []).filter(user => user.id !== currentUserId) : 
+        (data || []);
+      
+      console.log('Filtered users:', filteredUsers);
+      setUsers(filteredUsers);
     } catch (error) {
       console.error('Error fetching users:', error);
+      setError('Failed to load users');
     } finally {
       setLoading(false);
     }
@@ -55,11 +73,14 @@ export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId
       ? selectedUserIds.filter(id => id !== userId)
       : [...selectedUserIds, userId];
     
+    console.log('User selection changed:', newSelection);
     onSelectionChange(newSelection);
   };
 
   const removeUser = (userId: string) => {
-    onSelectionChange(selectedUserIds.filter(id => id !== userId));
+    const newSelection = selectedUserIds.filter(id => id !== userId);
+    console.log('User removed:', userId, 'New selection:', newSelection);
+    onSelectionChange(newSelection);
   };
 
   const selectedUsers = users.filter(user => selectedUserIds.includes(user.id));
@@ -87,7 +108,10 @@ export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId
           <Command>
             <CommandInput placeholder="Search users..." />
             <CommandEmpty>
-              {loading ? "Loading users..." : "No users found."}
+              {loading ? "Loading users..." : 
+               error ? error : 
+               users.length === 0 ? "No other users found. Make sure other users are registered in the system." : 
+               "No users found."}
             </CommandEmpty>
             <CommandGroup className="max-h-64 overflow-auto">
               {users.map((user) => (
@@ -129,6 +153,12 @@ export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId
             </Badge>
           ))}
         </div>
+      )}
+      
+      {error && (
+        <p className="text-sm text-red-500 mt-2">
+          {error}
+        </p>
       )}
     </div>
   );
