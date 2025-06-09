@@ -25,9 +25,18 @@ export const isTaskOverdue = (taskDate: Date) => {
 export const isWeeklyOutputOverdue = (dueDate: Date, progress: number = 0, completedDate?: Date, createdDate?: Date) => {
   const today = getToday();
   
+  console.log('Checking overdue status:', { 
+    dueDate: format(dueDate, 'yyyy-MM-dd'), 
+    progress, 
+    completedDate: completedDate ? format(completedDate, 'yyyy-MM-dd') : 'none',
+    createdDate: createdDate ? format(createdDate, 'yyyy-MM-dd') : 'none'
+  });
+  
   // If not completed yet, check if past due date (but not including today)
   if (progress < 100) {
-    return isBefore(dueDate, today) && !isToday(dueDate);
+    const isOverdue = isBefore(dueDate, today) && !isToday(dueDate);
+    console.log('Not completed, overdue:', isOverdue);
+    return isOverdue;
   }
   
   // If completed, check if it was completed after the due date
@@ -35,15 +44,19 @@ export const isWeeklyOutputOverdue = (dueDate: Date, progress: number = 0, compl
     // Special case: if the output was completed in the same week it was created,
     // don't mark it as overdue (provides flexibility for users who forgot to mark it)
     if (createdDate && isSameWeek(completedDate, createdDate, { weekStartsOn: 1 })) {
+      console.log('Completed in same week as created, not overdue');
       return false;
     }
     
     // Use isBefore to check if due date is before completion date (meaning it's overdue)
     // But don't mark as overdue if completed on the same day as due date
-    return isAfter(completedDate, dueDate) && !isSameDate(completedDate, dueDate);
+    const isOverdue = isAfter(completedDate, dueDate) && !isSameDate(completedDate, dueDate);
+    console.log('Completed after due date check:', isOverdue);
+    return isOverdue;
   }
   
   // If completed but no completion date recorded, assume not overdue
+  console.log('Completed but no completion date, not overdue');
   return false;
 };
 

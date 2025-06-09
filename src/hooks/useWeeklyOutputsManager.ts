@@ -85,10 +85,14 @@ export const useWeeklyOutputsManager = ({
     const newProgressValue = Math.max(0, Math.min(100, newProgress));
     const updates: Partial<WeeklyOutput> = { progress: newProgressValue };
 
+    console.log('Updating progress:', { outputId, newProgress: newProgressValue, currentProgress: output.progress });
+
     if (newProgressValue === 100 && output.progress < 100) {
       updates.completedDate = new Date();
+      console.log('Setting completedDate to:', updates.completedDate);
     } else if (newProgressValue < 100 && output.progress === 100) {
       updates.completedDate = undefined;
+      console.log('Removing completedDate');
     }
 
     await editWeeklyOutput(outputId, updates);
