@@ -1,5 +1,5 @@
 
-import { format, startOfWeek, endOfWeek, isToday, addDays, isWithinInterval, isPast, isBefore, isAfter, isSameWeek } from 'date-fns';
+import { format, startOfWeek, endOfWeek, isToday, addDays, isWithinInterval, isPast, isBefore, isAfter, isSameWeek, differenceInDays } from 'date-fns';
 
 export const getToday = () => new Date();
 
@@ -40,11 +40,14 @@ export const isWeeklyOutputOverdue = (dueDate: Date, progress: number = 0, compl
   }
   
   // If completed, check if it was completed after the due date
-  if (completedDate) {
-    // Special case: if the output was completed in the same week it was created,
-    // don't mark it as overdue (provides flexibility for users who forgot to mark it)
-    if (createdDate && isSameWeek(completedDate, createdDate, { weekStartsOn: 1 })) {
-      console.log('Completed in same week as created, not overdue');
+  if (completedDate && createdDate) {
+    // More flexible approach: if the output was completed within a reasonable time frame
+    // from its creation (within 7 days), don't mark it as overdue
+    // This provides flexibility for users who complete tasks in the week they were created
+    const daysBetweenCreationAndCompletion = differenceInDays(completedDate, createdDate);
+    
+    if (daysBetweenCreationAndCompletion <= 7) {
+      console.log('Completed within 7 days of creation, not overdue');
       return false;
     }
     
