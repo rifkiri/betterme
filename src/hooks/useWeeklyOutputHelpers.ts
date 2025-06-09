@@ -6,7 +6,7 @@ export const useWeeklyOutputHelpers = (weeklyOutputs: WeeklyOutput[]) => {
   const getOverdueWeeklyOutputs = () => {
     return weeklyOutputs.filter(output => 
       output.dueDate && 
-      isWeeklyOutputOverdue(output.dueDate, output.progress, output.completedDate) && 
+      isWeeklyOutputOverdue(output.dueDate, output.progress, output.completedDate, output.createdDate) && 
       !output.completedDate
     );
   };

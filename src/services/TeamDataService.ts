@@ -382,7 +382,7 @@ class TeamDataService {
         // Get overdue outputs
         const outputs = await supabaseDataService.getWeeklyOutputs(member.id);
         outputs.forEach(output => {
-          if (!output.isDeleted && output.dueDate && isWeeklyOutputOverdue(output.dueDate, output.progress, output.completedDate)) {
+          if (!output.isDeleted && output.dueDate && isWeeklyOutputOverdue(output.dueDate, output.progress, output.completedDate, output.createdDate)) {
             const daysOverdue = Math.floor((today.getTime() - output.dueDate.getTime()) / (1000 * 60 * 60 * 24));
             overdueOutputs.push({
               id: output.id,
