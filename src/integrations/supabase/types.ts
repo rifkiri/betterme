@@ -187,6 +187,7 @@ export type Database = {
           is_moved: boolean
           original_due_date: string | null
           priority: Database["public"]["Enums"]["task_priority"] | null
+          tagged_users: string[] | null
           title: string
           updated_at: string
           user_id: string
@@ -204,6 +205,7 @@ export type Database = {
           is_moved?: boolean
           original_due_date?: string | null
           priority?: Database["public"]["Enums"]["task_priority"] | null
+          tagged_users?: string[] | null
           title: string
           updated_at?: string
           user_id: string
@@ -221,6 +223,7 @@ export type Database = {
           is_moved?: boolean
           original_due_date?: string | null
           priority?: Database["public"]["Enums"]["task_priority"] | null
+          tagged_users?: string[] | null
           title?: string
           updated_at?: string
           user_id?: string

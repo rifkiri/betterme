@@ -29,7 +29,7 @@ export class SupabaseTasksService {
       deletedDate: task.deleted_date ? new Date(task.deleted_date) : undefined,
       createdDate: new Date(task.created_date),
       weeklyOutputId: task.weekly_output_id,
-      taggedUsers: task.tagged_users || []
+      taggedUsers: (task as any).tagged_users || []
     }));
   }
 
