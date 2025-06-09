@@ -1,4 +1,3 @@
-
 import { supabaseDataService } from './SupabaseDataService';
 import { TeamData, TeamMember, OverdueTask, OverdueOutput, TeamTrends } from '@/types/teamData';
 import { User } from '@/types/userTypes';
@@ -6,29 +5,29 @@ import { supabase } from '@/integrations/supabase/client';
 import { isTaskOverdue, isWeeklyOutputOverdue } from '@/utils/dateUtils';
 
 class TeamDataService {
-  // Get current manager's team data
+  // Get current user's team data (works for managers, admins, and team members)
   async getCurrentManagerTeamData(): Promise<TeamData> {
     try {
       console.log('Starting to fetch team data...');
       
-      // Get current manager's ID
+      // Get current user's ID
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         throw new Error('No authenticated user found');
       }
       
-      // Get current manager's profile to verify they are a manager or admin
-      const { data: managerProfile } = await supabase
+      // Get current user's profile to verify they have access
+      const { data: userProfile } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
       
-      if (!managerProfile || !['manager', 'admin'].includes(managerProfile.role)) {
-        throw new Error('User must be a manager or admin to access team data');
+      if (!userProfile || !['manager', 'admin', 'team-member'].includes(userProfile.role)) {
+        throw new Error('User must be a manager, admin, or team member to access team data');
       }
       
-      console.log('Manager/Admin profile:', managerProfile);
+      console.log('User profile:', userProfile);
       
       // Get all team members (RLS will handle filtering)
       const allUsers = await supabaseDataService.getUsers();
