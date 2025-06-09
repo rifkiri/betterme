@@ -13,6 +13,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { WeeklyOutput } from '@/types/productivity';
 import { taskFormSchema, TaskFormValues } from './taskFormSchema';
+import { UserSelector } from './UserSelector';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 interface TaskFormProps {
   onSubmit: (values: TaskFormValues) => void;
@@ -27,6 +29,8 @@ export const TaskForm = ({
   weeklyOutputs,
   initialValues
 }: TaskFormProps) => {
+  const { profile } = useUserProfile();
+  
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: initialValues || {
@@ -35,7 +39,8 @@ export const TaskForm = ({
       priority: 'Medium',
       estimatedTime: '',
       dueDate: new Date(),
-      weeklyOutputId: undefined
+      weeklyOutputId: undefined,
+      taggedUsers: []
     }
   });
 
@@ -135,6 +140,24 @@ export const TaskForm = ({
                   ))}
                 </SelectContent>
               </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="taggedUsers"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Tag Users for Support (Optional)</FormLabel>
+              <FormControl>
+                <UserSelector
+                  selectedUserIds={field.value || []}
+                  onSelectionChange={field.onChange}
+                  currentUserId={profile?.id}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}

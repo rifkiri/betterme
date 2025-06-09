@@ -7,7 +7,8 @@ export const taskFormSchema = z.object({
   priority: z.enum(['High', 'Medium', 'Low']),
   estimatedTime: z.string().optional(),
   dueDate: z.date().optional(),
-  weeklyOutputId: z.string().optional()
+  weeklyOutputId: z.string().optional(),
+  taggedUsers: z.array(z.string()).optional()
 });
 
 export type TaskFormValues = z.infer<typeof taskFormSchema>;

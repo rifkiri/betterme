@@ -21,7 +21,8 @@ export const EditTaskDialog = ({ task, open, onOpenChange, onSave, weeklyOutputs
       priority: values.priority,
       estimatedTime: values.estimatedTime || undefined,
       dueDate: values.dueDate,
-      weeklyOutputId: values.weeklyOutputId || undefined
+      weeklyOutputId: values.weeklyOutputId || undefined,
+      taggedUsers: values.taggedUsers || []
     });
     onOpenChange(false);
   };
@@ -37,7 +38,8 @@ export const EditTaskDialog = ({ task, open, onOpenChange, onSave, weeklyOutputs
     priority: task.priority,
     estimatedTime: task.estimatedTime || '',
     dueDate: task.dueDate || new Date(),
-    weeklyOutputId: task.weeklyOutputId || undefined
+    weeklyOutputId: task.weeklyOutputId || undefined,
+    taggedUsers: task.taggedUsers || []
   };
 
   return (

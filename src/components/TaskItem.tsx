@@ -1,12 +1,13 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Circle, Clock, ArrowRight, Trash2, Target, Calendar } from 'lucide-react';
+import { CheckCircle, Circle, Clock, ArrowRight, Trash2, Target, Calendar, Users } from 'lucide-react';
 import { Task, WeeklyOutput } from '@/types/productivity';
 import { MoveTaskDialog } from './MoveTaskDialog';
 import { EditTaskDialog } from './EditTaskDialog';
 import { format, isToday, isTomorrow, isPast } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TaskItemProps {
   task: Task;
@@ -17,9 +18,41 @@ interface TaskItemProps {
   weeklyOutputs?: WeeklyOutput[];
 }
 
+interface TaggedUser {
+  id: string;
+  name: string;
+}
+
 export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteTask, weeklyOutputs = [] }: TaskItemProps) => {
   const [editingTask, setEditingTask] = useState(false);
+  const [taggedUsers, setTaggedUsers] = useState<TaggedUser[]>([]);
   const linkedOutput = task.weeklyOutputId ? weeklyOutputs.find(output => output.id === task.weeklyOutputId) : null;
+
+  useEffect(() => {
+    if (task.taggedUsers && task.taggedUsers.length > 0) {
+      fetchTaggedUsers();
+    }
+  }, [task.taggedUsers]);
+
+  const fetchTaggedUsers = async () => {
+    if (!task.taggedUsers) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, name')
+        .in('id', task.taggedUsers);
+
+      if (error) {
+        console.error('Error fetching tagged users:', error);
+        return;
+      }
+
+      setTaggedUsers(data || []);
+    } catch (error) {
+      console.error('Error fetching tagged users:', error);
+    }
+  };
 
   const formatDueDate = (dueDate: Date) => {
     if (isToday(dueDate)) {
@@ -88,6 +121,18 @@ export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteT
               </span>
             )}
           </div>
+          {taggedUsers.length > 0 && (
+            <div className="flex items-center gap-1 mt-1">
+              <Users className="h-3 w-3 text-blue-500" />
+              <div className="flex flex-wrap gap-1">
+                {taggedUsers.map((user) => (
+                  <Badge key={user.id} variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
+                    {user.name}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
           {linkedOutput && (
             <div className="text-xs text-blue-600 mt-1 truncate">
               → {linkedOutput.title}

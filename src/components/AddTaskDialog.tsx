@@ -26,7 +26,8 @@ export const AddTaskDialog = ({
       estimatedTime: values.estimatedTime || undefined,
       dueDate: values.dueDate || new Date(),
       originalDueDate: values.dueDate || new Date(),
-      weeklyOutputId: values.weeklyOutputId || undefined
+      weeklyOutputId: values.weeklyOutputId || undefined,
+      taggedUsers: values.taggedUsers || []
     });
     setOpen(false);
   };
