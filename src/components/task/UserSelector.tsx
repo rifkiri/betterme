@@ -50,6 +50,7 @@ export const UserSelector = ({ selectedUserIds = [], onSelectionChange, currentU
       if (error) {
         console.error('Error fetching users:', error);
         setError(`Failed to load users: ${error.message}`);
+        setUsers([]); // Ensure users is always an array
         return;
       }
 
@@ -120,27 +121,25 @@ export const UserSelector = ({ selectedUserIds = [], onSelectionChange, currentU
                safeUsers.length === 0 ? "No other users found. Make sure other users are registered in the system." : 
                "No users found."}
             </CommandEmpty>
-            {safeUsers.length > 0 && (
-              <CommandGroup className="max-h-64 overflow-auto">
-                {safeUsers.map((user) => (
-                  <CommandItem
-                    key={user.id}
-                    onSelect={() => toggleUser(user.id)}
-                    className="cursor-pointer"
-                  >
-                    <Check
-                      className={`mr-2 h-4 w-4 ${
-                        safeSelectedUserIds.includes(user.id) ? "opacity-100" : "opacity-0"
-                      }`}
-                    />
-                    <div className="flex flex-col">
-                      <span className="font-medium">{user.name || 'Unknown User'}</span>
-                      <span className="text-sm text-gray-500">{user.email || ''}</span>
-                    </div>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            )}
+            <CommandGroup className="max-h-64 overflow-auto">
+              {safeUsers.map((user) => (
+                <CommandItem
+                  key={user.id}
+                  onSelect={() => toggleUser(user.id)}
+                  className="cursor-pointer"
+                >
+                  <Check
+                    className={`mr-2 h-4 w-4 ${
+                      safeSelectedUserIds.includes(user.id) ? "opacity-100" : "opacity-0"
+                    }`}
+                  />
+                  <div className="flex flex-col">
+                    <span className="font-medium">{user.name || 'Unknown User'}</span>
+                    <span className="text-sm text-gray-500">{user.email || ''}</span>
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
           </Command>
         </PopoverContent>
       </Popover>
