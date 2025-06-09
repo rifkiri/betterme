@@ -58,9 +58,9 @@ export const StreakDatesDialog = ({
         return;
       }
 
-      // Calculate consecutive days from yesterday backwards
+      // Calculate consecutive days from today backwards
       const dates: Date[] = [];
-      let currentDate = subDays(new Date(), 1); // Start from yesterday
+      let currentDate = new Date(); // Start from today
       
       for (let i = 0; i < streak; i++) {
         const dateStr = format(currentDate, 'yyyy-MM-dd');
