@@ -46,7 +46,8 @@ export class SupabaseHabitsService {
     const dateStr = format(date, 'yyyy-MM-dd');
     console.log('Getting habits for date:', dateStr, 'user:', userId);
     
-    // First get all habits for the user
+    // For now, let's use the existing habits table and manage completion state differently
+    // We'll store the completion status in a simple way using the habits table itself
     const { data: habitsData, error: habitsError } = await supabase
       .from('habits')
       .select('*')
@@ -58,37 +59,13 @@ export class SupabaseHabitsService {
       throw habitsError;
     }
 
-    // Then get completions for the specific date using raw SQL query to avoid TypeScript issues
-    const { data: completionsData, error: completionsError } = await supabase
-      .rpc('get_habit_completions_for_date', {
-        p_user_id: userId,
-        p_date: dateStr
-      });
-
-    if (completionsError) {
-      console.log('No completions found or table doesn\'t exist yet:', completionsError);
-      // If the function doesn't exist or there's an error, fall back to basic habits
-      return habitsData.map(habit => ({
-        id: habit.id,
-        name: habit.name,
-        description: habit.description,
-        completed: false, // Default to not completed if we can't check
-        streak: habit.streak,
-        category: habit.category,
-        archived: habit.archived,
-        isDeleted: habit.is_deleted,
-        createdAt: habit.created_at
-      }));
-    }
-
-    // Create a set of completed habit IDs for quick lookup
-    const completedHabitIds = new Set(completionsData?.map((c: any) => c.habit_id) || []);
-
+    // For now, we'll just return the habits with their current completion status
+    // In the future, we can implement proper date-specific tracking
     return habitsData.map(habit => ({
       id: habit.id,
       name: habit.name,
       description: habit.description,
-      completed: completedHabitIds.has(habit.id),
+      completed: habit.completed,
       streak: habit.streak,
       category: habit.category,
       archived: habit.archived,
@@ -144,35 +121,9 @@ export class SupabaseHabitsService {
     const dateStr = format(date, 'yyyy-MM-dd');
     console.log('Toggling habit for date:', habitId, dateStr, completed);
 
-    if (completed) {
-      // Add completion record using raw SQL to avoid TypeScript issues
-      const { error } = await supabase
-        .rpc('add_habit_completion', {
-          p_habit_id: habitId,
-          p_user_id: userId,
-          p_completed_date: dateStr
-        });
-
-      if (error) {
-        console.error('Error adding habit completion:', error);
-        // Fall back to updating the habit directly if the function doesn't exist
-        await this.updateHabit(habitId, userId, { completed: true });
-      }
-    } else {
-      // Remove completion record using raw SQL to avoid TypeScript issues
-      const { error } = await supabase
-        .rpc('remove_habit_completion', {
-          p_habit_id: habitId,
-          p_user_id: userId,
-          p_completed_date: dateStr
-        });
-
-      if (error) {
-        console.error('Error removing habit completion:', error);
-        // Fall back to updating the habit directly if the function doesn't exist
-        await this.updateHabit(habitId, userId, { completed: false });
-      }
-    }
+    // For now, let's just update the habit's completion status directly
+    // This is a simplified approach until we implement proper date-specific tracking
+    await this.updateHabit(habitId, userId, { completed });
   }
 }
 
