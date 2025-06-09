@@ -1,155 +1,109 @@
 
-import { Target, CheckCircle, Clock, Award, Calendar } from 'lucide-react';
-import { useProductivity } from '@/hooks/useProductivity';
-import { QuickStatsCard } from './QuickStatsCard';
-import { FeelingTracker } from './FeelingTracker';
-import { HabitsSection } from './HabitsSection';
-import { WeeklyOutputsSection } from './WeeklyOutputsSection';
-import { TasksSection } from './TasksSection';
+import React from "react";
+import { useProductivityData } from "@/hooks/useProductivityData";
+import { HabitsSection } from "./HabitsSection";
+import { TasksSection } from "./TasksSection";
+import { WeeklyOutputsSection } from "./WeeklyOutputsSection";
+import { FeelingTracker } from "./FeelingTracker";
+import { DateNavigator } from "./DateNavigator";
+import { QuickStatsCard } from "./QuickStatsCard";
+import { TeamMemberOverview } from "./team/TeamMemberOverview";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 export const SimpleEmployeeDashboard = () => {
-  console.log('SimpleEmployeeDashboard rendering...');
-  
   const {
+    currentDate,
     habits,
-    archivedHabits,
     tasks,
-    deletedTasks,
     weeklyOutputs,
-    deletedWeeklyOutputs,
-    selectedDate,
-    handleDateChange,
+    isLoading,
+    navigateDate,
+    toggleHabit,
+    toggleTask,
     addHabit,
     editHabit,
     addTask,
     editTask,
+    deleteTask,
     addWeeklyOutput,
     editWeeklyOutput,
-    toggleHabit,
-    toggleTask,
-    deleteTask,
-    restoreTask,
-    permanentlyDeleteTask,
-    archiveHabit,
-    restoreHabit,
-    permanentlyDeleteHabit,
-    rollOverTask,
-    getTodaysTasks,
-    getOverdueTasks,
-    getTasksByDate,
-    updateProgress,
-    moveWeeklyOutput,
     deleteWeeklyOutput,
-    restoreWeeklyOutput,
-    permanentlyDeleteWeeklyOutput,
-    getOverdueWeeklyOutputs
-  } = useProductivity();
+    moveTask,
+    moveWeeklyOutput
+  } = useProductivityData();
 
-  console.log('Dashboard data:', {
-    habitsCount: habits.length,
-    tasksCount: tasks.length,
-    weeklyOutputsCount: weeklyOutputs.length
-  });
+  const { profile } = useUserProfile();
 
-  const completedHabits = habits.filter(habit => habit.completed).length;
-  const todaysTasks = getTodaysTasks();
-  const overdueTasks = getOverdueTasks();
-  const overdueWeeklyOutputs = getOverdueWeeklyOutputs();
-
-  console.log('Today tasks:', todaysTasks.length, 'Overdue tasks:', overdueTasks.length, 'Overdue weekly outputs:', overdueWeeklyOutputs.length);
-
-  const handleRollOver = (taskId: string, targetDate: Date) => {
-    rollOverTask(taskId, targetDate);
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your productivity data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 p-1 sm:p-2 lg:p-4">
-      <div className="max-w-full mx-auto space-y-2 sm:space-y-4">
-        {/* Header */}
-        <div className="text-center mb-2 sm:mb-4 px-2">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">My Productivity</h1>
-          <p className="text-gray-600 text-xs sm:text-sm lg:text-base">Track your habits, manage tasks, and plan your week</p>
-        </div>
+    <div className="max-w-7xl mx-auto py-8 px-4">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">My Productivity</h1>
+        <p className="text-gray-600">Track your daily habits, tasks, and weekly outputs</p>
+      </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-1 sm:gap-2 lg:gap-4 mb-2 sm:mb-4 px-1 sm:px-2">
+      {/* Team Overview Section for Team Members */}
+      {profile?.role === 'team-member' && (
+        <div className="mb-8">
+          <TeamMemberOverview />
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+        <div className="lg:col-span-3">
+          <DateNavigator currentDate={currentDate} onNavigate={navigateDate} />
+        </div>
+        <div className="lg:col-span-1">
           <QuickStatsCard 
-            title="Habits Today" 
-            value={`${completedHabits}/${habits.length}`} 
-            icon={Target} 
-            gradient="bg-gradient-to-r from-blue-50 to-blue-100" 
-          />
-          <QuickStatsCard 
-            title="Best Streak" 
-            value={Math.max(...habits.map(h => h.streak), 0).toString()} 
-            icon={Award} 
-            gradient="bg-gradient-to-r from-purple-50 to-purple-100" 
-          />
-          <QuickStatsCard 
-            title="Today's Tasks" 
-            value={`${todaysTasks.filter(t => t.completed).length}/${todaysTasks.length}`} 
-            icon={CheckCircle} 
-            gradient="bg-gradient-to-r from-green-50 to-green-100" 
-          />
-          <QuickStatsCard 
-            title="Overdue" 
-            value={(overdueTasks.length + overdueWeeklyOutputs.length).toString()} 
-            icon={Clock} 
-            gradient="bg-gradient-to-r from-orange-50 to-orange-100" 
+            habits={habits} 
+            tasks={tasks} 
+            weeklyOutputs={weeklyOutputs} 
           />
         </div>
+      </div>
 
-        {/* Mobile-first responsive grid */}
-        <div className="space-y-2 sm:space-y-4 lg:grid lg:grid-cols-3 lg:gap-3 xl:gap-6 lg:space-y-0">
-          <div className="lg:col-span-1 space-y-2 sm:space-y-4">
-            <FeelingTracker />
-            <HabitsSection 
-              habits={habits}
-              archivedHabits={archivedHabits}
-              selectedDate={selectedDate}
-              onDateChange={handleDateChange}
-              onAddHabit={addHabit}
-              onEditHabit={editHabit}
-              onToggleHabit={toggleHabit}
-              onArchiveHabit={archiveHabit}
-              onRestoreHabit={restoreHabit}
-              onPermanentlyDeleteHabit={permanentlyDeleteHabit}
-            />
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <HabitsSection
+          habits={habits}
+          onToggleHabit={toggleHabit}
+          onAddHabit={addHabit}
+          onEditHabit={editHabit}
+          currentDate={currentDate}
+        />
+        
+        <TasksSection
+          tasks={tasks}
+          onToggleTask={toggleTask}
+          onAddTask={addTask}
+          onEditTask={editTask}
+          onDeleteTask={deleteTask}
+          onMoveTask={moveTask}
+          currentDate={currentDate}
+          weeklyOutputs={weeklyOutputs}
+        />
+      </div>
 
-          <div className="lg:col-span-1">
-            <WeeklyOutputsSection 
-              weeklyOutputs={weeklyOutputs}
-              deletedWeeklyOutputs={deletedWeeklyOutputs}
-              overdueWeeklyOutputs={overdueWeeklyOutputs}
-              tasks={tasks}
-              onAddWeeklyOutput={addWeeklyOutput}
-              onEditWeeklyOutput={editWeeklyOutput}
-              onUpdateProgress={updateProgress}
-              onMoveWeeklyOutput={moveWeeklyOutput}
-              onDeleteWeeklyOutput={deleteWeeklyOutput}
-              onRestoreWeeklyOutput={restoreWeeklyOutput}
-              onPermanentlyDeleteWeeklyOutput={permanentlyDeleteWeeklyOutput}
-            />
-          </div>
-
-          <div className="lg:col-span-1">
-            <TasksSection 
-              tasks={tasks}
-              deletedTasks={deletedTasks}
-              overdueTasks={overdueTasks}
-              onAddTask={addTask}
-              onEditTask={editTask}
-              onToggleTask={toggleTask}
-              onMoveTask={handleRollOver}
-              onDeleteTask={deleteTask}
-              onRestoreTask={restoreTask}
-              onPermanentlyDeleteTask={permanentlyDeleteTask}
-              getTasksByDate={getTasksByDate}
-              weeklyOutputs={weeklyOutputs}
-            />
-          </div>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <WeeklyOutputsSection
+          weeklyOutputs={weeklyOutputs}
+          onAddWeeklyOutput={addWeeklyOutput}
+          onEditWeeklyOutput={editWeeklyOutput}
+          onDeleteWeeklyOutput={deleteWeeklyOutput}
+          onMoveWeeklyOutput={moveWeeklyOutput}
+          currentDate={currentDate}
+        />
+        
+        <FeelingTracker currentDate={currentDate} />
       </div>
     </div>
   );
