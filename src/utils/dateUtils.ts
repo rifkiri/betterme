@@ -32,18 +32,23 @@ export const isWeeklyOutputOverdue = (dueDate: Date, progress: number = 0, compl
     createdDate: createdDate ? format(createdDate, 'yyyy-MM-dd') : 'none'
   });
   
-  // If not completed yet, check if past due date (but not including today)
+  // If not completed (progress < 100), check if past due date
   if (progress < 100) {
     const isOverdue = isBefore(dueDate, today) && !isToday(dueDate);
     console.log('Not completed, overdue:', isOverdue);
     return isOverdue;
   }
   
-  // If completed, check if it was completed after the due date
-  if (completedDate && createdDate) {
-    // More flexible approach: if the output was completed within a reasonable time frame
-    // from its creation (within 7 days), don't mark it as overdue
-    // This provides flexibility for users who complete tasks in the week they were created
+  // If completed (progress = 100), check if it has a completedDate set
+  // If no completedDate but progress is 100, assume it was just completed and not overdue
+  if (progress === 100 && !completedDate) {
+    console.log('Completed but no completion date recorded, assuming just completed - not overdue');
+    return false;
+  }
+  
+  // If completed with a completion date, check if it was completed after the due date
+  if (progress === 100 && completedDate && createdDate) {
+    // Flexible approach: if the output was completed within 7 days of creation, don't mark as overdue
     const daysBetweenCreationAndCompletion = differenceInDays(completedDate, createdDate);
     
     if (daysBetweenCreationAndCompletion <= 7) {
@@ -51,15 +56,14 @@ export const isWeeklyOutputOverdue = (dueDate: Date, progress: number = 0, compl
       return false;
     }
     
-    // Use isBefore to check if due date is before completion date (meaning it's overdue)
-    // But don't mark as overdue if completed on the same day as due date
+    // Check if completed after due date (but not on the same day)
     const isOverdue = isAfter(completedDate, dueDate) && !isSameDate(completedDate, dueDate);
     console.log('Completed after due date check:', isOverdue);
     return isOverdue;
   }
   
-  // If completed but no completion date recorded, assume not overdue
-  console.log('Completed but no completion date, not overdue');
+  // Default case: not overdue
+  console.log('Default case: not overdue');
   return false;
 };
 
