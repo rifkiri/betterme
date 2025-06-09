@@ -1,3 +1,4 @@
+
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Home, Calendar, Settings, Users, LogOut, Menu, X } from 'lucide-react';
@@ -96,14 +97,8 @@ export const AppNavigation = () => {
         icon: Users,
         description: 'Team management'
       }];
-    } else if (currentUser?.role === 'team-member') {
-      return [...baseItems, {
-        name: 'My Team',
-        href: '/manager',
-        icon: Users,
-        description: 'Team overview'
-      }];
     } else {
+      // team-member gets only base items
       return baseItems;
     }
   };
