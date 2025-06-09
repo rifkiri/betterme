@@ -46,22 +46,20 @@ export class SupabaseHabitsService {
     const dateStr = format(date, 'yyyy-MM-dd');
     console.log('Getting habits for date:', dateStr, 'user:', userId);
     
-    // For now, let's use the existing habits table and manage completion state differently
-    // We'll store the completion status in a simple way using the habits table itself
-    const { data: habitsData, error: habitsError } = await supabase
-      .from('habits')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+    // Use the new database function to get habits with completion status for the specific date
+    const { data, error } = await supabase.rpc('get_habits_for_date', {
+      user_id_param: userId,
+      target_date: dateStr
+    });
 
-    if (habitsError) {
-      console.error('Error fetching habits for date:', habitsError);
-      throw habitsError;
+    if (error) {
+      console.error('Error fetching habits for date:', error);
+      throw error;
     }
 
-    // For now, we'll just return the habits with their current completion status
-    // In the future, we can implement proper date-specific tracking
-    return habitsData.map(habit => ({
+    console.log('Habits data for date:', data);
+
+    return data.map((habit: any) => ({
       id: habit.id,
       name: habit.name,
       description: habit.description,
@@ -121,9 +119,20 @@ export class SupabaseHabitsService {
     const dateStr = format(date, 'yyyy-MM-dd');
     console.log('Toggling habit for date:', habitId, dateStr, completed);
 
-    // For now, let's just update the habit's completion status directly
-    // This is a simplified approach until we implement proper date-specific tracking
-    await this.updateHabit(habitId, userId, { completed });
+    // Use the new database function to properly handle daily completions and streak calculation
+    const { data, error } = await supabase.rpc('toggle_habit_completion', {
+      habit_id_param: habitId,
+      user_id_param: userId,
+      target_date: dateStr,
+      is_completed: completed
+    });
+
+    if (error) {
+      console.error('Error toggling habit completion:', error);
+      throw error;
+    }
+
+    console.log('Habit toggle result:', data);
   }
 }
 

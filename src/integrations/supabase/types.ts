@@ -9,6 +9,38 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      habit_completions: {
+        Row: {
+          completed_date: string
+          created_at: string
+          habit_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          completed_date: string
+          created_at?: string
+          habit_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          completed_date?: string
+          created_at?: string
+          habit_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_completions_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       habits: {
         Row: {
           archived: boolean
@@ -18,6 +50,7 @@ export type Database = {
           description: string | null
           id: string
           is_deleted: boolean
+          last_completed_date: string | null
           name: string
           streak: number
           updated_at: string
@@ -31,6 +64,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_deleted?: boolean
+          last_completed_date?: string | null
           name: string
           streak?: number
           updated_at?: string
@@ -44,6 +78,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_deleted?: boolean
+          last_completed_date?: string | null
           name?: string
           streak?: number
           updated_at?: string
@@ -269,12 +304,39 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_habit_streak: {
+        Args: { habit_id_param: string; user_id_param: string }
+        Returns: number
+      }
+      get_habits_for_date: {
+        Args: { user_id_param: string; target_date: string }
+        Returns: {
+          id: string
+          name: string
+          description: string
+          category: string
+          streak: number
+          archived: boolean
+          is_deleted: boolean
+          created_at: string
+          completed: boolean
+        }[]
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: string
       }
       is_admin: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      toggle_habit_completion: {
+        Args: {
+          habit_id_param: string
+          user_id_param: string
+          target_date: string
+          is_completed: boolean
+        }
         Returns: boolean
       }
       validate_password_strength: {
