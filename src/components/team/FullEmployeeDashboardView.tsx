@@ -59,8 +59,8 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
     userId: employee.id,
     archived: false,
     isDeleted: false,
-    createdAt: new Date(),
-    updatedAt: new Date()
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   }));
 
   const transformedTasks = employee.recentTasks.map(t => ({
@@ -68,13 +68,14 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
     title: t.title,
     completed: t.completed,
     dueDate: new Date(t.dueDate),
-    priority: t.priority,
+    priority: t.priority as 'Low' | 'Medium' | 'High',
     description: '',
     userId: employee.id,
     isDeleted: false,
-    createdAt: new Date(),
+    createdDate: new Date(),
     updatedAt: new Date(),
-    originalDueDate: new Date(t.dueDate)
+    originalDueDate: new Date(t.dueDate),
+    isMoved: false
   }));
 
   const transformedWeeklyOutputs = employee.weeklyOutputs.map(o => ({
@@ -85,7 +86,7 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
     description: '',
     userId: employee.id,
     isDeleted: false,
-    createdAt: new Date(),
+    createdDate: new Date(),
     updatedAt: new Date(),
     originalDueDate: new Date(o.dueDate)
   }));
