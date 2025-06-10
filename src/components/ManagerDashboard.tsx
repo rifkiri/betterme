@@ -95,7 +95,7 @@ export const ManagerDashboard = () => {
     <div className="max-w-7xl mx-auto py-8 px-4">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Our Team</h1>
-        <p className="text-gray-600">Monitor team productivity and individual performance</p>
+        <p className="text-gray-600">Monitor team productivity</p>
       </div>
 
       <Tabs value={selectedTab} onValueChange={handleTabChange} className="space-y-6">
