@@ -142,6 +142,12 @@ export const IndividualDetailsSection = ({
           >
             ← Back to All Team Members
           </button>
+          <button
+            onClick={() => onViewMemberDashboard?.(selectedMemberId)}
+            className="px-4 py-2 bg-green-50 hover:bg-green-100 text-green-600 rounded-md transition-colors"
+          >
+            View Full Dashboard
+          </button>
         </div>
       </div>
     );

@@ -34,19 +34,19 @@ export const ManagerDashboard = () => {
   }, [location.state]);
 
   const handleViewMemberDetails = (memberId: string) => {
-    console.log('handleViewMemberDetails called with:', memberId);
+    console.log('ManagerDashboard - handleViewMemberDetails called with:', memberId);
     setSelectedEmployee(memberId);
     setViewMode('summary');
     setSelectedTab('individual-detail');
-    console.log('Set viewMode to summary');
+    console.log('ManagerDashboard - Set viewMode to summary for member:', memberId);
   };
 
   const handleViewMemberDashboard = (memberId: string) => {
-    console.log('handleViewMemberDashboard called with:', memberId);
+    console.log('ManagerDashboard - handleViewMemberDashboard called with:', memberId);
     setSelectedEmployee(memberId);
     setViewMode('dashboard');
     setSelectedTab('individual-detail');
-    console.log('Set viewMode to dashboard');
+    console.log('ManagerDashboard - Set viewMode to dashboard for member:', memberId);
   };
 
   // Log current state for debugging
