@@ -26,7 +26,7 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
 
   const mockHandlers = {
     ...createMockHandlers(),
-    handleDateChange: setSelectedDate,
+    handleDateChange: setSelectedDate, // This now properly updates the state
   };
 
   // Helper function to get tasks by date for TasksSection
