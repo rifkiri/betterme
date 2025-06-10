@@ -21,8 +21,8 @@ export class UnifiedSignInService {
       const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
       if (authError) {
         console.error('❌ Cannot check auth users (admin access required):', authError);
-      } else if (authUsers && authUsers.users) {
-        const userExists = authUsers.users.find(u => u.email && u.email.toLowerCase() === sanitizedEmail);
+      } else if (authUsers?.users) {
+        const userExists = authUsers.users.find((u: any) => u.email && u.email.toLowerCase() === sanitizedEmail);
         console.log('User exists in auth.users:', !!userExists);
         if (userExists) {
           console.log('Auth user details:', {
