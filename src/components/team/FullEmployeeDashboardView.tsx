@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Target, CheckCircle, Clock, Award } from 'lucide-react';
 import { QuickStatsCard } from '../QuickStatsCard';
 import { FeelingTracker } from '../FeelingTracker';
 import { HabitsSection } from '../HabitsSection';
 import { WeeklyOutputsSection } from '../WeeklyOutputsSection';
 import { TasksSection } from '../TasksSection';
+import { DateNavigator } from '../DateNavigator';
 import { EmployeeData } from '@/types/individualData';
 import { useProductivity } from '@/hooks/useProductivity';
 
@@ -15,9 +16,11 @@ interface FullEmployeeDashboardViewProps {
 }
 
 export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDashboardViewProps) => {
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  
   // This is a read-only view, so we'll create mock handlers for the employee's data
   const mockHandlers = {
-    handleDateChange: () => {},
+    handleDateChange: setSelectedDate,
     addHabit: () => {},
     editHabit: () => {},
     addTask: () => {},
@@ -87,8 +90,6 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
     originalDueDate: new Date(o.dueDate)
   }));
 
-  const selectedDate = new Date();
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 p-1 sm:p-2 lg:p-4">
       <div className="max-w-full mx-auto space-y-2 sm:space-y-4">
@@ -112,6 +113,14 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
           <p className="text-gray-600 text-xs sm:text-sm lg:text-base">
             {employee.role} - Track habits, manage tasks, and plan the week
           </p>
+        </div>
+
+        {/* Date Navigation */}
+        <div className="flex justify-center mb-4">
+          <DateNavigator 
+            selectedDate={selectedDate} 
+            onDateChange={setSelectedDate}
+          />
         </div>
 
         {/* Quick Stats */}
@@ -145,73 +154,45 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
         {/* Dashboard Layout */}
         <div className="space-y-2 sm:space-y-4 lg:grid lg:grid-cols-3 lg:gap-3 xl:gap-6 lg:space-y-0">
           <div className="lg:col-span-1 space-y-2 sm:space-y-4">
-            <div className="bg-white rounded-lg p-4 shadow-sm border">
-              <div className="text-sm text-gray-500 mb-2">Mood Tracking (Read-only)</div>
-              <div className="text-2xl font-bold text-blue-600">View Only</div>
-              <div className="text-sm text-gray-600">Manager cannot modify employee mood</div>
-            </div>
-            
-            <div className="bg-white rounded-lg p-4 shadow-sm border">
-              <div className="text-sm text-gray-500 mb-2">Daily Habits (Read-only)</div>
-              <div className="space-y-2">
-                {transformedHabits.map(habit => (
-                  <div key={habit.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                    <div className="flex items-center space-x-2">
-                      <div className={`w-3 h-3 rounded-full ${habit.completed ? 'bg-green-500' : 'bg-gray-300'}`} />
-                      <span className="text-sm">{habit.name}</span>
-                    </div>
-                    <span className="text-xs text-gray-500">{habit.streak} day streak</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <HabitsSection 
+              habits={transformedHabits}
+              selectedDate={selectedDate}
+              onToggleHabit={mockHandlers.toggleHabit}
+              onAddHabit={mockHandlers.addHabit}
+              onEditHabit={mockHandlers.editHabit}
+              isReadOnly={true}
+            />
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg p-4 shadow-sm border">
-              <div className="text-sm text-gray-500 mb-2">Weekly Outputs (Read-only)</div>
-              <div className="space-y-3">
-                {transformedWeeklyOutputs.map(output => (
-                  <div key={output.id} className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">{output.title}</span>
-                      <span className="text-xs text-gray-500">
-                        Due: {output.dueDate.toLocaleDateString()}
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-600 h-2 rounded-full" 
-                        style={{ width: `${output.progress}%` }}
-                      />
-                    </div>
-                    <div className="text-xs text-gray-600">{output.progress}% complete</div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <WeeklyOutputsSection
+              weeklyOutputs={transformedWeeklyOutputs}
+              deletedWeeklyOutputs={[]}
+              onAddWeeklyOutput={mockHandlers.addWeeklyOutput}
+              onEditWeeklyOutput={mockHandlers.editWeeklyOutput}
+              onUpdateProgress={mockHandlers.updateProgress}
+              onMoveWeeklyOutput={mockHandlers.moveWeeklyOutput}
+              onDeleteWeeklyOutput={mockHandlers.deleteWeeklyOutput}
+              onRestoreWeeklyOutput={mockHandlers.restoreWeeklyOutput}
+              onPermanentlyDeleteWeeklyOutput={mockHandlers.permanentlyDeleteWeeklyOutput}
+              isReadOnly={true}
+            />
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg p-4 shadow-sm border">
-              <div className="text-sm text-gray-500 mb-2">Recent Tasks (Read-only)</div>
-              <div className="space-y-2">
-                {transformedTasks.map(task => (
-                  <div key={task.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                    <div className="flex items-center space-x-2">
-                      <div className={`w-3 h-3 rounded-full ${task.completed ? 'bg-green-500' : 'bg-yellow-500'}`} />
-                      <div>
-                        <div className="text-sm font-medium">{task.title}</div>
-                        <div className="text-xs text-gray-500">
-                          Due: {task.dueDate.toLocaleDateString()}
-                        </div>
-                      </div>
-                    </div>
-                    <span className="text-xs px-2 py-1 bg-gray-200 rounded">{task.priority}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <TasksSection
+              tasks={transformedTasks}
+              deletedTasks={[]}
+              selectedDate={selectedDate}
+              onAddTask={mockHandlers.addTask}
+              onEditTask={mockHandlers.editTask}
+              onToggleTask={mockHandlers.toggleTask}
+              onDeleteTask={mockHandlers.deleteTask}
+              onRestoreTask={mockHandlers.restoreTask}
+              onPermanentlyDeleteTask={mockHandlers.permanentlyDeleteTask}
+              onRollOverTask={mockHandlers.rollOverTask}
+              isReadOnly={true}
+            />
           </div>
         </div>
       </div>
