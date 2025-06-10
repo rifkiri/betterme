@@ -49,14 +49,15 @@ export const ManagerDashboard = () => {
     console.log('ManagerDashboard - Set viewMode to dashboard for member:', memberId);
   };
 
-  // Clear selection when switching to team tab or individual selector tab
+  // Clear selection when switching to team tab, but NOT when switching to individual tab
   const handleTabChange = (value: string) => {
     setSelectedTab(value);
-    if (value === 'team' || value === 'individual') {
+    if (value === 'team') {
       setSelectedEmployee('');
       setViewMode('summary');
-      console.log('Cleared selection when switching to tab:', value);
+      console.log('Cleared selection when switching to team tab');
     }
+    // Don't clear selection when going to individual tab - let it work independently
   };
 
   // Log current state for debugging
@@ -81,7 +82,7 @@ export const ManagerDashboard = () => {
           </TabsTrigger>
           <TabsTrigger value="individual" className="flex items-center gap-2">
             <User className="h-4 w-4" />
-            Individual Selector
+            Individual Performance
           </TabsTrigger>
           <TabsTrigger value="individual-detail" className="flex items-center gap-2">
             <UserCheck className="h-4 w-4" />
@@ -100,18 +101,17 @@ export const ManagerDashboard = () => {
           <div>
             <Card className="mb-6">
               <CardHeader>
-                <CardTitle>Select Team Member</CardTitle>
+                <CardTitle>Individual Performance Analysis</CardTitle>
                 <CardDescription>
-                  Choose a team member to view their detailed performance analysis
+                  Select a team member to view their detailed productivity metrics and performance trends
                 </CardDescription>
               </CardHeader>
             </Card>
             
             <IndividualPerformance 
-              preSelectedEmployee={selectedEmployee}
+              preSelectedEmployee=""
               onEmployeeChange={(employeeId) => {
-                setSelectedEmployee(employeeId);
-                console.log('Employee selected from Individual tab:', employeeId);
+                console.log('Employee selected from Individual Performance tab:', employeeId);
               }}
             />
           </div>
