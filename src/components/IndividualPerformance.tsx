@@ -5,9 +5,24 @@ import { IndividualPerformanceStates } from './individual/IndividualPerformanceS
 import { IndividualPerformanceContent } from './individual/IndividualPerformanceContent';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 
-export const IndividualPerformance = () => {
-  const [selectedEmployee, setSelectedEmployee] = useState('');
+interface IndividualPerformanceProps {
+  preSelectedEmployee?: string;
+  onEmployeeChange?: (employeeId: string) => void;
+}
+
+export const IndividualPerformance = ({ 
+  preSelectedEmployee, 
+  onEmployeeChange 
+}: IndividualPerformanceProps) => {
+  const [selectedEmployee, setSelectedEmployee] = useState(preSelectedEmployee || '');
   const { employeeData, isLoading } = useEmployeeData();
+
+  // Handle pre-selected employee
+  useEffect(() => {
+    if (preSelectedEmployee && Object.keys(employeeData).length > 0) {
+      setSelectedEmployee(preSelectedEmployee);
+    }
+  }, [preSelectedEmployee, employeeData]);
 
   // Auto-select first employee if none selected and there are team members
   useEffect(() => {
@@ -16,6 +31,12 @@ export const IndividualPerformance = () => {
       setSelectedEmployee(firstEmployeeId);
     }
   }, [selectedEmployee, employeeData]);
+
+  // Handle employee change
+  const handleEmployeeChange = (employeeId: string) => {
+    setSelectedEmployee(employeeId);
+    onEmployeeChange?.(employeeId);
+  };
 
   // Update selected employee when it changes
   useEffect(() => {
@@ -29,7 +50,7 @@ export const IndividualPerformance = () => {
   const statesComponent = (
     <IndividualPerformanceStates
       selectedEmployee={selectedEmployee}
-      onEmployeeChange={setSelectedEmployee}
+      onEmployeeChange={handleEmployeeChange}
       isLoading={isLoading}
       hasEmployeeData={hasEmployeeData}
     />
@@ -43,7 +64,7 @@ export const IndividualPerformance = () => {
     <div className="space-y-6">
       <EmployeeSelector 
         selectedEmployee={selectedEmployee} 
-        onEmployeeChange={setSelectedEmployee} 
+        onEmployeeChange={handleEmployeeChange} 
       />
 
       <IndividualPerformanceContent employee={employee} />

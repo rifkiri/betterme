@@ -5,13 +5,21 @@ import { OverdueItemsSection } from './team/OverdueItemsSection';
 import { TeamPerformanceTable } from './team/TeamPerformanceTable';
 import { TeamTrendsCard } from './team/TeamTrendsCard';
 import { TeamMoodChart } from './team/TeamMoodChart';
+import { IndividualDetailsSection } from './team/IndividualDetailsSection';
 import { useTeamDataRealtime } from '@/hooks/useTeamDataRealtime';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Loader2, Users, RefreshCw } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export const TeamOverview = () => {
   const { teamData, isLoading, error, lastUpdated, manualRefresh } = useTeamDataRealtime();
+  const navigate = useNavigate();
+
+  const handleViewMemberDetails = (memberId: string) => {
+    // Navigate to individual performance tab with the selected member
+    navigate('/manager', { state: { selectedTab: 'individual', selectedEmployee: memberId } });
+  };
 
   if (isLoading) {
     return (
@@ -94,6 +102,13 @@ export const TeamOverview = () => {
 
       <TeamSummaryCards teamData={teamData} />
       <TeamMoodChart teamData={teamData} />
+      
+      {/* New Individual Details Section */}
+      <IndividualDetailsSection 
+        teamData={teamData} 
+        onViewMemberDetails={handleViewMemberDetails}
+      />
+      
       <OverdueItemsSection teamData={teamData} />
       <TeamPerformanceTable teamData={teamData} />
       <TeamTrendsCard teamData={teamData} />
