@@ -64,7 +64,7 @@ export const EmployeeDashboardLayout = ({
       <div className="lg:col-span-1">
         <TasksSection
           tasks={transformedTasks}
-          deletedTasks={[]}}
+          deletedTasks={[]}
           overdueTasks={transformedOverdueTasks}
           onAddTask={mockHandlers.addTask}
           onEditTask={mockHandlers.editTask}
