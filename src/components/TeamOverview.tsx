@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { TeamSummaryCards } from './team/TeamSummaryCards';
 import { OverdueItemsSection } from './team/OverdueItemsSection';
@@ -16,39 +17,6 @@ interface TeamOverviewProps {
 
 export const TeamOverview = ({ onViewMemberDetails, onViewMemberDashboard }: TeamOverviewProps) => {
   const { teamData, isLoading, error, lastUpdated, manualRefresh } = useTeamDataRealtime();
-
-  // Check if user has access to individual detail features
-  const canAccessIndividualDetail = profile?.role === 'manager' || profile?.role === 'admin';
-
-  const handleViewMemberDetails = (memberId: string) => {
-    console.log('TeamOverview - handleViewMemberDetails called with:', memberId);
-    if (!canAccessIndividualDetail) return;
-    
-    if (onViewMemberDetails) {
-      onViewMemberDetails(memberId);
-    } else {
-      // Navigate to individual detail tab with the selected member
-      navigate('/manager', { state: { selectedTab: 'individual-detail', selectedEmployee: memberId } });
-    }
-  };
-
-  const handleViewMemberDashboard = (memberId: string) => {
-    console.log('TeamOverview - handleViewMemberDashboard called with:', memberId);
-    if (!canAccessIndividualDetail) return;
-    
-    if (onViewMemberDashboard) {
-      onViewMemberDashboard(memberId);
-    } else {
-      // Navigate to individual detail tab with dashboard view mode
-      navigate('/manager', { 
-        state: { 
-          selectedTab: 'individual-detail', 
-          selectedEmployee: memberId,
-          viewMode: 'dashboard'
-        } 
-      });
-    }
-  };
 
   if (isLoading) {
     return (
