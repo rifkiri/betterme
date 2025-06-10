@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { IndividualDetailCard } from './IndividualDetailCard';
@@ -160,7 +159,7 @@ export const IndividualDetailsSection = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Individual Team Performance
+            Individual Productivity
           </CardTitle>
           <CardDescription>
             Click on any team member to view their detailed productivity
