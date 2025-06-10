@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { IndividualDetailCard } from './IndividualDetailCard';
 import { IndividualPerformanceContent } from '../individual/IndividualPerformanceContent';
+import { FullEmployeeDashboardView } from './FullEmployeeDashboardView';
 import { TeamData } from '@/types/teamData';
 import { Users } from 'lucide-react';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
@@ -11,12 +12,14 @@ interface IndividualDetailsSectionProps {
   teamData: TeamData;
   onViewMemberDetails?: (memberId: string) => void;
   selectedMemberId?: string;
+  viewMode?: 'summary' | 'dashboard';
 }
 
 export const IndividualDetailsSection = ({ 
   teamData, 
   onViewMemberDetails, 
-  selectedMemberId 
+  selectedMemberId,
+  viewMode = 'summary'
 }: IndividualDetailsSectionProps) => {
   const { employeeData, isLoading } = useEmployeeData();
 
@@ -31,7 +34,7 @@ export const IndividualDetailsSection = ({
     );
   }
 
-  // If a specific member is selected, show their detailed performance
+  // If a specific member is selected, show their detailed view
   if (selectedMemberId) {
     const selectedMember = teamData.membersSummary.find(member => member.id === selectedMemberId);
     const selectedEmployeeData = employeeData[selectedMemberId];
@@ -94,23 +97,34 @@ export const IndividualDetailsSection = ({
       );
     }
 
+    // Show full dashboard view if viewMode is 'dashboard'
+    if (viewMode === 'dashboard') {
+      return (
+        <FullEmployeeDashboardView 
+          employee={selectedEmployeeData}
+          onBack={() => onViewMemberDetails?.('')}
+        />
+      );
+    }
+
+    // Show summary performance view (existing behavior)
     return (
       <div className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              {selectedMember.name}'s Detailed Performance
+              {selectedMember.name}'s Performance Summary
             </CardTitle>
             <CardDescription>
-              Complete productivity overview including habits, tasks, outputs, and mood tracking
+              Detailed productivity overview including habits, tasks, outputs, and mood tracking
             </CardDescription>
           </CardHeader>
         </Card>
 
         <IndividualPerformanceContent employee={selectedEmployeeData} />
 
-        <div className="flex justify-center mt-6">
+        <div className="flex justify-center gap-4 mt-6">
           <button
             onClick={() => onViewMemberDetails?.('')}
             className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"

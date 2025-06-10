@@ -4,15 +4,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { TeamMember } from '@/types/teamData';
-import { CheckCircle, Target, TrendingUp, Clock, Award } from 'lucide-react';
+import { CheckCircle, Target, TrendingUp, Clock, Award, Monitor } from 'lucide-react';
 
 interface IndividualDetailCardProps {
   member: TeamMember;
   onViewDetails?: (memberId: string) => void;
+  onViewDashboard?: (memberId: string) => void;
   isSelected?: boolean;
 }
 
-export const IndividualDetailCard = ({ member, onViewDetails, isSelected }: IndividualDetailCardProps) => {
+export const IndividualDetailCard = ({ 
+  member, 
+  onViewDetails, 
+  onViewDashboard, 
+  isSelected 
+}: IndividualDetailCardProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'excellent':
@@ -35,6 +41,11 @@ export const IndividualDetailCard = ({ member, onViewDetails, isSelected }: Indi
   const handleViewDetails = () => {
     console.log('View details clicked for member:', member.id);
     onViewDetails?.(member.id);
+  };
+
+  const handleViewDashboard = () => {
+    console.log('View dashboard clicked for member:', member.id);
+    onViewDashboard?.(member.id);
   };
 
   return (
@@ -98,15 +109,26 @@ export const IndividualDetailCard = ({ member, onViewDetails, isSelected }: Indi
           </div>
         </div>
 
-        {/* Action Button */}
-        {onViewDetails && (
-          <button
-            onClick={handleViewDetails}
-            className="w-full mt-3 px-3 py-2 text-sm bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-md transition-colors"
-          >
-            View Detailed Performance
-          </button>
-        )}
+        {/* Action Buttons */}
+        <div className="space-y-2">
+          {onViewDetails && (
+            <button
+              onClick={handleViewDetails}
+              className="w-full px-3 py-2 text-sm bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-md transition-colors"
+            >
+              View Performance Summary
+            </button>
+          )}
+          {onViewDashboard && (
+            <button
+              onClick={handleViewDashboard}
+              className="w-full px-3 py-2 text-sm bg-green-50 hover:bg-green-100 text-green-600 rounded-md transition-colors flex items-center justify-center gap-2"
+            >
+              <Monitor className="h-4 w-4" />
+              View Full Dashboard
+            </button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

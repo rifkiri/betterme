@@ -12,13 +12,28 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle, Loader2, Users, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export const TeamOverview = () => {
+interface TeamOverviewProps {
+  onViewMemberDetails?: (memberId: string) => void;
+  onViewMemberDashboard?: (memberId: string) => void;
+}
+
+export const TeamOverview = ({ onViewMemberDetails, onViewMemberDashboard }: TeamOverviewProps) => {
   const { teamData, isLoading, error, lastUpdated, manualRefresh } = useTeamDataRealtime();
   const navigate = useNavigate();
 
   const handleViewMemberDetails = (memberId: string) => {
-    // Navigate to individual detail tab with the selected member
-    navigate('/manager', { state: { selectedTab: 'individual-detail', selectedEmployee: memberId } });
+    if (onViewMemberDetails) {
+      onViewMemberDetails(memberId);
+    } else {
+      // Navigate to individual detail tab with the selected member
+      navigate('/manager', { state: { selectedTab: 'individual-detail', selectedEmployee: memberId } });
+    }
+  };
+
+  const handleViewMemberDashboard = (memberId: string) => {
+    if (onViewMemberDashboard) {
+      onViewMemberDashboard(memberId);
+    }
   };
 
   if (isLoading) {
@@ -103,7 +118,7 @@ export const TeamOverview = () => {
       <TeamSummaryCards teamData={teamData} />
       <TeamMoodChart teamData={teamData} />
       
-      {/* New Individual Details Section */}
+      {/* Individual Details Section with both view options */}
       <IndividualDetailsSection 
         teamData={teamData} 
         onViewMemberDetails={handleViewMemberDetails}

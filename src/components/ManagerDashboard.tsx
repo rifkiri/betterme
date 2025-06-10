@@ -13,6 +13,7 @@ export const ManagerDashboard = () => {
   const location = useLocation();
   const [selectedTab, setSelectedTab] = useState('team');
   const [selectedEmployee, setSelectedEmployee] = useState('');
+  const [viewMode, setViewMode] = useState<'summary' | 'dashboard'>('summary');
   const { teamData, isLoading } = useTeamDataRealtime();
 
   // Handle navigation from TeamOverview
@@ -31,6 +32,14 @@ export const ManagerDashboard = () => {
   const handleViewMemberDetails = (memberId: string) => {
     console.log('handleViewMemberDetails called with:', memberId);
     setSelectedEmployee(memberId);
+    setViewMode('summary');
+    setSelectedTab('individual-detail');
+  };
+
+  const handleViewMemberDashboard = (memberId: string) => {
+    console.log('handleViewMemberDashboard called with:', memberId);
+    setSelectedEmployee(memberId);
+    setViewMode('dashboard');
     setSelectedTab('individual-detail');
   };
 
@@ -58,7 +67,10 @@ export const ManagerDashboard = () => {
         </TabsList>
 
         <TabsContent value="team">
-          <TeamOverview />
+          <TeamOverview 
+            onViewMemberDetails={handleViewMemberDetails}
+            onViewMemberDashboard={handleViewMemberDashboard}
+          />
         </TabsContent>
 
         <TabsContent value="individual">
@@ -74,7 +86,7 @@ export const ManagerDashboard = () => {
               {selectedEmployee && (
                 <div className="mb-4 p-3 bg-blue-50 rounded-lg">
                   <p className="text-sm text-blue-700">
-                    Showing details for: {teamData.membersSummary.find(m => m.id === selectedEmployee)?.name || 'Unknown'}
+                    Showing {viewMode === 'dashboard' ? 'full dashboard' : 'performance summary'} for: {teamData.membersSummary.find(m => m.id === selectedEmployee)?.name || 'Unknown'}
                   </p>
                 </div>
               )}
@@ -82,6 +94,7 @@ export const ManagerDashboard = () => {
                 teamData={teamData} 
                 onViewMemberDetails={handleViewMemberDetails}
                 selectedMemberId={selectedEmployee}
+                viewMode={viewMode}
               />
             </div>
           ) : (
