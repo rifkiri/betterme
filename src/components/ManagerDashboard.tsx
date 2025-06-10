@@ -58,7 +58,7 @@ export const ManagerDashboard = () => {
           </TabsTrigger>
           <TabsTrigger value="individual" className="flex items-center gap-2">
             <User className="h-4 w-4" />
-            Individual Overview
+            Individual Selector
           </TabsTrigger>
           <TabsTrigger value="individual-detail" className="flex items-center gap-2">
             <UserCheck className="h-4 w-4" />
@@ -74,10 +74,24 @@ export const ManagerDashboard = () => {
         </TabsContent>
 
         <TabsContent value="individual">
-          <IndividualPerformance 
-            preSelectedEmployee={selectedEmployee}
-            onEmployeeChange={setSelectedEmployee}
-          />
+          <div>
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>Select Team Member</CardTitle>
+                <CardDescription>
+                  Choose a team member to view their detailed performance analysis
+                </CardDescription>
+              </CardHeader>
+            </Card>
+            
+            <IndividualPerformance 
+              preSelectedEmployee={selectedEmployee}
+              onEmployeeChange={(employeeId) => {
+                setSelectedEmployee(employeeId);
+                console.log('Employee selected from Individual tab:', employeeId);
+              }}
+            />
+          </div>
         </TabsContent>
 
         <TabsContent value="individual-detail">
