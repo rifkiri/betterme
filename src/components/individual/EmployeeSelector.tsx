@@ -19,9 +19,10 @@ export const EmployeeSelector = ({ selectedEmployee, onEmployeeChange }: Employe
       setIsLoading(true);
       try {
         const users = await supabaseDataService.getUsers();
-        const members = users.filter(user => user.role === 'team-member');
+        // Include both team members and managers, exclude only admins
+        const members = users.filter(user => user.role !== 'admin');
         setTeamMembers(members);
-        console.log('Team members loaded from Supabase:', members);
+        console.log('Team members loaded from Supabase (excluding admins):', members);
       } catch (error) {
         console.error('Failed to load team members from Supabase:', error);
       } finally {
@@ -55,7 +56,7 @@ export const EmployeeSelector = ({ selectedEmployee, onEmployeeChange }: Employe
           <SelectContent>
             {teamMembers.map((member) => (
               <SelectItem key={member.id} value={member.id}>
-                {member.name} - {member.position || 'Team Member'}
+                {member.name} - {member.position || member.role}
               </SelectItem>
             ))}
           </SelectContent>
