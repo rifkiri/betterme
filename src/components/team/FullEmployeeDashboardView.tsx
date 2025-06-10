@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Target, CheckCircle, Clock, Award } from 'lucide-react';
 import { QuickStatsCard } from '../QuickStatsCard';
@@ -82,15 +81,15 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
   const transformedOverdueTasks = employee.overdueTasks.map(t => ({
     id: t.id,
     title: t.title,
-    completed: t.completed,
-    dueDate: new Date(t.dueDate),
+    completed: false, // Overdue tasks are by definition not completed
+    dueDate: new Date(t.originalDueDate || new Date()), // Use originalDueDate since dueDate doesn't exist
     priority: t.priority as 'Low' | 'Medium' | 'High',
     description: '',
     userId: employee.id,
     isDeleted: false,
     createdDate: new Date(),
     updatedAt: new Date(),
-    originalDueDate: new Date(t.dueDate),
+    originalDueDate: new Date(t.originalDueDate || new Date()),
     isMoved: false
   }));
 
@@ -111,13 +110,13 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
     id: o.id,
     title: o.title,
     progress: o.progress,
-    dueDate: new Date(o.dueDate),
+    dueDate: new Date(o.originalDueDate || new Date()), // Use originalDueDate since dueDate doesn't exist
     description: '',
     userId: employee.id,
     isDeleted: false,
     createdDate: new Date(),
     updatedAt: new Date(),
-    originalDueDate: new Date(o.dueDate)
+    originalDueDate: new Date(o.originalDueDate || new Date())
   }));
 
   // Helper function to get tasks by date for TasksSection
