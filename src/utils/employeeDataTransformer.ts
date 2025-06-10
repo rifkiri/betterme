@@ -1,6 +1,7 @@
 
 import { EmployeeData } from '@/types/individualData';
 import { User } from '@/types/userTypes';
+import { supabaseDataService } from '@/services/SupabaseDataService';
 
 export const transformToEmployeeData = (
   user: User, 
@@ -90,4 +91,22 @@ export const transformToEmployeeData = (
     })),
     moodData: transformedMoodData
   };
+};
+
+export const transformUserToEmployeeData = async (user: User): Promise<EmployeeData> => {
+  try {
+    // Fetch all data for the user
+    const [habits, tasks, outputs, moodData] = await Promise.all([
+      supabaseDataService.getHabits(user.id),
+      supabaseDataService.getTasks(user.id),
+      supabaseDataService.getWeeklyOutputs(user.id),
+      supabaseDataService.getMoodData(user.id)
+    ]);
+    
+    // Use the existing transform function
+    return transformToEmployeeData(user, habits, tasks, outputs, moodData);
+  } catch (error) {
+    console.error(`Error transforming user data for ${user.name}:`, error);
+    throw error;
+  }
 };
