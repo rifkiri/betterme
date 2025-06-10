@@ -1,9 +1,8 @@
 
 import { useState, useEffect } from 'react';
-import { EmployeeData } from '@/types/individualData';
 import { supabaseDataService } from '@/services/SupabaseDataService';
-import { transformToEmployeeData } from '@/utils/employeeDataTransformer';
-import { toast } from 'sonner';
+import { EmployeeData } from '@/types/individualData';
+import { transformUserToEmployeeData } from '@/utils/employeeDataTransformer';
 
 export const useEmployeeData = () => {
   const [employeeData, setEmployeeData] = useState<Record<string, EmployeeData>>({});
@@ -13,31 +12,30 @@ export const useEmployeeData = () => {
     const loadEmployeeData = async () => {
       setIsLoading(true);
       try {
-        // Get all team members from Supabase
+        console.log('Loading users for employee data...');
         const users = await supabaseDataService.getUsers();
-        const teamMembers = users.filter(user => user.role === 'team-member');
         
-        console.log('Team members from Supabase:', teamMembers);
+        // Include both team members and managers, exclude only admins
+        const teamMembers = users.filter(user => user.role !== 'admin');
+        console.log('Team members for employee data (excluding admins):', teamMembers);
         
-        const data: Record<string, EmployeeData> = {};
+        const employeeDataMap: Record<string, EmployeeData> = {};
         
-        // Load data for each team member from Supabase
-        for (const member of teamMembers) {
-          const [habits, tasks, outputs, moodData] = await Promise.all([
-            supabaseDataService.getHabits(member.id),
-            supabaseDataService.getTasks(member.id),
-            supabaseDataService.getWeeklyOutputs(member.id),
-            supabaseDataService.getMoodData(member.id)
-          ]);
-          
-          data[member.id] = transformToEmployeeData(member, habits, tasks, outputs, moodData);
+        for (const user of teamMembers) {
+          try {
+            console.log(`Transforming data for user: ${user.name} (${user.role})`);
+            const employeeData = await transformUserToEmployeeData(user);
+            employeeDataMap[user.id] = employeeData;
+            console.log(`Successfully transformed data for ${user.name}`);
+          } catch (error) {
+            console.error(`Failed to transform data for user ${user.id}:`, error);
+          }
         }
         
-        setEmployeeData(data);
-        console.log('Employee data loaded from Supabase:', data);
+        console.log('Final employee data map:', employeeDataMap);
+        setEmployeeData(employeeDataMap);
       } catch (error) {
-        console.error('Failed to load employee data from Supabase:', error);
-        toast.error('Failed to load employee data. Please try again.');
+        console.error('Failed to load employee data:', error);
       } finally {
         setIsLoading(false);
       }
