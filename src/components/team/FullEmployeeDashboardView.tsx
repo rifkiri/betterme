@@ -141,38 +141,17 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
             <p className="text-gray-500">Loading historical data for {format(selectedDate, 'MMM d, yyyy')}...</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {/* Historical overview */}
-            <div className="bg-green-50 p-4 rounded-lg">
-              <h3 className="text-lg font-semibold text-green-800 mb-2">Historical Overview</h3>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <span className="font-medium">Total Habits:</span> {allHabits.length}
-                </div>
-                <div>
-                  <span className="font-medium">Total Tasks:</span> {allTasks.length}
-                </div>
-                <div>
-                  <span className="font-medium">Total Weekly Outputs:</span> {allWeeklyOutputs.length}
-                </div>
-                <div>
-                  <span className="font-medium">Overdue Items:</span> {overdueData.overdueTasks.length + overdueData.overdueOutputs.length}
-                </div>
-              </div>
-            </div>
-
-            <EmployeeDashboardLayout
-              transformedHabits={habitsForSelectedDate}
-              transformedTasks={allTasks}
-              transformedOverdueTasks={overdueData.overdueTasks}
-              transformedWeeklyOutputs={weeklyOutputsForView}
-              transformedOverdueOutputs={overdueData.overdueOutputs}
-              selectedDate={selectedDate}
-              mockHandlers={readOnlyHandlers}
-              getTasksByDate={getTasksByDate}
-              isViewOnly={true}
-            />
-          </div>
+          <EmployeeDashboardLayout
+            transformedHabits={habitsForSelectedDate}
+            transformedTasks={allTasks}
+            transformedOverdueTasks={overdueData.overdueTasks}
+            transformedWeeklyOutputs={weeklyOutputsForView}
+            transformedOverdueOutputs={overdueData.overdueOutputs}
+            selectedDate={selectedDate}
+            mockHandlers={readOnlyHandlers}
+            getTasksByDate={getTasksByDate}
+            isViewOnly={true}
+          />
         )}
       </div>
     </div>
