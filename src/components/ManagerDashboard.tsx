@@ -27,6 +27,10 @@ export const ManagerDashboard = () => {
       setSelectedEmployee(state.selectedEmployee);
       console.log('Selected employee:', state.selectedEmployee);
     }
+    if (state?.viewMode) {
+      setViewMode(state.viewMode);
+      console.log('Set view mode from navigation:', state.viewMode);
+    }
   }, [location.state]);
 
   const handleViewMemberDetails = (memberId: string) => {

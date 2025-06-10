@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TeamSummaryCards } from './team/TeamSummaryCards';
 import { OverdueItemsSection } from './team/OverdueItemsSection';
@@ -22,6 +21,7 @@ export const TeamOverview = ({ onViewMemberDetails, onViewMemberDashboard }: Tea
   const navigate = useNavigate();
 
   const handleViewMemberDetails = (memberId: string) => {
+    console.log('TeamOverview - handleViewMemberDetails called with:', memberId);
     if (onViewMemberDetails) {
       onViewMemberDetails(memberId);
     } else {
@@ -31,8 +31,18 @@ export const TeamOverview = ({ onViewMemberDetails, onViewMemberDashboard }: Tea
   };
 
   const handleViewMemberDashboard = (memberId: string) => {
+    console.log('TeamOverview - handleViewMemberDashboard called with:', memberId);
     if (onViewMemberDashboard) {
       onViewMemberDashboard(memberId);
+    } else {
+      // Navigate to individual detail tab with dashboard view mode
+      navigate('/manager', { 
+        state: { 
+          selectedTab: 'individual-detail', 
+          selectedEmployee: memberId,
+          viewMode: 'dashboard'
+        } 
+      });
     }
   };
 
