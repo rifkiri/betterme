@@ -104,7 +104,7 @@ export const IndividualDetailCard = ({ member, onViewDetails, isSelected }: Indi
             onClick={handleViewDetails}
             className="w-full mt-3 px-3 py-2 text-sm bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-md transition-colors"
           >
-            {isSelected ? 'Currently Viewing' : 'View Full Details'}
+            View Detailed Performance
           </button>
         )}
       </CardContent>

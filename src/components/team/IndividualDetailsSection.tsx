@@ -2,8 +2,10 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { IndividualDetailCard } from './IndividualDetailCard';
+import { IndividualPerformanceContent } from '../individual/IndividualPerformanceContent';
 import { TeamData } from '@/types/teamData';
 import { Users } from 'lucide-react';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 interface IndividualDetailsSectionProps {
   teamData: TeamData;
@@ -16,6 +18,8 @@ export const IndividualDetailsSection = ({
   onViewMemberDetails, 
   selectedMemberId 
 }: IndividualDetailsSectionProps) => {
+  const { employeeData, isLoading } = useEmployeeData();
+
   if (!teamData.membersSummary || teamData.membersSummary.length === 0) {
     return (
       <Card>
@@ -27,40 +31,85 @@ export const IndividualDetailsSection = ({
     );
   }
 
-  // If a specific member is selected, show only that member
-  const membersToShow = selectedMemberId 
-    ? teamData.membersSummary.filter(member => member.id === selectedMemberId)
-    : teamData.membersSummary;
+  // If a specific member is selected, show their detailed performance
+  if (selectedMemberId) {
+    const selectedMember = teamData.membersSummary.find(member => member.id === selectedMemberId);
+    const selectedEmployeeData = employeeData[selectedMemberId];
 
-  return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            {selectedMemberId ? 'Individual Team Member Detail' : 'Individual Team Performance'}
-          </CardTitle>
-          <CardDescription>
-            {selectedMemberId 
-              ? 'Detailed productivity overview for the selected team member'
-              : 'Detailed productivity overview for each team member'
-            }
-          </CardDescription>
-        </CardHeader>
-      </Card>
+    if (!selectedMember) {
+      return (
+        <Card>
+          <CardContent className="text-center py-8">
+            <p className="text-gray-500">Selected team member not found</p>
+            <button
+              onClick={() => onViewMemberDetails?.('')}
+              className="mt-4 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
+            >
+              ← Back to All Team Members
+            </button>
+          </CardContent>
+        </Card>
+      );
+    }
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {membersToShow.map((member) => (
-          <IndividualDetailCard
-            key={member.id}
-            member={member}
-            onViewDetails={onViewMemberDetails}
-            isSelected={member.id === selectedMemberId}
-          />
-        ))}
-      </div>
+    if (isLoading) {
+      return (
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Loading {selectedMember.name}'s Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-center py-8">
+              <p className="text-gray-500">Loading detailed performance data...</p>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
 
-      {selectedMemberId && (
+    if (!selectedEmployeeData) {
+      return (
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                {selectedMember.name}'s Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-center py-8">
+              <p className="text-gray-500">No detailed data available for {selectedMember.name}</p>
+              <button
+                onClick={() => onViewMemberDetails?.('')}
+                className="mt-4 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
+              >
+                ← Back to All Team Members
+              </button>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              {selectedMember.name}'s Detailed Performance
+            </CardTitle>
+            <CardDescription>
+              Complete productivity overview including habits, tasks, outputs, and mood tracking
+            </CardDescription>
+          </CardHeader>
+        </Card>
+
+        <IndividualPerformanceContent employee={selectedEmployeeData} />
+
         <div className="flex justify-center mt-6">
           <button
             onClick={() => onViewMemberDetails?.('')}
@@ -69,7 +118,35 @@ export const IndividualDetailsSection = ({
             ← Back to All Team Members
           </button>
         </div>
-      )}
+      </div>
+    );
+  }
+
+  // Show all team members overview
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Individual Team Performance
+          </CardTitle>
+          <CardDescription>
+            Click on any team member to view their detailed productivity overview
+          </CardDescription>
+        </CardHeader>
+      </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {teamData.membersSummary.map((member) => (
+          <IndividualDetailCard
+            key={member.id}
+            member={member}
+            onViewDetails={onViewMemberDetails}
+            isSelected={false}
+          />
+        ))}
+      </div>
     </div>
   );
 };
