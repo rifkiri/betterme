@@ -7,13 +7,15 @@ import { IndividualDetailsSection } from './team/IndividualDetailsSection';
 import { Users, User, UserCheck } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useTeamDataRealtime } from '@/hooks/useTeamDataRealtime';
-
 export const ManagerDashboard = () => {
   const location = useLocation();
   const [selectedTab, setSelectedTab] = useState('team');
   const [selectedEmployee, setSelectedEmployee] = useState('');
   const [viewMode, setViewMode] = useState<'summary' | 'dashboard'>('summary');
-  const { teamData, isLoading } = useTeamDataRealtime();
+  const {
+    teamData,
+    isLoading
+  } = useTeamDataRealtime();
 
   // Handle navigation from TeamOverview
   useEffect(() => {
@@ -31,7 +33,6 @@ export const ManagerDashboard = () => {
       console.log('Set view mode from navigation:', state.viewMode);
     }
   }, [location.state]);
-
   const handleViewMemberDetails = (memberId: string) => {
     console.log('ManagerDashboard - handleViewMemberDetails called with:', memberId);
     setSelectedEmployee(memberId);
@@ -39,7 +40,6 @@ export const ManagerDashboard = () => {
     setSelectedTab('individual-detail');
     console.log('ManagerDashboard - Set viewMode to summary for member:', memberId);
   };
-
   const handleViewMemberDashboard = (memberId: string) => {
     console.log('ManagerDashboard - handleViewMemberDashboard called with:', memberId);
     setSelectedEmployee(memberId);
@@ -65,9 +65,7 @@ export const ManagerDashboard = () => {
     selectedEmployee,
     viewMode
   });
-
-  return (
-    <div className="max-w-7xl mx-auto py-8 px-4">
+  return <div className="max-w-7xl mx-auto py-8 px-4">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">My Team</h1>
         <p className="text-gray-600">Monitor team productivity and individual performance</p>
@@ -90,64 +88,40 @@ export const ManagerDashboard = () => {
         </TabsList>
 
         <TabsContent value="team">
-          <TeamOverview 
-            onViewMemberDetails={handleViewMemberDetails}
-            onViewMemberDashboard={handleViewMemberDashboard}
-          />
+          <TeamOverview onViewMemberDetails={handleViewMemberDetails} onViewMemberDashboard={handleViewMemberDashboard} />
         </TabsContent>
 
         <TabsContent value="individual">
           <div>
             <Card className="mb-6">
-              <CardHeader>
-                <CardTitle>Individual Performance Analysis</CardTitle>
-                <CardDescription>
-                  Select a team member to view their detailed productivity metrics and performance trends
-                </CardDescription>
-              </CardHeader>
+              
             </Card>
             
-            <IndividualPerformance 
-              preSelectedEmployee=""
-              onEmployeeChange={(employeeId) => {
-                console.log('Employee selected from Individual Performance tab:', employeeId);
-              }}
-            />
+            <IndividualPerformance preSelectedEmployee="" onEmployeeChange={employeeId => {
+            console.log('Employee selected from Individual Performance tab:', employeeId);
+          }} />
           </div>
         </TabsContent>
 
         <TabsContent value="individual-detail">
-          {teamData ? (
-            <div>
-              {selectedEmployee && (
-                <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+          {teamData ? <div>
+              {selectedEmployee && <div className="mb-4 p-3 bg-blue-50 rounded-lg">
                   <p className="text-sm text-blue-700">
                     Showing {viewMode === 'dashboard' ? 'full dashboard' : 'performance summary'} for: {teamData.membersSummary.find(m => m.id === selectedEmployee)?.name || 'Unknown'}
                   </p>
                   <p className="text-xs text-blue-600 mt-1">
                     View mode: {viewMode} | Selected ID: {selectedEmployee}
                   </p>
-                </div>
-              )}
-              <IndividualDetailsSection 
-                teamData={teamData} 
-                onViewMemberDetails={handleViewMemberDetails}
-                onViewMemberDashboard={handleViewMemberDashboard}
-                selectedMemberId={selectedEmployee}
-                viewMode={viewMode}
-              />
-            </div>
-          ) : (
-            <Card>
+                </div>}
+              <IndividualDetailsSection teamData={teamData} onViewMemberDetails={handleViewMemberDetails} onViewMemberDashboard={handleViewMemberDashboard} selectedMemberId={selectedEmployee} viewMode={viewMode} />
+            </div> : <Card>
               <CardContent className="text-center py-8">
                 <p className="text-gray-500">
                   {isLoading ? 'Loading team data...' : 'No team data available'}
                 </p>
               </CardContent>
-            </Card>
-          )}
+            </Card>}
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 };
