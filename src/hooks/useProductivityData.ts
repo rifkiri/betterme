@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { Habit, Task, WeeklyOutput } from '@/types/productivity';
@@ -22,7 +23,7 @@ export const useProductivityData = () => {
       console.error('Error getting user:', error);
       return null;
     }
-    console.log('Current user:', user?.id);
+    console.log('Current authenticated user:', user?.id);
     return user?.id || null;
   };
 
@@ -31,7 +32,7 @@ export const useProductivityData = () => {
   useEffect(() => {
     const initializeUser = async () => {
       const currentUserId = await getCurrentUserId();
-      console.log('Initialized user ID:', currentUserId);
+      console.log('Initialized user ID in useProductivityData:', currentUserId);
       setUserId(currentUserId);
     };
     initializeUser();
@@ -40,7 +41,7 @@ export const useProductivityData = () => {
   // Check if Supabase is available
   const isSupabaseAvailable = () => {
     const available = supabaseDataService.isConfigured() && userId !== null;
-    console.log('Supabase available:', available, 'User ID:', userId);
+    console.log('Supabase available for user:', userId, 'available:', available);
     return available;
   };
 
@@ -52,21 +53,24 @@ export const useProductivityData = () => {
     }
 
     const targetDate = date || selectedDate;
-    console.log('Loading data for user:', userId, 'date:', format(targetDate, 'yyyy-MM-dd'));
+    console.log('Loading productivity data for user:', userId, 'date:', format(targetDate, 'yyyy-MM-dd'));
     setIsLoading(true);
     try {
       if (isSupabaseAvailable()) {
-        console.log('Loading data from Supabase...');
+        console.log('Loading data from Supabase for authenticated user...');
+        
+        // Load habits for the specific date and user
         const [habitsData, tasksData, weeklyOutputsData] = await Promise.all([
           supabaseDataService.getHabitsForDate(userId, targetDate),
           supabaseDataService.getTasks(userId),
           supabaseDataService.getWeeklyOutputs(userId)
         ]);
 
-        console.log('Loaded habits for date:', habitsData);
-        console.log('Loaded tasks:', tasksData);
-        console.log('Loaded weekly outputs:', weeklyOutputsData);
+        console.log('Loaded habits for user', userId, 'date:', format(targetDate, 'yyyy-MM-dd'), habitsData);
+        console.log('Loaded tasks for user', userId, ':', tasksData);
+        console.log('Loaded weekly outputs for user', userId, ':', weeklyOutputsData);
 
+        // Filter and set data ensuring user isolation
         setHabits(habitsData.filter(h => !h.archived && !h.isDeleted));
         setArchivedHabits(habitsData.filter(h => h.archived));
         setTasks(tasksData.filter(t => !t.isDeleted));
@@ -74,13 +78,13 @@ export const useProductivityData = () => {
         setWeeklyOutputs(weeklyOutputsData.filter(w => !w.isDeleted));
         setDeletedWeeklyOutputs(weeklyOutputsData.filter(w => w.isDeleted));
         
-        console.log('Data loaded from Supabase successfully');
+        console.log('Data loaded successfully for user:', userId);
       } else {
         console.log('Supabase not available or user not authenticated');
         toast.error('Please sign in to access your data');
       }
     } catch (error) {
-      console.error('Failed to load data from Supabase:', error);
+      console.error('Failed to load data from Supabase for user', userId, ':', error);
       toast.error('Failed to load data from Supabase');
     } finally {
       setIsLoading(false);
@@ -89,12 +93,13 @@ export const useProductivityData = () => {
 
   useEffect(() => {
     if (userId) {
-      console.log('User ID or date changed, loading data:', userId, format(selectedDate, 'yyyy-MM-dd'));
+      console.log('User ID or date changed, reloading data for user:', userId, format(selectedDate, 'yyyy-MM-dd'));
       loadAllData(selectedDate);
     }
   }, [userId, selectedDate]);
 
   const handleDateChange = (date: Date) => {
+    console.log('Date changed to:', format(date, 'yyyy-MM-dd'), 'for user:', userId);
     setSelectedDate(date);
   };
 

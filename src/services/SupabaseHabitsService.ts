@@ -18,6 +18,8 @@ export class SupabaseHabitsService {
   }
 
   async getHabits(userId: string): Promise<Habit[]> {
+    console.log('Getting habits for user:', userId);
+    
     const { data, error } = await supabase
       .from('habits')
       .select('*')
@@ -28,6 +30,8 @@ export class SupabaseHabitsService {
       console.error('Error fetching habits:', error);
       throw error;
     }
+
+    console.log('Raw habits data for user', userId, ':', data);
 
     return data.map(habit => ({
       id: habit.id,
@@ -44,9 +48,9 @@ export class SupabaseHabitsService {
 
   async getHabitsForDate(userId: string, date: Date): Promise<Habit[]> {
     const dateStr = format(date, 'yyyy-MM-dd');
-    console.log('Getting habits for date:', dateStr, 'user:', userId);
+    console.log('Getting habits for user:', userId, 'and date:', dateStr);
     
-    // Use the new database function to get habits with completion status for the specific date
+    // Use the database function to get habits with completion status for the specific date
     const { data, error } = await supabase.rpc('get_habits_for_date', {
       user_id_param: userId,
       target_date: dateStr
@@ -57,9 +61,9 @@ export class SupabaseHabitsService {
       throw error;
     }
 
-    console.log('Habits data for date:', data);
+    console.log('Habits data for user', userId, 'date', dateStr, ':', data);
 
-    return data.map((habit: any) => ({
+    const mappedData = data.map((habit: any) => ({
       id: habit.id,
       name: habit.name,
       description: habit.description,
@@ -70,9 +74,14 @@ export class SupabaseHabitsService {
       isDeleted: habit.is_deleted,
       createdAt: habit.created_at
     }));
+
+    console.log('Mapped habits data:', mappedData);
+    return mappedData;
   }
 
   async addHabit(habit: Habit & { userId: string }): Promise<void> {
+    console.log('Adding habit for user:', habit.userId, habit);
+    
     const { error } = await supabase
       .from('habits')
       .insert({
@@ -93,6 +102,8 @@ export class SupabaseHabitsService {
   }
 
   async updateHabit(id: string, userId: string, updates: Partial<Habit>): Promise<void> {
+    console.log('Updating habit:', id, 'for user:', userId, 'with updates:', updates);
+    
     const supabaseUpdates: any = {};
     
     if (updates.name) supabaseUpdates.name = updates.name;
@@ -107,7 +118,7 @@ export class SupabaseHabitsService {
       .from('habits')
       .update(supabaseUpdates)
       .eq('id', id)
-      .eq('user_id', userId);
+      .eq('user_id', userId); // Ensure we only update for the correct user
 
     if (error) {
       console.error('Error updating habit:', error);
@@ -117,9 +128,9 @@ export class SupabaseHabitsService {
 
   async toggleHabitForDate(habitId: string, userId: string, date: Date, completed: boolean): Promise<void> {
     const dateStr = format(date, 'yyyy-MM-dd');
-    console.log('Toggling habit for date:', habitId, dateStr, completed);
+    console.log('Toggling habit completion - habit:', habitId, 'user:', userId, 'date:', dateStr, 'completed:', completed);
 
-    // Use the new database function to properly handle daily completions and streak calculation
+    // Use the database function to properly handle daily completions and streak calculation
     const { data, error } = await supabase.rpc('toggle_habit_completion', {
       habit_id_param: habitId,
       user_id_param: userId,
@@ -132,7 +143,7 @@ export class SupabaseHabitsService {
       throw error;
     }
 
-    console.log('Habit toggle result:', data);
+    console.log('Habit toggle result for user', userId, ':', data);
   }
 }
 

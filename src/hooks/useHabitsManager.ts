@@ -1,3 +1,4 @@
+
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { Habit } from '@/types/productivity';
 import { toast } from 'sonner';
@@ -37,18 +38,18 @@ export const useHabitsManager = ({
       streak: 0,
     };
 
-    console.log('Adding habit:', newHabit);
+    console.log('Adding habit for user:', userId, newHabit);
 
     try {
       if (isSupabaseAvailable()) {
         await supabaseDataService.addHabit({ ...newHabit, userId });
-        await loadAllData();
+        await loadAllData(selectedDate);
         toast.success('Habit added successfully');
       } else {
         toast.error('Please sign in to add habits');
       }
     } catch (error) {
-      console.error('Failed to add habit:', error);
+      console.error('Failed to add habit for user', userId, ':', error);
       toast.error('Failed to add habit');
     }
   };
@@ -60,18 +61,18 @@ export const useHabitsManager = ({
       return;
     }
 
-    console.log('Editing habit:', id, updates);
+    console.log('Editing habit for user:', userId, 'habit:', id, 'updates:', updates);
 
     try {
       if (isSupabaseAvailable()) {
         await supabaseDataService.updateHabit(id, userId, updates);
-        await loadAllData();
+        await loadAllData(selectedDate);
         toast.success('Habit updated successfully');
       } else {
         toast.error('Please sign in to edit habits');
       }
     } catch (error) {
-      console.error('Failed to update habit:', error);
+      console.error('Failed to update habit for user', userId, ':', error);
       toast.error('Failed to update habit');
     }
   };
@@ -85,24 +86,24 @@ export const useHabitsManager = ({
 
     const habit = habits.find(h => h.id === id);
     if (!habit) {
-      console.log('Habit not found:', id);
+      console.log('Habit not found for user:', userId, 'habit:', id);
       return;
     }
 
     const newCompleted = !habit.completed;
 
-    console.log('Toggling habit:', id, 'from', habit.completed, 'to', newCompleted, 'for date:', selectedDate);
+    console.log('Toggling habit for user:', userId, 'habit:', id, 'from', habit.completed, 'to', newCompleted, 'for date:', selectedDate);
 
     try {
       if (isSupabaseAvailable()) {
         await supabaseDataService.toggleHabitForDate(id, userId, selectedDate, newCompleted);
         await loadAllData(selectedDate);
-        console.log('Habit toggled successfully');
+        console.log('Habit toggled successfully for user:', userId);
       } else {
         toast.error('Please sign in to update habits');
       }
     } catch (error) {
-      console.error('Failed to update habit:', error);
+      console.error('Failed to update habit for user', userId, ':', error);
       toast.error('Failed to update habit');
     }
   };
@@ -110,51 +111,57 @@ export const useHabitsManager = ({
   const archiveHabit = async (id: string) => {
     if (!userId) return;
 
+    console.log('Archiving habit for user:', userId, 'habit:', id);
+
     try {
       if (isSupabaseAvailable()) {
         await supabaseDataService.updateHabit(id, userId, { archived: true });
-        await loadAllData();
+        await loadAllData(selectedDate);
         toast.success('Habit archived');
       } else {
         toast.error('Please sign in to archive habits');
       }
     } catch (error) {
       toast.error('Failed to archive habit');
-      console.error('Failed to archive habit:', error);
+      console.error('Failed to archive habit for user', userId, ':', error);
     }
   };
 
   const restoreHabit = async (id: string) => {
     if (!userId) return;
 
+    console.log('Restoring habit for user:', userId, 'habit:', id);
+
     try {
       if (isSupabaseAvailable()) {
         await supabaseDataService.updateHabit(id, userId, { archived: false });
-        await loadAllData();
+        await loadAllData(selectedDate);
         toast.success('Habit restored');
       } else {
         toast.error('Please sign in to restore habits');
       }
     } catch (error) {
       toast.error('Failed to restore habit');
-      console.error('Failed to restore habit:', error);
+      console.error('Failed to restore habit for user', userId, ':', error);
     }
   };
 
   const permanentlyDeleteHabit = async (id: string) => {
     if (!userId) return;
 
+    console.log('Permanently deleting habit for user:', userId, 'habit:', id);
+
     try {
       if (isSupabaseAvailable()) {
         await supabaseDataService.updateHabit(id, userId, { isDeleted: true });
-        await loadAllData();
+        await loadAllData(selectedDate);
         toast.success('Habit permanently deleted');
       } else {
         toast.error('Please sign in to delete habits');
       }
     } catch (error) {
       toast.error('Failed to delete habit');
-      console.error('Failed to delete habit:', error);
+      console.error('Failed to delete habit for user', userId, ':', error);
     }
   };
 
