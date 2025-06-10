@@ -37,7 +37,7 @@ export const EmployeeSelector = ({ selectedEmployee, onEmployeeChange }: Employe
       <CardHeader>
         <CardTitle>Select Team Member</CardTitle>
         <CardDescription>
-          Choose a team member to view their detailed performance
+          Choose a team member to view their productivity overview
           <span className="text-blue-600"> • Using Supabase Database</span>
         </CardDescription>
       </CardHeader>
