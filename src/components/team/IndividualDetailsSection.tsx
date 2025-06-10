@@ -11,6 +11,7 @@ import { useEmployeeData } from '@/hooks/useEmployeeData';
 interface IndividualDetailsSectionProps {
   teamData: TeamData;
   onViewMemberDetails?: (memberId: string) => void;
+  onViewMemberDashboard?: (memberId: string) => void;
   selectedMemberId?: string;
   viewMode?: 'summary' | 'dashboard';
 }
@@ -18,6 +19,7 @@ interface IndividualDetailsSectionProps {
 export const IndividualDetailsSection = ({ 
   teamData, 
   onViewMemberDetails, 
+  onViewMemberDashboard,
   selectedMemberId,
   viewMode = 'summary'
 }: IndividualDetailsSectionProps) => {
@@ -157,6 +159,7 @@ export const IndividualDetailsSection = ({
             key={member.id}
             member={member}
             onViewDetails={onViewMemberDetails}
+            onViewDashboard={onViewMemberDashboard}
             isSelected={false}
           />
         ))}

@@ -122,6 +122,7 @@ export const TeamOverview = ({ onViewMemberDetails, onViewMemberDashboard }: Tea
       <IndividualDetailsSection 
         teamData={teamData} 
         onViewMemberDetails={handleViewMemberDetails}
+        onViewMemberDashboard={handleViewMemberDashboard}
       />
       
       <OverdueItemsSection teamData={teamData} />
