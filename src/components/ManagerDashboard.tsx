@@ -4,13 +4,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TeamOverview } from './TeamOverview';
 import { IndividualPerformance } from './IndividualPerformance';
-import { Users, User } from 'lucide-react';
+import { IndividualDetailsSection } from './team/IndividualDetailsSection';
+import { Users, User, UserCheck } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+import { useTeamDataRealtime } from '@/hooks/useTeamDataRealtime';
 
 export const ManagerDashboard = () => {
   const location = useLocation();
   const [selectedTab, setSelectedTab] = useState('team');
   const [selectedEmployee, setSelectedEmployee] = useState('');
+  const { teamData, isLoading } = useTeamDataRealtime();
 
   // Handle navigation from TeamOverview
   useEffect(() => {
@@ -23,6 +26,11 @@ export const ManagerDashboard = () => {
     }
   }, [location.state]);
 
+  const handleViewMemberDetails = (memberId: string) => {
+    setSelectedEmployee(memberId);
+    setSelectedTab('individual-detail');
+  };
+
   return (
     <div className="max-w-7xl mx-auto py-8 px-4">
       <div className="mb-8">
@@ -31,7 +39,7 @@ export const ManagerDashboard = () => {
       </div>
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+        <TabsList className="grid w-full grid-cols-3 lg:w-[600px]">
           <TabsTrigger value="team" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Team Overview
@@ -39,6 +47,10 @@ export const ManagerDashboard = () => {
           <TabsTrigger value="individual" className="flex items-center gap-2">
             <User className="h-4 w-4" />
             Individual Overview
+          </TabsTrigger>
+          <TabsTrigger value="individual-detail" className="flex items-center gap-2">
+            <UserCheck className="h-4 w-4" />
+            Individual Detail
           </TabsTrigger>
         </TabsList>
 
@@ -51,6 +63,23 @@ export const ManagerDashboard = () => {
             preSelectedEmployee={selectedEmployee}
             onEmployeeChange={setSelectedEmployee}
           />
+        </TabsContent>
+
+        <TabsContent value="individual-detail">
+          {teamData ? (
+            <IndividualDetailsSection 
+              teamData={teamData} 
+              onViewMemberDetails={handleViewMemberDetails}
+            />
+          ) : (
+            <Card>
+              <CardContent className="text-center py-8">
+                <p className="text-gray-500">
+                  {isLoading ? 'Loading team data...' : 'No team data available'}
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>
