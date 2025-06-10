@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { TeamSummaryCards } from './team/TeamSummaryCards';
 import { OverdueItemsSection } from './team/OverdueItemsSection';
@@ -6,6 +7,7 @@ import { TeamTrendsCard } from './team/TeamTrendsCard';
 import { TeamMoodChart } from './team/TeamMoodChart';
 import { IndividualDetailsSection } from './team/IndividualDetailsSection';
 import { useTeamDataRealtime } from '@/hooks/useTeamDataRealtime';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Loader2, Users, RefreshCw } from 'lucide-react';
@@ -18,10 +20,16 @@ interface TeamOverviewProps {
 
 export const TeamOverview = ({ onViewMemberDetails, onViewMemberDashboard }: TeamOverviewProps) => {
   const { teamData, isLoading, error, lastUpdated, manualRefresh } = useTeamDataRealtime();
+  const { profile } = useUserProfile();
   const navigate = useNavigate();
+
+  // Check if user has access to individual detail features
+  const canAccessIndividualDetail = profile?.role === 'manager' || profile?.role === 'admin';
 
   const handleViewMemberDetails = (memberId: string) => {
     console.log('TeamOverview - handleViewMemberDetails called with:', memberId);
+    if (!canAccessIndividualDetail) return;
+    
     if (onViewMemberDetails) {
       onViewMemberDetails(memberId);
     } else {
@@ -32,6 +40,8 @@ export const TeamOverview = ({ onViewMemberDetails, onViewMemberDashboard }: Tea
 
   const handleViewMemberDashboard = (memberId: string) => {
     console.log('TeamOverview - handleViewMemberDashboard called with:', memberId);
+    if (!canAccessIndividualDetail) return;
+    
     if (onViewMemberDashboard) {
       onViewMemberDashboard(memberId);
     } else {
@@ -128,11 +138,11 @@ export const TeamOverview = ({ onViewMemberDetails, onViewMemberDashboard }: Tea
       <TeamSummaryCards teamData={teamData} />
       <TeamMoodChart teamData={teamData} />
       
-      {/* Individual Details Section with both view options */}
+      {/* Individual Details Section with role-based access */}
       <IndividualDetailsSection 
         teamData={teamData} 
-        onViewMemberDetails={handleViewMemberDetails}
-        onViewMemberDashboard={handleViewMemberDashboard}
+        onViewMemberDetails={canAccessIndividualDetail ? handleViewMemberDetails : undefined}
+        onViewMemberDashboard={canAccessIndividualDetail ? handleViewMemberDashboard : undefined}
       />
       
       <OverdueItemsSection teamData={teamData} />

@@ -109,26 +109,28 @@ export const IndividualDetailCard = ({
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="space-y-2">
-          {onViewDetails && (
-            <button
-              onClick={handleViewDetails}
-              className="w-full px-3 py-2 text-sm bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-md transition-colors"
-            >
-              View Performance Summary
-            </button>
-          )}
-          {onViewDashboard && (
-            <button
-              onClick={handleViewDashboard}
-              className="w-full px-3 py-2 text-sm bg-green-50 hover:bg-green-100 text-green-600 rounded-md transition-colors flex items-center justify-center gap-2"
-            >
-              <Monitor className="h-4 w-4" />
-              View Full Dashboard
-            </button>
-          )}
-        </div>
+        {/* Action Buttons - Only show if user has access */}
+        {(onViewDetails || onViewDashboard) && (
+          <div className="space-y-2">
+            {onViewDetails && (
+              <button
+                onClick={handleViewDetails}
+                className="w-full px-3 py-2 text-sm bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-md transition-colors"
+              >
+                View Performance Summary
+              </button>
+            )}
+            {onViewDashboard && (
+              <button
+                onClick={handleViewDashboard}
+                className="w-full px-3 py-2 text-sm bg-green-50 hover:bg-green-100 text-green-600 rounded-md transition-colors flex items-center justify-center gap-2"
+              >
+                <Monitor className="h-4 w-4" />
+                View Full Dashboard
+              </button>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
