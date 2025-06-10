@@ -448,5 +448,3 @@ class TeamDataService {
 }
 
 export const teamDataService = new TeamDataService();
-
-}
