@@ -61,7 +61,7 @@ export class UnifiedSignInService {
     console.log('Standard auth result:', { 
       success: !signInError, 
       error: signInError?.message,
-      errorCode: signInError?.status,
+      errorCode: 'status' in signInError ? signInError.status : 'unknown',
       userId: signInData.user?.id 
     });
 
@@ -104,8 +104,8 @@ export class UnifiedSignInService {
     if (signInError) {
       console.log('Error details:', {
         message: signInError.message,
-        status: signInError.status,
-        name: signInError.name
+        status: 'status' in signInError ? signInError.status : 'unknown',
+        name: 'name' in signInError ? signInError.name : 'unknown'
       });
 
       // Check if it's a credential issue vs other issues
