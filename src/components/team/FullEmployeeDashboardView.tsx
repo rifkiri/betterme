@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { DateNavigator } from '../DateNavigator';
 import { EmployeeData } from '@/types/individualData';
@@ -8,7 +7,7 @@ import { EmployeeDashboardLayout } from './EmployeeDashboardLayout';
 import { createReadOnlyHandlers } from '@/utils/employeeDashboardTransformer';
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { Habit, Task, WeeklyOutput } from '@/types/productivity';
-import { format, subDays } from 'date-fns';
+import { format } from 'date-fns';
 
 interface FullEmployeeDashboardViewProps {
   employee: EmployeeData;
@@ -143,24 +142,6 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Show date-specific information */}
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h3 className="text-lg font-semibold text-blue-800 mb-2">
-                Data for {format(selectedDate, 'EEEE, MMMM d, yyyy')}
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                <div>
-                  <span className="font-medium">Habits Completed:</span> {habitsForSelectedDate.filter(h => h.completed).length}/{habitsForSelectedDate.length}
-                </div>
-                <div>
-                  <span className="font-medium">Tasks Due:</span> {tasksForSelectedDate.length}
-                </div>
-                <div>
-                  <span className="font-medium">Tasks Completed:</span> {tasksForSelectedDate.filter(t => t.completed).length}
-                </div>
-              </div>
-            </div>
-
             {/* Historical overview */}
             <div className="bg-green-50 p-4 rounded-lg">
               <h3 className="text-lg font-semibold text-green-800 mb-2">Historical Overview</h3>
