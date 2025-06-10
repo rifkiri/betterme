@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -154,16 +153,6 @@ export const ManagerDashboard = () => {
             </Card>
           ) : teamData ? (
             <div>
-              {selectedEmployee && (
-                <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-blue-700">
-                    Showing {viewMode === 'dashboard' ? 'full dashboard' : 'performance summary'} for: {teamData.membersSummary.find(m => m.id === selectedEmployee)?.name || 'Unknown'}
-                  </p>
-                  <p className="text-xs text-blue-600 mt-1">
-                    View mode: {viewMode} | Selected ID: {selectedEmployee}
-                  </p>
-                </div>
-              )}
               <IndividualDetailsSection 
                 teamData={teamData} 
                 onViewMemberDetails={handleViewMemberDetails} 
