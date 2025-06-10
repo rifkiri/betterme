@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { DateNavigator } from '../DateNavigator';
 import { EmployeeData } from '@/types/individualData';
 import { EmployeeDashboardHeader } from './EmployeeDashboardHeader';
 import { EmployeeStatsGrid } from './EmployeeStatsGrid';
@@ -126,19 +125,11 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
       <div className="max-w-full mx-auto space-y-2 sm:space-y-4">
         <EmployeeDashboardHeader employee={employee} onBack={onBack} />
 
-        {/* Date Navigation */}
-        <div className="flex justify-center mb-4">
-          <DateNavigator 
-            selectedDate={selectedDate} 
-            onDateChange={setSelectedDate}
-          />
-        </div>
-
         <EmployeeStatsGrid employee={employee} />
 
         {isLoadingData ? (
           <div className="text-center py-8">
-            <p className="text-gray-500">Loading historical data for {format(selectedDate, 'MMM d, yyyy')}...</p>
+            <p className="text-gray-500">Loading historical data...</p>
           </div>
         ) : (
           <EmployeeDashboardLayout
@@ -157,3 +148,5 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
     </div>
   );
 };
+
+export default FullEmployeeDashboardView;
