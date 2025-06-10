@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -82,7 +81,7 @@ export const ManagerDashboard = () => {
           </TabsTrigger>
           <TabsTrigger value="individual" className="flex items-center gap-2">
             <User className="h-4 w-4" />
-            Individual Performance
+            Individual Detail
           </TabsTrigger>
           <TabsTrigger value="individual-detail" className="flex items-center gap-2">
             <UserCheck className="h-4 w-4" />
