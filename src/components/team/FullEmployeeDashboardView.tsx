@@ -41,6 +41,7 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
     deleteWeeklyOutput: () => {},
     restoreWeeklyOutput: () => {},
     permanentlyDeleteWeeklyOutput: () => {},
+    moveTask: () => {},
   };
 
   // Calculate stats from employee data
@@ -78,6 +79,21 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
     isMoved: false
   }));
 
+  const transformedOverdueTasks = employee.overdueTasks.map(t => ({
+    id: t.id,
+    title: t.title,
+    completed: t.completed,
+    dueDate: new Date(t.dueDate),
+    priority: t.priority as 'Low' | 'Medium' | 'High',
+    description: '',
+    userId: employee.id,
+    isDeleted: false,
+    createdDate: new Date(),
+    updatedAt: new Date(),
+    originalDueDate: new Date(t.dueDate),
+    isMoved: false
+  }));
+
   const transformedWeeklyOutputs = employee.weeklyOutputs.map(o => ({
     id: o.id,
     title: o.title,
@@ -90,6 +106,26 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
     updatedAt: new Date(),
     originalDueDate: new Date(o.dueDate)
   }));
+
+  const transformedOverdueOutputs = employee.overdueOutputs.map(o => ({
+    id: o.id,
+    title: o.title,
+    progress: o.progress,
+    dueDate: new Date(o.dueDate),
+    description: '',
+    userId: employee.id,
+    isDeleted: false,
+    createdDate: new Date(),
+    updatedAt: new Date(),
+    originalDueDate: new Date(o.dueDate)
+  }));
+
+  // Helper function to get tasks by date for TasksSection
+  const getTasksByDate = (date: Date) => {
+    return transformedTasks.filter(task => 
+      task.dueDate.toDateString() === date.toDateString()
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 p-1 sm:p-2 lg:p-4">
@@ -157,11 +193,15 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
           <div className="lg:col-span-1 space-y-2 sm:space-y-4">
             <HabitsSection 
               habits={transformedHabits}
+              archivedHabits={[]}
               selectedDate={selectedDate}
+              onDateChange={mockHandlers.handleDateChange}
               onToggleHabit={mockHandlers.toggleHabit}
               onAddHabit={mockHandlers.addHabit}
               onEditHabit={mockHandlers.editHabit}
-              isReadOnly={true}
+              onArchiveHabit={mockHandlers.archiveHabit}
+              onRestoreHabit={mockHandlers.restoreHabit}
+              onPermanentlyDeleteHabit={mockHandlers.permanentlyDeleteHabit}
             />
           </div>
 
@@ -169,6 +209,8 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
             <WeeklyOutputsSection
               weeklyOutputs={transformedWeeklyOutputs}
               deletedWeeklyOutputs={[]}
+              overdueWeeklyOutputs={transformedOverdueOutputs}
+              tasks={transformedTasks}
               onAddWeeklyOutput={mockHandlers.addWeeklyOutput}
               onEditWeeklyOutput={mockHandlers.editWeeklyOutput}
               onUpdateProgress={mockHandlers.updateProgress}
@@ -176,7 +218,6 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
               onDeleteWeeklyOutput={mockHandlers.deleteWeeklyOutput}
               onRestoreWeeklyOutput={mockHandlers.restoreWeeklyOutput}
               onPermanentlyDeleteWeeklyOutput={mockHandlers.permanentlyDeleteWeeklyOutput}
-              isReadOnly={true}
             />
           </div>
 
@@ -184,15 +225,16 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
             <TasksSection
               tasks={transformedTasks}
               deletedTasks={[]}
-              selectedDate={selectedDate}
+              overdueTasks={transformedOverdueTasks}
               onAddTask={mockHandlers.addTask}
               onEditTask={mockHandlers.editTask}
               onToggleTask={mockHandlers.toggleTask}
+              onMoveTask={mockHandlers.moveTask}
               onDeleteTask={mockHandlers.deleteTask}
               onRestoreTask={mockHandlers.restoreTask}
               onPermanentlyDeleteTask={mockHandlers.permanentlyDeleteTask}
-              onRollOverTask={mockHandlers.rollOverTask}
-              isReadOnly={true}
+              getTasksByDate={getTasksByDate}
+              weeklyOutputs={transformedWeeklyOutputs}
             />
           </div>
         </div>
