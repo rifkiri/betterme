@@ -21,8 +21,8 @@ export class UnifiedSignInService {
       const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
       if (authError) {
         console.error('❌ Cannot check auth users (admin access required):', authError);
-      } else {
-        const userExists = authUsers.users.find(u => u.email?.toLowerCase() === sanitizedEmail);
+      } else if (authUsers && authUsers.users) {
+        const userExists = authUsers.users.find(u => u.email && u.email.toLowerCase() === sanitizedEmail);
         console.log('User exists in auth.users:', !!userExists);
         if (userExists) {
           console.log('Auth user details:', {
@@ -61,7 +61,7 @@ export class UnifiedSignInService {
     console.log('Standard auth result:', { 
       success: !signInError, 
       error: signInError?.message,
-      errorCode: 'status' in signInError ? signInError.status : 'unknown',
+      errorCode: signInError && 'status' in signInError ? signInError.status : 'unknown',
       userId: signInData.user?.id 
     });
 
@@ -104,8 +104,8 @@ export class UnifiedSignInService {
     if (signInError) {
       console.log('Error details:', {
         message: signInError.message,
-        status: 'status' in signInError ? signInError.status : 'unknown',
-        name: 'name' in signInError ? signInError.name : 'unknown'
+        status: signInError && 'status' in signInError ? signInError.status : 'unknown',
+        name: signInError && 'name' in signInError ? signInError.name : 'unknown'
       });
 
       // Check if it's a credential issue vs other issues
