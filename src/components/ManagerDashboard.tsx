@@ -20,13 +20,16 @@ export const ManagerDashboard = () => {
     const state = location.state as any;
     if (state?.selectedTab) {
       setSelectedTab(state.selectedTab);
+      console.log('Navigated to tab:', state.selectedTab);
     }
     if (state?.selectedEmployee) {
       setSelectedEmployee(state.selectedEmployee);
+      console.log('Selected employee:', state.selectedEmployee);
     }
   }, [location.state]);
 
   const handleViewMemberDetails = (memberId: string) => {
+    console.log('handleViewMemberDetails called with:', memberId);
     setSelectedEmployee(memberId);
     setSelectedTab('individual-detail');
   };
@@ -67,10 +70,20 @@ export const ManagerDashboard = () => {
 
         <TabsContent value="individual-detail">
           {teamData ? (
-            <IndividualDetailsSection 
-              teamData={teamData} 
-              onViewMemberDetails={handleViewMemberDetails}
-            />
+            <div>
+              {selectedEmployee && (
+                <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-blue-700">
+                    Showing details for: {teamData.membersSummary.find(m => m.id === selectedEmployee)?.name || 'Unknown'}
+                  </p>
+                </div>
+              )}
+              <IndividualDetailsSection 
+                teamData={teamData} 
+                onViewMemberDetails={handleViewMemberDetails}
+                selectedMemberId={selectedEmployee}
+              />
+            </div>
           ) : (
             <Card>
               <CardContent className="text-center py-8">

@@ -9,9 +9,10 @@ import { CheckCircle, Target, TrendingUp, Clock, Award } from 'lucide-react';
 interface IndividualDetailCardProps {
   member: TeamMember;
   onViewDetails?: (memberId: string) => void;
+  isSelected?: boolean;
 }
 
-export const IndividualDetailCard = ({ member, onViewDetails }: IndividualDetailCardProps) => {
+export const IndividualDetailCard = ({ member, onViewDetails, isSelected }: IndividualDetailCardProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'excellent':
@@ -31,8 +32,13 @@ export const IndividualDetailCard = ({ member, onViewDetails }: IndividualDetail
     return Math.round((member.habitsRate + member.tasksRate + member.outputsRate) / 3);
   };
 
+  const handleViewDetails = () => {
+    console.log('View details clicked for member:', member.id);
+    onViewDetails?.(member.id);
+  };
+
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className={`hover:shadow-md transition-shadow ${isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -95,10 +101,10 @@ export const IndividualDetailCard = ({ member, onViewDetails }: IndividualDetail
         {/* Action Button */}
         {onViewDetails && (
           <button
-            onClick={() => onViewDetails(member.id)}
+            onClick={handleViewDetails}
             className="w-full mt-3 px-3 py-2 text-sm bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-md transition-colors"
           >
-            View Full Details
+            {isSelected ? 'Currently Viewing' : 'View Full Details'}
           </button>
         )}
       </CardContent>
