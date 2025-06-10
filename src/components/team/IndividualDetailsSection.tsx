@@ -25,6 +25,9 @@ export const IndividualDetailsSection = ({
 }: IndividualDetailsSectionProps) => {
   const { employeeData, isLoading } = useEmployeeData();
 
+  console.log('IndividualDetailsSection - selectedMemberId:', selectedMemberId);
+  console.log('IndividualDetailsSection - viewMode:', viewMode);
+
   if (!teamData.membersSummary || teamData.membersSummary.length === 0) {
     return (
       <Card>
@@ -40,6 +43,10 @@ export const IndividualDetailsSection = ({
   if (selectedMemberId) {
     const selectedMember = teamData.membersSummary.find(member => member.id === selectedMemberId);
     const selectedEmployeeData = employeeData[selectedMemberId];
+
+    console.log('Selected member found:', selectedMember?.name);
+    console.log('Employee data loaded:', !!selectedEmployeeData);
+    console.log('View mode is dashboard:', viewMode === 'dashboard');
 
     if (!selectedMember) {
       return (
@@ -101,6 +108,7 @@ export const IndividualDetailsSection = ({
 
     // Show full dashboard view if viewMode is 'dashboard'
     if (viewMode === 'dashboard') {
+      console.log('Rendering FullEmployeeDashboardView for:', selectedMember.name);
       return (
         <FullEmployeeDashboardView 
           employee={selectedEmployeeData}
@@ -110,6 +118,7 @@ export const IndividualDetailsSection = ({
     }
 
     // Show summary performance view (existing behavior)
+    console.log('Rendering summary view for:', selectedMember.name);
     return (
       <div className="space-y-6">
         <Card>

@@ -34,6 +34,7 @@ export const ManagerDashboard = () => {
     setSelectedEmployee(memberId);
     setViewMode('summary');
     setSelectedTab('individual-detail');
+    console.log('Set viewMode to summary');
   };
 
   const handleViewMemberDashboard = (memberId: string) => {
@@ -41,7 +42,15 @@ export const ManagerDashboard = () => {
     setSelectedEmployee(memberId);
     setViewMode('dashboard');
     setSelectedTab('individual-detail');
+    console.log('Set viewMode to dashboard');
   };
+
+  // Log current state for debugging
+  console.log('ManagerDashboard state:', {
+    selectedTab,
+    selectedEmployee,
+    viewMode
+  });
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4">
@@ -102,11 +111,15 @@ export const ManagerDashboard = () => {
                   <p className="text-sm text-blue-700">
                     Showing {viewMode === 'dashboard' ? 'full dashboard' : 'performance summary'} for: {teamData.membersSummary.find(m => m.id === selectedEmployee)?.name || 'Unknown'}
                   </p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    View mode: {viewMode} | Selected ID: {selectedEmployee}
+                  </p>
                 </div>
               )}
               <IndividualDetailsSection 
                 teamData={teamData} 
                 onViewMemberDetails={handleViewMemberDetails}
+                onViewMemberDashboard={handleViewMemberDashboard}
                 selectedMemberId={selectedEmployee}
                 viewMode={viewMode}
               />
