@@ -15,6 +15,7 @@ export class UnifiedSignInService {
     console.log('=== CHECKING FOR USER IN PROFILES ===');
     
     const sanitizedEmail = email.trim().toLowerCase();
+    console.log('Sanitized email:', sanitizedEmail);
     
     const { data: existingUserData, error: userError } = await supabase
       .from('profiles')
@@ -28,18 +29,22 @@ export class UnifiedSignInService {
       return false;
     }
 
+    console.log('Profile lookup result:', existingUserData);
+
     if (existingUserData) {
       console.log('Found user data:', { 
         email: existingUserData.email, 
         status: existingUserData.user_status,
         hasTemporaryPassword: !!existingUserData.temporary_password,
-        hasChangedPassword: existingUserData.has_changed_password
+        hasChangedPassword: existingUserData.has_changed_password,
+        role: existingUserData.role
       });
 
       // For pending users, use temporary_password as credential
       if (existingUserData.user_status === 'pending' && existingUserData.temporary_password) {
+        console.log('User is pending with temporary password');
         if (existingUserData.temporary_password === password) {
-          console.log('Pending user with correct temporary password - using temporary password as credential');
+          console.log('Pending user with correct temporary password - attempting auth with temp password');
           
           // Use temporary password as the actual login credential
           const { data: signInData, error: signInError } = await AuthService.signInWithPassword(existingUserData.email, existingUserData.temporary_password);
@@ -74,10 +79,14 @@ export class UnifiedSignInService {
           return false;
         }
       }
+    } else {
+      console.log('No user found in profiles table with email:', sanitizedEmail);
+      toast.error('User not found. Please check your email or contact an administrator.');
+      return false;
     }
 
-    // Try regular sign in for active users or users not found in profiles
-    console.log('Attempting regular sign in');
+    // Try regular sign in for active users
+    console.log('Attempting regular sign in with provided credentials');
     const { data: signInData, error: signInError } = await AuthService.signInWithPassword(email, password);
     console.log('Regular sign in result:', { success: !signInError, error: signInError?.message });
 
@@ -117,7 +126,7 @@ export class UnifiedSignInService {
       }
     }
 
-    console.log('Authentication failed');
+    console.log('Authentication failed with error:', signInError?.message);
     console.log('=== SIGN IN DEBUG END ===');
     toast.error('Invalid email or password');
     return false;
