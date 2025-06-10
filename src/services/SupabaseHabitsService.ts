@@ -72,10 +72,11 @@ export class SupabaseHabitsService {
       category: habit.category,
       archived: habit.archived,
       isDeleted: habit.is_deleted,
-      createdAt: habit.created_at
+      createdAt: habit.created_at,
+      userId: userId // Ensure userId is set correctly
     }));
 
-    console.log('Mapped habits data:', mappedData);
+    console.log('Mapped habits data for user', userId, ':', mappedData);
     return mappedData;
   }
 

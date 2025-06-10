@@ -1,11 +1,13 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { DateNavigator } from '../DateNavigator';
 import { EmployeeData } from '@/types/individualData';
 import { EmployeeDashboardHeader } from './EmployeeDashboardHeader';
 import { EmployeeStatsGrid } from './EmployeeStatsGrid';
 import { EmployeeDashboardLayout } from './EmployeeDashboardLayout';
 import { transformEmployeeDataForDashboard, createReadOnlyHandlers } from '@/utils/employeeDashboardTransformer';
+import { supabaseDataService } from '@/services/SupabaseDataService';
+import { Habit } from '@/types/productivity';
 import { format } from 'date-fns';
 
 interface FullEmployeeDashboardViewProps {
@@ -15,52 +17,47 @@ interface FullEmployeeDashboardViewProps {
 
 export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDashboardViewProps) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [actualHabits, setActualHabits] = useState<Habit[]>([]);
+  const [isLoadingHabits, setIsLoadingHabits] = useState(false);
   
-  // Transform employee data and create mock handlers - recalculate when date changes
+  // Fetch actual historical habit data when date changes
+  useEffect(() => {
+    const fetchHabitsForDate = async () => {
+      setIsLoadingHabits(true);
+      try {
+        console.log('Fetching habits for employee:', employee.id, 'date:', format(selectedDate, 'yyyy-MM-dd'));
+        const habits = await supabaseDataService.getHabitsForDate(employee.id, selectedDate);
+        console.log('Fetched actual habits for date:', habits);
+        setActualHabits(habits);
+      } catch (error) {
+        console.error('Error fetching habits for date:', error);
+        // Fallback to transformed data if fetch fails
+        const { transformedHabits } = transformEmployeeDataForDashboard(employee);
+        setActualHabits(transformedHabits);
+      } finally {
+        setIsLoadingHabits(false);
+      }
+    };
+
+    fetchHabitsForDate();
+  }, [employee.id, selectedDate]);
+  
+  // Transform employee data for other sections (tasks, outputs) - recalculate when date changes
   const transformedData = useMemo(() => {
     const {
-      transformedHabits,
       transformedTasks,
       transformedOverdueTasks,
       transformedWeeklyOutputs,
       transformedOverdueOutputs
     } = transformEmployeeDataForDashboard(employee);
 
-    // Update habits completion status based on selected date
-    // For demo purposes, we'll simulate different completion patterns for different dates
-    const dateString = format(selectedDate, 'yyyy-MM-dd');
-    const today = format(new Date(), 'yyyy-MM-dd');
-    
-    const updatedHabits = transformedHabits.map(habit => {
-      // Simulate different completion patterns based on date
-      let completed = false;
-      
-      if (dateString === today) {
-        // Use original completion status for today
-        completed = habit.completed;
-      } else {
-        // For other dates, simulate different completion patterns
-        const dayOfMonth = selectedDate.getDate();
-        const habitIndex = transformedHabits.indexOf(habit);
-        
-        // Create a deterministic but varied pattern based on date and habit
-        completed = (dayOfMonth + habitIndex) % 3 !== 0;
-      }
-      
-      return {
-        ...habit,
-        completed
-      };
-    });
-
     return {
-      transformedHabits: updatedHabits,
       transformedTasks,
       transformedOverdueTasks,
       transformedWeeklyOutputs,
       transformedOverdueOutputs
     };
-  }, [employee, selectedDate]);
+  }, [employee]);
 
   const readOnlyHandlers = {
     ...createReadOnlyHandlers(),
@@ -89,17 +86,23 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
 
         <EmployeeStatsGrid employee={employee} />
 
-        <EmployeeDashboardLayout
-          transformedHabits={transformedData.transformedHabits}
-          transformedTasks={transformedData.transformedTasks}
-          transformedOverdueTasks={transformedData.transformedOverdueTasks}
-          transformedWeeklyOutputs={transformedData.transformedWeeklyOutputs}
-          transformedOverdueOutputs={transformedData.transformedOverdueOutputs}
-          selectedDate={selectedDate}
-          mockHandlers={readOnlyHandlers}
-          getTasksByDate={getTasksByDate}
-          isViewOnly={true}
-        />
+        {isLoadingHabits ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">Loading habit data for {format(selectedDate, 'MMM d, yyyy')}...</p>
+          </div>
+        ) : (
+          <EmployeeDashboardLayout
+            transformedHabits={actualHabits}
+            transformedTasks={transformedData.transformedTasks}
+            transformedOverdueTasks={transformedData.transformedOverdueTasks}
+            transformedWeeklyOutputs={transformedData.transformedWeeklyOutputs}
+            transformedOverdueOutputs={transformedData.transformedOverdueOutputs}
+            selectedDate={selectedDate}
+            mockHandlers={readOnlyHandlers}
+            getTasksByDate={getTasksByDate}
+            isViewOnly={true}
+          />
+        )}
       </div>
     </div>
   );
