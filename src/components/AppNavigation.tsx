@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Home, Calendar, Settings, Users, LogOut, Menu, X } from 'lucide-react';
@@ -80,7 +79,7 @@ export const AppNavigation = () => {
 
     if (currentUser?.role === 'admin') {
       return [...baseItems, {
-        name: 'My Team',
+        name: 'Our Team',
         href: '/manager',
         icon: Users,
         description: 'Team management'
@@ -92,7 +91,7 @@ export const AppNavigation = () => {
       }];
     } else if (currentUser?.role === 'manager') {
       return [...baseItems, {
-        name: 'My Team',
+        name: 'Our Team',
         href: '/manager',
         icon: Users,
         description: 'Team management'
