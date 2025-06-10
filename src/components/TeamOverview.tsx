@@ -1,17 +1,13 @@
-
 import React from 'react';
 import { TeamSummaryCards } from './team/TeamSummaryCards';
 import { OverdueItemsSection } from './team/OverdueItemsSection';
 import { TeamPerformanceTable } from './team/TeamPerformanceTable';
 import { TeamTrendsCard } from './team/TeamTrendsCard';
 import { TeamMoodChart } from './team/TeamMoodChart';
-import { IndividualDetailsSection } from './team/IndividualDetailsSection';
 import { useTeamDataRealtime } from '@/hooks/useTeamDataRealtime';
-import { useUserProfile } from '@/hooks/useUserProfile';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Loader2, Users, RefreshCw } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 interface TeamOverviewProps {
   onViewMemberDetails?: (memberId: string) => void;
@@ -20,8 +16,6 @@ interface TeamOverviewProps {
 
 export const TeamOverview = ({ onViewMemberDetails, onViewMemberDashboard }: TeamOverviewProps) => {
   const { teamData, isLoading, error, lastUpdated, manualRefresh } = useTeamDataRealtime();
-  const { profile } = useUserProfile();
-  const navigate = useNavigate();
 
   // Check if user has access to individual detail features
   const canAccessIndividualDetail = profile?.role === 'manager' || profile?.role === 'admin';
@@ -137,14 +131,6 @@ export const TeamOverview = ({ onViewMemberDetails, onViewMemberDashboard }: Tea
 
       <TeamSummaryCards teamData={teamData} />
       <TeamMoodChart teamData={teamData} />
-      
-      {/* Individual Details Section with role-based access */}
-      <IndividualDetailsSection 
-        teamData={teamData} 
-        onViewMemberDetails={canAccessIndividualDetail ? handleViewMemberDetails : undefined}
-        onViewMemberDashboard={canAccessIndividualDetail ? handleViewMemberDashboard : undefined}
-      />
-      
       <OverdueItemsSection teamData={teamData} />
       <TeamPerformanceTable teamData={teamData} />
       <TeamTrendsCard teamData={teamData} />
