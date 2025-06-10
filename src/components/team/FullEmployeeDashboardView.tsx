@@ -5,7 +5,7 @@ import { EmployeeData } from '@/types/individualData';
 import { EmployeeDashboardHeader } from './EmployeeDashboardHeader';
 import { EmployeeStatsGrid } from './EmployeeStatsGrid';
 import { EmployeeDashboardLayout } from './EmployeeDashboardLayout';
-import { transformEmployeeDataForDashboard, createMockHandlers } from '@/utils/employeeDashboardTransformer';
+import { transformEmployeeDataForDashboard, createReadOnlyHandlers } from '@/utils/employeeDashboardTransformer';
 import { format } from 'date-fns';
 
 interface FullEmployeeDashboardViewProps {
@@ -62,9 +62,9 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
     };
   }, [employee, selectedDate]);
 
-  const mockHandlers = {
-    ...createMockHandlers(),
-    handleDateChange: setSelectedDate,
+  const readOnlyHandlers = {
+    ...createReadOnlyHandlers(),
+    handleDateChange: setSelectedDate, // Only allow date navigation
   };
 
   // Helper function to get tasks by date for TasksSection
@@ -87,6 +87,13 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
           />
         </div>
 
+        {/* View-only indicator */}
+        <div className="flex justify-center mb-4">
+          <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium">
+            📖 View-Only Mode - Team data is protected from accidental changes
+          </div>
+        </div>
+
         <EmployeeStatsGrid employee={employee} />
 
         <EmployeeDashboardLayout
@@ -96,8 +103,9 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
           transformedWeeklyOutputs={transformedData.transformedWeeklyOutputs}
           transformedOverdueOutputs={transformedData.transformedOverdueOutputs}
           selectedDate={selectedDate}
-          mockHandlers={mockHandlers}
+          mockHandlers={readOnlyHandlers}
           getTasksByDate={getTasksByDate}
+          isViewOnly={true}
         />
       </div>
     </div>

@@ -1,4 +1,3 @@
-
 import { EmployeeData } from '@/types/individualData';
 import { Habit, Task, WeeklyOutput } from '@/types/productivity';
 
@@ -83,27 +82,31 @@ export const transformEmployeeDataForDashboard = (employee: EmployeeData) => {
   };
 };
 
-export const createMockHandlers = () => ({
-  handleDateChange: () => {},
-  addHabit: () => {},
-  editHabit: () => {},
-  addTask: () => {},
-  editTask: () => {},
-  addWeeklyOutput: () => {},
-  editWeeklyOutput: () => {},
-  toggleHabit: () => {},
-  toggleTask: () => {},
-  deleteTask: () => {},
-  restoreTask: () => {},
-  permanentlyDeleteTask: () => {},
-  archiveHabit: () => {},
-  restoreHabit: () => {},
-  permanentlyDeleteHabit: () => {},
-  rollOverTask: () => {},
-  updateProgress: () => {},
-  moveWeeklyOutput: () => {},
-  deleteWeeklyOutput: () => {},
-  restoreWeeklyOutput: () => {},
-  permanentlyDeleteWeeklyOutput: () => {},
-  moveTask: () => {},
+// Create read-only handlers that prevent any modifications
+export const createReadOnlyHandlers = () => ({
+  handleDateChange: () => {}, // This will be overridden with actual date change handler
+  addHabit: () => console.log('View-only mode: Cannot add habits'),
+  editHabit: () => console.log('View-only mode: Cannot edit habits'),
+  addTask: () => console.log('View-only mode: Cannot add tasks'),
+  editTask: () => console.log('View-only mode: Cannot edit tasks'),
+  addWeeklyOutput: () => console.log('View-only mode: Cannot add weekly outputs'),
+  editWeeklyOutput: () => console.log('View-only mode: Cannot edit weekly outputs'),
+  toggleHabit: () => console.log('View-only mode: Cannot toggle habits'),
+  toggleTask: () => console.log('View-only mode: Cannot toggle tasks'),
+  deleteTask: () => console.log('View-only mode: Cannot delete tasks'),
+  restoreTask: () => console.log('View-only mode: Cannot restore tasks'),
+  permanentlyDeleteTask: () => console.log('View-only mode: Cannot permanently delete tasks'),
+  archiveHabit: () => console.log('View-only mode: Cannot archive habits'),
+  restoreHabit: () => console.log('View-only mode: Cannot restore habits'),
+  permanentlyDeleteHabit: () => console.log('View-only mode: Cannot permanently delete habits'),
+  rollOverTask: () => console.log('View-only mode: Cannot roll over tasks'),
+  updateProgress: () => console.log('View-only mode: Cannot update progress'),
+  moveWeeklyOutput: () => console.log('View-only mode: Cannot move weekly outputs'),
+  deleteWeeklyOutput: () => console.log('View-only mode: Cannot delete weekly outputs'),
+  restoreWeeklyOutput: () => console.log('View-only mode: Cannot restore weekly outputs'),
+  permanentlyDeleteWeeklyOutput: () => console.log('View-only mode: Cannot permanently delete weekly outputs'),
+  moveTask: () => console.log('View-only mode: Cannot move tasks'),
 });
+
+// Keep the old function for backward compatibility
+export const createMockHandlers = createReadOnlyHandlers;
