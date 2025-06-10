@@ -49,6 +49,16 @@ export const ManagerDashboard = () => {
     console.log('ManagerDashboard - Set viewMode to dashboard for member:', memberId);
   };
 
+  // Clear selection when switching to team tab or individual selector tab
+  const handleTabChange = (value: string) => {
+    setSelectedTab(value);
+    if (value === 'team' || value === 'individual') {
+      setSelectedEmployee('');
+      setViewMode('summary');
+      console.log('Cleared selection when switching to tab:', value);
+    }
+  };
+
   // Log current state for debugging
   console.log('ManagerDashboard state:', {
     selectedTab,
@@ -63,7 +73,7 @@ export const ManagerDashboard = () => {
         <p className="text-gray-600">Monitor team productivity and individual performance</p>
       </div>
 
-      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
+      <Tabs value={selectedTab} onValueChange={handleTabChange} className="space-y-6">
         <TabsList className="grid w-full grid-cols-3 lg:w-[600px]">
           <TabsTrigger value="team" className="flex items-center gap-2">
             <Users className="h-4 w-4" />

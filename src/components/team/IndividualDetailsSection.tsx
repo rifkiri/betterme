@@ -39,8 +39,8 @@ export const IndividualDetailsSection = ({
     );
   }
 
-  // If a specific member is selected, show their detailed view
-  if (selectedMemberId) {
+  // If a specific member is selected AND we explicitly want to show their details
+  if (selectedMemberId && (viewMode === 'dashboard' || viewMode === 'summary')) {
     const selectedMember = teamData.membersSummary.find(member => member.id === selectedMemberId);
     const selectedEmployeeData = employeeData[selectedMemberId];
 
@@ -153,7 +153,7 @@ export const IndividualDetailsSection = ({
     );
   }
 
-  // Show all team members overview
+  // Show all team members overview (when no specific member is selected or we want to show the grid)
   return (
     <div className="space-y-4">
       <Card>
@@ -175,7 +175,7 @@ export const IndividualDetailsSection = ({
             member={member}
             onViewDetails={onViewMemberDetails}
             onViewDashboard={onViewMemberDashboard}
-            isSelected={false}
+            isSelected={member.id === selectedMemberId}
           />
         ))}
       </div>
