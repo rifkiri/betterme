@@ -5,9 +5,9 @@ import { EmployeeData } from '@/types/individualData';
 import { EmployeeDashboardHeader } from './EmployeeDashboardHeader';
 import { EmployeeStatsGrid } from './EmployeeStatsGrid';
 import { EmployeeDashboardLayout } from './EmployeeDashboardLayout';
-import { transformEmployeeDataForDashboard, createReadOnlyHandlers } from '@/utils/employeeDashboardTransformer';
+import { createReadOnlyHandlers } from '@/utils/employeeDashboardTransformer';
 import { supabaseDataService } from '@/services/SupabaseDataService';
-import { Habit } from '@/types/productivity';
+import { Habit, Task, WeeklyOutput } from '@/types/productivity';
 import { format } from 'date-fns';
 
 interface FullEmployeeDashboardViewProps {
@@ -18,46 +18,59 @@ interface FullEmployeeDashboardViewProps {
 export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDashboardViewProps) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [actualHabits, setActualHabits] = useState<Habit[]>([]);
-  const [isLoadingHabits, setIsLoadingHabits] = useState(false);
+  const [actualTasks, setActualTasks] = useState<Task[]>([]);
+  const [actualWeeklyOutputs, setActualWeeklyOutputs] = useState<WeeklyOutput[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(false);
   
-  // Fetch actual historical habit data when date changes
+  // Fetch all historical data when date changes
   useEffect(() => {
-    const fetchHabitsForDate = async () => {
-      setIsLoadingHabits(true);
+    const fetchAllDataForDate = async () => {
+      setIsLoadingData(true);
       try {
-        console.log('Fetching habits for employee:', employee.id, 'date:', format(selectedDate, 'yyyy-MM-dd'));
-        const habits = await supabaseDataService.getHabitsForDate(employee.id, selectedDate);
-        console.log('Fetched actual habits for date:', habits);
+        console.log('Fetching all data for employee:', employee.id, 'date:', format(selectedDate, 'yyyy-MM-dd'));
+        
+        // Fetch all data in parallel
+        const [habits, tasks, weeklyOutputs] = await Promise.all([
+          supabaseDataService.getHabitsForDate(employee.id, selectedDate),
+          supabaseDataService.getTasks(employee.id),
+          supabaseDataService.getWeeklyOutputs(employee.id)
+        ]);
+
+        console.log('Fetched historical data for employee:', employee.id, {
+          habits: habits.length,
+          tasks: tasks.length,
+          weeklyOutputs: weeklyOutputs.length
+        });
+
         setActualHabits(habits);
+        setActualTasks(tasks.filter(t => !t.isDeleted));
+        setActualWeeklyOutputs(weeklyOutputs.filter(w => !w.isDeleted));
       } catch (error) {
-        console.error('Error fetching habits for date:', error);
-        // Fallback to transformed data if fetch fails
-        const { transformedHabits } = transformEmployeeDataForDashboard(employee);
-        setActualHabits(transformedHabits);
+        console.error('Error fetching historical data for employee:', employee.id, error);
+        // Fallback to empty arrays on error
+        setActualHabits([]);
+        setActualTasks([]);
+        setActualWeeklyOutputs([]);
       } finally {
-        setIsLoadingHabits(false);
+        setIsLoadingData(false);
       }
     };
 
-    fetchHabitsForDate();
+    fetchAllDataForDate();
   }, [employee.id, selectedDate]);
-  
-  // Transform employee data for other sections (tasks, outputs) - recalculate when date changes
-  const transformedData = useMemo(() => {
-    const {
-      transformedTasks,
-      transformedOverdueTasks,
-      transformedWeeklyOutputs,
-      transformedOverdueOutputs
-    } = transformEmployeeDataForDashboard(employee);
 
-    return {
-      transformedTasks,
-      transformedOverdueTasks,
-      transformedWeeklyOutputs,
-      transformedOverdueOutputs
-    };
-  }, [employee]);
+  // Calculate overdue items from actual data
+  const overdueData = useMemo(() => {
+    const today = new Date();
+    const overdueTasks = actualTasks.filter(task => 
+      !task.completed && task.dueDate < today
+    );
+    const overdueOutputs = actualWeeklyOutputs.filter(output => 
+      output.progress < 100 && output.dueDate < today
+    );
+
+    return { overdueTasks, overdueOutputs };
+  }, [actualTasks, actualWeeklyOutputs]);
 
   const readOnlyHandlers = {
     ...createReadOnlyHandlers(),
@@ -66,7 +79,7 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
 
   // Helper function to get tasks by date for TasksSection
   const getTasksByDate = (date: Date) => {
-    return transformedData.transformedTasks.filter(task => 
+    return actualTasks.filter(task => 
       task.dueDate.toDateString() === date.toDateString()
     );
   };
@@ -86,17 +99,17 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
 
         <EmployeeStatsGrid employee={employee} />
 
-        {isLoadingHabits ? (
+        {isLoadingData ? (
           <div className="text-center py-8">
-            <p className="text-gray-500">Loading habit data for {format(selectedDate, 'MMM d, yyyy')}...</p>
+            <p className="text-gray-500">Loading historical data for {format(selectedDate, 'MMM d, yyyy')}...</p>
           </div>
         ) : (
           <EmployeeDashboardLayout
             transformedHabits={actualHabits}
-            transformedTasks={transformedData.transformedTasks}
-            transformedOverdueTasks={transformedData.transformedOverdueTasks}
-            transformedWeeklyOutputs={transformedData.transformedWeeklyOutputs}
-            transformedOverdueOutputs={transformedData.transformedOverdueOutputs}
+            transformedTasks={actualTasks}
+            transformedOverdueTasks={overdueData.overdueTasks}
+            transformedWeeklyOutputs={actualWeeklyOutputs}
+            transformedOverdueOutputs={overdueData.overdueOutputs}
             selectedDate={selectedDate}
             mockHandlers={readOnlyHandlers}
             getTasksByDate={getTasksByDate}
