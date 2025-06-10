@@ -8,7 +8,7 @@ import { EmployeeDashboardLayout } from './EmployeeDashboardLayout';
 import { createReadOnlyHandlers } from '@/utils/employeeDashboardTransformer';
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { Habit, Task, WeeklyOutput } from '@/types/productivity';
-import { format } from 'date-fns';
+import { format, subDays } from 'date-fns';
 
 interface FullEmployeeDashboardViewProps {
   employee: EmployeeData;
@@ -17,60 +17,97 @@ interface FullEmployeeDashboardViewProps {
 
 export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDashboardViewProps) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [actualHabits, setActualHabits] = useState<Habit[]>([]);
-  const [actualTasks, setActualTasks] = useState<Task[]>([]);
-  const [actualWeeklyOutputs, setActualWeeklyOutputs] = useState<WeeklyOutput[]>([]);
+  const [allHabits, setAllHabits] = useState<Habit[]>([]);
+  const [allTasks, setAllTasks] = useState<Task[]>([]);
+  const [allWeeklyOutputs, setAllWeeklyOutputs] = useState<WeeklyOutput[]>([]);
+  const [habitsForSelectedDate, setHabitsForSelectedDate] = useState<Habit[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
   
-  // Fetch all historical data when date changes
+  // Fetch all comprehensive historical data
   useEffect(() => {
-    const fetchAllDataForDate = async () => {
+    const fetchAllHistoricalData = async () => {
       setIsLoadingData(true);
       try {
-        console.log('Fetching all data for employee:', employee.id, 'date:', format(selectedDate, 'yyyy-MM-dd'));
+        console.log('Fetching comprehensive historical data for employee:', employee.id);
         
         // Fetch all data in parallel
-        const [habits, tasks, weeklyOutputs] = await Promise.all([
-          supabaseDataService.getHabitsForDate(employee.id, selectedDate),
+        const [allTasksData, allWeeklyOutputsData] = await Promise.all([
           supabaseDataService.getTasks(employee.id),
           supabaseDataService.getWeeklyOutputs(employee.id)
         ]);
 
-        console.log('Fetched historical data for employee:', employee.id, {
-          habits: habits.length,
-          tasks: tasks.length,
-          weeklyOutputs: weeklyOutputs.length
+        console.log('Fetched comprehensive historical data for employee:', employee.id, {
+          tasks: allTasksData.length,
+          weeklyOutputs: allWeeklyOutputsData.length
         });
 
-        setActualHabits(habits);
-        setActualTasks(tasks.filter(t => !t.isDeleted));
-        setActualWeeklyOutputs(weeklyOutputs.filter(w => !w.isDeleted));
+        setAllTasks(allTasksData.filter(t => !t.isDeleted));
+        setAllWeeklyOutputs(allWeeklyOutputsData.filter(w => !w.isDeleted));
       } catch (error) {
-        console.error('Error fetching historical data for employee:', employee.id, error);
+        console.error('Error fetching comprehensive historical data for employee:', employee.id, error);
         // Fallback to empty arrays on error
-        setActualHabits([]);
-        setActualTasks([]);
-        setActualWeeklyOutputs([]);
+        setAllTasks([]);
+        setAllWeeklyOutputs([]);
       } finally {
         setIsLoadingData(false);
       }
     };
 
-    fetchAllDataForDate();
+    fetchAllHistoricalData();
+  }, [employee.id]);
+
+  // Fetch habits for the selected date specifically
+  useEffect(() => {
+    const fetchHabitsForDate = async () => {
+      try {
+        console.log('Fetching habits for employee:', employee.id, 'date:', format(selectedDate, 'yyyy-MM-dd'));
+        
+        const habitsData = await supabaseDataService.getHabitsForDate(employee.id, selectedDate);
+        console.log('Fetched habits for date:', format(selectedDate, 'yyyy-MM-dd'), habitsData);
+        
+        setHabitsForSelectedDate(habitsData.filter(h => !h.archived && !h.isDeleted));
+        
+        // Also fetch all habits (not date-specific) for comprehensive view
+        const allHabitsData = await supabaseDataService.getHabits(employee.id);
+        setAllHabits(allHabitsData.filter(h => !h.archived && !h.isDeleted));
+      } catch (error) {
+        console.error('Error fetching habits for date for employee:', employee.id, error);
+        setHabitsForSelectedDate([]);
+        setAllHabits([]);
+      }
+    };
+
+    fetchHabitsForDate();
   }, [employee.id, selectedDate]);
 
-  // Calculate overdue items from actual data
+  // Calculate overdue items from all historical data
   const overdueData = useMemo(() => {
     const today = new Date();
-    const overdueTasks = actualTasks.filter(task => 
+    const overdueTasks = allTasks.filter(task => 
       !task.completed && task.dueDate < today
     );
-    const overdueOutputs = actualWeeklyOutputs.filter(output => 
+    const overdueOutputs = allWeeklyOutputs.filter(output => 
       output.progress < 100 && output.dueDate < today
     );
 
     return { overdueTasks, overdueOutputs };
-  }, [actualTasks, actualWeeklyOutputs]);
+  }, [allTasks, allWeeklyOutputs]);
+
+  // Filter tasks and outputs relevant to the selected date
+  const tasksForSelectedDate = useMemo(() => {
+    return allTasks.filter(task => {
+      const taskDate = new Date(task.dueDate);
+      const selectedDateString = format(selectedDate, 'yyyy-MM-dd');
+      const taskDateString = format(taskDate, 'yyyy-MM-dd');
+      return taskDateString === selectedDateString;
+    });
+  }, [allTasks, selectedDate]);
+
+  // Get weekly outputs that are relevant (due within the week of selected date)
+  const weeklyOutputsForView = useMemo(() => {
+    // Show all weekly outputs for comprehensive view, but could be filtered by week if needed
+    return allWeeklyOutputs;
+  }, [allWeeklyOutputs]);
 
   const readOnlyHandlers = {
     ...createReadOnlyHandlers(),
@@ -79,9 +116,10 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
 
   // Helper function to get tasks by date for TasksSection
   const getTasksByDate = (date: Date) => {
-    return actualTasks.filter(task => 
-      task.dueDate.toDateString() === date.toDateString()
-    );
+    return allTasks.filter(task => {
+      const taskDate = new Date(task.dueDate);
+      return format(taskDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
+    });
   };
 
   return (
@@ -104,17 +142,56 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
             <p className="text-gray-500">Loading historical data for {format(selectedDate, 'MMM d, yyyy')}...</p>
           </div>
         ) : (
-          <EmployeeDashboardLayout
-            transformedHabits={actualHabits}
-            transformedTasks={actualTasks}
-            transformedOverdueTasks={overdueData.overdueTasks}
-            transformedWeeklyOutputs={actualWeeklyOutputs}
-            transformedOverdueOutputs={overdueData.overdueOutputs}
-            selectedDate={selectedDate}
-            mockHandlers={readOnlyHandlers}
-            getTasksByDate={getTasksByDate}
-            isViewOnly={true}
-          />
+          <div className="space-y-4">
+            {/* Show date-specific information */}
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h3 className="text-lg font-semibold text-blue-800 mb-2">
+                Data for {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span className="font-medium">Habits Completed:</span> {habitsForSelectedDate.filter(h => h.completed).length}/{habitsForSelectedDate.length}
+                </div>
+                <div>
+                  <span className="font-medium">Tasks Due:</span> {tasksForSelectedDate.length}
+                </div>
+                <div>
+                  <span className="font-medium">Tasks Completed:</span> {tasksForSelectedDate.filter(t => t.completed).length}
+                </div>
+              </div>
+            </div>
+
+            {/* Historical overview */}
+            <div className="bg-green-50 p-4 rounded-lg">
+              <h3 className="text-lg font-semibold text-green-800 mb-2">Historical Overview</h3>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <span className="font-medium">Total Habits:</span> {allHabits.length}
+                </div>
+                <div>
+                  <span className="font-medium">Total Tasks:</span> {allTasks.length}
+                </div>
+                <div>
+                  <span className="font-medium">Total Weekly Outputs:</span> {allWeeklyOutputs.length}
+                </div>
+                <div>
+                  <span className="font-medium">Overdue Items:</span> {overdueData.overdueTasks.length + overdueData.overdueOutputs.length}
+                </div>
+              </div>
+            </div>
+
+            <EmployeeDashboardLayout
+              transformedHabits={habitsForSelectedDate}
+              transformedTasks={allTasks}
+              transformedOverdueTasks={overdueData.overdueTasks}
+              transformedWeeklyOutputs={weeklyOutputsForView}
+              transformedOverdueOutputs={overdueData.overdueOutputs}
+              selectedDate={selectedDate}
+              mockHandlers={readOnlyHandlers}
+              getTasksByDate={getTasksByDate}
+              isViewOnly={true}
+            />
+          </div>
         )}
       </div>
     </div>
