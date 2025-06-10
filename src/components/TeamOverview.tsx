@@ -17,8 +17,8 @@ export const TeamOverview = () => {
   const navigate = useNavigate();
 
   const handleViewMemberDetails = (memberId: string) => {
-    // Navigate to individual performance tab with the selected member
-    navigate('/manager', { state: { selectedTab: 'individual', selectedEmployee: memberId } });
+    // Navigate to individual detail tab with the selected member
+    navigate('/manager', { state: { selectedTab: 'individual-detail', selectedEmployee: memberId } });
   };
 
   if (isLoading) {
