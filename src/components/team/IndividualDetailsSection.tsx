@@ -163,7 +163,7 @@ export const IndividualDetailsSection = ({
             Individual Team Performance
           </CardTitle>
           <CardDescription>
-            Click on any team member to view their detailed productivity overview
+            Click on any team member to view their detailed productivity
           </CardDescription>
         </CardHeader>
       </Card>
