@@ -1,3 +1,4 @@
+
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Home, Calendar, Settings, Users, LogOut, Menu, X } from 'lucide-react';
@@ -75,29 +76,22 @@ export const AppNavigation = () => {
       href: '/monthly',
       icon: Calendar,
       description: 'Monthly analytics'
+    }, {
+      name: 'Our Team',
+      href: '/manager',
+      icon: Users,
+      description: 'Team overview'
     }];
 
     if (currentUser?.role === 'admin') {
       return [...baseItems, {
-        name: 'Our Team',
-        href: '/manager',
-        icon: Users,
-        description: 'Team management'
-      }, {
         name: 'Settings',
         href: '/settings',
         icon: Settings,
         description: 'App preferences'
       }];
-    } else if (currentUser?.role === 'manager') {
-      return [...baseItems, {
-        name: 'Our Team',
-        href: '/manager',
-        icon: Users,
-        description: 'Team management'
-      }];
     } else {
-      // team-member gets only base items
+      // team-member and manager get the same base items now
       return baseItems;
     }
   };

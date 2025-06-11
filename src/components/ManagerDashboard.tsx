@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -20,7 +21,7 @@ export const ManagerDashboard = () => {
     isLoading
   } = useTeamDataRealtime();
 
-  // Check if user has access to individual detail tab
+  // Check if user has access to individual detail tab (only managers and admins)
   const canAccessIndividualDetail = profile?.role === 'manager' || profile?.role === 'admin';
 
   // Handle navigation from TeamOverview
