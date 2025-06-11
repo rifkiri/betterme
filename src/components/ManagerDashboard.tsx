@@ -9,6 +9,7 @@ import { Users, User, UserCheck, Lock } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useTeamDataRealtime } from '@/hooks/useTeamDataRealtime';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export const ManagerDashboard = () => {
   const location = useLocation();
@@ -16,6 +17,7 @@ export const ManagerDashboard = () => {
   const [selectedEmployee, setSelectedEmployee] = useState('');
   const [viewMode, setViewMode] = useState<'summary' | 'dashboard'>('summary');
   const { profile } = useUserProfile();
+  const isMobile = useIsMobile();
   const {
     teamData,
     isLoading
@@ -91,27 +93,46 @@ export const ManagerDashboard = () => {
     canAccessIndividualDetail
   });
 
+  // Helper function to get icon labels based on screen size
+  const getTabLabel = (text: string, icon: React.ReactNode) => {
+    if (isMobile) {
+      return icon;
+    }
+    return (
+      <span className="flex items-center gap-2">
+        {icon}
+        {text}
+      </span>
+    );
+  };
+
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Our Team</h1>
-        <p className="text-gray-600">Monitor team productivity</p>
+    <div className="max-w-7xl mx-auto py-6 px-3 sm:py-8 sm:px-4">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">Our Team</h1>
+        <p className="text-sm sm:text-base text-gray-600">Monitor team productivity</p>
       </div>
 
-      <Tabs value={selectedTab} onValueChange={handleTabChange} className="space-y-6">
-        <TabsList className={`grid w-full ${canAccessIndividualDetail ? 'grid-cols-3' : 'grid-cols-2'} lg:w-[600px]`}>
-          <TabsTrigger value="team" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Team Overview
+      <Tabs value={selectedTab} onValueChange={handleTabChange} className="space-y-4 sm:space-y-6">
+        <TabsList className={`w-full flex ${canAccessIndividualDetail ? 'grid-cols-3' : 'grid-cols-2'} lg:w-[600px] ${isMobile ? 'p-0.5' : 'p-1'}`}>
+          <TabsTrigger 
+            value="team" 
+            className={`flex items-center justify-center ${isMobile ? 'px-2 py-1.5 text-xs' : 'px-3 py-1.5 text-sm'}`}
+          >
+            {getTabLabel("Team Overview", <Users className="h-4 w-4" />)}
           </TabsTrigger>
-          <TabsTrigger value="individual" className="flex items-center gap-2">
-            <User className="h-4 w-4" />
-            Individual Overview
+          <TabsTrigger 
+            value="individual" 
+            className={`flex items-center justify-center ${isMobile ? 'px-2 py-1.5 text-xs' : 'px-3 py-1.5 text-sm'}`}
+          >
+            {getTabLabel("Individual Overview", <User className="h-4 w-4" />)}
           </TabsTrigger>
           {canAccessIndividualDetail && (
-            <TabsTrigger value="individual-detail" className="flex items-center gap-2">
-              <UserCheck className="h-4 w-4" />
-              Individual Detail
+            <TabsTrigger 
+              value="individual-detail" 
+              className={`flex items-center justify-center ${isMobile ? 'px-2 py-1.5 text-xs' : 'px-3 py-1.5 text-sm'}`}
+            >
+              {getTabLabel("Individual Detail", <UserCheck className="h-4 w-4" />)}
             </TabsTrigger>
           )}
         </TabsList>
