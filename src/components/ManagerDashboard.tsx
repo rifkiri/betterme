@@ -99,7 +99,7 @@ export const ManagerDashboard = () => {
       </div>
 
       <Tabs value={selectedTab} onValueChange={handleTabChange} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 lg:w-[600px]">
+        <TabsList className={`grid w-full ${canAccessIndividualDetail ? 'grid-cols-3' : 'grid-cols-2'} lg:w-[600px]`}>
           <TabsTrigger value="team" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Team Overview
@@ -108,18 +108,12 @@ export const ManagerDashboard = () => {
             <User className="h-4 w-4" />
             Individual Overview
           </TabsTrigger>
-          <TabsTrigger 
-            value="individual-detail" 
-            className="flex items-center gap-2"
-            disabled={!canAccessIndividualDetail}
-          >
-            {canAccessIndividualDetail ? (
+          {canAccessIndividualDetail && (
+            <TabsTrigger value="individual-detail" className="flex items-center gap-2">
               <UserCheck className="h-4 w-4" />
-            ) : (
-              <Lock className="h-4 w-4" />
-            )}
-            Individual Detail
-          </TabsTrigger>
+              Individual Detail
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="team">
@@ -141,37 +135,29 @@ export const ManagerDashboard = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="individual-detail">
-          {!canAccessIndividualDetail ? (
-            <Card>
-              <CardContent className="text-center py-8">
-                <Lock className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                <p className="text-gray-600 font-medium">Access Restricted</p>
-                <p className="text-gray-500 text-sm mt-1">
-                  Only managers and administrators can access individual detail views
-                </p>
-              </CardContent>
-            </Card>
-          ) : teamData ? (
-            <div>
-              <IndividualDetailsSection 
-                teamData={teamData} 
-                onViewMemberDetails={handleViewMemberDetails} 
-                onViewMemberDashboard={handleViewMemberDashboard} 
-                selectedMemberId={selectedEmployee} 
-                viewMode={viewMode} 
-              />
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="text-center py-8">
-                <p className="text-gray-500">
-                  {isLoading ? 'Loading team data...' : 'No team data available'}
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
+        {canAccessIndividualDetail && (
+          <TabsContent value="individual-detail">
+            {teamData ? (
+              <div>
+                <IndividualDetailsSection 
+                  teamData={teamData} 
+                  onViewMemberDetails={handleViewMemberDetails} 
+                  onViewMemberDashboard={handleViewMemberDashboard} 
+                  selectedMemberId={selectedEmployee} 
+                  viewMode={viewMode} 
+                />
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <p className="text-gray-500">
+                    {isLoading ? 'Loading team data...' : 'No team data available'}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
