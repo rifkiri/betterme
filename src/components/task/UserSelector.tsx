@@ -38,18 +38,20 @@ export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId
     setError(null);
     
     try {
-      console.log('Fetching users for tagging...');
+      console.log('=== FETCHING USERS FOR TAGGING ===');
+      console.log('Current user ID:', currentUserId);
       
       // First try to get current user to check if we have access
       const { data: { user: currentUser } } = await supabase.auth.getUser();
-      console.log('Current user:', currentUser?.id);
+      console.log('Auth current user:', currentUser?.id);
       
       const { data, error } = await supabase
         .from('profiles')
         .select('id, name, email, role')
         .eq('user_status', 'active');
 
-      console.log('Profiles query result:', { data, error });
+      console.log('Raw profiles data:', data);
+      console.log('Profiles query error:', error);
 
       if (error) {
         console.error('Error fetching users:', error);
@@ -60,19 +62,26 @@ export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId
 
       // Ensure data is an array and filter out current user and admin users
       const safeData = Array.isArray(data) ? data : [];
+      console.log('Safe data before filtering:', safeData);
+      
       const filteredUsers = safeData.filter(user => {
+        console.log('Checking user:', user.name, 'ID:', user.id, 'Role:', user.role);
+        
         // Filter out current user if provided
         if (currentUserId && user.id === currentUserId) {
+          console.log('Filtering out current user:', user.name);
           return false;
         }
         // Filter out admin users
         if (user.role === 'admin') {
+          console.log('Filtering out admin user:', user.name);
           return false;
         }
+        console.log('Including user:', user.name);
         return true;
       });
       
-      console.log('Filtered users (excluding current user and admins):', filteredUsers);
+      console.log('Final filtered users:', filteredUsers);
       setUsers(filteredUsers);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -128,7 +137,7 @@ export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId
               <CommandEmpty>
                 {loading ? "Loading users..." : 
                  error ? error : 
-                 safeUsers.length === 0 ? "No other users found (admins cannot be tagged)." : 
+                 safeUsers.length === 0 ? "No other users found (current user and admins are excluded)." : 
                  "No users found."}
               </CommandEmpty>
               <CommandGroup>
