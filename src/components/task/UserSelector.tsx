@@ -61,8 +61,8 @@ export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId
         <PopoverContent className="w-full p-0">
           <Command shouldFilter={false}>
             <CommandInput placeholder="Search users..." />
-            <ScrollArea className="h-72">
-              <CommandList>
+            <ScrollArea className="h-[300px]">
+              <CommandList className="max-h-none">
                 <CommandEmpty>
                   {loading ? "Loading users..." : 
                    error ? error : 
