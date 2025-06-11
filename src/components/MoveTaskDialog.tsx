@@ -17,7 +17,9 @@ export const MoveTaskDialog = ({ onMoveTask, disabled }: MoveTaskDialogProps) =>
 
   const handleMove = () => {
     if (selectedDate) {
-      onMoveTask(selectedDate);
+      // Create a new date to ensure we pass a proper date object
+      const dateToUse = new Date(selectedDate);
+      onMoveTask(dateToUse);
       setOpen(false);
       setSelectedDate(undefined);
     }
@@ -49,6 +51,7 @@ export const MoveTaskDialog = ({ onMoveTask, disabled }: MoveTaskDialogProps) =>
             selected={selectedDate}
             onSelect={setSelectedDate}
             className="rounded-md border"
+            initialFocus
           />
           {selectedDate && (
             <p className="text-sm text-gray-600">

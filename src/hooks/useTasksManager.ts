@@ -148,9 +148,24 @@ export const useTasksManager = ({
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
 
+    console.log('Moving task:', task.title, 'to date:', newDueDate);
+
+    // Ensure proper date comparison by setting to midnight
+    const normalizeDate = (date: Date) => {
+      const normalized = new Date(date);
+      normalized.setHours(0, 0, 0, 0);
+      return normalized;
+    };
+
     const originalDate = task.originalDueDate || task.dueDate;
-    const isMovedBackToOriginal = originalDate && 
-      originalDate.toDateString() === newDueDate.toDateString();
+    const normalizedOriginal = normalizeDate(originalDate);
+    const normalizedNew = normalizeDate(newDueDate);
+    
+    // Check if moving back to original date
+    const isMovedBackToOriginal = normalizedOriginal.getTime() === normalizedNew.getTime();
+
+    console.log('Original date:', originalDate);
+    console.log('Is moved back to original:', isMovedBackToOriginal);
 
     const updates = {
       dueDate: newDueDate,
@@ -167,8 +182,8 @@ export const useTasksManager = ({
         toast.error('Please sign in to move tasks');
       }
     } catch (error) {
-      toast.error('Failed to move task');
       console.error('Failed to move task:', error);
+      toast.error('Failed to move task');
     }
   };
 
