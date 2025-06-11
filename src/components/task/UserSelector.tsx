@@ -59,7 +59,7 @@ export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-full p-0">
-          <Command shouldFilter={false}>
+          <Command>
             <CommandInput placeholder="Search users..." />
             <ScrollArea className="h-[300px]">
               <CommandList className="max-h-none">
@@ -73,7 +73,7 @@ export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId
                   {users.map((user) => (
                     <CommandItem
                       key={user.id}
-                      value={user.name || 'Unknown User'}
+                      value={`${user.name || 'Unknown User'} ${user.email || ''}`}
                       onSelect={() => toggleUser(user.id)}
                       className="cursor-pointer"
                     >
