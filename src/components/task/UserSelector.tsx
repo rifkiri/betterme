@@ -11,6 +11,7 @@ interface User {
   id: string;
   name: string;
   email: string;
+  role: string;
 }
 
 interface UserSelectorProps {
@@ -45,7 +46,7 @@ export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId
       
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, name, email')
+        .select('id, name, email, role')
         .eq('user_status', 'active');
 
       console.log('Profiles query result:', { data, error });
@@ -57,13 +58,21 @@ export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId
         return;
       }
 
-      // Ensure data is an array and filter out current user if provided
+      // Ensure data is an array and filter out current user and admin users
       const safeData = Array.isArray(data) ? data : [];
-      const filteredUsers = currentUserId ? 
-        safeData.filter(user => user.id !== currentUserId) : 
-        safeData;
+      const filteredUsers = safeData.filter(user => {
+        // Filter out current user if provided
+        if (currentUserId && user.id === currentUserId) {
+          return false;
+        }
+        // Filter out admin users
+        if (user.role === 'admin') {
+          return false;
+        }
+        return true;
+      });
       
-      console.log('Filtered users:', filteredUsers);
+      console.log('Filtered users (excluding current user and admins):', filteredUsers);
       setUsers(filteredUsers);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -119,7 +128,7 @@ export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId
               <CommandEmpty>
                 {loading ? "Loading users..." : 
                  error ? error : 
-                 safeUsers.length === 0 ? "No other users found. Make sure other users are registered in the system." : 
+                 safeUsers.length === 0 ? "No other users found (admins cannot be tagged)." : 
                  "No users found."}
               </CommandEmpty>
               <CommandGroup>
