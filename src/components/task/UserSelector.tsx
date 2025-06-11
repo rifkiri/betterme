@@ -1,18 +1,16 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Check, X, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { supabase } from '@/integrations/supabase/client';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
+import { useUserSelector } from '@/hooks/useUserSelector';
+import { 
+  getSelectedUsersFromList, 
+  toggleUserSelection, 
+  removeUserFromSelection 
+} from '@/utils/userSelectorUtils';
 
 interface UserSelectorProps {
   selectedUserIds?: string[];
@@ -22,81 +20,23 @@ interface UserSelectorProps {
 
 export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId }: UserSelectorProps) => {
   const [open, setOpen] = useState(false);
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
+  
   // Ensure selectedUserIds is always an array at the component level
   const safeSelectedUserIds = Array.isArray(selectedUserIds) ? selectedUserIds : [];
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // Get current authenticated user to ensure we have the right current user ID
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      
-      // Use the authenticated user ID as the definitive current user ID
-      const actualCurrentUserId = currentUser?.id || currentUserId;
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, name, email, role')
-        .eq('user_status', 'active');
-
-      if (error) {
-        console.error('Error fetching users:', error);
-        setError(`Failed to load users: ${error.message}`);
-        setUsers([]); // Ensure users is always an array
-        return;
-      }
-
-      // Ensure data is an array and filter out current user and admin users
-      const safeData = Array.isArray(data) ? data : [];
-      
-      const filteredUsers = safeData.filter(user => {
-        // Filter out current user if provided
-        if (actualCurrentUserId && user.id === actualCurrentUserId) {
-          return false;
-        }
-        // Filter out admin users
-        if (user.role === 'admin') {
-          return false;
-        }
-        return true;
-      });
-      
-      setUsers(filteredUsers);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      setError('Failed to load users');
-      setUsers([]); // Ensure users is always an array
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { users, loading, error } = useUserSelector({ currentUserId });
 
   const toggleUser = (userId: string) => {
-    const newSelection = safeSelectedUserIds.includes(userId)
-      ? safeSelectedUserIds.filter(id => id !== userId)
-      : [...safeSelectedUserIds, userId];
-    
+    const newSelection = toggleUserSelection(safeSelectedUserIds, userId);
     onSelectionChange(newSelection);
   };
 
   const removeUser = (userId: string) => {
-    const newSelection = safeSelectedUserIds.filter(id => id !== userId);
+    const newSelection = removeUserFromSelection(safeSelectedUserIds, userId);
     onSelectionChange(newSelection);
   };
 
-  // Ensure arrays are always defined
-  const safeUsers = Array.isArray(users) ? users : [];
-  const selectedUsers = safeUsers.filter(user => safeSelectedUserIds.includes(user.id));
+  const selectedUsers = getSelectedUsersFromList(users, safeSelectedUserIds);
 
   return (
     <div className="space-y-2">
@@ -124,11 +64,11 @@ export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId
               <CommandEmpty>
                 {loading ? "Loading users..." : 
                  error ? error : 
-                 safeUsers.length === 0 ? "No other users found (current user and admins are excluded)." : 
+                 users.length === 0 ? "No other users found (current user and admins are excluded)." : 
                  "No users found."}
               </CommandEmpty>
               <CommandGroup>
-                {safeUsers.map((user) => (
+                {users.map((user) => (
                   <CommandItem
                     key={user.id}
                     value={user.name || 'Unknown User'}
