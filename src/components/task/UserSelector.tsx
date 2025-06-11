@@ -38,24 +38,16 @@ export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId
     setError(null);
     
     try {
-      console.log('=== FETCHING USERS FOR TAGGING ===');
-      console.log('Current user ID:', currentUserId);
-      
       // Get current authenticated user to ensure we have the right current user ID
       const { data: { user: currentUser } } = await supabase.auth.getUser();
-      console.log('Auth current user:', currentUser?.id);
       
       // Use the authenticated user ID as the definitive current user ID
       const actualCurrentUserId = currentUser?.id || currentUserId;
-      console.log('Actual current user ID to filter out:', actualCurrentUserId);
       
       const { data, error } = await supabase
         .from('profiles')
         .select('id, name, email, role')
         .eq('user_status', 'active');
-
-      console.log('Raw profiles data:', data);
-      console.log('Profiles query error:', error);
 
       if (error) {
         console.error('Error fetching users:', error);
@@ -66,28 +58,19 @@ export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId
 
       // Ensure data is an array and filter out current user and admin users
       const safeData = Array.isArray(data) ? data : [];
-      console.log('Safe data before filtering:', safeData);
-      console.log('Total users found:', safeData.length);
       
       const filteredUsers = safeData.filter(user => {
-        console.log('Checking user:', user.name, 'ID:', user.id, 'Role:', user.role);
-        
         // Filter out current user if provided
         if (actualCurrentUserId && user.id === actualCurrentUserId) {
-          console.log('❌ Filtering out current user:', user.name);
           return false;
         }
         // Filter out admin users
         if (user.role === 'admin') {
-          console.log('❌ Filtering out admin user:', user.name);
           return false;
         }
-        console.log('✅ Including user:', user.name);
         return true;
       });
       
-      console.log('Final filtered users count:', filteredUsers.length);
-      console.log('Final filtered users:', filteredUsers);
       setUsers(filteredUsers);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -103,13 +86,11 @@ export const UserSelector = ({ selectedUserIds, onSelectionChange, currentUserId
       ? safeSelectedUserIds.filter(id => id !== userId)
       : [...safeSelectedUserIds, userId];
     
-    console.log('User selection changed:', newSelection);
     onSelectionChange(newSelection);
   };
 
   const removeUser = (userId: string) => {
     const newSelection = safeSelectedUserIds.filter(id => id !== userId);
-    console.log('User removed:', userId, 'New selection:', newSelection);
     onSelectionChange(newSelection);
   };
 
