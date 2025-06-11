@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -26,7 +25,7 @@ export const TeamMoodChart = ({ teamData }: TeamMoodChartProps) => {
       moodByDate[entry.date].push(entry.mood);
     });
 
-    // Calculate average for each date and sort by date
+    // Calculate average for each date and sort chronologically (oldest to newest)
     const dailyAverages = Object.entries(moodByDate)
       .map(([date, moods]) => ({
         date,

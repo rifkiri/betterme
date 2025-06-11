@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -58,8 +59,11 @@ export const IndividualMoodChart = ({ employeeName, moodData = [] }: IndividualM
     );
   }
 
-  const currentMood = moodData[moodData.length - 1].mood;
-  const averageMood = moodData.reduce((sum, day) => sum + day.mood, 0) / moodData.length;
+  // Sort mood data chronologically (oldest to newest)
+  const sortedMoodData = [...moodData].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  const currentMood = sortedMoodData[sortedMoodData.length - 1].mood;
+  const averageMood = sortedMoodData.reduce((sum, day) => sum + day.mood, 0) / sortedMoodData.length;
   const trend = currentMood > averageMood ? 'improving' : currentMood < averageMood ? 'declining' : 'stable';
 
   return (
@@ -106,7 +110,7 @@ export const IndividualMoodChart = ({ employeeName, moodData = [] }: IndividualM
           <h4 className="text-sm font-medium mb-3">30-Day Mood History</h4>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={moodData}>
+              <LineChart data={sortedMoodData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   dataKey="date" 

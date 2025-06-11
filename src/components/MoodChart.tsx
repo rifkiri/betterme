@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Heart, TrendingUp, TrendingDown, Minus } from 'lucide-react';
@@ -39,7 +40,10 @@ export const MoodChart = ({ monthDays, selectedMonth, moodData }: MoodChartProps
     );
   }
 
-  const chartData = moodData.map(entry => ({
+  // Sort mood data by date chronologically (oldest to newest)
+  const sortedMoodData = [...moodData].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  const chartData = sortedMoodData.map(entry => ({
     date: format(entry.date, 'MMM dd'),
     mood: entry.mood,
     fullDate: entry.date
@@ -50,10 +54,10 @@ export const MoodChart = ({ monthDays, selectedMonth, moodData }: MoodChartProps
   const lowestMood = Math.min(...moodData.map(entry => entry.mood));
 
   const getMoodTrend = () => {
-    if (moodData.length < 2) return { trend: 'stable', icon: Minus };
+    if (sortedMoodData.length < 2) return { trend: 'stable', icon: Minus };
     
-    const firstHalf = moodData.slice(0, Math.floor(moodData.length / 2));
-    const secondHalf = moodData.slice(Math.floor(moodData.length / 2));
+    const firstHalf = sortedMoodData.slice(0, Math.floor(sortedMoodData.length / 2));
+    const secondHalf = sortedMoodData.slice(Math.floor(sortedMoodData.length / 2));
     
     const firstHalfAvg = firstHalf.reduce((sum, entry) => sum + entry.mood, 0) / firstHalf.length;
     const secondHalfAvg = secondHalf.reduce((sum, entry) => sum + entry.mood, 0) / secondHalf.length;
