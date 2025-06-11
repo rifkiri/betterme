@@ -150,13 +150,14 @@ export const useTasksManager = ({
 
     console.log('Moving task:', task.title, 'to date:', newDueDate);
 
-    // Ensure proper date comparison by setting to midnight
+    // Ensure proper date comparison by setting all dates to midnight UTC
     const normalizeDate = (date: Date) => {
       const normalized = new Date(date);
       normalized.setHours(0, 0, 0, 0);
       return normalized;
     };
 
+    // Store original due date if this is the first move
     const originalDate = task.originalDueDate || task.dueDate;
     const normalizedOriginal = normalizeDate(originalDate);
     const normalizedNew = normalizeDate(newDueDate);
@@ -167,9 +168,11 @@ export const useTasksManager = ({
     console.log('Original date:', originalDate);
     console.log('Is moved back to original:', isMovedBackToOriginal);
 
-    const updates = {
+    const updates: Partial<Task> = {
       dueDate: newDueDate,
+      // Only set originalDueDate if it's not already set
       originalDueDate: task.originalDueDate || task.dueDate,
+      // Only set isMoved to false if moving back to original date
       isMoved: !isMovedBackToOriginal
     };
 

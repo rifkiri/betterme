@@ -17,8 +17,9 @@ export const MoveTaskDialog = ({ onMoveTask, disabled }: MoveTaskDialogProps) =>
 
   const handleMove = () => {
     if (selectedDate) {
-      // Create a new date to ensure we pass a proper date object
+      // Ensure we pass a proper date object with time set to noon to avoid timezone issues
       const dateToUse = new Date(selectedDate);
+      dateToUse.setHours(12, 0, 0, 0);
       onMoveTask(dateToUse);
       setOpen(false);
       setSelectedDate(undefined);
@@ -50,7 +51,7 @@ export const MoveTaskDialog = ({ onMoveTask, disabled }: MoveTaskDialogProps) =>
             mode="single"
             selected={selectedDate}
             onSelect={setSelectedDate}
-            className="rounded-md border"
+            className="rounded-md border pointer-events-auto"
             initialFocus
           />
           {selectedDate && (
