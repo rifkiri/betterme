@@ -1,43 +1,15 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { User, UserRole } from '@/types/userTypes';
-import { Trash2, Eye, Edit } from 'lucide-react';
-import { toast } from 'sonner';
+import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { User } from '@/types/userTypes';
 import { EditUserDialog } from './EditUserDialog';
+import { UserTableRow } from './UserTableRow';
 
 interface UserTableProps {
   users: User[];
   onDeleteUser: (userId: string) => void;
   onUpdateUser: (userId: string, updates: Partial<User>) => void;
 }
-
-const getRoleBadgeVariant = (role: UserRole) => {
-  switch (role) {
-    case 'admin':
-      return 'destructive';
-    case 'manager':
-      return 'default';
-    case 'team-member':
-      return 'secondary';
-    default:
-      return 'outline';
-  }
-};
-
-const getStatusBadgeVariant = (status: string) => {
-  switch (status) {
-    case 'active':
-      return 'default';
-    case 'pending':
-      return 'outline';
-    default:
-      return 'secondary';
-  }
-};
 
 export const UserTable = ({
   users,
@@ -46,26 +18,6 @@ export const UserTable = ({
 }: UserTableProps) => {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-
-  const handleShowPassword = (user: User) => {
-    if (user.userStatus === 'pending' && user.temporaryPassword) {
-      toast.info(`Temporary password: ${user.temporaryPassword}`, {
-        duration: 10000,
-        description: 'Password will be cleared after first login'
-      });
-    } else if (user.userStatus === 'pending') {
-      toast.info('No temporary password set for this user');
-    } else {
-      toast.info('User has changed their password from the default');
-    }
-  };
-
-  const handleRoleChange = (userId: string, newRole: UserRole) => {
-    onUpdateUser(userId, {
-      role: newRole
-    });
-    toast.success('User role updated successfully');
-  };
 
   const handleEditUser = (user: User) => {
     setEditingUser(user);
@@ -90,41 +42,13 @@ export const UserTable = ({
           </TableHeader>
           <TableBody>
             {users.map(user => (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>
-                  <Select value={user.role} onValueChange={(value: UserRole) => handleRoleChange(user.id, value)}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="team-member">Team Member</SelectItem>
-                      <SelectItem value="manager">Manager</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </TableCell>
-                <TableCell>{user.position || '-'}</TableCell>
-                <TableCell>
-                  <Badge variant={getStatusBadgeVariant(user.userStatus)}>
-                    {user.userStatus}
-                  </Badge>
-                </TableCell>
-                <TableCell>{user.createdAt}</TableCell>
-                <TableCell>{user.lastLogin || 'Never'}</TableCell>
-                <TableCell className="text-right space-x-2">
-                  <Button variant="outline" size="sm" onClick={() => handleEditUser(user)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleShowPassword(user)}>
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => onDeleteUser(user.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
+              <UserTableRow
+                key={user.id}
+                user={user}
+                onEditUser={handleEditUser}
+                onDeleteUser={onDeleteUser}
+                onUpdateUser={onUpdateUser}
+              />
             ))}
           </TableBody>
         </Table>
