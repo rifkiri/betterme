@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MoreVertical, Trash2, FolderOpen } from 'lucide-react';
+import { MoreVertical, Trash2, FolderOpen, Plus } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Project, Task } from '@/types/productivity';
 import { AddWeeklyOutputDialog } from './AddWeeklyOutputDialog';
@@ -52,39 +52,44 @@ export const ProjectsSection = ({
 
   return (
     <Card className="h-fit">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-            📁 Projects
-            {overdueProjects.length > 0 && (
-              <Badge variant="destructive" className="text-xs">
-                {overdueProjects.length} overdue
-              </Badge>
-            )}
-          </CardTitle>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setShowAllProjects(true)}>
-                <FolderOpen className="h-4 w-4 mr-2" />
-                View All Projects
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShowDeletedProjects(true)}>
-                <Trash2 className="h-4 w-4 mr-2" />
-                View Deleted ({deletedProjects.length})
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+      <CardHeader className="pb-2 sm:pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="min-w-0">
+            <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+              📁 Projects
+              {overdueProjects.length > 0 && (
+                <Badge variant="destructive" className="text-xs">
+                  {overdueProjects.length} overdue
+                </Badge>
+              )}
+            </CardTitle>
+          </div>
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowDeletedProjects(true)}
+              className="flex items-center gap-2 text-xs px-2 py-1"
+            >
+              <Trash2 className="h-3 w-3" />
+              Deleted ({deletedProjects.length})
+            </Button>
+            <AddWeeklyOutputDialog onAddWeeklyOutput={onAddProject} />
+          </div>
         </div>
       </CardHeader>
       
       <CardContent className="space-y-3">
         <div className="flex gap-2">
-          <AddWeeklyOutputDialog onAddWeeklyOutput={onAddProject} />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowAllProjects(true)}
+            className="flex items-center gap-2"
+          >
+            <FolderOpen className="h-4 w-4" />
+            View All Projects
+          </Button>
         </div>
 
         {/* Active Projects Only */}
