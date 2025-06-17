@@ -105,6 +105,19 @@ export class SupabaseTasksService {
       throw error;
     }
   }
+
+  async permanentlyDeleteTask(id: string, userId: string): Promise<void> {
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error permanently deleting task:', error);
+      throw error;
+    }
+  }
 }
 
 export const supabaseTasksService = new SupabaseTasksService();

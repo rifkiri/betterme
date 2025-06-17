@@ -129,8 +129,8 @@ export const useTasksManager = ({
 
     try {
       if (isSupabaseAvailable()) {
-        // Actually delete from database
-        await supabaseDataService.updateTask(id, userId, { isDeleted: true });
+        // Actually delete the task permanently from the database
+        await supabaseDataService.permanentlyDeleteTask(id, userId);
         await loadAllData();
         toast.success('Task permanently deleted');
       } else {

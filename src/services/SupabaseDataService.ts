@@ -1,3 +1,4 @@
+
 import { supabaseProfilesService } from './SupabaseProfilesService';
 import { supabaseHabitsService } from './SupabaseHabitsService';
 import { supabaseTasksService } from './SupabaseTasksService';
@@ -54,6 +55,10 @@ export class SupabaseDataService {
 
   async updateTask(id: string, userId: string, updates: any) {
     return await supabaseTasksService.updateTask(id, userId, updates);
+  }
+
+  async permanentlyDeleteTask(id: string, userId: string) {
+    return await supabaseTasksService.permanentlyDeleteTask(id, userId);
   }
 
   // Weekly outputs management
