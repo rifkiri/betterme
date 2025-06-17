@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { WeeklyOutput, Task } from '@/types/productivity';
+import { WeeklyOutput, Task, Project } from '@/types/productivity';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { TaskForm } from './task/TaskForm';
 import { TaskFormValues } from './task/taskFormSchema';
@@ -11,9 +11,17 @@ interface EditTaskDialogProps {
   onOpenChange: (open: boolean) => void;
   onSave: (taskId: string, updates: Partial<Task>) => void;
   weeklyOutputs: WeeklyOutput[];
+  projects?: Project[];
 }
 
-export const EditTaskDialog = ({ task, open, onOpenChange, onSave, weeklyOutputs }: EditTaskDialogProps) => {
+export const EditTaskDialog = ({ 
+  task, 
+  open, 
+  onOpenChange, 
+  onSave, 
+  weeklyOutputs, 
+  projects = [] 
+}: EditTaskDialogProps) => {
   const handleSubmit = (values: TaskFormValues) => {
     onSave(task.id, {
       title: values.title,
@@ -22,6 +30,7 @@ export const EditTaskDialog = ({ task, open, onOpenChange, onSave, weeklyOutputs
       estimatedTime: values.estimatedTime || undefined,
       dueDate: values.dueDate,
       weeklyOutputId: values.weeklyOutputId || undefined,
+      projectId: values.projectId || undefined,
       taggedUsers: values.taggedUsers || []
     });
     onOpenChange(false);
@@ -39,6 +48,7 @@ export const EditTaskDialog = ({ task, open, onOpenChange, onSave, weeklyOutputs
     estimatedTime: task.estimatedTime || '',
     dueDate: task.dueDate || new Date(),
     weeklyOutputId: task.weeklyOutputId || undefined,
+    projectId: task.projectId || undefined,
     taggedUsers: task.taggedUsers || []
   };
 
@@ -56,6 +66,7 @@ export const EditTaskDialog = ({ task, open, onOpenChange, onSave, weeklyOutputs
           onSubmit={handleSubmit}
           onCancel={handleCancel}
           weeklyOutputs={weeklyOutputs}
+          projects={projects}
         />
       </DialogContent>
     </Dialog>

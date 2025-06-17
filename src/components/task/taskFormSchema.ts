@@ -8,6 +8,7 @@ export const taskFormSchema = z.object({
   estimatedTime: z.string().optional(),
   dueDate: z.date().optional(),
   weeklyOutputId: z.string().optional(),
+  projectId: z.string().optional(),
   taggedUsers: z.array(z.string()).optional()
 });
 

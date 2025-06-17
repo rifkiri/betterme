@@ -3,18 +3,20 @@ import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { WeeklyOutput, Task } from '@/types/productivity';
+import { WeeklyOutput, Task, Project } from '@/types/productivity';
 import { TaskForm } from './task/TaskForm';
 import { TaskFormValues } from './task/taskFormSchema';
 
 interface AddTaskDialogProps {
   onAddTask: (task: Omit<Task, 'id' | 'completed' | 'createdDate' | 'isMoved'>) => void;
   weeklyOutputs: WeeklyOutput[];
+  projects?: Project[];
 }
 
 export const AddTaskDialog = ({
   onAddTask,
-  weeklyOutputs
+  weeklyOutputs,
+  projects = []
 }: AddTaskDialogProps) => {
   const [open, setOpen] = useState(false);
 
@@ -27,6 +29,7 @@ export const AddTaskDialog = ({
       dueDate: values.dueDate || new Date(),
       originalDueDate: values.dueDate || new Date(),
       weeklyOutputId: values.weeklyOutputId || undefined,
+      projectId: values.projectId || undefined,
       taggedUsers: values.taggedUsers || []
     });
     setOpen(false);
@@ -55,6 +58,7 @@ export const AddTaskDialog = ({
           onSubmit={handleSubmit}
           onCancel={handleCancel}
           weeklyOutputs={weeklyOutputs}
+          projects={projects}
         />
       </DialogContent>
     </Dialog>
