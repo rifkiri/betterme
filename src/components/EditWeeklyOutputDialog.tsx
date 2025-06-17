@@ -17,6 +17,7 @@ import { WeeklyOutput } from '@/types/productivity';
 
 const weeklyOutputSchema = z.object({
   title: z.string().min(1, 'Title is required'),
+  description: z.string().optional(),
   dueDate: z.date().optional()
 });
 
@@ -34,6 +35,7 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
     resolver: zodResolver(weeklyOutputSchema),
     defaultValues: {
       title: weeklyOutput.title,
+      description: weeklyOutput.description || '',
       dueDate: weeklyOutput.dueDate || undefined
     }
   });
@@ -47,6 +49,7 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
 
     onSave(weeklyOutput.id, {
       title: values.title,
+      description: values.description,
       dueDate: dueDate
     });
     onOpenChange(false);
@@ -75,6 +78,24 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
                   <FormLabel>Title</FormLabel>
                   <FormControl>
                     <Textarea placeholder="Describe your weekly output..." className="resize-none" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Enter description..." 
+                      className="min-h-[80px]"
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
