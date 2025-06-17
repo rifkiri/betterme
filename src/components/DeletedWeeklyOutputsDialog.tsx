@@ -8,45 +8,26 @@ import { WeeklyOutput } from '@/types/productivity';
 
 interface DeletedWeeklyOutputsDialogProps {
   deletedWeeklyOutputs: WeeklyOutput[];
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  onRestoreWeeklyOutput?: (id: string) => void;
-  onPermanentlyDeleteWeeklyOutput?: (id: string) => void;
-  onRestore?: (id: string) => void;
-  onPermanentlyDelete?: (id: string) => void;
-  title?: string;
+  onRestore: (id: string) => void;
+  onPermanentlyDelete: (id: string) => void;
 }
 
 export const DeletedWeeklyOutputsDialog = ({ 
   deletedWeeklyOutputs, 
-  open,
-  onOpenChange,
-  onRestoreWeeklyOutput,
-  onPermanentlyDeleteWeeklyOutput,
   onRestore, 
-  onPermanentlyDelete,
-  title = "Deleted Weekly Outputs"
+  onPermanentlyDelete 
 }: DeletedWeeklyOutputsDialogProps) => {
-  const handleRestore = onRestoreWeeklyOutput || onRestore;
-  const handlePermanentDelete = onPermanentlyDeleteWeeklyOutput || onPermanentlyDelete;
-
-  const dialogProps = open !== undefined && onOpenChange !== undefined 
-    ? { open, onOpenChange }
-    : {};
-
   return (
-    <Dialog {...dialogProps}>
-      {!open && (
-        <DialogTrigger asChild>
-          <Button variant="outline" size="sm">
-            <Archive className="h-4 w-4 mr-2" />
-            Deleted ({deletedWeeklyOutputs.length})
-          </Button>
-        </DialogTrigger>
-      )}
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          <Archive className="h-4 w-4 mr-2" />
+          Deleted ({deletedWeeklyOutputs.length})
+        </Button>
+      </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle>Deleted Weekly Outputs</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4 max-h-96 overflow-y-auto">
@@ -70,7 +51,7 @@ export const DeletedWeeklyOutputsDialog = ({
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleRestore?.(output.id)}
+                    onClick={() => onRestore(output.id)}
                     className="text-xs px-2 py-1"
                   >
                     <RotateCcw className="h-3 w-3 mr-1" />
@@ -79,7 +60,7 @@ export const DeletedWeeklyOutputsDialog = ({
                   <Button
                     size="sm"
                     variant="destructive"
-                    onClick={() => handlePermanentDelete?.(output.id)}
+                    onClick={() => onPermanentlyDelete(output.id)}
                     className="text-xs px-2 py-1"
                   >
                     <Trash2 className="h-3 w-3 mr-1" />
