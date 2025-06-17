@@ -77,6 +77,19 @@ export class SupabaseWeeklyOutputsService {
       throw error;
     }
   }
+
+  async permanentlyDeleteWeeklyOutput(id: string, userId: string): Promise<void> {
+    const { error } = await supabase
+      .from('weekly_outputs')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error permanently deleting weekly output:', error);
+      throw error;
+    }
+  }
 }
 
 export const supabaseWeeklyOutputsService = new SupabaseWeeklyOutputsService();

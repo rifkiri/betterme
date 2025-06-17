@@ -152,8 +152,8 @@ export const useWeeklyOutputsManager = ({
 
     try {
       if (isSupabaseAvailable()) {
-        // Actually delete from database
-        await supabaseDataService.updateWeeklyOutput(id, userId, { isDeleted: true });
+        // Actually delete the weekly output permanently from the database
+        await supabaseDataService.permanentlyDeleteWeeklyOutput(id, userId);
         await loadAllData();
         toast.success('Weekly output permanently deleted');
       } else {

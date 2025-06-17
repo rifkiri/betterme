@@ -74,6 +74,10 @@ export class SupabaseDataService {
     return await supabaseWeeklyOutputsService.updateWeeklyOutput(id, userId, updates);
   }
 
+  async permanentlyDeleteWeeklyOutput(id: string, userId: string) {
+    return await supabaseWeeklyOutputsService.permanentlyDeleteWeeklyOutput(id, userId);
+  }
+
   // Mood tracking
   async getMoodData(userId: string) {
     return await supabaseMoodService.getMoodData(userId);
