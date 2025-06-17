@@ -55,7 +55,7 @@ export const ProjectsSection = ({
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
             📁 Projects
-            {over dueProjects.length > 0 && (
+            {overdueProjects.length > 0 && (
               <Badge variant="destructive" className="text-xs">
                 {overdueProjects.length} overdue
               </Badge>
