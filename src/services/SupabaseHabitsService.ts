@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Habit } from '@/types/productivity';
 import { format } from 'date-fns';
@@ -145,6 +144,34 @@ export class SupabaseHabitsService {
     }
 
     console.log('Habit toggle result for user', userId, ':', data);
+  }
+
+  async permanentlyDeleteHabit(id: string, userId: string): Promise<void> {
+    console.log('Permanently deleting habit:', id, 'for user:', userId);
+    
+    // First delete all habit completions for this habit
+    const { error: completionsError } = await supabase
+      .from('habit_completions')
+      .delete()
+      .eq('habit_id', id)
+      .eq('user_id', userId);
+
+    if (completionsError) {
+      console.error('Error deleting habit completions:', completionsError);
+      throw completionsError;
+    }
+
+    // Then delete the habit itself
+    const { error } = await supabase
+      .from('habits')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error permanently deleting habit:', error);
+      throw error;
+    }
   }
 }
 

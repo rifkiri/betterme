@@ -153,7 +153,8 @@ export const useHabitsManager = ({
 
     try {
       if (isSupabaseAvailable()) {
-        await supabaseDataService.updateHabit(id, userId, { isDeleted: true });
+        // Actually delete the habit permanently from the database
+        await supabaseDataService.permanentlyDeleteHabit(id, userId);
         await loadAllData(selectedDate);
         toast.success('Habit permanently deleted');
       } else {
