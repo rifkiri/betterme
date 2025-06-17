@@ -3,12 +3,13 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MoreVertical, Trash2 } from 'lucide-react';
+import { MoreVertical, Trash2, FolderOpen } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Project, Task } from '@/types/productivity';
 import { AddWeeklyOutputDialog } from './AddWeeklyOutputDialog';
-import { WeeklyOutputCard } from './WeeklyOutputCard';
+import { CompactProjectCard } from './CompactProjectCard';
 import { DeletedWeeklyOutputsDialog } from './DeletedWeeklyOutputsDialog';
+import { AllProjectsModal } from './AllProjectsModal';
 
 interface ProjectsSectionProps {
   projects: Project[];
@@ -38,9 +39,9 @@ export const ProjectsSection = ({
   onPermanentlyDeleteProject,
 }: ProjectsSectionProps) => {
   const [showDeletedProjects, setShowDeletedProjects] = useState(false);
+  const [showAllProjects, setShowAllProjects] = useState(false);
 
   const activeProjects = projects.filter(project => project.progress < 100);
-  const completedProjects = projects.filter(project => project.progress === 100);
 
   // Convert projects to WeeklyOutput format for reusing existing components
   const convertProjectToWeeklyOutput = (project: Project) => ({
@@ -68,6 +69,10 @@ export const ProjectsSection = ({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setShowAllProjects(true)}>
+                <FolderOpen className="h-4 w-4 mr-2" />
+                View All Projects
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setShowDeletedProjects(true)}>
                 <Trash2 className="h-4 w-4 mr-2" />
                 View Deleted ({deletedProjects.length})
@@ -77,90 +82,54 @@ export const ProjectsSection = ({
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3">
         <div className="flex gap-2">
           <AddWeeklyOutputDialog onAddWeeklyOutput={onAddProject} />
         </div>
 
-        {/* Overdue Projects */}
-        {overdueProjects.length > 0 && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 mb-2">
-              <h4 className="text-sm font-medium text-red-600">Overdue Projects</h4>
-              <Badge variant="destructive" className="text-xs">
-                {overdueProjects.length}
-              </Badge>
-            </div>
-            {overdueProjects.map((project) => (
-              <WeeklyOutputCard
-                key={project.id}
-                output={convertProjectToWeeklyOutput(project)}
-                onEditWeeklyOutput={onEditProject}
-                onUpdateProgress={onUpdateProgress}
-                onMoveWeeklyOutput={onMoveProject}
-                onDeleteWeeklyOutput={onDeleteProject}
-                tasks={tasks}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Active Projects */}
-        {activeProjects.length > 0 && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 mb-2">
-              <h4 className="text-sm font-medium text-blue-600">Active Projects</h4>
-              <Badge variant="secondary" className="text-xs">
-                {activeProjects.length}
-              </Badge>
-            </div>
+        {/* Active Projects Only */}
+        {activeProjects.length > 0 ? (
+          <div className="grid gap-2">
             {activeProjects.map((project) => (
-              <WeeklyOutputCard
+              <CompactProjectCard
                 key={project.id}
-                output={convertProjectToWeeklyOutput(project)}
-                onEditWeeklyOutput={onEditProject}
+                project={project}
+                onEditProject={onEditProject}
                 onUpdateProgress={onUpdateProgress}
-                onMoveWeeklyOutput={onMoveProject}
-                onDeleteWeeklyOutput={onDeleteProject}
+                onMoveProject={onMoveProject}
+                onDeleteProject={onDeleteProject}
                 tasks={tasks}
+                isOverdue={overdueProjects.some(op => op.id === project.id)}
               />
             ))}
           </div>
-        )}
-
-        {/* Completed Projects */}
-        {completedProjects.length > 0 && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 mb-2">
-              <h4 className="text-sm font-medium text-green-600">Completed Projects</h4>
-              <Badge variant="default" className="text-xs bg-green-100 text-green-800">
-                {completedProjects.length}
-              </Badge>
-            </div>
-            {completedProjects.map((project) => (
-              <WeeklyOutputCard
-                key={project.id}
-                output={convertProjectToWeeklyOutput(project)}
-                onEditWeeklyOutput={onEditProject}
-                onUpdateProgress={onUpdateProgress}
-                onMoveWeeklyOutput={onMoveProject}
-                onDeleteWeeklyOutput={onDeleteProject}
-                tasks={tasks}
-              />
-            ))}
-          </div>
-        )}
-
-        {projects.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            <p className="text-sm">No projects yet</p>
+        ) : (
+          <div className="text-center py-6 text-gray-500">
+            <p className="text-sm">No active projects</p>
             <p className="text-xs mt-1">Add your first project to get started!</p>
           </div>
         )}
       </CardContent>
 
+      {/* All Projects Modal */}
+      {showAllProjects && (
+        <AllProjectsModal
+          open={showAllProjects}
+          onOpenChange={setShowAllProjects}
+          projects={projects}
+          onEditProject={onEditProject}
+          onUpdateProgress={onUpdateProgress}
+          onMoveProject={onMoveProject}
+          onDeleteProject={onDeleteProject}
+          tasks={tasks}
+        />
+      )}
+
+      {/* Deleted Projects Modal */}
       {showDeletedProjects && (
         <DeletedWeeklyOutputsDialog
+          open={showDeletedProjects}
+          onOpenChange={setShowDeletedProjects}
           deletedWeeklyOutputs={deletedProjects.map(convertProjectToWeeklyOutput)}
           onRestore={onRestoreProject}
           onPermanentlyDelete={onPermanentlyDeleteProject}
