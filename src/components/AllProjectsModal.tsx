@@ -10,7 +10,6 @@ interface AllProjectsModalProps {
   projects: Project[];
   onEditProject: (id: string, updates: Partial<Project>) => void;
   onUpdateProgress: (projectId: string, newProgress: number) => void;
-  onMoveProject: (id: string, newDueDate: Date) => void;
   onDeleteProject: (id: string) => void;
   tasks?: Task[];
 }
@@ -21,7 +20,6 @@ export const AllProjectsModal = ({
   projects,
   onEditProject,
   onUpdateProgress,
-  onMoveProject,
   onDeleteProject,
   tasks = []
 }: AllProjectsModalProps) => {
@@ -61,7 +59,6 @@ export const AllProjectsModal = ({
                     output={convertProjectToWeeklyOutput(project)}
                     onEditWeeklyOutput={onEditProject}
                     onUpdateProgress={onUpdateProgress}
-                    onMoveWeeklyOutput={onMoveProject}
                     onDeleteWeeklyOutput={onDeleteProject}
                     tasks={tasks}
                   />
@@ -86,7 +83,6 @@ export const AllProjectsModal = ({
                     output={convertProjectToWeeklyOutput(project)}
                     onEditWeeklyOutput={onEditProject}
                     onUpdateProgress={onUpdateProgress}
-                    onMoveWeeklyOutput={onMoveProject}
                     onDeleteWeeklyOutput={onDeleteProject}
                     tasks={tasks}
                   />

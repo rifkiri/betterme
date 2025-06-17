@@ -87,44 +87,6 @@ export const useProjectsManager = ({
     }
   };
 
-  const moveProject = async (projectId: string, newDueDate: Date) => {
-    if (!userId) return;
-
-    const project = projects.find(p => p.id === projectId);
-    if (!project) return;
-
-    const normalizeDate = (date: Date) => {
-      const normalized = new Date(date);
-      normalized.setHours(0, 0, 0, 0);
-      return normalized;
-    };
-
-    const originalDate = project.originalDueDate || project.dueDate;
-    const normalizedOriginal = normalizeDate(originalDate);
-    const normalizedNew = normalizeDate(newDueDate);
-    
-    const isMovedBackToOriginal = normalizedOriginal.getTime() === normalizedNew.getTime();
-
-    const updates: Partial<Project> = {
-      dueDate: newDueDate,
-      originalDueDate: project.originalDueDate || project.dueDate,
-      isMoved: !isMovedBackToOriginal
-    };
-
-    try {
-      if (isSupabaseAvailable()) {
-        await supabaseDataService.updateProject(projectId, userId, updates);
-        await loadAllData();
-        toast.success('Project moved successfully');
-      } else {
-        toast.error('Please sign in to move projects');
-      }
-    } catch (error) {
-      console.error('Failed to move project:', error);
-      toast.error('Failed to move project');
-    }
-  };
-
   const deleteProject = async (id: string) => {
     if (!userId) return;
 
@@ -180,7 +142,6 @@ export const useProjectsManager = ({
     addProject,
     editProject,
     updateProgress,
-    moveProject,
     deleteProject,
     restoreProject,
     permanentlyDeleteProject,

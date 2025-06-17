@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,6 @@ interface ProjectsSectionProps {
   onAddProject: (project: Omit<Project, 'id' | 'createdDate'>) => void;
   onEditProject: (id: string, updates: Partial<Project>) => void;
   onUpdateProgress: (projectId: string, newProgress: number) => void;
-  onMoveProject: (id: string, newDueDate: Date) => void;
   onDeleteProject: (id: string) => void;
   onRestoreProject: (id: string) => void;
   onPermanentlyDeleteProject: (id: string) => void;
@@ -32,7 +32,6 @@ export const ProjectsSection = ({
   onAddProject,
   onEditProject,
   onUpdateProgress,
-  onMoveProject,
   onDeleteProject,
   onRestoreProject,
   onPermanentlyDeleteProject,
@@ -104,7 +103,6 @@ export const ProjectsSection = ({
                 project={project}
                 onEditProject={onEditProject}
                 onUpdateProgress={onUpdateProgress}
-                onMoveProject={onMoveProject}
                 onDeleteProject={onDeleteProject}
                 tasks={tasks}
                 isOverdue={overdueProjects.some(op => op.id === project.id)}
@@ -127,7 +125,6 @@ export const ProjectsSection = ({
           projects={projects}
           onEditProject={onEditProject}
           onUpdateProgress={onUpdateProgress}
-          onMoveProject={onMoveProject}
           onDeleteProject={onDeleteProject}
           tasks={tasks}
         />

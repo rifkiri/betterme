@@ -13,7 +13,6 @@ interface CompactProjectCardProps {
   project: Project;
   onEditProject: (id: string, updates: Partial<Project>) => void;
   onUpdateProgress: (projectId: string, newProgress: number) => void;
-  onMoveProject: (id: string, newDueDate: Date) => void;
   onDeleteProject: (id: string) => void;
   tasks?: Task[];
   isOverdue?: boolean;
@@ -23,7 +22,6 @@ export const CompactProjectCard = ({
   project,
   onEditProject,
   onUpdateProgress,
-  onMoveProject,
   onDeleteProject,
   tasks = [],
   isOverdue = false
@@ -100,10 +98,6 @@ export const CompactProjectCard = ({
                 <Link className="h-2 w-2" />
                 {linkedTasksCount}
               </Badge>
-            )}
-            
-            {project.isMoved && project.originalDueDate && (
-              <span className="text-orange-600">Moved</span>
             )}
           </div>
           
