@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -25,9 +24,15 @@ type FormData = z.infer<typeof formSchema>;
 
 interface AddWeeklyOutputDialogProps {
   onAddWeeklyOutput: (output: Omit<WeeklyOutput, 'id' | 'createdDate'>) => void;
+  buttonText?: string;
+  dialogTitle?: string;
 }
 
-export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput }: AddWeeklyOutputDialogProps) => {
+export const AddWeeklyOutputDialog = ({ 
+  onAddWeeklyOutput, 
+  buttonText = "Add Outputs",
+  dialogTitle = "Add Weekly Output"
+}: AddWeeklyOutputDialogProps) => {
   const [open, setOpen] = useState(false);
 
   const form = useForm<FormData>({
@@ -65,12 +70,12 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput }: AddWeeklyOutputDial
       <DialogTrigger asChild>
         <Button size="sm" variant="outline" className="flex-1 mr-2">
           <Plus className="h-4 w-4 mr-2" />
-          Add Outputs
+          {buttonText}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Weekly Output</DialogTitle>
+          <DialogTitle>{dialogTitle}</DialogTitle>
         </DialogHeader>
         
         <Form {...form}>

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -74,7 +73,11 @@ export const ProjectsSection = ({
               <Trash2 className="h-3 w-3" />
               Deleted ({deletedProjects.length})
             </Button>
-            <AddWeeklyOutputDialog onAddWeeklyOutput={onAddProject} />
+            <AddWeeklyOutputDialog 
+              onAddWeeklyOutput={onAddProject} 
+              buttonText="Add Projects"
+              dialogTitle="Add Project"
+            />
           </div>
         </div>
       </CardHeader>
