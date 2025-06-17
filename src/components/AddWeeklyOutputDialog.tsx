@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -64,6 +65,9 @@ export const AddWeeklyOutputDialog = ({
   // Get today's date and set time to start of day for proper comparison
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+
+  // Determine submit button text based on dialog title
+  const submitButtonText = dialogTitle.includes('Project') ? 'Add Project' : 'Add Output';
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -168,7 +172,7 @@ export const AddWeeklyOutputDialog = ({
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit">Add Output</Button>
+              <Button type="submit">{submitButtonText}</Button>
             </div>
           </form>
         </Form>
