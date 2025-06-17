@@ -33,6 +33,9 @@ export const AllProjectsModal = ({
     isDeleted: project.isDeleted || false,
   });
 
+  // No-op function for move functionality since projects don't have move capability
+  const handleMoveProject = () => {};
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">

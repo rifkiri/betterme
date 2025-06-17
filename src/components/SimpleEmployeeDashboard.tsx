@@ -48,7 +48,6 @@ export const SimpleEmployeeDashboard = () => {
     restoreWeeklyOutput,
     permanentlyDeleteWeeklyOutput,
     getOverdueWeeklyOutputs,
-    moveProject,
     deleteProject,
     restoreProject,
     permanentlyDeleteProject,
@@ -73,6 +72,9 @@ export const SimpleEmployeeDashboard = () => {
   const handleRollOver = (taskId: string, targetDate: Date) => {
     rollOverTask(taskId, targetDate);
   };
+
+  // No-op function for project move since projects don't have move capability
+  const handleMoveProject = () => {};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 p-1 sm:p-2 lg:p-4">
@@ -138,7 +140,7 @@ export const SimpleEmployeeDashboard = () => {
               onAddProject={addProject}
               onEditProject={editProject}
               onUpdateProgress={updateProgress}
-              onMoveProject={moveProject}
+              onMoveProject={handleMoveProject}
               onDeleteProject={deleteProject}
               onRestoreProject={restoreProject}
               onPermanentlyDeleteProject={permanentlyDeleteProject}
