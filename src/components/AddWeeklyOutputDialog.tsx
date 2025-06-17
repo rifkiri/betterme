@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -16,6 +17,7 @@ import { WeeklyOutput } from '@/types/productivity';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required'),
+  description: z.string().optional(),
   dueDate: z.date().optional(),
 });
 
@@ -32,6 +34,7 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput }: AddWeeklyOutputDial
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: '',
+      description: '',
       dueDate: undefined,
     },
   });
@@ -45,6 +48,7 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput }: AddWeeklyOutputDial
 
     onAddWeeklyOutput({
       title: data.title,
+      description: data.description,
       progress: 0,
       dueDate: dueDate,
     });
@@ -79,6 +83,24 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput }: AddWeeklyOutputDial
                   <FormLabel>Title</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter output title..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Enter description..." 
+                      className="min-h-[80px]"
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
