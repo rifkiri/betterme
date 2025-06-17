@@ -121,7 +121,6 @@ export const CompactProjectCard = ({
             <MoveWeeklyOutputDialog 
               onMoveOutput={newDueDate => onMoveProject(project.id, newDueDate)} 
               disabled={project.progress === 100}
-              size="sm"
             />
           </div>
         </div>
