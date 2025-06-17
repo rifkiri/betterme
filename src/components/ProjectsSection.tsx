@@ -152,14 +152,13 @@ export const ProjectsSection = ({
         )}
       </CardContent>
 
-      <DeletedWeeklyOutputsDialog
-        deletedWeeklyOutputs={deletedProjects}
-        open={showDeletedProjects}
-        onOpenChange={setShowDeletedProjects}
-        onRestoreWeeklyOutput={onRestoreProject}
-        onPermanentlyDeleteWeeklyOutput={onPermanentlyDeleteProject}
-        title="Deleted Projects"
-      />
+      {showDeletedProjects && (
+        <DeletedWeeklyOutputsDialog
+          deletedWeeklyOutputs={deletedProjects}
+          onRestore={onRestoreProject}
+          onPermanentlyDelete={onPermanentlyDeleteProject}
+        />
+      )}
     </Card>
   );
 };
