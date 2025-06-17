@@ -18,6 +18,8 @@ export const SimpleEmployeeDashboard = () => {
     deletedTasks,
     weeklyOutputs,
     deletedWeeklyOutputs,
+    projects,
+    deletedProjects,
     selectedDate,
     handleDateChange,
     addHabit,
@@ -26,6 +28,8 @@ export const SimpleEmployeeDashboard = () => {
     editTask,
     addWeeklyOutput,
     editWeeklyOutput,
+    addProject,
+    editProject,
     toggleHabit,
     toggleTask,
     deleteTask,
@@ -43,21 +47,28 @@ export const SimpleEmployeeDashboard = () => {
     deleteWeeklyOutput,
     restoreWeeklyOutput,
     permanentlyDeleteWeeklyOutput,
-    getOverdueWeeklyOutputs
+    getOverdueWeeklyOutputs,
+    moveProject,
+    deleteProject,
+    restoreProject,
+    permanentlyDeleteProject,
+    getOverdueProjects
   } = useProductivity();
 
   console.log('Dashboard data:', {
     habitsCount: habits.length,
     tasksCount: tasks.length,
-    weeklyOutputsCount: weeklyOutputs.length
+    weeklyOutputsCount: weeklyOutputs.length,
+    projectsCount: projects.length
   });
 
   const completedHabits = habits.filter(habit => habit.completed).length;
   const todaysTasks = getTodaysTasks();
   const overdueTasks = getOverdueTasks();
   const overdueWeeklyOutputs = getOverdueWeeklyOutputs();
+  const overdueProjects = getOverdueProjects();
 
-  console.log('Today tasks:', todaysTasks.length, 'Overdue tasks:', overdueTasks.length, 'Overdue weekly outputs:', overdueWeeklyOutputs.length);
+  console.log('Today tasks:', todaysTasks.length, 'Overdue tasks:', overdueTasks.length, 'Overdue weekly outputs:', overdueWeeklyOutputs.length, 'Overdue projects:', overdueProjects.length);
 
   const handleRollOver = (taskId: string, targetDate: Date) => {
     rollOverTask(taskId, targetDate);
@@ -94,7 +105,7 @@ export const SimpleEmployeeDashboard = () => {
           />
           <QuickStatsCard 
             title="Overdue" 
-            value={(overdueTasks.length + overdueWeeklyOutputs.length).toString()} 
+            value={(overdueTasks.length + overdueWeeklyOutputs.length + overdueProjects.length).toString()} 
             icon={Clock} 
             gradient="bg-gradient-to-r from-orange-50 to-orange-100" 
           />
@@ -120,17 +131,17 @@ export const SimpleEmployeeDashboard = () => {
 
           <div className="xl:col-span-1">
             <ProjectsSection 
-              projects={weeklyOutputs}
-              deletedProjects={deletedWeeklyOutputs}
-              overdueProjects={overdueWeeklyOutputs}
+              projects={projects}
+              deletedProjects={deletedProjects}
+              overdueProjects={overdueProjects}
               tasks={tasks}
-              onAddProject={addWeeklyOutput}
-              onEditProject={editWeeklyOutput}
+              onAddProject={addProject}
+              onEditProject={editProject}
               onUpdateProgress={updateProgress}
-              onMoveProject={moveWeeklyOutput}
-              onDeleteProject={deleteWeeklyOutput}
-              onRestoreProject={restoreWeeklyOutput}
-              onPermanentlyDeleteProject={permanentlyDeleteWeeklyOutput}
+              onMoveProject={moveProject}
+              onDeleteProject={deleteProject}
+              onRestoreProject={restoreProject}
+              onPermanentlyDeleteProject={permanentlyDeleteProject}
             />
           </div>
 

@@ -174,6 +174,62 @@ export type Database = {
         }
         Relationships: []
       }
+      projects: {
+        Row: {
+          completed_date: string | null
+          created_date: string
+          deleted_date: string | null
+          description: string | null
+          due_date: string
+          id: string
+          is_deleted: boolean
+          is_moved: boolean
+          original_due_date: string | null
+          progress: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_date?: string | null
+          created_date?: string
+          deleted_date?: string | null
+          description?: string | null
+          due_date: string
+          id?: string
+          is_deleted?: boolean
+          is_moved?: boolean
+          original_due_date?: string | null
+          progress?: number
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_date?: string | null
+          created_date?: string
+          deleted_date?: string | null
+          description?: string | null
+          due_date?: string
+          id?: string
+          is_deleted?: boolean
+          is_moved?: boolean
+          original_due_date?: string | null
+          progress?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           completed: boolean
@@ -187,6 +243,7 @@ export type Database = {
           is_moved: boolean
           original_due_date: string | null
           priority: Database["public"]["Enums"]["task_priority"] | null
+          project_id: string | null
           tagged_users: string[] | null
           title: string
           updated_at: string
@@ -205,6 +262,7 @@ export type Database = {
           is_moved?: boolean
           original_due_date?: string | null
           priority?: Database["public"]["Enums"]["task_priority"] | null
+          project_id?: string | null
           tagged_users?: string[] | null
           title: string
           updated_at?: string
@@ -223,6 +281,7 @@ export type Database = {
           is_moved?: boolean
           original_due_date?: string | null
           priority?: Database["public"]["Enums"]["task_priority"] | null
+          project_id?: string | null
           tagged_users?: string[] | null
           title?: string
           updated_at?: string
@@ -230,6 +289,13 @@ export type Database = {
           weekly_output_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tasks_user_id_fkey"
             columns: ["user_id"]

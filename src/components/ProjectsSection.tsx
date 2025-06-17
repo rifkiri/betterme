@@ -3,20 +3,20 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MoreVertical, RotateCcw, Trash2, Archive } from 'lucide-react';
+import { MoreVertical, Trash2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { WeeklyOutput, Task } from '@/types/productivity';
+import { Project, Task } from '@/types/productivity';
 import { AddWeeklyOutputDialog } from './AddWeeklyOutputDialog';
 import { WeeklyOutputCard } from './WeeklyOutputCard';
 import { DeletedWeeklyOutputsDialog } from './DeletedWeeklyOutputsDialog';
 
 interface ProjectsSectionProps {
-  projects: WeeklyOutput[];
-  deletedProjects: WeeklyOutput[];
-  overdueProjects: WeeklyOutput[];
+  projects: Project[];
+  deletedProjects: Project[];
+  overdueProjects: Project[];
   tasks?: Task[];
-  onAddProject: (project: Omit<WeeklyOutput, 'id' | 'createdDate'>) => void;
-  onEditProject: (id: string, updates: Partial<WeeklyOutput>) => void;
+  onAddProject: (project: Omit<Project, 'id' | 'createdDate'>) => void;
+  onEditProject: (id: string, updates: Partial<Project>) => void;
   onUpdateProgress: (projectId: string, newProgress: number) => void;
   onMoveProject: (id: string, newDueDate: Date) => void;
   onDeleteProject: (id: string) => void;
@@ -42,13 +42,20 @@ export const ProjectsSection = ({
   const activeProjects = projects.filter(project => project.progress < 100);
   const completedProjects = projects.filter(project => project.progress === 100);
 
+  // Convert projects to WeeklyOutput format for reusing existing components
+  const convertProjectToWeeklyOutput = (project: Project) => ({
+    ...project,
+    isMoved: project.isMoved || false,
+    isDeleted: project.isDeleted || false,
+  });
+
   return (
     <Card className="h-fit">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-            📋 Projects
-            {overdueProjects.length > 0 && (
+            📁 Projects
+            {over dueProjects.length > 0 && (
               <Badge variant="destructive" className="text-xs">
                 {overdueProjects.length} overdue
               </Badge>
@@ -87,7 +94,7 @@ export const ProjectsSection = ({
             {overdueProjects.map((project) => (
               <WeeklyOutputCard
                 key={project.id}
-                output={project}
+                output={convertProjectToWeeklyOutput(project)}
                 onEditWeeklyOutput={onEditProject}
                 onUpdateProgress={onUpdateProgress}
                 onMoveWeeklyOutput={onMoveProject}
@@ -110,7 +117,7 @@ export const ProjectsSection = ({
             {activeProjects.map((project) => (
               <WeeklyOutputCard
                 key={project.id}
-                output={project}
+                output={convertProjectToWeeklyOutput(project)}
                 onEditWeeklyOutput={onEditProject}
                 onUpdateProgress={onUpdateProgress}
                 onMoveWeeklyOutput={onMoveProject}
@@ -133,7 +140,7 @@ export const ProjectsSection = ({
             {completedProjects.map((project) => (
               <WeeklyOutputCard
                 key={project.id}
-                output={project}
+                output={convertProjectToWeeklyOutput(project)}
                 onEditWeeklyOutput={onEditProject}
                 onUpdateProgress={onUpdateProgress}
                 onMoveWeeklyOutput={onMoveProject}
@@ -154,9 +161,10 @@ export const ProjectsSection = ({
 
       {showDeletedProjects && (
         <DeletedWeeklyOutputsDialog
-          deletedWeeklyOutputs={deletedProjects}
+          deletedWeeklyOutputs={deletedProjects.map(convertProjectToWeeklyOutput)}
           onRestore={onRestoreProject}
           onPermanentlyDelete={onPermanentlyDeleteProject}
+          title="Deleted Projects"
         />
       )}
     </Card>
