@@ -7,7 +7,6 @@ import { CalendarIcon, Trash2, Link, MoreHorizontal } from 'lucide-react';
 import { Project, Task } from '@/types/productivity';
 import { format, isToday, isTomorrow } from 'date-fns';
 import { EditWeeklyOutputDialog } from './EditWeeklyOutputDialog';
-import { MoveWeeklyOutputDialog } from './MoveWeeklyOutputDialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface CompactProjectCardProps {
@@ -117,11 +116,6 @@ export const CompactProjectCard = ({
                 </span>
               </div>
             )}
-            
-            <MoveWeeklyOutputDialog 
-              onMoveOutput={newDueDate => onMoveProject(project.id, newDueDate)} 
-              disabled={project.progress === 100}
-            />
           </div>
         </div>
       </div>
