@@ -179,7 +179,7 @@ export const ProjectsSection = ({
         project={movingProject}
         open={!!movingProject}
         onOpenChange={(open) => !open && setMovingProject(null)}
-        onMove={on MoveProject}
+        onMove={onMoveProject}
       />
     </Card>
   );
