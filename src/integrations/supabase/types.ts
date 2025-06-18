@@ -324,6 +324,7 @@ export type Database = {
           is_moved: boolean
           original_due_date: string | null
           progress: number
+          project_id: string | null
           title: string
           updated_at: string
           user_id: string
@@ -339,6 +340,7 @@ export type Database = {
           is_moved?: boolean
           original_due_date?: string | null
           progress?: number
+          project_id?: string | null
           title: string
           updated_at?: string
           user_id: string
@@ -354,11 +356,19 @@ export type Database = {
           is_moved?: boolean
           original_due_date?: string | null
           progress?: number
+          project_id?: string | null
           title?: string
           updated_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "weekly_outputs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "weekly_outputs_user_id_fkey"
             columns: ["user_id"]
