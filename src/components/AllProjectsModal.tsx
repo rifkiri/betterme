@@ -2,7 +2,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Project, Task } from '@/types/productivity';
-import { WeeklyOutputCard } from './WeeklyOutputCard';
+import { ProjectCard } from './ProjectCard';
 
 interface AllProjectsModalProps {
   open: boolean;
@@ -26,16 +26,6 @@ export const AllProjectsModal = ({
   const activeProjects = projects.filter(project => project.progress < 100);
   const completedProjects = projects.filter(project => project.progress === 100);
 
-  // Convert projects to WeeklyOutput format for reusing existing components
-  const convertProjectToWeeklyOutput = (project: Project) => ({
-    ...project,
-    isMoved: project.isMoved || false,
-    isDeleted: project.isDeleted || false,
-  });
-
-  // No-op function for move functionality since projects don't have move capability
-  const handleMoveProject = () => {};
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
@@ -57,12 +47,12 @@ export const AllProjectsModal = ({
               </div>
               <div className="grid gap-3">
                 {activeProjects.map((project) => (
-                  <WeeklyOutputCard
+                  <ProjectCard
                     key={project.id}
-                    output={convertProjectToWeeklyOutput(project)}
-                    onEditWeeklyOutput={onEditProject}
+                    project={project}
+                    onEditProject={onEditProject}
                     onUpdateProgress={onUpdateProgress}
-                    onDeleteWeeklyOutput={onDeleteProject}
+                    onDeleteProject={onDeleteProject}
                     tasks={tasks}
                   />
                 ))}
@@ -81,12 +71,12 @@ export const AllProjectsModal = ({
               </div>
               <div className="grid gap-3">
                 {completedProjects.map((project) => (
-                  <WeeklyOutputCard
+                  <ProjectCard
                     key={project.id}
-                    output={convertProjectToWeeklyOutput(project)}
-                    onEditWeeklyOutput={onEditProject}
+                    project={project}
+                    onEditProject={onEditProject}
                     onUpdateProgress={onUpdateProgress}
-                    onDeleteWeeklyOutput={onDeleteProject}
+                    onDeleteProject={onDeleteProject}
                     tasks={tasks}
                   />
                 ))}

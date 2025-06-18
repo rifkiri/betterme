@@ -1,4 +1,3 @@
-
 import { Target, CheckCircle, Clock, Award, Calendar } from 'lucide-react';
 import { useProductivity } from '@/hooks/useProductivity';
 import { QuickStatsCard } from './QuickStatsCard';
@@ -73,9 +72,6 @@ export const SimpleEmployeeDashboard = () => {
     rollOverTask(taskId, targetDate);
   };
 
-  // No-op function for project move since projects don't have move capability
-  const handleMoveProject = () => {};
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 p-1 sm:p-2 lg:p-4">
       <div className="max-w-full mx-auto space-y-2 sm:space-y-4">
@@ -140,7 +136,6 @@ export const SimpleEmployeeDashboard = () => {
               onAddProject={addProject}
               onEditProject={editProject}
               onUpdateProgress={updateProgress}
-              onMoveProject={handleMoveProject}
               onDeleteProject={deleteProject}
               onRestoreProject={restoreProject}
               onPermanentlyDeleteProject={permanentlyDeleteProject}

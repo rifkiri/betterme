@@ -3,11 +3,10 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MoreVertical, Trash2, FolderOpen, Plus } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Trash2, FolderOpen } from 'lucide-react';
 import { Project, Task } from '@/types/productivity';
 import { AddWeeklyOutputDialog } from './AddWeeklyOutputDialog';
-import { CompactProjectCard } from './CompactProjectCard';
+import { ProjectCard } from './ProjectCard';
 import { DeletedWeeklyOutputsDialog } from './DeletedWeeklyOutputsDialog';
 import { AllProjectsModal } from './AllProjectsModal';
 
@@ -97,17 +96,28 @@ export const ProjectsSection = ({
         {/* Active Projects Only */}
         {activeProjects.length > 0 ? (
           <div className="grid gap-2">
-            {activeProjects.map((project) => (
-              <CompactProjectCard
+            {activeProjects.slice(0, 3).map((project) => (
+              <ProjectCard
                 key={project.id}
                 project={project}
                 onEditProject={onEditProject}
                 onUpdateProgress={onUpdateProgress}
                 onDeleteProject={onDeleteProject}
                 tasks={tasks}
-                isOverdue={overdueProjects.some(op => op.id === project.id)}
               />
             ))}
+            {activeProjects.length > 3 && (
+              <div className="text-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAllProjects(true)}
+                  className="text-xs text-gray-600"
+                >
+                  View {activeProjects.length - 3} more projects...
+                </Button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="text-center py-6 text-gray-500">
