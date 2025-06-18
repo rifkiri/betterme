@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, FolderOpen, Trash2 } from 'lucide-react';
+import { Plus, FolderOpen, Trash2, Eye, EyeOff } from 'lucide-react';
 import { AddProjectDialog } from './AddProjectDialog';
 import { EditProjectDialog } from './EditProjectDialog';
 import { MoveProjectDialog } from './MoveProjectDialog';
@@ -39,6 +39,7 @@ export const ProjectsSection = ({
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [movingProject, setMovingProject] = useState<Project | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
+  const [showCompleted, setShowCompleted] = useState(false);
 
   const activeProjects = projects.filter(p => !p.isDeleted);
   const completedProjects = activeProjects.filter(p => p.progress >= 100);
@@ -58,6 +59,26 @@ export const ProjectsSection = ({
             )}
           </div>
           <div className="flex items-center gap-2">
+            {completedProjects.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCompleted(!showCompleted)}
+                className="text-xs"
+              >
+                {showCompleted ? (
+                  <>
+                    <EyeOff className="h-3 w-3 mr-1" />
+                    Hide Completed
+                  </>
+                ) : (
+                  <>
+                    <Eye className="h-3 w-3 mr-1" />
+                    Show All ({completedProjects.length} completed)
+                  </>
+                )}
+              </Button>
+            )}
             {deletedProjects.length > 0 && (
               <Button
                 variant="outline"
@@ -103,8 +124,8 @@ export const ProjectsSection = ({
           </div>
         )}
 
-        {/* Completed Projects */}
-        {completedProjects.length > 0 && (
+        {/* Completed Projects - Only show when showCompleted is true */}
+        {showCompleted && completedProjects.length > 0 && (
           <div>
             <h4 className="text-sm font-medium text-gray-700 mb-2">
               Completed ({completedProjects.length})
