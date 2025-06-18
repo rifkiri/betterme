@@ -34,6 +34,11 @@ export const DeletedWeeklyOutputsDialog = ({
     ? { open, onOpenChange }
     : {};
 
+  // Determine the correct empty state message based on the title
+  const emptyStateMessage = title === "Deleted Projects" 
+    ? "No deleted projects" 
+    : "No deleted weekly outputs";
+
   return (
     <Dialog {...dialogProps}>
       {!open && (
@@ -51,7 +56,7 @@ export const DeletedWeeklyOutputsDialog = ({
         
         <div className="space-y-4 max-h-96 overflow-y-auto">
           {deletedWeeklyOutputs.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">No deleted weekly outputs</p>
+            <p className="text-center text-gray-500 py-8">{emptyStateMessage}</p>
           ) : (
             deletedWeeklyOutputs.map((output) => (
               <div key={output.id} className="p-4 bg-gray-50 rounded-lg border">
