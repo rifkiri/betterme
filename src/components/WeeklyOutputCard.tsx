@@ -35,6 +35,15 @@ export const WeeklyOutputCard = ({
 
   const linkedTasksCount = tasks.filter(task => task.weeklyOutputId === output.id).length;
 
+  const handleProgressUpdate = (change: number) => {
+    const newProgress = Math.max(0, Math.min(100, output.progress + change));
+    onUpdateProgress(output.id, newProgress);
+  };
+
+  const handleMarkComplete = () => {
+    onUpdateProgress(output.id, 100);
+  };
+
   return (
     <>
       <div className={`p-4 rounded-lg border ${isOverdue() ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'}`}>
@@ -82,14 +91,31 @@ export const WeeklyOutputCard = ({
         </div>
         
         <div className="flex items-center space-x-2">
-          <Button size="sm" variant="outline" onClick={() => onUpdateProgress(output.id, output.progress - 10)} disabled={output.progress <= 0} className="text-xs px-2 py-1">
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={() => handleProgressUpdate(-10)} 
+            disabled={output.progress <= 0} 
+            className="text-xs px-2 py-1"
+          >
             -10%
           </Button>
-          <Button size="sm" variant="outline" onClick={() => onUpdateProgress(output.id, output.progress + 10)} disabled={output.progress >= 100} className="text-xs px-2 py-1">
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={() => handleProgressUpdate(10)} 
+            disabled={output.progress >= 100} 
+            className="text-xs px-2 py-1"
+          >
             +10%
           </Button>
           {output.progress !== 100 && (
-            <Button size="sm" variant="default" onClick={() => onUpdateProgress(output.id, 100)} className="text-xs px-2 py-1">
+            <Button 
+              size="sm" 
+              variant="default" 
+              onClick={handleMarkComplete} 
+              className="text-xs px-2 py-1"
+            >
               Achieved
             </Button>
           )}
