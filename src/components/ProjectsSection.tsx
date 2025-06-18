@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, FolderOpen } from 'lucide-react';
 import { Project, Task } from '@/types/productivity';
-import { AddWeeklyOutputDialog } from './AddWeeklyOutputDialog';
+import { AddProjectDialog } from './AddProjectDialog';
 import { ProjectCard } from './ProjectCard';
-import { DeletedWeeklyOutputsDialog } from './DeletedWeeklyOutputsDialog';
+import { DeletedProjectsDialog } from './DeletedProjectsDialog';
 import { AllProjectsModal } from './AllProjectsModal';
 
 interface ProjectsSectionProps {
@@ -40,13 +40,6 @@ export const ProjectsSection = ({
 
   const activeProjects = projects.filter(project => project.progress < 100);
 
-  // Convert projects to WeeklyOutput format for reusing existing components
-  const convertProjectToWeeklyOutput = (project: Project) => ({
-    ...project,
-    isMoved: project.isMoved || false,
-    isDeleted: project.isDeleted || false,
-  });
-
   return (
     <Card className="h-fit">
       <CardHeader className="pb-2 sm:pb-4">
@@ -71,10 +64,9 @@ export const ProjectsSection = ({
               <Trash2 className="h-3 w-3" />
               Deleted ({deletedProjects.length})
             </Button>
-            <AddWeeklyOutputDialog 
-              onAddWeeklyOutput={onAddProject} 
+            <AddProjectDialog 
+              onAddProject={onAddProject} 
               buttonText="Add Projects"
-              dialogTitle="Add Project"
             />
           </div>
         </div>
@@ -142,13 +134,12 @@ export const ProjectsSection = ({
 
       {/* Deleted Projects Modal */}
       {showDeletedProjects && (
-        <DeletedWeeklyOutputsDialog
+        <DeletedProjectsDialog
           open={showDeletedProjects}
           onOpenChange={setShowDeletedProjects}
-          deletedWeeklyOutputs={deletedProjects.map(convertProjectToWeeklyOutput)}
+          deletedProjects={deletedProjects}
           onRestore={onRestoreProject}
           onPermanentlyDelete={onPermanentlyDeleteProject}
-          title="Deleted Projects"
         />
       )}
     </Card>
