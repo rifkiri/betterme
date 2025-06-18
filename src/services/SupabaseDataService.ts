@@ -1,8 +1,10 @@
+
 import { supabaseProfilesService } from './SupabaseProfilesService';
 import { supabaseHabitsService } from './SupabaseHabitsService';
 import { supabaseTasksService } from './SupabaseTasksService';
 import { supabaseWeeklyOutputsService } from './SupabaseWeeklyOutputsService';
 import { supabaseMoodService } from './SupabaseMoodService';
+import { supabaseProjectsService } from './SupabaseProjectsService';
 
 export class SupabaseDataService {
   // User management
@@ -79,6 +81,23 @@ export class SupabaseDataService {
 
   async permanentlyDeleteWeeklyOutput(id: string, userId: string) {
     return await supabaseWeeklyOutputsService.permanentlyDeleteWeeklyOutput(id, userId);
+  }
+
+  // Projects management
+  async getProjects(userId: string) {
+    return await supabaseProjectsService.getProjects(userId);
+  }
+
+  async addProject(project: any) {
+    return await supabaseProjectsService.addProject(project);
+  }
+
+  async updateProject(id: string, userId: string, updates: any) {
+    return await supabaseProjectsService.updateProject(id, userId, updates);
+  }
+
+  async permanentlyDeleteProject(id: string, userId: string) {
+    return await supabaseProjectsService.permanentlyDeleteProject(id, userId);
   }
 
   // Mood tracking

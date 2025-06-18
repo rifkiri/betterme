@@ -18,6 +18,8 @@ export const SimpleEmployeeDashboard = () => {
     deletedTasks,
     weeklyOutputs,
     deletedWeeklyOutputs,
+    projects,
+    deletedProjects,
     selectedDate,
     handleDateChange,
     addHabit,
@@ -26,6 +28,8 @@ export const SimpleEmployeeDashboard = () => {
     editTask,
     addWeeklyOutput,
     editWeeklyOutput,
+    addProject,
+    editProject,
     toggleHabit,
     toggleTask,
     deleteTask,
@@ -43,39 +47,31 @@ export const SimpleEmployeeDashboard = () => {
     deleteWeeklyOutput,
     restoreWeeklyOutput,
     permanentlyDeleteWeeklyOutput,
-    getOverdueWeeklyOutputs
+    getOverdueWeeklyOutputs,
+    getOverdueProjects,
+    moveProject,
+    deleteProject,
+    restoreProject,
+    permanentlyDeleteProject
   } = useProductivity();
 
   console.log('Dashboard data:', {
     habitsCount: habits.length,
     tasksCount: tasks.length,
-    weeklyOutputsCount: weeklyOutputs.length
+    weeklyOutputsCount: weeklyOutputs.length,
+    projectsCount: projects.length
   });
 
   const completedHabits = habits.filter(habit => habit.completed).length;
   const todaysTasks = getTodaysTasks();
   const overdueTasks = getOverdueTasks();
   const overdueWeeklyOutputs = getOverdueWeeklyOutputs();
+  const overdueProjects = getOverdueProjects();
 
-  console.log('Today tasks:', todaysTasks.length, 'Overdue tasks:', overdueTasks.length, 'Overdue weekly outputs:', overdueWeeklyOutputs.length);
+  console.log('Today tasks:', todaysTasks.length, 'Overdue tasks:', overdueTasks.length, 'Overdue weekly outputs:', overdueWeeklyOutputs.length, 'Overdue projects:', overdueProjects.length);
 
   const handleRollOver = (taskId: string, targetDate: Date) => {
     rollOverTask(taskId, targetDate);
-  };
-
-  // Mock project handlers (to be implemented with actual functionality)
-  const mockProjects = [];
-  const mockDeletedProjects = [];
-  const mockOverdueProjects = [];
-
-  const mockProjectHandlers = {
-    addProject: (project: any) => console.log('Add project:', project),
-    editProject: (id: string, updates: any) => console.log('Edit project:', id, updates),
-    updateProjectProgress: (id: string, progress: number) => console.log('Update progress:', id, progress),
-    moveProject: (id: string, newDate: Date) => console.log('Move project:', id, newDate),
-    deleteProject: (id: string) => console.log('Delete project:', id),
-    restoreProject: (id: string) => console.log('Restore project:', id),
-    permanentlyDeleteProject: (id: string) => console.log('Permanently delete project:', id),
   };
 
   return (
@@ -109,7 +105,7 @@ export const SimpleEmployeeDashboard = () => {
           />
           <QuickStatsCard 
             title="Overdue" 
-            value={(overdueTasks.length + overdueWeeklyOutputs.length).toString()} 
+            value={(overdueTasks.length + overdueWeeklyOutputs.length + overdueProjects.length).toString()} 
             icon={Clock} 
             gradient="bg-gradient-to-r from-orange-50 to-orange-100" 
           />
@@ -135,16 +131,16 @@ export const SimpleEmployeeDashboard = () => {
 
           <div className="lg:col-span-1 space-y-2 sm:space-y-4">
             <ProjectsSection 
-              projects={mockProjects}
-              deletedProjects={mockDeletedProjects}
-              overdueProjects={mockOverdueProjects}
-              onAddProject={mockProjectHandlers.addProject}
-              onEditProject={mockProjectHandlers.editProject}
-              onUpdateProgress={mockProjectHandlers.updateProjectProgress}
-              onMoveProject={mockProjectHandlers.moveProject}
-              onDeleteProject={mockProjectHandlers.deleteProject}
-              onRestoreProject={mockProjectHandlers.restoreProject}
-              onPermanentlyDeleteProject={mockProjectHandlers.permanentlyDeleteProject}
+              projects={projects}
+              deletedProjects={deletedProjects}
+              overdueProjects={overdueProjects}
+              onAddProject={addProject}
+              onEditProject={editProject}
+              onUpdateProgress={updateProgress}
+              onMoveProject={moveProject}
+              onDeleteProject={deleteProject}
+              onRestoreProject={restoreProject}
+              onPermanentlyDeleteProject={permanentlyDeleteProject}
             />
             
             <WeeklyOutputsSection 

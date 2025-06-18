@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { Habit, Task, WeeklyOutput } from '@/types/productivity';
+import { Project } from '@/types/projects';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
@@ -10,9 +11,11 @@ export const useProductivityData = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [weeklyOutputs, setWeeklyOutputs] = useState<WeeklyOutput[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [archivedHabits, setArchivedHabits] = useState<Habit[]>([]);
   const [deletedTasks, setDeletedTasks] = useState<Task[]>([]);
   const [deletedWeeklyOutputs, setDeletedWeeklyOutputs] = useState<WeeklyOutput[]>([]);
+  const [deletedProjects, setDeletedProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
@@ -60,15 +63,17 @@ export const useProductivityData = () => {
         console.log('Loading data from Supabase for authenticated user...');
         
         // Load habits for the specific date and user
-        const [habitsData, tasksData, weeklyOutputsData] = await Promise.all([
+        const [habitsData, tasksData, weeklyOutputsData, projectsData] = await Promise.all([
           supabaseDataService.getHabitsForDate(userId, targetDate),
           supabaseDataService.getTasks(userId),
-          supabaseDataService.getWeeklyOutputs(userId)
+          supabaseDataService.getWeeklyOutputs(userId),
+          supabaseDataService.getProjects(userId)
         ]);
 
         console.log('Loaded habits for user', userId, 'date:', format(targetDate, 'yyyy-MM-dd'), habitsData);
         console.log('Loaded tasks for user', userId, ':', tasksData);
         console.log('Loaded weekly outputs for user', userId, ':', weeklyOutputsData);
+        console.log('Loaded projects for user', userId, ':', projectsData);
 
         // Filter and set data ensuring user isolation
         setHabits(habitsData.filter(h => !h.archived && !h.isDeleted));
@@ -77,6 +82,8 @@ export const useProductivityData = () => {
         setDeletedTasks(tasksData.filter(t => t.isDeleted));
         setWeeklyOutputs(weeklyOutputsData.filter(w => !w.isDeleted));
         setDeletedWeeklyOutputs(weeklyOutputsData.filter(w => w.isDeleted));
+        setProjects(projectsData.filter(p => !p.isDeleted));
+        setDeletedProjects(projectsData.filter(p => p.isDeleted));
         
         console.log('Data loaded successfully for user:', userId);
       } else {
@@ -111,12 +118,16 @@ export const useProductivityData = () => {
     setTasks,
     weeklyOutputs,
     setWeeklyOutputs,
+    projects,
+    setProjects,
     archivedHabits,
     setArchivedHabits,
     deletedTasks,
     setDeletedTasks,
     deletedWeeklyOutputs,
     setDeletedWeeklyOutputs,
+    deletedProjects,
+    setDeletedProjects,
     isLoading,
     selectedDate,
     
