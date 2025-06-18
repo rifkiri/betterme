@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 interface UseHabitsManagerProps {
   userId: string | null;
-  isGoogleSheetsAvailable: () => boolean;
+  isSupabaseAvailable: () => boolean;
   loadAllData: (date?: Date) => Promise<void>;
   habits: Habit[];
   setHabits: (habits: Habit[] | ((prev: Habit[]) => Habit[])) => void;
@@ -16,7 +16,7 @@ interface UseHabitsManagerProps {
 
 export const useHabitsManager = ({
   userId,
-  isGoogleSheetsAvailable: isSupabaseAvailable,
+  isSupabaseAvailable,
   loadAllData,
   habits,
   setHabits,

@@ -133,7 +133,7 @@ export const useProductivityData = () => {
     
     // Utils
     userId,
-    isGoogleSheetsAvailable: isSupabaseAvailable, // Keep same interface
+    isSupabaseAvailable,
     loadAllData,
     handleDateChange,
   };

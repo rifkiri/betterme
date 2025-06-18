@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 interface UseWeeklyOutputsManagerProps {
   userId: string | null;
-  isGoogleSheetsAvailable: () => boolean;
+  isSupabaseAvailable: () => boolean;
   loadAllData: () => Promise<void>;
   weeklyOutputs: WeeklyOutput[];
   setWeeklyOutputs: (outputs: WeeklyOutput[] | ((prev: WeeklyOutput[]) => WeeklyOutput[])) => void;
@@ -15,7 +15,7 @@ interface UseWeeklyOutputsManagerProps {
 
 export const useWeeklyOutputsManager = ({
   userId,
-  isGoogleSheetsAvailable: isSupabaseAvailable,
+  isSupabaseAvailable,
   loadAllData,
   weeklyOutputs,
   setWeeklyOutputs,

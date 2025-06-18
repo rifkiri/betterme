@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 interface UseTasksManagerProps {
   userId: string | null;
-  isGoogleSheetsAvailable: () => boolean;
+  isSupabaseAvailable: () => boolean;
   loadAllData: () => Promise<void>;
   tasks: Task[];
   setTasks: (tasks: Task[] | ((prev: Task[]) => Task[])) => void;
@@ -15,7 +15,7 @@ interface UseTasksManagerProps {
 
 export const useTasksManager = ({
   userId,
-  isGoogleSheetsAvailable: isSupabaseAvailable,
+  isSupabaseAvailable,
   loadAllData,
   tasks,
   setTasks,
