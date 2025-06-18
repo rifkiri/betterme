@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import { SimpleEmployeeDashboard } from "./components/SimpleEmployeeDashboard";
 import Monthly from "./pages/Monthly";
 import Manager from "./pages/Manager";
 import Profile from "./pages/Profile";
@@ -20,7 +20,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/signin" element={<SignIn />} />
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<SimpleEmployeeDashboard />} />
           <Route path="/monthly" element={<Monthly />} />
           <Route path="/manager" element={<Manager />} />
           <Route path="/profile" element={<Profile />} />
