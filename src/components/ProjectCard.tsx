@@ -42,6 +42,23 @@ export const ProjectCard = ({
     setTimeout(() => setIsUpdatingProgress(false), 300);
   };
 
+  const handleProgressUpdate = (change: number) => {
+    if (project.isDeleted) return;
+    
+    setIsUpdatingProgress(true);
+    const newProgress = Math.max(0, Math.min(100, project.progress + change));
+    onUpdateProgress(project.id, newProgress);
+    setTimeout(() => setIsUpdatingProgress(false), 300);
+  };
+
+  const handleMarkComplete = () => {
+    if (project.isDeleted || project.progress >= 100) return;
+    
+    setIsUpdatingProgress(true);
+    onUpdateProgress(project.id, 100);
+    setTimeout(() => setIsUpdatingProgress(false), 300);
+  };
+
   const getStatusColor = () => {
     if (project.progress >= 100) return 'text-green-600';
     if (isOverdue) return 'text-red-600';
@@ -138,6 +155,38 @@ export const ProjectCard = ({
               } as React.CSSProperties}
             />
           </div>
+
+          {!project.isDeleted && (
+            <div className="flex items-center gap-2 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={() => handleProgressUpdate(-10)}
+                disabled={project.progress <= 0 || isUpdatingProgress}
+              >
+                -10%
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={() => handleProgressUpdate(10)}
+                disabled={project.progress >= 100 || isUpdatingProgress}
+              >
+                +10%
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                className="h-7 px-3 text-xs bg-green-600 hover:bg-green-700"
+                onClick={handleMarkComplete}
+                disabled={project.progress >= 100 || isUpdatingProgress}
+              >
+                Achieved
+              </Button>
+            </div>
+          )}
           
           {isOverdue && (
             <p className="text-xs text-red-600 font-medium">
@@ -153,7 +202,7 @@ export const ProjectCard = ({
           
           {project.progress >= 100 && (
             <p className="text-xs text-green-600 font-medium">
-              ✓ Completed
+              ✓ Achieved
             </p>
           )}
         </div>
