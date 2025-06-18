@@ -7,7 +7,7 @@ import { CalendarIcon, Trash2, Link } from 'lucide-react';
 import { Project, Task } from '@/types/productivity';
 import { format, isToday, isTomorrow } from 'date-fns';
 import { isWeeklyOutputOverdue } from '@/utils/dateUtils';
-import { EditWeeklyOutputDialog } from './EditWeeklyOutputDialog';
+import { EditProjectDialog } from './EditProjectDialog';
 
 interface ProjectCardProps {
   project: Project;
@@ -30,14 +30,10 @@ export const ProjectCard = ({
     return project.dueDate && isWeeklyOutputOverdue(project.dueDate, project.progress, project.completedDate, project.createdDate);
   };
 
-  const linkedTasksCount = tasks.filter(task => task.projectId === project.id).length;
-
-  // Convert project to WeeklyOutput format for EditWeeklyOutputDialog
-  const projectAsWeeklyOutput = {
-    ...project,
-    isMoved: project.isMoved || false,
-    isDeleted: project.isDeleted || false,
-  };
+  const linkedTasksCount = tasks.filter(task => 
+    task.weeklyOutputId && 
+    tasks.some(t => t.weeklyOutputId === task.weeklyOutputId && t.projectId === project.id)
+  ).length;
 
   return (
     <>
@@ -103,8 +99,8 @@ export const ProjectCard = ({
       </div>
       
       {editingProject && (
-        <EditWeeklyOutputDialog 
-          weeklyOutput={projectAsWeeklyOutput} 
+        <EditProjectDialog 
+          project={editingProject} 
           open={true} 
           onOpenChange={open => !open && setEditingProject(null)} 
           onSave={onEditProject} 
