@@ -48,16 +48,11 @@ export const EmployeeDashboardLayout = ({
       <div className="lg:col-span-1">
         <WeeklyOutputsSection
           weeklyOutputs={transformedWeeklyOutputs}
-          deletedWeeklyOutputs={[]}
-          overdueWeeklyOutputs={transformedOverdueOutputs}
-          tasks={transformedTasks}
           onAddWeeklyOutput={mockHandlers.addWeeklyOutput}
-          onEditWeeklyOutput={mockHandlers.editWeeklyOutput}
+          onEditOutput={mockHandlers.editWeeklyOutput}
           onUpdateProgress={mockHandlers.updateProgress}
-          onMoveWeeklyOutput={mockHandlers.moveWeeklyOutput}
-          onDeleteWeeklyOutput={mockHandlers.deleteWeeklyOutput}
-          onRestoreWeeklyOutput={mockHandlers.restoreWeeklyOutput}
-          onPermanentlyDeleteWeeklyOutput={mockHandlers.permanentlyDeleteWeeklyOutput}
+          onDeleteOutput={mockHandlers.deleteWeeklyOutput}
+          projects={[]}
         />
       </div>
 

@@ -31,22 +31,30 @@ const Index = () => {
           
           <HabitsSection
             habits={productivity.habits}
+            archivedHabits={productivity.archivedHabits}
             onToggleHabit={productivity.toggleHabit}
             onAddHabit={productivity.addHabit}
             onEditHabit={productivity.editHabit}
-            onDeleteHabit={productivity.deleteHabit}
+            onArchiveHabit={productivity.archiveHabit}
+            onRestoreHabit={productivity.restoreHabit}
+            onPermanentlyDeleteHabit={productivity.permanentlyDeleteHabit}
             selectedDate={productivity.selectedDate}
+            onDateChange={productivity.handleDateChange}
           />
           
           <TasksSection
             tasks={productivity.tasks}
+            deletedTasks={productivity.deletedTasks}
+            overdueTasks={productivity.getOverdueTasks()}
             onAddTask={productivity.addTask}
             onEditTask={productivity.editTask}
             onToggleTask={productivity.toggleTask}
+            onMoveTask={productivity.rollOverTask}
             onDeleteTask={productivity.deleteTask}
-            onMoveTask={productivity.moveTask}
+            onRestoreTask={productivity.restoreTask}
+            onPermanentlyDeleteTask={productivity.permanentlyDeleteTask}
+            getTasksByDate={productivity.getTasksByDate}
             weeklyOutputs={productivity.weeklyOutputs}
-            projects={productivity.projects}
           />
           
           <WeeklyOutputsSection
@@ -60,10 +68,14 @@ const Index = () => {
           
           <ProjectsSection
             projects={productivity.projects}
+            deletedProjects={productivity.deletedProjects}
+            overdueProjects={productivity.getOverdueProjects()}
             onAddProject={productivity.addProject}
             onEditProject={productivity.editProject}
             onUpdateProgress={productivity.updateProgress}
             onDeleteProject={productivity.deleteProject}
+            onRestoreProject={productivity.restoreProject}
+            onPermanentlyDeleteProject={productivity.permanentlyDeleteProject}
             tasks={productivity.tasks}
           />
         </div>

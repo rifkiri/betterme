@@ -1,3 +1,4 @@
+
 import { Target, CheckCircle, Clock, Award, Calendar } from 'lucide-react';
 import { useProductivity } from '@/hooks/useProductivity';
 import { QuickStatsCard } from './QuickStatsCard';
@@ -16,7 +17,6 @@ export const SimpleEmployeeDashboard = () => {
     tasks,
     deletedTasks,
     weeklyOutputs,
-    deletedWeeklyOutputs,
     projects,
     deletedProjects,
     selectedDate,
@@ -42,10 +42,7 @@ export const SimpleEmployeeDashboard = () => {
     getOverdueTasks,
     getTasksByDate,
     updateProgress,
-    moveWeeklyOutput,
     deleteWeeklyOutput,
-    restoreWeeklyOutput,
-    permanentlyDeleteWeeklyOutput,
     getOverdueWeeklyOutputs,
     deleteProject,
     restoreProject,
@@ -145,16 +142,11 @@ export const SimpleEmployeeDashboard = () => {
           <div className="xl:col-span-1">
             <WeeklyOutputsSection 
               weeklyOutputs={weeklyOutputs}
-              deletedWeeklyOutputs={deletedWeeklyOutputs}
-              overdueWeeklyOutputs={overdueWeeklyOutputs}
-              tasks={tasks}
               onAddWeeklyOutput={addWeeklyOutput}
-              onEditWeeklyOutput={editWeeklyOutput}
+              onEditOutput={editWeeklyOutput}
               onUpdateProgress={updateProgress}
-              onMoveWeeklyOutput={moveWeeklyOutput}
-              onDeleteWeeklyOutput={deleteWeeklyOutput}
-              onRestoreWeeklyOutput={restoreWeeklyOutput}
-              onPermanentlyDeleteWeeklyOutput={permanentlyDeleteWeeklyOutput}
+              onDeleteOutput={deleteWeeklyOutput}
+              projects={projects}
             />
           </div>
 
