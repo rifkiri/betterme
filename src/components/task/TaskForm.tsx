@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { WeeklyOutput, Project } from '@/types/productivity';
+import { WeeklyOutput } from '@/types/productivity';
 import { taskFormSchema, TaskFormValues } from './taskFormSchema';
 import { UserSelector } from './UserSelector';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -20,7 +20,6 @@ interface TaskFormProps {
   onSubmit: (values: TaskFormValues) => void;
   onCancel: () => void;
   weeklyOutputs: WeeklyOutput[];
-  projects?: Project[];
   initialValues?: TaskFormValues;
 }
 
@@ -28,7 +27,6 @@ export const TaskForm = ({
   onSubmit,
   onCancel,
   weeklyOutputs,
-  projects = [],
   initialValues
 }: TaskFormProps) => {
   const { profile } = useUserProfile();
@@ -42,7 +40,6 @@ export const TaskForm = ({
       estimatedTime: '',
       dueDate: new Date(),
       weeklyOutputId: undefined,
-      projectId: undefined,
       taggedUsers: []
     }
   });
@@ -146,32 +143,6 @@ export const TaskForm = ({
                     {weeklyOutputs.map(output => (
                       <SelectItem key={output.id} value={output.id}>
                         {output.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="projectId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-medium">Link to Project (Optional)</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || ""}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a project" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="none">No project</SelectItem>
-                    {projects.map(project => (
-                      <SelectItem key={project.id} value={project.id}>
-                        {project.title}
                       </SelectItem>
                     ))}
                   </SelectContent>
