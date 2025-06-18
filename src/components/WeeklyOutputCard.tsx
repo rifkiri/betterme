@@ -8,12 +8,14 @@ import { WeeklyOutput, Project } from '@/types/productivity';
 import { format, isToday, isTomorrow } from 'date-fns';
 import { isWeeklyOutputOverdue } from '@/utils/dateUtils';
 import { EditWeeklyOutputDialog } from './EditWeeklyOutputDialog';
+import { MoveWeeklyOutputDialog } from './MoveWeeklyOutputDialog';
 
 interface WeeklyOutputCardProps {
   output: WeeklyOutput;
   onEditOutput: (id: string, updates: Partial<WeeklyOutput>) => void;
   onUpdateProgress: (outputId: string, newProgress: number) => void;
   onDeleteOutput: (id: string) => void;
+  onMoveOutput: (id: string, newDueDate: Date) => void;
   projects?: Project[];
 }
 
@@ -22,6 +24,7 @@ export const WeeklyOutputCard = ({
   onEditOutput,
   onUpdateProgress,
   onDeleteOutput,
+  onMoveOutput,
   projects = []
 }: WeeklyOutputCardProps) => {
   const [editingOutput, setEditingOutput] = useState<WeeklyOutput | null>(null);
@@ -31,6 +34,10 @@ export const WeeklyOutputCard = ({
   };
 
   const linkedProject = projects.find(project => project.id === output.projectId);
+
+  const handleMoveOutput = (targetDate: Date) => {
+    onMoveOutput(output.id, targetDate);
+  };
 
   return (
     <>
@@ -70,6 +77,10 @@ export const WeeklyOutputCard = ({
             <Badge variant={output.progress === 100 ? 'default' : isOverdue() ? 'destructive' : 'secondary'} className="text-xs">
               {output.progress}%
             </Badge>
+            <MoveWeeklyOutputDialog
+              onMoveOutput={handleMoveOutput}
+              disabled={output.progress === 100}
+            />
             <Button size="sm" variant="outline" onClick={() => onDeleteOutput(output.id)} className="text-xs px-2 py-1 text-red-600 hover:bg-red-50">
               <Trash2 className="h-3 w-3" />
             </Button>

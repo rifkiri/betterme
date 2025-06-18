@@ -3,17 +3,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Trash2, RotateCcw, Archive } from 'lucide-react';
+import { Trash2, RotateCcw, Archive, CalendarIcon } from 'lucide-react';
 import { WeeklyOutput } from '@/types/productivity';
+import { format, isToday, isTomorrow } from 'date-fns';
 
 interface DeletedWeeklyOutputsDialogProps {
   deletedWeeklyOutputs: WeeklyOutput[];
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  onRestoreWeeklyOutput?: (id: string) => void;
-  onPermanentlyDeleteWeeklyOutput?: (id: string) => void;
-  onRestore?: (id: string) => void;
-  onPermanentlyDelete?: (id: string) => void;
+  onRestore: (id: string) => void;
+  onPermanentlyDelete: (id: string) => void;
   title?: string;
 }
 
@@ -21,23 +20,13 @@ export const DeletedWeeklyOutputsDialog = ({
   deletedWeeklyOutputs, 
   open,
   onOpenChange,
-  onRestoreWeeklyOutput,
-  onPermanentlyDeleteWeeklyOutput,
-  onRestore, 
+  onRestore,
   onPermanentlyDelete,
   title = "Deleted Weekly Outputs"
 }: DeletedWeeklyOutputsDialogProps) => {
-  const handleRestore = onRestoreWeeklyOutput || onRestore;
-  const handlePermanentDelete = onPermanentlyDeleteWeeklyOutput || onPermanentlyDelete;
-
   const dialogProps = open !== undefined && onOpenChange !== undefined 
     ? { open, onOpenChange }
     : {};
-
-  // Determine the correct empty state message based on the title
-  const emptyStateMessage = title === "Deleted Projects" 
-    ? "No deleted projects" 
-    : "No deleted weekly outputs";
 
   return (
     <Dialog {...dialogProps}>
@@ -56,12 +45,25 @@ export const DeletedWeeklyOutputsDialog = ({
         
         <div className="space-y-4 max-h-96 overflow-y-auto">
           {deletedWeeklyOutputs.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">{emptyStateMessage}</p>
+            <p className="text-center text-gray-500 py-8">No deleted weekly outputs</p>
           ) : (
             deletedWeeklyOutputs.map((output) => (
               <div key={output.id} className="p-4 bg-gray-50 rounded-lg border">
                 <div className="flex items-start justify-between mb-3">
-                  <p className="text-sm text-gray-700 leading-relaxed flex-1">{output.title}</p>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-700 leading-relaxed mb-2">{output.title}</p>
+                    {output.description && (
+                      <p className="text-xs text-gray-600 mb-2">{output.description}</p>
+                    )}
+                    {output.dueDate && (
+                      <div className="flex items-center text-xs text-gray-500 mb-2">
+                        <CalendarIcon className="h-3 w-3 mr-1" />
+                        <span>
+                          Due: {isToday(output.dueDate) ? 'Today' : isTomorrow(output.dueDate) ? 'Tomorrow' : format(output.dueDate, 'MMM dd')}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                   <Badge variant="secondary" className="ml-2 text-xs">
                     {output.progress}%
                   </Badge>
@@ -75,7 +77,7 @@ export const DeletedWeeklyOutputsDialog = ({
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleRestore?.(output.id)}
+                    onClick={() => onRestore(output.id)}
                     className="text-xs px-2 py-1"
                   >
                     <RotateCcw className="h-3 w-3 mr-1" />
@@ -84,7 +86,7 @@ export const DeletedWeeklyOutputsDialog = ({
                   <Button
                     size="sm"
                     variant="destructive"
-                    onClick={() => handlePermanentDelete?.(output.id)}
+                    onClick={() => onPermanentlyDelete(output.id)}
                     className="text-xs px-2 py-1"
                   >
                     <Trash2 className="h-3 w-3 mr-1" />
