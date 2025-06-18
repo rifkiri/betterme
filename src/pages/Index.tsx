@@ -42,6 +42,28 @@ const Index = () => {
             onDateChange={productivity.handleDateChange}
           />
           
+          <ProjectsSection
+            projects={productivity.projects}
+            deletedProjects={productivity.deletedProjects}
+            overdueProjects={productivity.getOverdueProjects()}
+            onAddProject={productivity.addProject}
+            onEditProject={productivity.editProject}
+            onUpdateProgress={productivity.updateProgress}
+            onDeleteProject={productivity.deleteProject}
+            onRestoreProject={productivity.restoreProject}
+            onPermanentlyDeleteProject={productivity.permanentlyDeleteProject}
+            tasks={productivity.tasks}
+          />
+          
+          <WeeklyOutputsSection
+            weeklyOutputs={productivity.weeklyOutputs}
+            onAddWeeklyOutput={productivity.addWeeklyOutput}
+            onEditOutput={productivity.editWeeklyOutput}
+            onUpdateProgress={productivity.updateProgress}
+            onDeleteOutput={productivity.deleteWeeklyOutput}
+            projects={productivity.projects}
+          />
+          
           <TasksSection
             tasks={productivity.tasks}
             deletedTasks={productivity.deletedTasks}
@@ -55,28 +77,6 @@ const Index = () => {
             onPermanentlyDeleteTask={productivity.permanentlyDeleteTask}
             getTasksByDate={productivity.getTasksByDate}
             weeklyOutputs={productivity.weeklyOutputs}
-          />
-          
-          <WeeklyOutputsSection
-            weeklyOutputs={productivity.weeklyOutputs}
-            onAddWeeklyOutput={productivity.addWeeklyOutput}
-            onEditOutput={productivity.editWeeklyOutput}
-            onUpdateProgress={productivity.updateProgress}
-            onDeleteOutput={productivity.deleteWeeklyOutput}
-            projects={productivity.projects}
-          />
-          
-          <ProjectsSection
-            projects={productivity.projects}
-            deletedProjects={productivity.deletedProjects}
-            overdueProjects={productivity.getOverdueProjects()}
-            onAddProject={productivity.addProject}
-            onEditProject={productivity.editProject}
-            onUpdateProgress={productivity.updateProgress}
-            onDeleteProject={productivity.deleteProject}
-            onRestoreProject={productivity.restoreProject}
-            onPermanentlyDeleteProject={productivity.permanentlyDeleteProject}
-            tasks={productivity.tasks}
           />
         </div>
       </div>
