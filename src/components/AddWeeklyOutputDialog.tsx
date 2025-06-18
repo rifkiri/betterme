@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Plus, CalendarIcon } from 'lucide-react';
@@ -13,12 +14,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '@/lib/utils';
-import { WeeklyOutput } from '@/types/productivity';
+import { WeeklyOutput, Project } from '@/types/productivity';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
   dueDate: z.date().optional(),
+  projectId: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -27,12 +29,14 @@ interface AddWeeklyOutputDialogProps {
   onAddWeeklyOutput: (output: Omit<WeeklyOutput, 'id' | 'createdDate'>) => void;
   buttonText?: string;
   dialogTitle?: string;
+  projects?: Project[];
 }
 
 export const AddWeeklyOutputDialog = ({ 
   onAddWeeklyOutput, 
   buttonText = "Add Outputs",
-  dialogTitle = "Add Weekly Output"
+  dialogTitle = "Add Weekly Output",
+  projects = []
 }: AddWeeklyOutputDialogProps) => {
   const [open, setOpen] = useState(false);
 
@@ -42,6 +46,7 @@ export const AddWeeklyOutputDialog = ({
       title: '',
       description: '',
       dueDate: undefined,
+      projectId: undefined,
     },
   });
 
@@ -57,6 +62,7 @@ export const AddWeeklyOutputDialog = ({
       description: data.description,
       progress: 0,
       dueDate: dueDate,
+      projectId: data.projectId === "none" ? undefined : data.projectId,
     });
     form.reset();
     setOpen(false);
@@ -111,6 +117,32 @@ export const AddWeeklyOutputDialog = ({
                       {...field} 
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="projectId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Link to Project (Optional)</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a project" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">No project</SelectItem>
+                      {projects.map(project => (
+                        <SelectItem key={project.id} value={project.id}>
+                          {project.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

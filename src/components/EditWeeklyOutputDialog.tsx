@@ -10,15 +10,17 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { WeeklyOutput } from '@/types/productivity';
+import { WeeklyOutput, Project } from '@/types/productivity';
 
 const weeklyOutputSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
-  dueDate: z.date().optional()
+  dueDate: z.date().optional(),
+  projectId: z.string().optional()
 });
 
 type WeeklyOutputFormValues = z.infer<typeof weeklyOutputSchema>;
@@ -28,15 +30,23 @@ interface EditWeeklyOutputDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (outputId: string, updates: Partial<WeeklyOutput>) => void;
+  projects?: Project[];
 }
 
-export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSave }: EditWeeklyOutputDialogProps) => {
+export const EditWeeklyOutputDialog = ({ 
+  weeklyOutput, 
+  open, 
+  onOpenChange, 
+  onSave,
+  projects = []
+}: EditWeeklyOutputDialogProps) => {
   const form = useForm<WeeklyOutputFormValues>({
     resolver: zodResolver(weeklyOutputSchema),
     defaultValues: {
       title: weeklyOutput.title,
       description: weeklyOutput.description || '',
-      dueDate: weeklyOutput.dueDate || undefined
+      dueDate: weeklyOutput.dueDate || undefined,
+      projectId: weeklyOutput.projectId || undefined
     }
   });
 
@@ -50,7 +60,8 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
     onSave(weeklyOutput.id, {
       title: values.title,
       description: values.description,
-      dueDate: dueDate
+      dueDate: dueDate,
+      projectId: values.projectId === "none" ? undefined : values.projectId
     });
     onOpenChange(false);
   };
@@ -97,6 +108,32 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
                       {...field} 
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="projectId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Link to Project (Optional)</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a project" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">No project</SelectItem>
+                      {projects.map(project => (
+                        <SelectItem key={project.id} value={project.id}>
+                          {project.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

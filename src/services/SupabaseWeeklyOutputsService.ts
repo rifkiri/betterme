@@ -26,7 +26,8 @@ export class SupabaseWeeklyOutputsService {
       isDeleted: output.is_deleted,
       completedDate: output.completed_date ? new Date(output.completed_date) : undefined,
       deletedDate: output.deleted_date ? new Date(output.deleted_date) : undefined,
-      createdDate: new Date(output.created_date)
+      createdDate: new Date(output.created_date),
+      projectId: output.project_id,
     }));
   }
 
@@ -44,7 +45,8 @@ export class SupabaseWeeklyOutputsService {
         is_deleted: output.isDeleted,
         completed_date: output.completedDate?.toISOString(),
         deleted_date: output.deletedDate?.toISOString(),
-        created_date: output.createdDate.toISOString()
+        created_date: output.createdDate.toISOString(),
+        project_id: output.projectId,
       });
 
     if (error) {
@@ -65,6 +67,7 @@ export class SupabaseWeeklyOutputsService {
     if (updates.isDeleted !== undefined) supabaseUpdates.is_deleted = updates.isDeleted;
     if (updates.completedDate) supabaseUpdates.completed_date = updates.completedDate.toISOString();
     if (updates.deletedDate) supabaseUpdates.deleted_date = updates.deletedDate.toISOString();
+    if (updates.projectId !== undefined) supabaseUpdates.project_id = updates.projectId;
 
     const { error } = await supabase
       .from('weekly_outputs')

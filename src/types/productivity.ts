@@ -58,6 +58,7 @@ export interface WeeklyOutput {
   isMoved?: boolean;
   isDeleted?: boolean;
   deletedDate?: Date;
+  projectId?: string; // Link to projects
 }
 
 export interface Project {

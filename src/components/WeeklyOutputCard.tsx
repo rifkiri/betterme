@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { CalendarIcon, Trash2, Link } from 'lucide-react';
-import { WeeklyOutput, Task } from '@/types/productivity';
+import { WeeklyOutput, Task, Project } from '@/types/productivity';
 import { format, isToday, isTomorrow } from 'date-fns';
 import { isWeeklyOutputOverdue } from '@/utils/dateUtils';
 import { EditWeeklyOutputDialog } from './EditWeeklyOutputDialog';
@@ -17,6 +17,7 @@ interface WeeklyOutputCardProps {
   onMoveWeeklyOutput: (id: string, newDueDate: Date) => void;
   onDeleteWeeklyOutput: (id: string) => void;
   tasks?: Task[];
+  projects?: Project[];
 }
 
 export const WeeklyOutputCard = ({
@@ -25,7 +26,8 @@ export const WeeklyOutputCard = ({
   onUpdateProgress,
   onMoveWeeklyOutput,
   onDeleteWeeklyOutput,
-  tasks = []
+  tasks = [],
+  projects = []
 }: WeeklyOutputCardProps) => {
   const [editingOutput, setEditingOutput] = useState<WeeklyOutput | null>(null);
   
@@ -34,6 +36,7 @@ export const WeeklyOutputCard = ({
   };
 
   const linkedTasksCount = tasks.filter(task => task.weeklyOutputId === output.id).length;
+  const linkedProject = projects.find(project => project.id === output.projectId);
 
   return (
     <>
@@ -53,6 +56,12 @@ export const WeeklyOutputCard = ({
                 <Badge variant="outline" className="text-xs flex items-center gap-1 bg-green-50 text-green-600 border-green-200">
                   <Link className="h-2 w-2" />
                   {linkedTasksCount} task{linkedTasksCount !== 1 ? 's' : ''} linked
+                </Badge>
+              )}
+              {linkedProject && (
+                <Badge variant="outline" className="text-xs flex items-center gap-1 bg-purple-50 text-purple-600 border-purple-200">
+                  <Link className="h-2 w-2" />
+                  Project: {linkedProject.title}
                 </Badge>
               )}
             </div>
@@ -101,7 +110,8 @@ export const WeeklyOutputCard = ({
           weeklyOutput={editingOutput} 
           open={true} 
           onOpenChange={open => !open && setEditingOutput(null)} 
-          onSave={onEditWeeklyOutput} 
+          onSave={onEditWeeklyOutput}
+          projects={projects}
         />
       )}
     </>
