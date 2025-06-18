@@ -26,8 +26,7 @@ export class SupabaseWeeklyOutputsService {
       isDeleted: output.is_deleted,
       completedDate: output.completed_date ? new Date(output.completed_date) : undefined,
       deletedDate: output.deleted_date ? new Date(output.deleted_date) : undefined,
-      createdDate: new Date(output.created_date),
-      projectId: output.project_id || undefined,
+      createdDate: new Date(output.created_date)
     }));
   }
 
@@ -45,8 +44,7 @@ export class SupabaseWeeklyOutputsService {
         is_deleted: output.isDeleted,
         completed_date: output.completedDate?.toISOString(),
         deleted_date: output.deletedDate?.toISOString(),
-        created_date: output.createdDate.toISOString(),
-        project_id: output.projectId || null,
+        created_date: output.createdDate.toISOString()
       });
 
     if (error) {
@@ -58,25 +56,15 @@ export class SupabaseWeeklyOutputsService {
   async updateWeeklyOutput(id: string, userId: string, updates: Partial<WeeklyOutput>): Promise<void> {
     const supabaseUpdates: any = {};
     
-    if (updates.title !== undefined) supabaseUpdates.title = updates.title;
+    if (updates.title) supabaseUpdates.title = updates.title;
     if (updates.description !== undefined) supabaseUpdates.description = updates.description;
     if (updates.progress !== undefined) supabaseUpdates.progress = updates.progress;
-    if (updates.dueDate !== undefined) supabaseUpdates.due_date = updates.dueDate.toISOString().split('T')[0];
-    if (updates.originalDueDate !== undefined) supabaseUpdates.original_due_date = updates.originalDueDate?.toISOString().split('T')[0];
+    if (updates.dueDate) supabaseUpdates.due_date = updates.dueDate.toISOString().split('T')[0];
+    if (updates.originalDueDate) supabaseUpdates.original_due_date = updates.originalDueDate.toISOString().split('T')[0];
     if (updates.isMoved !== undefined) supabaseUpdates.is_moved = updates.isMoved;
     if (updates.isDeleted !== undefined) supabaseUpdates.is_deleted = updates.isDeleted;
-    
-    // Handle completedDate - allow both setting and clearing
-    if (updates.completedDate !== undefined) {
-      supabaseUpdates.completed_date = updates.completedDate ? updates.completedDate.toISOString() : null;
-    }
-    
-    // Handle deletedDate - allow both setting and clearing
-    if (updates.deletedDate !== undefined) {
-      supabaseUpdates.deleted_date = updates.deletedDate ? updates.deletedDate.toISOString() : null;
-    }
-    
-    if (updates.projectId !== undefined) supabaseUpdates.project_id = updates.projectId || null;
+    if (updates.completedDate) supabaseUpdates.completed_date = updates.completedDate.toISOString();
+    if (updates.deletedDate) supabaseUpdates.deleted_date = updates.deletedDate.toISOString();
 
     const { error } = await supabase
       .from('weekly_outputs')

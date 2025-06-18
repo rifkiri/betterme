@@ -13,13 +13,7 @@ interface EditTaskDialogProps {
   weeklyOutputs: WeeklyOutput[];
 }
 
-export const EditTaskDialog = ({ 
-  task, 
-  open, 
-  onOpenChange, 
-  onSave, 
-  weeklyOutputs
-}: EditTaskDialogProps) => {
+export const EditTaskDialog = ({ task, open, onOpenChange, onSave, weeklyOutputs }: EditTaskDialogProps) => {
   const handleSubmit = (values: TaskFormValues) => {
     onSave(task.id, {
       title: values.title,

@@ -1,9 +1,7 @@
-
 import { supabaseProfilesService } from './SupabaseProfilesService';
 import { supabaseHabitsService } from './SupabaseHabitsService';
 import { supabaseTasksService } from './SupabaseTasksService';
 import { supabaseWeeklyOutputsService } from './SupabaseWeeklyOutputsService';
-import { supabaseProjectsService } from './SupabaseProjectsService';
 import { supabaseMoodService } from './SupabaseMoodService';
 
 export class SupabaseDataService {
@@ -64,23 +62,6 @@ export class SupabaseDataService {
 
   async permanentlyDeleteTask(id: string, userId: string) {
     return await supabaseTasksService.permanentlyDeleteTask(id, userId);
-  }
-
-  // Projects management
-  async getProjects(userId: string) {
-    return await supabaseProjectsService.getProjects(userId);
-  }
-
-  async addProject(project: any) {
-    return await supabaseProjectsService.addProject(project);
-  }
-
-  async updateProject(id: string, userId: string, updates: any) {
-    return await supabaseProjectsService.updateProject(id, userId, updates);
-  }
-
-  async permanentlyDeleteProject(id: string, userId: string) {
-    return await supabaseProjectsService.permanentlyDeleteProject(id, userId);
   }
 
   // Weekly outputs management

@@ -4,7 +4,6 @@ import { useProductivity } from '@/hooks/useProductivity';
 import { QuickStatsCard } from './QuickStatsCard';
 import { FeelingTracker } from './FeelingTracker';
 import { HabitsSection } from './HabitsSection';
-import { ProjectsSection } from './ProjectsSection';
 import { WeeklyOutputsSection } from './WeeklyOutputsSection';
 import { TasksSection } from './TasksSection';
 
@@ -18,8 +17,6 @@ export const SimpleEmployeeDashboard = () => {
     deletedTasks,
     weeklyOutputs,
     deletedWeeklyOutputs,
-    projects,
-    deletedProjects,
     selectedDate,
     handleDateChange,
     addHabit,
@@ -28,8 +25,6 @@ export const SimpleEmployeeDashboard = () => {
     editTask,
     addWeeklyOutput,
     editWeeklyOutput,
-    addProject,
-    editProject,
     toggleHabit,
     toggleTask,
     deleteTask,
@@ -43,31 +38,25 @@ export const SimpleEmployeeDashboard = () => {
     getOverdueTasks,
     getTasksByDate,
     updateProgress,
+    moveWeeklyOutput,
     deleteWeeklyOutput,
     restoreWeeklyOutput,
     permanentlyDeleteWeeklyOutput,
-    moveWeeklyOutput,
-    getOverdueWeeklyOutputs,
-    deleteProject,
-    restoreProject,
-    permanentlyDeleteProject,
-    getOverdueProjects
+    getOverdueWeeklyOutputs
   } = useProductivity();
 
   console.log('Dashboard data:', {
     habitsCount: habits.length,
     tasksCount: tasks.length,
-    weeklyOutputsCount: weeklyOutputs.length,
-    projectsCount: projects.length
+    weeklyOutputsCount: weeklyOutputs.length
   });
 
   const completedHabits = habits.filter(habit => habit.completed).length;
   const todaysTasks = getTodaysTasks();
   const overdueTasks = getOverdueTasks();
   const overdueWeeklyOutputs = getOverdueWeeklyOutputs();
-  const overdueProjects = getOverdueProjects();
 
-  console.log('Today tasks:', todaysTasks.length, 'Overdue tasks:', overdueTasks.length, 'Overdue weekly outputs:', overdueWeeklyOutputs.length, 'Overdue projects:', overdueProjects.length);
+  console.log('Today tasks:', todaysTasks.length, 'Overdue tasks:', overdueTasks.length, 'Overdue weekly outputs:', overdueWeeklyOutputs.length);
 
   const handleRollOver = (taskId: string, targetDate: Date) => {
     rollOverTask(taskId, targetDate);
@@ -104,15 +93,15 @@ export const SimpleEmployeeDashboard = () => {
           />
           <QuickStatsCard 
             title="Overdue" 
-            value={(overdueTasks.length + overdueWeeklyOutputs.length + overdueProjects.length).toString()} 
+            value={(overdueTasks.length + overdueWeeklyOutputs.length).toString()} 
             icon={Clock} 
             gradient="bg-gradient-to-r from-orange-50 to-orange-100" 
           />
         </div>
 
-        {/* Updated responsive grid layout for 4 sections */}
-        <div className="space-y-2 sm:space-y-4 xl:grid xl:grid-cols-4 xl:gap-3 xl:space-y-0">
-          <div className="xl:col-span-1 space-y-2 sm:space-y-4">
+        {/* Mobile-first responsive grid */}
+        <div className="space-y-2 sm:space-y-4 lg:grid lg:grid-cols-3 lg:gap-3 xl:gap-6 lg:space-y-0">
+          <div className="lg:col-span-1 space-y-2 sm:space-y-4">
             <FeelingTracker />
             <HabitsSection 
               habits={habits}
@@ -128,38 +117,23 @@ export const SimpleEmployeeDashboard = () => {
             />
           </div>
 
-          <div className="xl:col-span-1">
-            <ProjectsSection 
-              projects={projects}
-              deletedProjects={deletedProjects}
-              overdueProjects={overdueProjects}
-              tasks={tasks}
-              onAddProject={addProject}
-              onEditProject={editProject}
-              onUpdateProgress={updateProgress}
-              onDeleteProject={deleteProject}
-              onRestoreProject={restoreProject}
-              onPermanentlyDeleteProject={permanentlyDeleteProject}
-            />
-          </div>
-
-          <div className="xl:col-span-1">
+          <div className="lg:col-span-1">
             <WeeklyOutputsSection 
               weeklyOutputs={weeklyOutputs}
               deletedWeeklyOutputs={deletedWeeklyOutputs}
               overdueWeeklyOutputs={overdueWeeklyOutputs}
+              tasks={tasks}
               onAddWeeklyOutput={addWeeklyOutput}
-              onEditOutput={editWeeklyOutput}
+              onEditWeeklyOutput={editWeeklyOutput}
               onUpdateProgress={updateProgress}
-              onDeleteOutput={deleteWeeklyOutput}
+              onMoveWeeklyOutput={moveWeeklyOutput}
+              onDeleteWeeklyOutput={deleteWeeklyOutput}
               onRestoreWeeklyOutput={restoreWeeklyOutput}
               onPermanentlyDeleteWeeklyOutput={permanentlyDeleteWeeklyOutput}
-              onMoveWeeklyOutput={moveWeeklyOutput}
-              projects={projects}
             />
           </div>
 
-          <div className="xl:col-span-1">
+          <div className="lg:col-span-1">
             <TasksSection 
               tasks={tasks}
               deletedTasks={deletedTasks}

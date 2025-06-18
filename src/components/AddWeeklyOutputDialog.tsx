@@ -4,148 +4,169 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Plus } from 'lucide-react';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Plus, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
-import { WeeklyOutput, Project } from '@/types/productivity';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { cn } from '@/lib/utils';
+import { WeeklyOutput } from '@/types/productivity';
+
+const formSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  description: z.string().optional(),
+  dueDate: z.date().optional(),
+});
+
+type FormData = z.infer<typeof formSchema>;
 
 interface AddWeeklyOutputDialogProps {
   onAddWeeklyOutput: (output: Omit<WeeklyOutput, 'id' | 'createdDate'>) => void;
-  projects?: Project[];
-  buttonText?: string;
-  buttonClassName?: string;
 }
 
-export const AddWeeklyOutputDialog = ({ 
-  onAddWeeklyOutput, 
-  projects = [],
-  buttonText = "Add Weekly Output",
-  buttonClassName = ""
-}: AddWeeklyOutputDialogProps) => {
+export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput }: AddWeeklyOutputDialogProps) => {
   const [open, setOpen] = useState(false);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [dueDate, setDueDate] = useState<Date>(new Date());
-  const [projectId, setProjectId] = useState<string>('');
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim()) return;
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      title: '',
+      description: '',
+      dueDate: undefined,
+    },
+  });
 
-    const newOutput: Omit<WeeklyOutput, 'id' | 'createdDate'> = {
-      title: title.trim(),
-      description: description.trim() || undefined,
+  const onSubmit = (data: FormData) => {
+    // Ensure the due date is set to end of day in local time to avoid timezone issues
+    let dueDate = data.dueDate;
+    if (dueDate) {
+      dueDate = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate(), 23, 59, 59, 999);
+    }
+
+    onAddWeeklyOutput({
+      title: data.title,
+      description: data.description,
       progress: 0,
-      dueDate,
-      projectId: projectId || undefined,
-      isMoved: false,
-      isDeleted: false,
-    };
-
-    onAddWeeklyOutput(newOutput);
-    
-    // Reset form
-    setTitle('');
-    setDescription('');
-    setDueDate(new Date());
-    setProjectId('');
+      dueDate: dueDate,
+    });
+    form.reset();
     setOpen(false);
   };
+
+  // Get today's date and set time to start of day for proper comparison
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className={cn("flex items-center gap-2", buttonClassName)}>
-          <Plus className="h-4 w-4" />
-          {buttonText}
+        <Button size="sm" variant="outline" className="flex-1 mr-2">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Outputs
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Weekly Output</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Title*</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter output title"
-              required
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter output title..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter description (optional)"
-              rows={3}
-            />
-          </div>
 
-          {projects.length > 0 && (
-            <div className="space-y-2">
-              <Label htmlFor="project">Link to Project (Optional)</Label>
-              <Select value={projectId} onValueChange={setProjectId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a project" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">No project</SelectItem>
-                  {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Enter description..." 
+                      className="min-h-[80px]"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="dueDate"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Due Date (Optional)</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Pick a due date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={(date) => {
+                          if (date) {
+                            // Create date in local timezone to avoid timezone conversion issues
+                            const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                            field.onChange(localDate);
+                          } else {
+                            field.onChange(date);
+                          }
+                        }}
+                        disabled={(date) => {
+                          const dateToCheck = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                          return dateToCheck < today;
+                        }}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Add Output</Button>
             </div>
-          )}
-          
-          <div className="space-y-2">
-            <Label>Due Date*</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !dueDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dueDate ? format(dueDate, "PPP") : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={dueDate}
-                  onSelect={(date) => date && setDueDate(date)}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          
-          <div className="flex gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1">
-              Cancel
-            </Button>
-            <Button type="submit" className="flex-1">
-              Add Output
-            </Button>
-          </div>
-        </form>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

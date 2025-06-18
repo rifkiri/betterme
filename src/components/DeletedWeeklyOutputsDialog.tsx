@@ -3,44 +3,31 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Trash2, RotateCcw, Archive, CalendarIcon } from 'lucide-react';
+import { Trash2, RotateCcw, Archive } from 'lucide-react';
 import { WeeklyOutput } from '@/types/productivity';
-import { format, isToday, isTomorrow } from 'date-fns';
 
 interface DeletedWeeklyOutputsDialogProps {
   deletedWeeklyOutputs: WeeklyOutput[];
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
   onRestore: (id: string) => void;
   onPermanentlyDelete: (id: string) => void;
-  title?: string;
 }
 
 export const DeletedWeeklyOutputsDialog = ({ 
   deletedWeeklyOutputs, 
-  open,
-  onOpenChange,
-  onRestore,
-  onPermanentlyDelete,
-  title = "Deleted Weekly Outputs"
+  onRestore, 
+  onPermanentlyDelete 
 }: DeletedWeeklyOutputsDialogProps) => {
-  const dialogProps = open !== undefined && onOpenChange !== undefined 
-    ? { open, onOpenChange }
-    : {};
-
   return (
-    <Dialog {...dialogProps}>
-      {!open && (
-        <DialogTrigger asChild>
-          <Button variant="outline" size="sm">
-            <Archive className="h-4 w-4 mr-2" />
-            Deleted ({deletedWeeklyOutputs.length})
-          </Button>
-        </DialogTrigger>
-      )}
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          <Archive className="h-4 w-4 mr-2" />
+          Deleted ({deletedWeeklyOutputs.length})
+        </Button>
+      </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle>Deleted Weekly Outputs</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4 max-h-96 overflow-y-auto">
@@ -50,20 +37,7 @@ export const DeletedWeeklyOutputsDialog = ({
             deletedWeeklyOutputs.map((output) => (
               <div key={output.id} className="p-4 bg-gray-50 rounded-lg border">
                 <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-700 leading-relaxed mb-2">{output.title}</p>
-                    {output.description && (
-                      <p className="text-xs text-gray-600 mb-2">{output.description}</p>
-                    )}
-                    {output.dueDate && (
-                      <div className="flex items-center text-xs text-gray-500 mb-2">
-                        <CalendarIcon className="h-3 w-3 mr-1" />
-                        <span>
-                          Due: {isToday(output.dueDate) ? 'Today' : isTomorrow(output.dueDate) ? 'Tomorrow' : format(output.dueDate, 'MMM dd')}
-                        </span>
-                      </div>
-                    )}
-                  </div>
+                  <p className="text-sm text-gray-700 leading-relaxed flex-1">{output.title}</p>
                   <Badge variant="secondary" className="ml-2 text-xs">
                     {output.progress}%
                   </Badge>

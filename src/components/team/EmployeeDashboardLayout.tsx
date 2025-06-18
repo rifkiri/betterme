@@ -50,14 +50,14 @@ export const EmployeeDashboardLayout = ({
           weeklyOutputs={transformedWeeklyOutputs}
           deletedWeeklyOutputs={[]}
           overdueWeeklyOutputs={transformedOverdueOutputs}
+          tasks={transformedTasks}
           onAddWeeklyOutput={mockHandlers.addWeeklyOutput}
-          onEditOutput={mockHandlers.editWeeklyOutput}
+          onEditWeeklyOutput={mockHandlers.editWeeklyOutput}
           onUpdateProgress={mockHandlers.updateProgress}
-          onDeleteOutput={mockHandlers.deleteWeeklyOutput}
+          onMoveWeeklyOutput={mockHandlers.moveWeeklyOutput}
+          onDeleteWeeklyOutput={mockHandlers.deleteWeeklyOutput}
           onRestoreWeeklyOutput={mockHandlers.restoreWeeklyOutput}
           onPermanentlyDeleteWeeklyOutput={mockHandlers.permanentlyDeleteWeeklyOutput}
-          onMoveWeeklyOutput={mockHandlers.moveWeeklyOutput}
-          projects={[]}
         />
       </div>
 

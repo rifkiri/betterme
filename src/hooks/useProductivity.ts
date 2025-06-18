@@ -1,12 +1,9 @@
-
 import { useProductivityData } from './useProductivityData';
 import { useHabitsManager } from './useHabitsManager';
 import { useTasksManager } from './useTasksManager';
 import { useWeeklyOutputsManager } from './useWeeklyOutputsManager';
-import { useProjectsManager } from './useProjectsManager';
 import { useTaskHelpers } from './useTaskHelpers';
 import { useWeeklyOutputHelpers } from './useWeeklyOutputHelpers';
-import { useProjectHelpers } from './useProjectHelpers';
 
 export const useProductivity = () => {
   const productivityData = useProductivityData();
@@ -42,19 +39,8 @@ export const useProductivity = () => {
     setDeletedWeeklyOutputs: productivityData.setDeletedWeeklyOutputs,
   });
 
-  const projectsManager = useProjectsManager({
-    userId: productivityData.userId,
-    isSupabaseAvailable: productivityData.isGoogleSheetsAvailable,
-    loadAllData: productivityData.loadAllData,
-    projects: productivityData.projects,
-    setProjects: productivityData.setProjects,
-    deletedProjects: productivityData.deletedProjects,
-    setDeletedProjects: productivityData.setDeletedProjects,
-  });
-
   const taskHelpers = useTaskHelpers(productivityData.tasks);
   const weeklyOutputHelpers = useWeeklyOutputHelpers(productivityData.weeklyOutputs);
-  const projectHelpers = useProjectHelpers(productivityData.projects);
 
   return {
     // State
@@ -64,8 +50,6 @@ export const useProductivity = () => {
     deletedTasks: productivityData.deletedTasks,
     weeklyOutputs: productivityData.weeklyOutputs,
     deletedWeeklyOutputs: productivityData.deletedWeeklyOutputs,
-    projects: productivityData.projects,
-    deletedProjects: productivityData.deletedProjects,
     isLoading: productivityData.isLoading,
     selectedDate: productivityData.selectedDate,
     
@@ -83,9 +67,5 @@ export const useProductivity = () => {
     // Weekly Outputs
     ...weeklyOutputsManager,
     ...weeklyOutputHelpers,
-
-    // Projects
-    ...projectsManager,
-    ...projectHelpers,
   };
 };
