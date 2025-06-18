@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trash2 } from 'lucide-react';
+import { Trash2, BarChart3 } from 'lucide-react';
 import { WeeklyOutput, Project } from '@/types/productivity';
 import { AddWeeklyOutputDialog } from './AddWeeklyOutputDialog';
 import { WeeklyOutputCard } from './WeeklyOutputCard';
@@ -70,11 +70,12 @@ export const WeeklyOutputsSection = ({
 
   return (
     <Card className="h-fit">
-      <CardHeader className="pb-2 sm:pb-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div className="min-w-0">
-            <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-              📊 Weekly Outputs
+      <CardHeader className="pb-3 sm:pb-4">
+        <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center space-x-2">
+            <CardTitle className="text-base sm:text-lg font-semibold text-gray-800 flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
+              Weekly Outputs
               {overdueWeeklyOutputs.length > 0 && (
                 <Badge variant="destructive" className="text-xs">
                   {overdueWeeklyOutputs.length} overdue
@@ -82,20 +83,21 @@ export const WeeklyOutputsSection = ({
               )}
             </CardTitle>
           </div>
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowDeletedOutputs(true)}
-              className="flex items-center gap-2 text-xs px-2 py-1"
+              className="flex items-center gap-1 text-xs px-2 py-1 h-8"
             >
               <Trash2 className="h-3 w-3" />
-              Deleted ({deletedWeeklyOutputs.length})
+              <span className="hidden sm:inline">Deleted</span> ({deletedWeeklyOutputs.length})
             </Button>
             <AddWeeklyOutputDialog 
               onAddWeeklyOutput={onAddWeeklyOutput} 
               projects={projects}
-              buttonText="Add Outputs"
+              buttonText="Add"
+              buttonClassName="text-xs px-2 py-1 h-8"
             />
           </div>
         </div>
