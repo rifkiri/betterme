@@ -2,10 +2,11 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, FolderOpen, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Plus, FolderOpen, Trash2, Eye } from 'lucide-react';
 import { AddProjectDialog } from './AddProjectDialog';
 import { EditProjectDialog } from './EditProjectDialog';
 import { MoveProjectDialog } from './MoveProjectDialog';
+import { AllProjectsDialog } from './AllProjectsDialog';
 import { ProjectCard } from './ProjectCard';
 import { Project } from '@/types/projects';
 import { Badge } from '@/components/ui/badge';
@@ -36,14 +37,18 @@ export const ProjectsSection = ({
   onPermanentlyDeleteProject
 }: ProjectsSectionProps) => {
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showAllDialog, setShowAllDialog] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [movingProject, setMovingProject] = useState<Project | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
-  const [showCompleted, setShowCompleted] = useState(false);
 
   const activeProjects = projects.filter(p => !p.isDeleted);
   const completedProjects = activeProjects.filter(p => p.progress >= 100);
   const inProgressProjects = activeProjects.filter(p => p.progress < 100);
+
+  // Show only first 4 projects in the main view
+  const displayedInProgress = inProgressProjects.slice(0, 4);
+  const hasMoreProjects = inProgressProjects.length > 4 || completedProjects.length > 0;
 
   return (
     <Card className="w-full">
@@ -59,26 +64,15 @@ export const ProjectsSection = ({
             )}
           </div>
           <div className="flex items-center gap-2">
-            {completedProjects.length > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowCompleted(!showCompleted)}
-                className="text-xs"
-              >
-                {showCompleted ? (
-                  <>
-                    <EyeOff className="h-3 w-3 mr-1" />
-                    Hide Completed
-                  </>
-                ) : (
-                  <>
-                    <Eye className="h-3 w-3 mr-1" />
-                    Show All ({completedProjects.length} completed)
-                  </>
-                )}
-              </Button>
-            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAllDialog(true)}
+              className="text-xs"
+            >
+              <Eye className="h-3 w-3 mr-1" />
+              Show All ({activeProjects.length})
+            </Button>
             {deletedProjects.length > 0 && (
               <Button
                 variant="outline"
@@ -103,14 +97,14 @@ export const ProjectsSection = ({
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Active Projects */}
-        {inProgressProjects.length > 0 && (
+        {/* Active Projects - Show only first 4 */}
+        {displayedInProgress.length > 0 && (
           <div>
             <h4 className="text-sm font-medium text-gray-700 mb-2">
               In Progress ({inProgressProjects.length})
             </h4>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-              {inProgressProjects.map((project) => (
+              {displayedInProgress.map((project) => (
                 <ProjectCard
                   key={project.id}
                   project={project}
@@ -121,27 +115,18 @@ export const ProjectsSection = ({
                 />
               ))}
             </div>
-          </div>
-        )}
-
-        {/* Completed Projects - Only show when showCompleted is true */}
-        {showCompleted && completedProjects.length > 0 && (
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-2">
-              Completed ({completedProjects.length})
-            </h4>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-              {completedProjects.map((project) => (
-                <ProjectCard
-                  key={project.id}
-                  project={project}
-                  onEdit={setEditingProject}
-                  onUpdateProgress={onUpdateProgress}
-                  onMove={setMovingProject}
-                  onDelete={onDeleteProject}
-                />
-              ))}
-            </div>
+            {hasMoreProjects && (
+              <div className="mt-3 text-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAllDialog(true)}
+                  className="text-xs text-blue-600 hover:text-blue-700"
+                >
+                  View all projects ({activeProjects.length} total)
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
@@ -185,6 +170,16 @@ export const ProjectsSection = ({
         open={showAddDialog}
         onOpenChange={setShowAddDialog}
         onSave={onAddProject}
+      />
+
+      <AllProjectsDialog
+        open={showAllDialog}
+        onOpenChange={setShowAllDialog}
+        projects={projects}
+        onEditProject={setEditingProject}
+        onUpdateProgress={onUpdateProgress}
+        onMoveProject={setMovingProject}
+        onDeleteProject={onDeleteProject}
       />
 
       {editingProject && (
