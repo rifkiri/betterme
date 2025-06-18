@@ -4,6 +4,7 @@ import { useProductivity } from '@/hooks/useProductivity';
 import { QuickStatsCard } from './QuickStatsCard';
 import { FeelingTracker } from './FeelingTracker';
 import { HabitsSection } from './HabitsSection';
+import { ProjectsSection } from './ProjectsSection';
 import { WeeklyOutputsSection } from './WeeklyOutputsSection';
 import { TasksSection } from './TasksSection';
 
@@ -62,6 +63,21 @@ export const SimpleEmployeeDashboard = () => {
     rollOverTask(taskId, targetDate);
   };
 
+  // Mock project handlers (to be implemented with actual functionality)
+  const mockProjects = [];
+  const mockDeletedProjects = [];
+  const mockOverdueProjects = [];
+
+  const mockProjectHandlers = {
+    addProject: (project: any) => console.log('Add project:', project),
+    editProject: (id: string, updates: any) => console.log('Edit project:', id, updates),
+    updateProjectProgress: (id: string, progress: number) => console.log('Update progress:', id, progress),
+    moveProject: (id: string, newDate: Date) => console.log('Move project:', id, newDate),
+    deleteProject: (id: string) => console.log('Delete project:', id),
+    restoreProject: (id: string) => console.log('Restore project:', id),
+    permanentlyDeleteProject: (id: string) => console.log('Permanently delete project:', id),
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 p-1 sm:p-2 lg:p-4">
       <div className="max-w-full mx-auto space-y-2 sm:space-y-4">
@@ -117,7 +133,20 @@ export const SimpleEmployeeDashboard = () => {
             />
           </div>
 
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-2 sm:space-y-4">
+            <ProjectsSection 
+              projects={mockProjects}
+              deletedProjects={mockDeletedProjects}
+              overdueProjects={mockOverdueProjects}
+              onAddProject={mockProjectHandlers.addProject}
+              onEditProject={mockProjectHandlers.editProject}
+              onUpdateProgress={mockProjectHandlers.updateProjectProgress}
+              onMoveProject={mockProjectHandlers.moveProject}
+              onDeleteProject={mockProjectHandlers.deleteProject}
+              onRestoreProject={mockProjectHandlers.restoreProject}
+              onPermanentlyDeleteProject={mockProjectHandlers.permanentlyDeleteProject}
+            />
+            
             <WeeklyOutputsSection 
               weeklyOutputs={weeklyOutputs}
               deletedWeeklyOutputs={deletedWeeklyOutputs}
