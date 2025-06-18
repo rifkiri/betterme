@@ -57,10 +57,15 @@ const Index = () => {
           
           <WeeklyOutputsSection
             weeklyOutputs={productivity.weeklyOutputs}
+            deletedWeeklyOutputs={productivity.deletedWeeklyOutputs}
+            overdueWeeklyOutputs={productivity.getOverdueWeeklyOutputs()}
             onAddWeeklyOutput={productivity.addWeeklyOutput}
             onEditOutput={productivity.editWeeklyOutput}
             onUpdateProgress={productivity.updateProgress}
             onDeleteOutput={productivity.deleteWeeklyOutput}
+            onRestoreWeeklyOutput={productivity.restoreWeeklyOutput}
+            onPermanentlyDeleteWeeklyOutput={productivity.permanentlyDeleteWeeklyOutput}
+            onMoveWeeklyOutput={productivity.moveWeeklyOutput}
             projects={productivity.projects}
           />
           

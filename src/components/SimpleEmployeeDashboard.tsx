@@ -17,6 +17,7 @@ export const SimpleEmployeeDashboard = () => {
     tasks,
     deletedTasks,
     weeklyOutputs,
+    deletedWeeklyOutputs,
     projects,
     deletedProjects,
     selectedDate,
@@ -43,6 +44,9 @@ export const SimpleEmployeeDashboard = () => {
     getTasksByDate,
     updateProgress,
     deleteWeeklyOutput,
+    restoreWeeklyOutput,
+    permanentlyDeleteWeeklyOutput,
+    moveWeeklyOutput,
     getOverdueWeeklyOutputs,
     deleteProject,
     restoreProject,
@@ -142,10 +146,15 @@ export const SimpleEmployeeDashboard = () => {
           <div className="xl:col-span-1">
             <WeeklyOutputsSection 
               weeklyOutputs={weeklyOutputs}
+              deletedWeeklyOutputs={deletedWeeklyOutputs}
+              overdueWeeklyOutputs={overdueWeeklyOutputs}
               onAddWeeklyOutput={addWeeklyOutput}
               onEditOutput={editWeeklyOutput}
               onUpdateProgress={updateProgress}
               onDeleteOutput={deleteWeeklyOutput}
+              onRestoreWeeklyOutput={restoreWeeklyOutput}
+              onPermanentlyDeleteWeeklyOutput={permanentlyDeleteWeeklyOutput}
+              onMoveWeeklyOutput={moveWeeklyOutput}
               projects={projects}
             />
           </div>
