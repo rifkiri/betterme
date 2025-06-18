@@ -4,29 +4,24 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { CalendarIcon, Trash2, Link } from 'lucide-react';
-import { WeeklyOutput, Task, Project } from '@/types/productivity';
+import { WeeklyOutput, Project } from '@/types/productivity';
 import { format, isToday, isTomorrow } from 'date-fns';
 import { isWeeklyOutputOverdue } from '@/utils/dateUtils';
 import { EditWeeklyOutputDialog } from './EditWeeklyOutputDialog';
-import { MoveWeeklyOutputDialog } from './MoveWeeklyOutputDialog';
 
 interface WeeklyOutputCardProps {
   output: WeeklyOutput;
-  onEditWeeklyOutput: (id: string, updates: Partial<WeeklyOutput>) => void;
+  onEditOutput: (id: string, updates: Partial<WeeklyOutput>) => void;
   onUpdateProgress: (outputId: string, newProgress: number) => void;
-  onMoveWeeklyOutput: (id: string, newDueDate: Date) => void;
-  onDeleteWeeklyOutput: (id: string) => void;
-  tasks?: Task[];
+  onDeleteOutput: (id: string) => void;
   projects?: Project[];
 }
 
 export const WeeklyOutputCard = ({
   output,
-  onEditWeeklyOutput,
+  onEditOutput,
   onUpdateProgress,
-  onMoveWeeklyOutput,
-  onDeleteWeeklyOutput,
-  tasks = [],
+  onDeleteOutput,
   projects = []
 }: WeeklyOutputCardProps) => {
   const [editingOutput, setEditingOutput] = useState<WeeklyOutput | null>(null);
@@ -35,16 +30,18 @@ export const WeeklyOutputCard = ({
     return output.dueDate && isWeeklyOutputOverdue(output.dueDate, output.progress, output.completedDate, output.createdDate);
   };
 
-  const linkedTasksCount = tasks.filter(task => task.weeklyOutputId === output.id).length;
   const linkedProject = projects.find(project => project.id === output.projectId);
 
   return (
     <>
-      <div className={`p-4 rounded-lg border ${isOverdue() ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'}`}>
+      <div className={`p-4 rounded-lg border ${isOverdue() ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
-            <div className="cursor-pointer hover:bg-blue-100 rounded p-1 -m-1 transition-colors" onClick={() => setEditingOutput(output)}>
+            <div className="cursor-pointer hover:bg-green-100 rounded p-1 -m-1 transition-colors" onClick={() => setEditingOutput(output)}>
               <p className="text-sm text-gray-700 leading-relaxed mb-2">{output.title}</p>
+              {output.description && (
+                <p className="text-xs text-gray-600 mb-2">{output.description}</p>
+              )}
               {output.isMoved && output.originalDueDate && (
                 <p className="text-xs text-orange-600 mb-1">
                   Moved from: {format(output.originalDueDate, 'MMM dd')}
@@ -52,16 +49,10 @@ export const WeeklyOutputCard = ({
               )}
             </div>
             <div className="flex items-center gap-2 mb-2">
-              {linkedTasksCount > 0 && (
-                <Badge variant="outline" className="text-xs flex items-center gap-1 bg-green-50 text-green-600 border-green-200">
-                  <Link className="h-2 w-2" />
-                  {linkedTasksCount} task{linkedTasksCount !== 1 ? 's' : ''} linked
-                </Badge>
-              )}
               {linkedProject && (
-                <Badge variant="outline" className="text-xs flex items-center gap-1 bg-purple-50 text-purple-600 border-purple-200">
+                <Badge variant="outline" className="text-xs flex items-center gap-1 bg-blue-50 text-blue-600 border-blue-200">
                   <Link className="h-2 w-2" />
-                  Project: {linkedProject.title}
+                  {linkedProject.title}
                 </Badge>
               )}
             </div>
@@ -79,8 +70,7 @@ export const WeeklyOutputCard = ({
             <Badge variant={output.progress === 100 ? 'default' : isOverdue() ? 'destructive' : 'secondary'} className="text-xs">
               {output.progress}%
             </Badge>
-            <MoveWeeklyOutputDialog onMoveOutput={newDueDate => onMoveWeeklyOutput(output.id, newDueDate)} disabled={output.progress === 100} />
-            <Button size="sm" variant="outline" onClick={() => onDeleteWeeklyOutput(output.id)} className="text-xs px-2 py-1 text-red-600 hover:bg-red-50">
+            <Button size="sm" variant="outline" onClick={() => onDeleteOutput(output.id)} className="text-xs px-2 py-1 text-red-600 hover:bg-red-50">
               <Trash2 className="h-3 w-3" />
             </Button>
           </div>
@@ -99,7 +89,7 @@ export const WeeklyOutputCard = ({
           </Button>
           {output.progress !== 100 && (
             <Button size="sm" variant="default" onClick={() => onUpdateProgress(output.id, 100)} className="text-xs px-2 py-1">
-              Achieved
+              Completed
             </Button>
           )}
         </div>
@@ -110,7 +100,7 @@ export const WeeklyOutputCard = ({
           weeklyOutput={editingOutput} 
           open={true} 
           onOpenChange={open => !open && setEditingOutput(null)} 
-          onSave={onEditWeeklyOutput}
+          onSave={onEditOutput} 
           projects={projects}
         />
       )}
