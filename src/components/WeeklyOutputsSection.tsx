@@ -92,6 +92,12 @@ export const WeeklyOutputsSection = ({
     setSelectedWeek(new Date());
   };
 
+  // Add console logging to debug the progress update function
+  const handleUpdateProgress = (outputId: string, newProgress: number) => {
+    console.log('WeeklyOutputsSection: handleUpdateProgress called', { outputId, newProgress });
+    onUpdateProgress(outputId, newProgress);
+  };
+
   return (
     <Card className="h-fit">
       <CardHeader className="pb-2 sm:pb-4">
@@ -135,7 +141,7 @@ export const WeeklyOutputsSection = ({
                     output={output} 
                     tasks={tasks}
                     onEditWeeklyOutput={onEditWeeklyOutput} 
-                    onUpdateProgress={onUpdateProgress} 
+                    onUpdateProgress={handleUpdateProgress} 
                     onMoveWeeklyOutput={onMoveWeeklyOutput} 
                     onDeleteWeeklyOutput={onDeleteWeeklyOutput} 
                   />
@@ -158,7 +164,7 @@ export const WeeklyOutputsSection = ({
                     output={output} 
                     tasks={tasks}
                     onEditWeeklyOutput={onEditWeeklyOutput} 
-                    onUpdateProgress={onUpdateProgress} 
+                    onUpdateProgress={handleUpdateProgress} 
                     onMoveWeeklyOutput={onMoveWeeklyOutput} 
                     onDeleteWeeklyOutput={onDeleteWeeklyOutput} 
                   />

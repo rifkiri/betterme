@@ -36,11 +36,14 @@ export const WeeklyOutputCard = ({
   const linkedTasksCount = tasks.filter(task => task.weeklyOutputId === output.id).length;
 
   const handleProgressUpdate = (change: number) => {
+    console.log('WeeklyOutputCard: handleProgressUpdate called', { outputId: output.id, change, currentProgress: output.progress });
     const newProgress = Math.max(0, Math.min(100, output.progress + change));
+    console.log('WeeklyOutputCard: calling onUpdateProgress with', { outputId: output.id, newProgress });
     onUpdateProgress(output.id, newProgress);
   };
 
   const handleMarkComplete = () => {
+    console.log('WeeklyOutputCard: handleMarkComplete called', { outputId: output.id });
     onUpdateProgress(output.id, 100);
   };
 
