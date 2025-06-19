@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,15 @@ export const WeeklyOutputCard = ({
 }: WeeklyOutputCardProps) => {
   const [editingOutput, setEditingOutput] = useState<WeeklyOutput | null>(null);
   
+  // Add debugging to see if component receives updated progress
+  useEffect(() => {
+    console.log('WeeklyOutputCard: Component updated with progress:', { 
+      outputId: output.id, 
+      title: output.title, 
+      progress: output.progress 
+    });
+  }, [output.progress, output.id, output.title]);
+  
   const isOverdue = () => {
     return output.dueDate && isWeeklyOutputOverdue(output.dueDate, output.progress, output.completedDate, output.createdDate);
   };
@@ -46,6 +55,8 @@ export const WeeklyOutputCard = ({
     console.log('WeeklyOutputCard: handleMarkComplete called', { outputId: output.id });
     onUpdateProgress(output.id, 100);
   };
+
+  console.log('WeeklyOutputCard: Rendering with progress value:', output.progress);
 
   return (
     <>
@@ -90,7 +101,11 @@ export const WeeklyOutputCard = ({
         </div>
         
         <div className="mb-3">
-          <Progress value={output.progress} className={`h-2 ${isOverdue() ? 'bg-red-100' : ''}`} />
+          <div className="text-xs text-gray-600 mb-1">Progress: {output.progress}%</div>
+          <Progress 
+            value={output.progress} 
+            className={`h-2 ${isOverdue() ? 'bg-red-100' : ''}`}
+          />
         </div>
         
         <div className="flex items-center space-x-2">
