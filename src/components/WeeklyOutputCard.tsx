@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -29,34 +29,11 @@ export const WeeklyOutputCard = ({
 }: WeeklyOutputCardProps) => {
   const [editingOutput, setEditingOutput] = useState<WeeklyOutput | null>(null);
   
-  // Add debugging to see if component receives updated progress
-  useEffect(() => {
-    console.log('WeeklyOutputCard: Component updated with progress:', { 
-      outputId: output.id, 
-      title: output.title, 
-      progress: output.progress 
-    });
-  }, [output.progress, output.id, output.title]);
-  
   const isOverdue = () => {
     return output.dueDate && isWeeklyOutputOverdue(output.dueDate, output.progress, output.completedDate, output.createdDate);
   };
 
   const linkedTasksCount = tasks.filter(task => task.weeklyOutputId === output.id).length;
-
-  const handleProgressUpdate = (change: number) => {
-    console.log('WeeklyOutputCard: handleProgressUpdate called', { outputId: output.id, change, currentProgress: output.progress });
-    const newProgress = Math.max(0, Math.min(100, output.progress + change));
-    console.log('WeeklyOutputCard: calling onUpdateProgress with', { outputId: output.id, newProgress });
-    onUpdateProgress(output.id, newProgress);
-  };
-
-  const handleMarkComplete = () => {
-    console.log('WeeklyOutputCard: handleMarkComplete called', { outputId: output.id });
-    onUpdateProgress(output.id, 100);
-  };
-
-  console.log('WeeklyOutputCard: Rendering with progress value:', output.progress);
 
   return (
     <>
@@ -101,39 +78,18 @@ export const WeeklyOutputCard = ({
         </div>
         
         <div className="mb-3">
-          <div className="text-xs text-gray-600 mb-1">Progress: {output.progress}%</div>
-          <Progress 
-            value={output.progress} 
-            className={`h-2 ${isOverdue() ? 'bg-red-100' : ''}`}
-          />
+          <Progress value={output.progress} className={`h-2 ${isOverdue() ? 'bg-red-100' : ''}`} />
         </div>
         
         <div className="flex items-center space-x-2">
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={() => handleProgressUpdate(-10)} 
-            disabled={output.progress <= 0} 
-            className="text-xs px-2 py-1"
-          >
+          <Button size="sm" variant="outline" onClick={() => onUpdateProgress(output.id, output.progress - 10)} disabled={output.progress <= 0} className="text-xs px-2 py-1">
             -10%
           </Button>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={() => handleProgressUpdate(10)} 
-            disabled={output.progress >= 100} 
-            className="text-xs px-2 py-1"
-          >
+          <Button size="sm" variant="outline" onClick={() => onUpdateProgress(output.id, output.progress + 10)} disabled={output.progress >= 100} className="text-xs px-2 py-1">
             +10%
           </Button>
           {output.progress !== 100 && (
-            <Button 
-              size="sm" 
-              variant="default" 
-              onClick={handleMarkComplete} 
-              className="text-xs px-2 py-1"
-            >
+            <Button size="sm" variant="default" onClick={() => onUpdateProgress(output.id, 100)} className="text-xs px-2 py-1">
               Achieved
             </Button>
           )}

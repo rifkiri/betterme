@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 interface UseWeeklyOutputsManagerProps {
   userId: string | null;
-  isSupabaseAvailable: () => boolean;
+  isGoogleSheetsAvailable: () => boolean;
   loadAllData: () => Promise<void>;
   weeklyOutputs: WeeklyOutput[];
   setWeeklyOutputs: (outputs: WeeklyOutput[] | ((prev: WeeklyOutput[]) => WeeklyOutput[])) => void;
@@ -15,7 +15,7 @@ interface UseWeeklyOutputsManagerProps {
 
 export const useWeeklyOutputsManager = ({
   userId,
-  isSupabaseAvailable,
+  isGoogleSheetsAvailable: isSupabaseAvailable,
   loadAllData,
   weeklyOutputs,
   setWeeklyOutputs,
@@ -77,20 +77,10 @@ export const useWeeklyOutputsManager = ({
   };
 
   const updateProgress = async (outputId: string, newProgress: number) => {
-    console.log('updateProgress called with:', { outputId, newProgress, userId });
-    
-    if (!userId) {
-      console.error('No user ID found for progress update');
-      toast.error('Please sign in to update progress');
-      return;
-    }
+    if (!userId) return;
 
     const output = weeklyOutputs.find(o => o.id === outputId);
-    if (!output) {
-      console.error('Output not found:', outputId);
-      toast.error('Weekly output not found');
-      return;
-    }
+    if (!output) return;
 
     const newProgressValue = Math.max(0, Math.min(100, newProgress));
     const updates: Partial<WeeklyOutput> = { progress: newProgressValue };
@@ -105,12 +95,7 @@ export const useWeeklyOutputsManager = ({
       console.log('Removing completedDate');
     }
 
-    try {
-      await editWeeklyOutput(outputId, updates);
-    } catch (error) {
-      console.error('Failed to update progress:', error);
-      toast.error('Failed to update progress');
-    }
+    await editWeeklyOutput(outputId, updates);
   };
 
   const moveWeeklyOutput = async (id: string, newDueDate: Date) => {

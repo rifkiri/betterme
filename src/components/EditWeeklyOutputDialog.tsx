@@ -49,7 +49,7 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
 
     onSave(weeklyOutput.id, {
       title: values.title,
-      description: values.description || undefined,
+      description: values.description,
       dueDate: dueDate
     });
     onOpenChange(false);
@@ -83,7 +83,7 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
                 </FormItem>
               )}
             />
-
+            
             <FormField
               control={form.control}
               name="description"
@@ -91,7 +91,11 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
                 <FormItem>
                   <FormLabel>Description (Optional)</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Add additional details..." className="resize-none" rows={3} {...field} />
+                    <Textarea 
+                      placeholder="Enter description..." 
+                      className="min-h-[80px]"
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
