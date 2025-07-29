@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { CalendarIcon, Trash2, Link } from 'lucide-react';
+import { CalendarIcon, Trash2, Link, Eye } from 'lucide-react';
 import { Goal, Task, WeeklyOutput } from '@/types/productivity';
 import { format, isToday, isTomorrow } from 'date-fns';
 import { EditGoalDialog } from './EditGoalDialog';
 import { MoveGoalDialog } from './MoveGoalDialog';
+import { GoalDetailsDialog } from './GoalDetailsDialog';
 
 interface GoalCardProps {
   goal: Goal;
@@ -32,6 +33,7 @@ export const GoalCard = ({
   isCompleted = false
 }: GoalCardProps) => {
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   
   const getCategoryColor = (category: Goal['category']) => {
     switch (category) {
@@ -55,7 +57,7 @@ export const GoalCard = ({
       }`}>
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
-            <div className="cursor-pointer hover:bg-blue-100 rounded p-1 -m-1 transition-colors" onClick={() => setEditingGoal(goal)}>
+            <div className="cursor-pointer hover:bg-blue-100 rounded p-1 -m-1 transition-colors" onClick={() => setShowDetailsDialog(true)}>
               <div className="flex items-center gap-2 mb-2">
                 <p className="text-sm text-gray-700 leading-relaxed flex-1">{goal.title}</p>
                 <Badge className={`text-xs ${getCategoryColor(goal.category)}`}>
@@ -91,6 +93,12 @@ export const GoalCard = ({
             <Badge variant={goal.progress === 100 ? 'default' : isOverdue ? 'destructive' : 'secondary'} className="text-xs">
               {goal.progress}%
             </Badge>
+            <Button size="sm" variant="outline" onClick={() => setShowDetailsDialog(true)} className="text-xs px-2 py-1" title="View Details">
+              <Eye className="h-3 w-3" />
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setEditingGoal(goal)} className="text-xs px-2 py-1">
+              Edit
+            </Button>
             <MoveGoalDialog onMoveGoal={newDeadline => onMoveGoal(goal.id, newDeadline)} disabled={goal.progress === 100} />
             <Button size="sm" variant="outline" onClick={() => onDeleteGoal(goal.id)} className="text-xs px-2 py-1 text-red-600 hover:bg-red-50">
               <Trash2 className="h-3 w-3" />
@@ -128,6 +136,16 @@ export const GoalCard = ({
           )}
         </div>
       </div>
+      
+      <GoalDetailsDialog
+        goal={goal}
+        open={showDetailsDialog}
+        onOpenChange={setShowDetailsDialog}
+        onEditGoal={onEditGoal}
+        onUpdateProgress={onUpdateProgress}
+        weeklyOutputs={weeklyOutputs}
+        tasks={tasks}
+      />
       
       {editingGoal && (
         <EditGoalDialog 
