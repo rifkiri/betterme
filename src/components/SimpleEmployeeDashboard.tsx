@@ -4,9 +4,10 @@ import { useProductivity } from '@/hooks/useProductivity';
 import { QuickStatsCard } from './QuickStatsCard';
 import { FeelingTracker } from './FeelingTracker';
 import { HabitsSection } from './HabitsSection';
-import { GoalsSection, Goal } from './GoalsSection';
+import { GoalsSection } from './GoalsSection';
 import { WeeklyOutputsSection } from './WeeklyOutputsSection';
 import { TasksSection } from './TasksSection';
+import { Goal } from '@/types/productivity';
 
 export const SimpleEmployeeDashboard = () => {
   console.log('SimpleEmployeeDashboard rendering...');
@@ -58,9 +59,10 @@ export const SimpleEmployeeDashboard = () => {
       unit: 'tasks',
       category: 'weekly',
       deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
-      createdAt: new Date(),
+      createdDate: new Date(),
       completed: false,
-      archived: false
+      archived: false,
+      progress: 72 // calculated from currentValue/targetValue
     },
     {
       id: '2',
@@ -70,14 +72,18 @@ export const SimpleEmployeeDashboard = () => {
       currentValue: 5,
       unit: 'days',
       category: 'daily',
-      createdAt: new Date(),
+      createdDate: new Date(),
       completed: false,
-      archived: false
+      archived: false,
+      progress: 71 // calculated from currentValue/targetValue
     }
   ];
 
+  const deletedGoals: Goal[] = [];
+  const overdueGoals: Goal[] = [];
+
   // Mock goal handlers - you'll need to implement these in your data layer
-  const handleAddGoal = (goal: Omit<Goal, 'id' | 'createdAt' | 'completed' | 'archived'>) => {
+  const handleAddGoal = (goal: Omit<Goal, 'id' | 'createdDate' | 'progress'>) => {
     console.log('Adding goal:', goal);
     // Implementation needed: Add to your state management
   };
@@ -92,14 +98,24 @@ export const SimpleEmployeeDashboard = () => {
     // Implementation needed: Delete from your state management
   };
 
-  const handleUpdateGoalProgress = (id: string, newValue: number) => {
-    console.log('Updating goal progress:', id, newValue);
+  const handleUpdateGoalProgress = (goalId: string, newProgress: number) => {
+    console.log('Updating goal progress:', goalId, newProgress);
     // Implementation needed: Update progress in your state management
   };
 
-  const handleToggleGoalComplete = (id: string) => {
-    console.log('Toggling goal completion:', id);
-    // Implementation needed: Mark goal as complete in your state management
+  const handleMoveGoal = (id: string, newDeadline: Date) => {
+    console.log('Moving goal:', id, newDeadline);
+    // Implementation needed: Move goal deadline in your state management
+  };
+
+  const handleRestoreGoal = (id: string) => {
+    console.log('Restoring goal:', id);
+    // Implementation needed: Restore goal in your state management
+  };
+
+  const handlePermanentlyDeleteGoal = (id: string) => {
+    console.log('Permanently deleting goal:', id);
+    // Implementation needed: Permanently delete goal in your state management
   };
 
   console.log('Dashboard data:', {
@@ -186,11 +202,16 @@ export const SimpleEmployeeDashboard = () => {
           <div className="lg:col-span-1">
             <GoalsSection 
               goals={goals}
+              deletedGoals={deletedGoals}
+              overdueGoals={overdueGoals}
+              tasks={tasks}
               onAddGoal={handleAddGoal}
               onEditGoal={handleEditGoal}
-              onDeleteGoal={handleDeleteGoal}
               onUpdateProgress={handleUpdateGoalProgress}
-              onToggleComplete={handleToggleGoalComplete}
+              onMoveGoal={handleMoveGoal}
+              onDeleteGoal={handleDeleteGoal}
+              onRestoreGoal={handleRestoreGoal}
+              onPermanentlyDeleteGoal={handlePermanentlyDeleteGoal}
             />
           </div>
 

@@ -58,6 +58,21 @@ export interface WeeklyOutput {
   deletedDate?: Date;
 }
 
+export interface Goal {
+  id: string;
+  title: string;
+  description?: string;
+  targetValue: number;
+  currentValue: number;
+  unit: string;
+  category: 'daily' | 'weekly' | 'monthly' | 'custom';
+  deadline?: Date;
+  createdDate: Date;
+  completed: boolean;
+  archived: boolean;
+  progress: number; // 0-100, calculated from currentValue/targetValue
+}
+
 export interface MoodEntry {
   id: string;
   userId?: string;
