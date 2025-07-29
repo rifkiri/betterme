@@ -56,6 +56,7 @@ export interface WeeklyOutput {
   isMoved?: boolean;
   isDeleted?: boolean;
   deletedDate?: Date;
+  linkedGoalIds?: string[]; // Link to goals
 }
 
 export interface Goal {
@@ -71,6 +72,7 @@ export interface Goal {
   completed: boolean;
   archived: boolean;
   progress: number; // 0-100, calculated from currentValue/targetValue
+  linkedOutputIds?: string[]; // Link to weekly outputs
 }
 
 export interface MoodEntry {

@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { CalendarIcon, Trash2, Link } from 'lucide-react';
-import { Goal, Task } from '@/types/productivity';
+import { Goal, Task, WeeklyOutput } from '@/types/productivity';
 import { format, isToday, isTomorrow } from 'date-fns';
 import { EditGoalDialog } from './EditGoalDialog';
 import { MoveGoalDialog } from './MoveGoalDialog';
@@ -11,6 +11,7 @@ import { MoveGoalDialog } from './MoveGoalDialog';
 interface GoalCardProps {
   goal: Goal;
   tasks?: Task[];
+  weeklyOutputs?: WeeklyOutput[];
   onEditGoal: (id: string, updates: Partial<Goal>) => void;
   onUpdateProgress: (goalId: string, newProgress: number) => void;
   onMoveGoal: (id: string, newDeadline: Date) => void;
@@ -22,6 +23,7 @@ interface GoalCardProps {
 export const GoalCard = ({
   goal,
   tasks = [],
+  weeklyOutputs = [],
   onEditGoal,
   onUpdateProgress,
   onMoveGoal,
@@ -41,7 +43,8 @@ export const GoalCard = ({
     }
   };
 
-  const linkedTasksCount = tasks.filter(task => task.weeklyOutputId === goal.id).length;
+  const linkedOutputsCount = goal.linkedOutputIds?.length || 0;
+  const linkedOutputs = weeklyOutputs.filter(output => goal.linkedOutputIds?.includes(output.id));
 
   return (
     <>
@@ -64,10 +67,10 @@ export const GoalCard = ({
               )}
             </div>
             <div className="flex items-center gap-2 mb-2">
-              {linkedTasksCount > 0 && (
+              {linkedOutputsCount > 0 && (
                 <Badge variant="outline" className="text-xs flex items-center gap-1 bg-green-50 text-green-600 border-green-200">
                   <Link className="h-2 w-2" />
-                  {linkedTasksCount} task{linkedTasksCount !== 1 ? 's' : ''} linked
+                  {linkedOutputsCount} output{linkedOutputsCount !== 1 ? 's' : ''} linked
                 </Badge>
               )}
               <span className="text-xs text-gray-500">
@@ -131,7 +134,8 @@ export const GoalCard = ({
           goal={editingGoal} 
           open={true} 
           onOpenChange={open => !open && setEditingGoal(null)} 
-          onSave={onEditGoal} 
+          onSave={onEditGoal}
+          weeklyOutputs={weeklyOutputs}
         />
       )}
     </>

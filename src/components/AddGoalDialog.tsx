@@ -13,7 +13,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '@/lib/utils';
-import { Goal } from '@/types/productivity';
+import { Goal, WeeklyOutput } from '@/types/productivity';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -22,15 +22,17 @@ const formSchema = z.object({
   unit: z.string().optional(),
   category: z.enum(['daily', 'weekly', 'monthly', 'custom']),
   deadline: z.date().optional(),
+  linkedOutputIds: z.array(z.string()).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
 interface AddGoalDialogProps {
   onAddGoal: (goal: Omit<Goal, 'id' | 'createdDate' | 'progress'>) => void;
+  weeklyOutputs?: WeeklyOutput[];
 }
 
-export const AddGoalDialog = ({ onAddGoal }: AddGoalDialogProps) => {
+export const AddGoalDialog = ({ onAddGoal, weeklyOutputs = [] }: AddGoalDialogProps) => {
   const [open, setOpen] = useState(false);
 
   const form = useForm<FormData>({
@@ -42,6 +44,7 @@ export const AddGoalDialog = ({ onAddGoal }: AddGoalDialogProps) => {
       unit: '',
       category: 'weekly',
       deadline: undefined,
+      linkedOutputIds: [],
     },
   });
 
@@ -62,6 +65,7 @@ export const AddGoalDialog = ({ onAddGoal }: AddGoalDialogProps) => {
       deadline: deadline,
       completed: false,
       archived: false,
+      linkedOutputIds: data.linkedOutputIds || [],
     });
     form.reset();
     setOpen(false);
@@ -70,6 +74,9 @@ export const AddGoalDialog = ({ onAddGoal }: AddGoalDialogProps) => {
   // Get today's date and set time to start of day for proper comparison
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+
+  // Filter available outputs (not completed)
+  const availableOutputs = weeklyOutputs.filter(output => output.progress < 100);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -229,6 +236,63 @@ export const AddGoalDialog = ({ onAddGoal }: AddGoalDialogProps) => {
                 </FormItem>
               )}
             />
+
+            {availableOutputs.length > 0 && (
+              <FormField
+                control={form.control}
+                name="linkedOutputIds"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Link to Outputs (Optional)</FormLabel>
+                    <FormControl>
+                      <Select 
+                        onValueChange={(value) => {
+                          const currentIds = field.value || [];
+                          if (currentIds.includes(value)) {
+                            field.onChange(currentIds.filter(id => id !== value));
+                          } else {
+                            field.onChange([...currentIds, value]);
+                          }
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select outputs to link" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableOutputs.map((output) => (
+                            <SelectItem key={output.id} value={output.id}>
+                              {output.title} ({output.progress}%)
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    {field.value && field.value.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {field.value.map((outputId) => {
+                          const output = availableOutputs.find(o => o.id === outputId);
+                          return output ? (
+                            <span key={outputId} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                              {output.title}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  field.onChange(field.value?.filter(id => id !== outputId));
+                                }}
+                                className="text-blue-600 hover:text-blue-800"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ) : null;
+                        })}
+                      </div>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div className="flex justify-end space-x-2">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>

@@ -3,7 +3,7 @@ import { Target } from 'lucide-react';
 import { DeletedGoalsDialog } from './DeletedGoalsDialog';
 import { AddGoalDialog } from './AddGoalDialog';
 import { GoalCard } from './GoalCard';
-import { Goal, Task } from '@/types/productivity';
+import { Goal, Task, WeeklyOutput } from '@/types/productivity';
 import { isBefore } from 'date-fns';
 
 interface GoalsSectionProps {
@@ -11,6 +11,7 @@ interface GoalsSectionProps {
   deletedGoals: Goal[];
   overdueGoals: Goal[];
   tasks: Task[];
+  weeklyOutputs?: WeeklyOutput[];
   onAddGoal: (goal: Omit<Goal, 'id' | 'createdDate' | 'progress'>) => void;
   onEditGoal: (id: string, updates: Partial<Goal>) => void;
   onUpdateProgress: (goalId: string, newProgress: number) => void;
@@ -25,6 +26,7 @@ export const GoalsSection = ({
   deletedGoals,
   overdueGoals,
   tasks,
+  weeklyOutputs = [],
   onAddGoal,
   onEditGoal,
   onUpdateProgress,
@@ -69,7 +71,7 @@ export const GoalsSection = ({
               onRestore={onRestoreGoal} 
               onPermanentlyDelete={onPermanentlyDeleteGoal} 
             />
-            <AddGoalDialog onAddGoal={onAddGoal} />
+            <AddGoalDialog onAddGoal={onAddGoal} weeklyOutputs={weeklyOutputs} />
           </div>
         </div>
       </CardHeader>
@@ -86,6 +88,7 @@ export const GoalsSection = ({
                     key={goal.id} 
                     goal={goal} 
                     tasks={tasks}
+                    weeklyOutputs={weeklyOutputs}
                     onEditGoal={onEditGoal} 
                     onUpdateProgress={onUpdateProgress} 
                     onMoveGoal={onMoveGoal} 
@@ -109,6 +112,7 @@ export const GoalsSection = ({
                     key={goal.id} 
                     goal={goal} 
                     tasks={tasks}
+                    weeklyOutputs={weeklyOutputs}
                     onEditGoal={onEditGoal} 
                     onUpdateProgress={onUpdateProgress} 
                     onMoveGoal={onMoveGoal} 
@@ -133,6 +137,7 @@ export const GoalsSection = ({
                     key={goal.id} 
                     goal={goal} 
                     tasks={tasks}
+                    weeklyOutputs={weeklyOutputs}
                     onEditGoal={onEditGoal} 
                     onUpdateProgress={onUpdateProgress} 
                     onMoveGoal={onMoveGoal} 
