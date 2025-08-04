@@ -13,10 +13,10 @@ export const useUsersData = () => {
     try {
       console.log('Loading users from Supabase');
       const supabaseUsers = await supabaseDataService.getUsers();
+      console.log('Users loaded successfully:', supabaseUsers.length, 'users');
       setUsers(supabaseUsers);
-      console.log('Users loaded successfully');
     } catch (error) {
-      console.error('Failed to load users');
+      console.error('Failed to load users:', error);
       toast.error('Failed to load users from Supabase');
     } finally {
       setIsLoading(false);

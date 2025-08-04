@@ -20,6 +20,7 @@ export const UserTable = ({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const handleEditUser = (user: User) => {
+    console.log('Opening edit dialog for user:', user);
     setEditingUser(user);
     setIsEditDialogOpen(true);
   };

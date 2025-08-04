@@ -48,7 +48,11 @@ export const EditUserDialog = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('=== EDIT USER SUBMIT START ===');
+    console.log('Form data:', { name, email, role, position, newPassword });
+    
     if (!user || !name || !email || !role) {
+      console.log('Missing required fields:', { user: !!user, name, email, role });
       toast.error('Please fill in all required fields');
       return;
     }
