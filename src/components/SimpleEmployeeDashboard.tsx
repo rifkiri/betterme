@@ -19,6 +19,8 @@ export const SimpleEmployeeDashboard = () => {
     deletedTasks,
     weeklyOutputs,
     deletedWeeklyOutputs,
+    goals,
+    deletedGoals,
     selectedDate,
     handleDateChange,
     addHabit,
@@ -27,6 +29,14 @@ export const SimpleEmployeeDashboard = () => {
     editTask,
     addWeeklyOutput,
     editWeeklyOutput,
+    addGoal,
+    editGoal,
+    updateGoalProgress,
+    moveGoal,
+    deleteGoal,
+    restoreGoal,
+    permanentlyDeleteGoal,
+    getOverdueGoals,
     toggleHabit,
     toggleTask,
     deleteTask,
@@ -47,76 +57,7 @@ export const SimpleEmployeeDashboard = () => {
     getOverdueWeeklyOutputs
   } = useProductivity();
 
-  // Mock goals data - you'll need to add this to your useProductivity hook
-  // or create a separate useGoals hook
-  const goals: Goal[] = [
-    {
-      id: '1',
-      title: 'Complete 25 Tasks This Week',
-      description: 'Focus on productivity and task completion',
-      targetValue: 25,
-      currentValue: 18,
-      unit: 'tasks',
-      category: 'weekly',
-      deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
-      createdDate: new Date(),
-      completed: false,
-      archived: false,
-      progress: 72 // calculated from currentValue/targetValue
-    },
-    {
-      id: '2',
-      title: 'Maintain 7-Day Habit Streak',
-      description: 'Keep all habits consistent for a week',
-      targetValue: 7,
-      currentValue: 5,
-      unit: 'days',
-      category: 'daily',
-      createdDate: new Date(),
-      completed: false,
-      archived: false,
-      progress: 71 // calculated from currentValue/targetValue
-    }
-  ];
-
-  const deletedGoals: Goal[] = [];
-  const overdueGoals: Goal[] = [];
-
-  // Mock goal handlers - you'll need to implement these in your data layer
-  const handleAddGoal = (goal: Omit<Goal, 'id' | 'createdDate' | 'progress'>) => {
-    console.log('Adding goal:', goal);
-    // Implementation needed: Add to your state management
-  };
-
-  const handleEditGoal = (id: string, updates: Partial<Goal>) => {
-    console.log('Editing goal:', id, updates);
-    // Implementation needed: Update in your state management
-  };
-
-  const handleDeleteGoal = (id: string) => {
-    console.log('Deleting goal:', id);
-    // Implementation needed: Delete from your state management
-  };
-
-  const handleUpdateGoalProgress = (goalId: string, newProgress: number) => {
-    console.log('Updating goal progress:', goalId, newProgress);
-    // Implementation needed: Update progress in your state management
-  };
-
-  const handleMoveGoal = (id: string, newDeadline: Date) => {
-    console.log('Moving goal:', id, newDeadline);
-    // Implementation needed: Move goal deadline in your state management
-  };
-
-  const handleRestoreGoal = (id: string) => {
-    console.log('Restoring goal:', id);
-    // Implementation needed: Restore goal in your state management
-  };
-
-  const handlePermanentlyDeleteGoal = (id: string) => {
-    console.log('Permanently deleting goal:', id);
-    // Implementation needed: Permanently delete goal in your state management
-  };
+  const overdueGoals = getOverdueGoals();
 
   console.log('Dashboard data:', {
     habitsCount: habits.length,
@@ -206,13 +147,13 @@ export const SimpleEmployeeDashboard = () => {
               overdueGoals={overdueGoals}
               tasks={tasks}
               weeklyOutputs={weeklyOutputs}
-              onAddGoal={handleAddGoal}
-              onEditGoal={handleEditGoal}
-              onUpdateProgress={handleUpdateGoalProgress}
-              onMoveGoal={handleMoveGoal}
-              onDeleteGoal={handleDeleteGoal}
-              onRestoreGoal={handleRestoreGoal}
-              onPermanentlyDeleteGoal={handlePermanentlyDeleteGoal}
+              onAddGoal={addGoal}
+              onEditGoal={editGoal}
+              onUpdateProgress={updateGoalProgress}
+              onMoveGoal={moveGoal}
+              onDeleteGoal={deleteGoal}
+              onRestoreGoal={restoreGoal}
+              onPermanentlyDeleteGoal={permanentlyDeleteGoal}
             />
           </div>
 

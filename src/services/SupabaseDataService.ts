@@ -3,6 +3,7 @@ import { supabaseHabitsService } from './SupabaseHabitsService';
 import { supabaseTasksService } from './SupabaseTasksService';
 import { supabaseWeeklyOutputsService } from './SupabaseWeeklyOutputsService';
 import { supabaseMoodService } from './SupabaseMoodService';
+import { supabaseGoalsService } from './SupabaseGoalsService';
 
 export class SupabaseDataService {
   // User management
@@ -79,6 +80,27 @@ export class SupabaseDataService {
 
   async permanentlyDeleteWeeklyOutput(id: string, userId: string) {
     return await supabaseWeeklyOutputsService.permanentlyDeleteWeeklyOutput(id, userId);
+  }
+
+  // Goals management
+  async getGoals(userId: string) {
+    return await supabaseGoalsService.getGoals(userId);
+  }
+
+  async addGoal(goal: any) {
+    return await supabaseGoalsService.addGoal(goal);
+  }
+
+  async updateGoal(id: string, userId: string, updates: any) {
+    return await supabaseGoalsService.updateGoal(id, userId, updates);
+  }
+
+  async updateGoalProgress(id: string, userId: string, currentValue: number) {
+    return await supabaseGoalsService.updateGoalProgress(id, userId, currentValue);
+  }
+
+  async permanentlyDeleteGoal(id: string, userId: string) {
+    return await supabaseGoalsService.permanentlyDeleteGoal(id, userId);
   }
 
   // Mood tracking

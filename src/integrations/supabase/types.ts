@@ -7,8 +7,70 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instanciate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.3 (519615d)"
+  }
   public: {
     Tables: {
+      goals: {
+        Row: {
+          archived: boolean
+          category: string
+          completed: boolean
+          created_date: string
+          current_value: number
+          deadline: string | null
+          deleted_date: string | null
+          description: string | null
+          id: string
+          is_deleted: boolean
+          linked_output_ids: string[] | null
+          target_value: number
+          title: string
+          unit: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          archived?: boolean
+          category?: string
+          completed?: boolean
+          created_date?: string
+          current_value?: number
+          deadline?: string | null
+          deleted_date?: string | null
+          description?: string | null
+          id?: string
+          is_deleted?: boolean
+          linked_output_ids?: string[] | null
+          target_value?: number
+          title: string
+          unit?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          archived?: boolean
+          category?: string
+          completed?: boolean
+          created_date?: string
+          current_value?: number
+          deadline?: string | null
+          deleted_date?: string | null
+          description?: string | null
+          id?: string
+          is_deleted?: boolean
+          linked_output_ids?: string[] | null
+          target_value?: number
+          title?: string
+          unit?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       habit_completions: {
         Row: {
           completed_date: string
@@ -174,79 +236,7 @@ export type Database = {
         }
         Relationships: []
       }
-      tasks: {
-        Row: {
-          completed: boolean
-          completed_date: string | null
-          created_date: string
-          deleted_date: string | null
-          description: string | null
-          due_date: string
-          id: string
-          is_deleted: boolean
-          is_moved: boolean
-          original_due_date: string | null
-          priority: Database["public"]["Enums"]["task_priority"] | null
-          tagged_users: string[] | null
-          title: string
-          updated_at: string
-          user_id: string
-          weekly_output_id: string | null
-        }
-        Insert: {
-          completed?: boolean
-          completed_date?: string | null
-          created_date?: string
-          deleted_date?: string | null
-          description?: string | null
-          due_date: string
-          id?: string
-          is_deleted?: boolean
-          is_moved?: boolean
-          original_due_date?: string | null
-          priority?: Database["public"]["Enums"]["task_priority"] | null
-          tagged_users?: string[] | null
-          title: string
-          updated_at?: string
-          user_id: string
-          weekly_output_id?: string | null
-        }
-        Update: {
-          completed?: boolean
-          completed_date?: string | null
-          created_date?: string
-          deleted_date?: string | null
-          description?: string | null
-          due_date?: string
-          id?: string
-          is_deleted?: boolean
-          is_moved?: boolean
-          original_due_date?: string | null
-          priority?: Database["public"]["Enums"]["task_priority"] | null
-          tagged_users?: string[] | null
-          title?: string
-          updated_at?: string
-          user_id?: string
-          weekly_output_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "tasks_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tasks_weekly_output_id_fkey"
-            columns: ["weekly_output_id"]
-            isOneToOne: false
-            referencedRelation: "weekly_outputs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      weekly_outputs: {
+      projects: {
         Row: {
           completed_date: string | null
           created_date: string
@@ -293,6 +283,157 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "projects_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          completed: boolean
+          completed_date: string | null
+          created_date: string
+          deleted_date: string | null
+          description: string | null
+          due_date: string
+          id: string
+          is_deleted: boolean
+          is_moved: boolean
+          original_due_date: string | null
+          priority: Database["public"]["Enums"]["task_priority"] | null
+          project_id: string | null
+          tagged_users: string[] | null
+          title: string
+          updated_at: string
+          user_id: string
+          weekly_output_id: string | null
+        }
+        Insert: {
+          completed?: boolean
+          completed_date?: string | null
+          created_date?: string
+          deleted_date?: string | null
+          description?: string | null
+          due_date: string
+          id?: string
+          is_deleted?: boolean
+          is_moved?: boolean
+          original_due_date?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"] | null
+          project_id?: string | null
+          tagged_users?: string[] | null
+          title: string
+          updated_at?: string
+          user_id: string
+          weekly_output_id?: string | null
+        }
+        Update: {
+          completed?: boolean
+          completed_date?: string | null
+          created_date?: string
+          deleted_date?: string | null
+          description?: string | null
+          due_date?: string
+          id?: string
+          is_deleted?: boolean
+          is_moved?: boolean
+          original_due_date?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"] | null
+          project_id?: string | null
+          tagged_users?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          weekly_output_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_weekly_output_id_fkey"
+            columns: ["weekly_output_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_outputs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weekly_outputs: {
+        Row: {
+          completed_date: string | null
+          created_date: string
+          deleted_date: string | null
+          description: string | null
+          due_date: string
+          id: string
+          is_deleted: boolean
+          is_moved: boolean
+          linked_goal_ids: string[] | null
+          original_due_date: string | null
+          progress: number
+          project_id: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_date?: string | null
+          created_date?: string
+          deleted_date?: string | null
+          description?: string | null
+          due_date: string
+          id?: string
+          is_deleted?: boolean
+          is_moved?: boolean
+          linked_goal_ids?: string[] | null
+          original_due_date?: string | null
+          progress?: number
+          project_id?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_date?: string | null
+          created_date?: string
+          deleted_date?: string | null
+          description?: string | null
+          due_date?: string
+          id?: string
+          is_deleted?: boolean
+          is_moved?: boolean
+          linked_goal_ids?: string[] | null
+          original_due_date?: string | null
+          progress?: number
+          project_id?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_outputs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "weekly_outputs_user_id_fkey"
             columns: ["user_id"]
@@ -365,21 +506,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -397,14 +542,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -420,14 +567,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -443,14 +592,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
@@ -458,14 +609,16 @@ export type Enums<
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
