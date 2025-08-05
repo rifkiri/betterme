@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Circle, Clock, ArrowRight, Trash2, Target, Calendar, Users } from 'lucide-react';
+import { CheckCircle, Circle, Clock, ArrowRight, Trash2, Target, Calendar, Users, Eye } from 'lucide-react';
 import { Task, WeeklyOutput } from '@/types/productivity';
 import { MoveTaskDialog } from './MoveTaskDialog';
 import { EditTaskDialog } from './EditTaskDialog';
@@ -14,6 +14,7 @@ interface TaskItemProps {
   onEditTask: (id: string, updates: Partial<Task>) => void;
   onMoveTask: (taskId: string, targetDate: Date) => void;
   onDeleteTask: (id: string) => void;
+  onViewDetails?: () => void;
   weeklyOutputs?: WeeklyOutput[];
 }
 
@@ -22,7 +23,7 @@ interface TaggedUser {
   name: string;
 }
 
-export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteTask, weeklyOutputs = [] }: TaskItemProps) => {
+export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteTask, onViewDetails, weeklyOutputs = [] }: TaskItemProps) => {
   const [editingTask, setEditingTask] = useState(false);
   const [taggedUsers, setTaggedUsers] = useState<TaggedUser[]>([]);
   const linkedOutput = task.weeklyOutputId ? weeklyOutputs.find(output => output.id === task.weeklyOutputId) : null;
@@ -146,6 +147,17 @@ export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteT
         </div>
       </div>
       <div className="flex items-center gap-2">
+        {onViewDetails && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onViewDetails}
+            className="h-8 w-8 p-0"
+            title="View Details"
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+        )}
         {!task.completed && (
           <MoveTaskDialog 
             onMoveTask={(newDate) => onMoveTask(task.id, newDate)}

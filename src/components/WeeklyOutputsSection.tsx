@@ -7,7 +7,7 @@ import { DeletedWeeklyOutputsDialog } from './DeletedWeeklyOutputsDialog';
 import { AddWeeklyOutputDialog } from './AddWeeklyOutputDialog';
 import { WeeklyOutputCard } from './WeeklyOutputCard';
 import { WeekNavigator } from './WeekNavigator';
-import { WeeklyOutput, Task } from '@/types/productivity';
+import { WeeklyOutput, Task, Goal } from '@/types/productivity';
 import { format, startOfWeek, endOfWeek, addWeeks, isWithinInterval, isSameWeek, isBefore } from 'date-fns';
 
 interface WeeklyOutputsSectionProps {
@@ -15,6 +15,7 @@ interface WeeklyOutputsSectionProps {
   deletedWeeklyOutputs: WeeklyOutput[];
   overdueWeeklyOutputs: WeeklyOutput[];
   tasks: Task[];
+  goals?: Goal[];
   onAddWeeklyOutput: (output: Omit<WeeklyOutput, 'id' | 'createdDate'>) => void;
   onEditWeeklyOutput: (id: string, updates: Partial<WeeklyOutput>) => void;
   onUpdateProgress: (outputId: string, newProgress: number) => void;
@@ -29,6 +30,7 @@ export const WeeklyOutputsSection = ({
   deletedWeeklyOutputs,
   overdueWeeklyOutputs,
   tasks,
+  goals = [],
   onAddWeeklyOutput,
   onEditWeeklyOutput,
   onUpdateProgress,
@@ -134,6 +136,7 @@ export const WeeklyOutputsSection = ({
                     key={output.id} 
                     output={output} 
                     tasks={tasks}
+                    goals={goals}
                     onEditWeeklyOutput={onEditWeeklyOutput} 
                     onUpdateProgress={onUpdateProgress} 
                     onMoveWeeklyOutput={onMoveWeeklyOutput} 
@@ -157,6 +160,7 @@ export const WeeklyOutputsSection = ({
                     key={output.id} 
                     output={output} 
                     tasks={tasks}
+                    goals={goals}
                     onEditWeeklyOutput={onEditWeeklyOutput} 
                     onUpdateProgress={onUpdateProgress} 
                     onMoveWeeklyOutput={onMoveWeeklyOutput} 

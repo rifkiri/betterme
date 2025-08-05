@@ -4,10 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, addDays, isToday, isSameDay } from 'date-fns';
-import { Task, WeeklyOutput } from '@/types/productivity';
+import { Task, WeeklyOutput, Goal } from '@/types/productivity';
 import { AddTaskDialog } from './AddTaskDialog';
 import { TaskItem } from './TaskItem';
 import { DeletedTasksDialog } from './DeletedTasksDialog';
+import { TaskDetailsDialog } from './TaskDetailsDialog';
 
 interface TasksSectionProps {
   tasks: Task[];
@@ -22,6 +23,7 @@ interface TasksSectionProps {
   onPermanentlyDeleteTask: (id: string) => void;
   getTasksByDate: (date: Date) => Task[];
   weeklyOutputs?: WeeklyOutput[];
+  goals?: Goal[];
 }
 
 export const TasksSection = ({ 
@@ -36,9 +38,11 @@ export const TasksSection = ({
   onRestoreTask,
   onPermanentlyDeleteTask,
   getTasksByDate,
-  weeklyOutputs = []
+  weeklyOutputs = [],
+  goals = []
 }: TasksSectionProps) => {
   const [selectedTaskDate, setSelectedTaskDate] = useState(new Date());
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   
   // Enhanced task filtering for selected date
   const getTasksForSelectedDate = (date: Date) => {
@@ -145,6 +149,7 @@ export const TasksSection = ({
                 onEditTask={onEditTask}
                 onMoveTask={onMoveTask}
                 onDeleteTask={onDeleteTask}
+                onViewDetails={() => setSelectedTask(task)}
                 weeklyOutputs={weeklyOutputs}
               />
             ))
@@ -164,6 +169,7 @@ export const TasksSection = ({
                   onEditTask={onEditTask}
                   onMoveTask={onMoveTask}
                   onDeleteTask={onDeleteTask}
+                  onViewDetails={() => setSelectedTask(task)}
                   weeklyOutputs={weeklyOutputs}
                 />
               ))}
@@ -171,6 +177,17 @@ export const TasksSection = ({
           </div>
         )}
       </CardContent>
+      
+      {/* Task Details Dialog */}
+      <TaskDetailsDialog
+        task={selectedTask}
+        open={!!selectedTask}
+        onOpenChange={(open) => !open && setSelectedTask(null)}
+        onEditTask={onEditTask}
+        onToggleTask={onToggleTask}
+        weeklyOutputs={weeklyOutputs}
+        goals={goals}
+      />
     </Card>
   );
 };
