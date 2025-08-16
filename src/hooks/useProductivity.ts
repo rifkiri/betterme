@@ -3,6 +3,7 @@ import { useHabitsManager } from './useHabitsManager';
 import { useTasksManager } from './useTasksManager';
 import { useWeeklyOutputsManager } from './useWeeklyOutputsManager';
 import { useGoalsManager } from './useGoalsManager';
+import { useGoalCollaboration } from './useGoalCollaboration';
 import { useTaskHelpers } from './useTaskHelpers';
 import { useWeeklyOutputHelpers } from './useWeeklyOutputHelpers';
 
@@ -50,6 +51,8 @@ export const useProductivity = () => {
     setDeletedGoals: productivityData.setDeletedGoals,
   });
 
+  const goalCollaboration = useGoalCollaboration(productivityData.userId || '');
+
   const taskHelpers = useTaskHelpers(productivityData.tasks);
   const weeklyOutputHelpers = useWeeklyOutputHelpers(productivityData.weeklyOutputs);
 
@@ -84,5 +87,6 @@ export const useProductivity = () => {
     
     // Goals
     ...goalsManager,
+    ...goalCollaboration,
   };
 };

@@ -23,6 +23,7 @@ interface EnhancedGoalsSectionProps {
   onPermanentlyDeleteGoal: (id: string) => void;
   onUpdateGoalProgress: (goalId: string, progress: number) => void;
   onJoinWorkGoal: (goalId: string) => void;
+  onLeaveWorkGoal: (goalId: string) => void;
 }
 
 export const EnhancedGoalsSection = ({
@@ -39,7 +40,8 @@ export const EnhancedGoalsSection = ({
   onRestoreGoal,
   onPermanentlyDeleteGoal,
   onUpdateGoalProgress,
-  onJoinWorkGoal
+  onJoinWorkGoal,
+  onLeaveWorkGoal
 }: EnhancedGoalsSectionProps) => {
   const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
 
@@ -67,9 +69,14 @@ export const EnhancedGoalsSection = ({
   };
 
   const renderGoalCard = (goal: Goal) => {
-    const userRole = getUserRole(goal);
+    const goalUserRole = getUserRole(goal);
     const progressColor = goal.progress >= 80 ? 'bg-green-500' : 
                          goal.progress >= 50 ? 'bg-yellow-500' : 'bg-blue-500';
+    
+    // Determine if user owns the goal or is just assigned to it
+    const isGoalOwner = goal.userId === currentUserId;
+    const isAssignedUser = goalUserRole && !isGoalOwner;
+    const canManageGoal = isGoalOwner || isManager;
 
     return (
       <Card key={goal.id} className="hover:shadow-md transition-shadow">
@@ -83,9 +90,14 @@ export const EnhancedGoalsSection = ({
               <Badge variant="outline" className={getCategoryColor(goal.category)}>
                 {goal.category === 'work' ? 'Work' : 'Personal'}
               </Badge>
-              {userRole && (
+              {goalUserRole && (
                 <Badge variant="secondary" className="text-xs">
-                  {userRole}
+                  {goalUserRole}
+                </Badge>
+              )}
+              {isGoalOwner && (
+                <Badge variant="default" className="text-xs">
+                  Owner
                 </Badge>
               )}
             </div>
@@ -150,13 +162,31 @@ export const EnhancedGoalsSection = ({
 
           {/* Action Buttons */}
           <div className="flex gap-2 pt-2 border-t">
-            <Button variant="outline" size="sm" onClick={() => onEditGoal(goal.id, {})}>
-              Edit
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => onDeleteGoal(goal.id)}>
-              Delete
-            </Button>
-            {goal.category === 'work' && userRole && (
+            {/* Edit button - only for goal owners and managers */}
+            {canManageGoal && (
+              <Button variant="outline" size="sm" onClick={() => onEditGoal(goal.id, {})}>
+                Edit
+              </Button>
+            )}
+            
+            {/* Delete vs Leave button based on ownership */}
+            {canManageGoal ? (
+              <Button variant="outline" size="sm" onClick={() => onDeleteGoal(goal.id)}>
+                Delete
+              </Button>
+            ) : isAssignedUser ? (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => onLeaveWorkGoal(goal.id)}
+                className="text-orange-600 hover:bg-orange-50"
+              >
+                Leave Goal
+              </Button>
+            ) : null}
+            
+            {/* Update Progress - for all assigned users and owners */}
+            {(goalUserRole || isGoalOwner) && (
               <Button 
                 variant="outline" 
                 size="sm"

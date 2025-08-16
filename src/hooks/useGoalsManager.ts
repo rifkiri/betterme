@@ -116,8 +116,14 @@ export const useGoalsManager = ({
     }
   };
 
-  const deleteGoal = async (id: string) => {
+  const deleteGoal = async (id: string, isAssignedGoal: boolean = false) => {
     if (!userId) return;
+
+    if (isAssignedGoal) {
+      console.log('User cannot delete assigned goal directly. Use leaveWorkGoal instead.');
+      toast.error('You cannot delete this goal. You can only leave it if you are assigned to it.');
+      return;
+    }
 
     console.log('Soft deleting goal for user:', userId, 'goal:', id);
 

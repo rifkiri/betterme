@@ -28,7 +28,8 @@ const Goals = () => {
     notifications,
     acknowledgeNotification,
     acknowledgeAllNotifications,
-    joinWorkGoal
+    joinWorkGoal,
+    leaveWorkGoal
   } = useGoalCollaboration(profile?.id || '');
 
   // Set page title and load users
@@ -63,6 +64,7 @@ const Goals = () => {
         onPermanentlyDeleteGoal={permanentlyDeleteGoal}
         onUpdateGoalProgress={updateGoalProgress}
         onJoinWorkGoal={joinWorkGoal}
+        onLeaveWorkGoal={leaveWorkGoal}
       />
 
       {/* Goal Notifications */}

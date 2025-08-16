@@ -61,6 +61,7 @@ export interface WeeklyOutput {
 
 export interface Goal {
   id: string;
+  userId?: string; // Owner of the goal
   title: string;
   description?: string;
   targetValue: number;

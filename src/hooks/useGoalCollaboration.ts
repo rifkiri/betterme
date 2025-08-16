@@ -3,6 +3,7 @@ import { supabaseGoalAssignmentsService } from '@/services/SupabaseGoalAssignmen
 import { supabaseGoalNotificationsService } from '@/services/SupabaseGoalNotificationsService';
 import { useState, useEffect } from 'react';
 import { GoalAssignment, GoalNotification } from '@/types/productivity';
+import { toast } from 'sonner';
 
 export const useGoalCollaboration = (userId: string) => {
   const [assignments, setAssignments] = useState<GoalAssignment[]>([]);
@@ -106,6 +107,34 @@ export const useGoalCollaboration = (userId: string) => {
     }
   };
 
+  const leaveWorkGoal = async (goalId: string) => {
+    if (!userId) return;
+    
+    try {
+      // Find the user's assignment to this goal
+      const userAssignment = assignments.find(
+        assignment => assignment.goalId === goalId && assignment.userId === userId
+      );
+      
+      if (!userAssignment) {
+        toast.error('No assignment found for this goal');
+        return;
+      }
+      
+      // Delete the assignment
+      await supabaseGoalAssignmentsService.deleteGoalAssignment(userAssignment.id);
+      
+      // Refresh assignments and goals data
+      await loadAssignments();
+      await loadAllData();
+      
+      toast.success('Successfully left the work goal');
+    } catch (error) {
+      console.error('Error leaving work goal:', error);
+      toast.error('Failed to leave work goal');
+    }
+  };
+
   useEffect(() => {
     if (userId) {
       loadAssignments();
@@ -122,6 +151,7 @@ export const useGoalCollaboration = (userId: string) => {
     createAssignment,
     acknowledgeNotification,
     acknowledgeAllNotifications,
-    joinWorkGoal
+    joinWorkGoal,
+    leaveWorkGoal
   };
 };
