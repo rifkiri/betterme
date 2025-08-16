@@ -66,13 +66,39 @@ export interface Goal {
   targetValue: number;
   currentValue: number;
   unit: string;
-  category: 'daily' | 'weekly' | 'monthly' | 'custom';
+  category: 'work' | 'personal';
   deadline?: Date;
   createdDate: Date;
   completed: boolean;
   archived: boolean;
   progress: number; // 0-100, calculated from currentValue/targetValue
   linkedOutputIds?: string[]; // Link to weekly outputs
+  coachId?: string; // Manager responsible for goal oversight
+  leadIds?: string[]; // Users leading goal execution (managers or team members)
+  memberIds?: string[]; // Users executing goal tasks (managers or team members)  
+  createdBy?: string; // Manager who created the work goal
+  assignmentDate?: Date;
+}
+
+export interface GoalAssignment {
+  id: string;
+  goalId: string;
+  userId: string;
+  role: 'coach' | 'lead' | 'member';
+  assignedBy: string;
+  assignedDate: Date;
+  acknowledged: boolean;
+  selfAssigned: boolean;
+}
+
+export interface GoalNotification {
+  id: string;
+  userId: string;
+  goalId: string;
+  notificationType: 'assignment' | 'self_assignment';
+  role: 'coach' | 'lead' | 'member';
+  acknowledged: boolean;
+  createdDate: Date;
 }
 
 export interface MoodEntry {

@@ -191,12 +191,10 @@ export const TaskDetailsDialog = ({
                 
                 <div className="space-y-2">
                   {relatedGoals.map((goal) => {
-                    const getCategoryColor = (category: Goal['category']) => {
+const getCategoryColor = (category: Goal['category']) => {
                       switch (category) {
-                        case 'daily': return 'bg-blue-100 text-blue-800';
-                        case 'weekly': return 'bg-green-100 text-green-800';
-                        case 'monthly': return 'bg-purple-100 text-purple-800';
-                        case 'custom': return 'bg-orange-100 text-orange-800';
+                        case 'work': return 'bg-blue-100 text-blue-800';
+                        case 'personal': return 'bg-green-100 text-green-800';
                         default: return 'bg-gray-100 text-gray-800';
                       }
                     };

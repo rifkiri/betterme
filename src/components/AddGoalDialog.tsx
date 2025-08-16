@@ -20,7 +20,7 @@ const formSchema = z.object({
   description: z.string().optional(),
   targetValue: z.number().min(1, 'Target value must be at least 1'),
   unit: z.string().optional(),
-  category: z.enum(['daily', 'weekly', 'monthly', 'custom']),
+  category: z.enum(['work', 'personal']),
   deadline: z.date().optional(),
   linkedOutputIds: z.array(z.string()).optional(),
 });
@@ -37,12 +37,12 @@ export const AddGoalDialog = ({ onAddGoal, weeklyOutputs = [] }: AddGoalDialogPr
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+defaultValues: {
       title: '',
       description: '',
       targetValue: 1,
       unit: '',
-      category: 'weekly',
+      category: 'personal',
       deadline: undefined,
       linkedOutputIds: [],
     },
@@ -174,10 +174,8 @@ export const AddGoalDialog = ({ onAddGoal, weeklyOutputs = [] }: AddGoalDialogPr
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="daily">Daily</SelectItem>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                      <SelectItem value="custom">Custom</SelectItem>
+                      <SelectItem value="work">Work</SelectItem>
+                      <SelectItem value="personal">Personal</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

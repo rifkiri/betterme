@@ -21,7 +21,7 @@ const formSchema = z.object({
   targetValue: z.number().min(1, 'Target value must be at least 1'),
   currentValue: z.number().min(0, 'Current value must be at least 0'),
   unit: z.string().optional(),
-  category: z.enum(['daily', 'weekly', 'monthly', 'custom']),
+  category: z.enum(['work', 'personal']),
   deadline: z.date().optional(),
   linkedOutputIds: z.array(z.string()).optional(),
 });
@@ -207,10 +207,8 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="daily">Daily</SelectItem>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                      <SelectItem value="custom">Custom</SelectItem>
+                      <SelectItem value="work">Work</SelectItem>
+                      <SelectItem value="personal">Personal</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
