@@ -22,11 +22,8 @@ import { Goal, WeeklyOutput } from '@/types/productivity';
 const createFormSchema = (isJoiningMode: boolean) => z.object({
   title: isJoiningMode ? z.string().optional() : z.string().min(1, 'Title is required'),
   description: z.string().optional(),
-  targetValue: z.number().min(1, 'Target value must be at least 1'),
-  unit: z.string().optional(),
   category: z.enum(['work', 'personal']),
   deadline: z.date().optional(),
-  linkedOutputIds: z.array(z.string()).optional(),
   coachId: z.string().optional(),
   leadIds: z.array(z.string()).optional(),
   memberIds: z.array(z.string()).optional(),
@@ -77,11 +74,8 @@ export const EnhancedAddGoalDialog = ({
     defaultValues: {
       title: '',
       description: '',
-      targetValue: 1,
-      unit: '',
       category: 'personal',
       deadline: undefined,
-      linkedOutputIds: [],
       coachId: '',
       leadIds: [],
       memberIds: [],
@@ -124,14 +118,14 @@ export const EnhancedAddGoalDialog = ({
     onAddGoal({
       title: data.title,
       description: data.description,
-      targetValue: data.targetValue,
+      targetValue: 1,
       currentValue: 0,
-      unit: data.unit || '',
+      unit: '',
       category: data.category,
       deadline: deadline,
       completed: false,
       archived: false,
-      linkedOutputIds: data.linkedOutputIds || [],
+      linkedOutputIds: [],
       coachId: data.category === 'work' ? (selectedCoach || undefined) : undefined,
       leadIds: data.category === 'work' ? (selectedLeads.length > 0 ? selectedLeads : undefined) : undefined,
       memberIds: data.category === 'work' ? (finalMemberIds.length > 0 ? finalMemberIds : undefined) : undefined,
@@ -298,80 +292,45 @@ export const EnhancedAddGoalDialog = ({
             )}
 
             {!isJoiningMode && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <FormField
-                  control={form.control}
-                  name="targetValue"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Target Value</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="100" 
-                          {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
+              <FormField
+                control={form.control}
+                name="deadline"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Deadline (Optional)</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full pl-3 text-left font-normal bg-white",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 bg-white z-50" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) => date < new Date()}
+                          initialFocus
                         />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="unit"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Unit</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., hours, tasks" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="deadline"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Deadline (Optional)</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "w-full pl-3 text-left font-normal bg-white",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 bg-white z-50" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) => date < new Date()}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
 
             {/* Work Goal Role Assignments - only show for managers creating new goals */}
@@ -517,56 +476,6 @@ export const EnhancedAddGoalDialog = ({
               </Card>
             )}
 
-            {/* Link to Weekly Outputs - only show when creating new goals */}
-            {!isJoiningMode && availableOutputs.length > 0 && (
-              <div className="space-y-3">
-                <FormLabel className="text-base font-medium">Link to Weekly Outputs (Optional)</FormLabel>
-                <FormField
-                  control={form.control}
-                  name="linkedOutputIds"
-                  render={() => (
-                    <FormItem>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {availableOutputs.map((output) => (
-                          <FormField
-                            key={output.id}
-                            control={form.control}
-                            name="linkedOutputIds"
-                            render={({ field }) => {
-                              return (
-                                <FormItem
-                                  key={output.id}
-                                  className="flex flex-row items-center space-x-3 space-y-0"
-                                >
-                                  <FormControl>
-                                    <Checkbox
-                                      checked={field.value?.includes(output.id)}
-                                      onCheckedChange={(checked) => {
-                                        return checked
-                                          ? field.onChange([...(field.value || []), output.id])
-                                          : field.onChange(
-                                              field.value?.filter(
-                                                (value) => value !== output.id
-                                              )
-                                            );
-                                      }}
-                                    />
-                                  </FormControl>
-                                  <FormLabel className="text-sm font-normal cursor-pointer">
-                                    {output.title} ({output.progress}% complete)
-                                  </FormLabel>
-                                </FormItem>
-                              );
-                            }}
-                          />
-                        ))}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
 
             {/* Show work goal details when joining */}
             {isJoiningMode && selectedWorkGoal && (
