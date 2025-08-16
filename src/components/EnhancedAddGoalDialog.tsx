@@ -200,8 +200,8 @@ export const EnhancedAddGoalDialog = ({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Basic Information - Category moved above title */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Basic Information - Category above title vertically */}
+            <div className="space-y-4">
               <FormField
                 control={form.control}
                 name="category"
