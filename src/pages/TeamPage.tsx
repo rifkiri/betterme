@@ -3,7 +3,7 @@ import React from "react";
 import { AppNavigation } from "@/components/AppNavigation";
 import { ManagerDashboard } from "@/components/ManagerDashboard";
 
-const Manager = () => {
+const TeamPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <AppNavigation />
@@ -12,4 +12,4 @@ const Manager = () => {
   );
 };
 
-export default Manager;
+export default TeamPage;

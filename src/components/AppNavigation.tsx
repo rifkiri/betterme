@@ -64,7 +64,7 @@ export const AppNavigation = () => {
       .substring(0, 2);
   };
 
-  // Define navigation items based on user role
+// Define navigation items based on user role
   const getNavigationItems = () => {
     const baseItems = [{
       name: 'My Productivity',
@@ -78,10 +78,19 @@ export const AppNavigation = () => {
       description: 'Monthly analytics'
     }, {
       name: 'Our Team',
-      href: '/manager',
+      href: '/team',
       icon: Users,
       description: 'Team overview'
     }];
+
+    if (currentUser?.role === 'manager' || currentUser?.role === 'admin') {
+      baseItems.push({
+        name: 'Manager Dashboard',
+        href: '/manager',
+        icon: Settings,
+        description: 'Team workload and goal management'
+      });
+    }
 
     if (currentUser?.role === 'admin') {
       return [...baseItems, {
@@ -91,7 +100,6 @@ export const AppNavigation = () => {
         description: 'App preferences'
       }];
     } else {
-      // team-member and manager get the same base items now
       return baseItems;
     }
   };

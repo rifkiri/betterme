@@ -12,6 +12,7 @@ import NotFound from "./pages/NotFound";
 // Lazy load pages that aren't immediately needed
 const Index = lazy(() => import("./pages/Index"));
 const Monthly = lazy(() => import("./pages/Monthly"));
+const TeamPage = lazy(() => import("./pages/TeamPage"));
 const Manager = lazy(() => import("./pages/Manager"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Settings = lazy(() => import("./pages/Settings"));
@@ -79,6 +80,14 @@ const App = () => (
             element={
               <Suspense fallback={<PageSkeleton />}>
                 <Monthly />
+              </Suspense>
+            } 
+          />
+          <Route 
+            path="/team" 
+            element={
+              <Suspense fallback={<PageSkeleton />}>
+                <TeamPage />
               </Suspense>
             } 
           />
