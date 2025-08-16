@@ -105,7 +105,7 @@ export const useGoalsManager = ({
     try {
       if (isSupabaseAvailable()) {
         console.log('🎯 [PROGRESS UPDATE] Calling database update...');
-        await supabaseDataService.updateGoal(goalId, userId, optimisticUpdates);
+        await supabaseDataService.updateGoalProgress(goalId, userId, clampedProgress);
         console.log('🎯 [PROGRESS UPDATE] Database update completed');
         
         console.log('🎯 [PROGRESS UPDATE] Refreshing data...');
