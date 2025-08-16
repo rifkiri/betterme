@@ -111,7 +111,6 @@ export type Database = {
           completed: boolean
           created_by: string | null
           created_date: string
-          current_value: number
           deadline: string | null
           deleted_date: string | null
           description: string | null
@@ -120,7 +119,6 @@ export type Database = {
           lead_ids: string[] | null
           linked_output_ids: string[] | null
           member_ids: string[] | null
-          target_value: number
           title: string
           unit: string
           updated_at: string
@@ -134,7 +132,6 @@ export type Database = {
           completed?: boolean
           created_by?: string | null
           created_date?: string
-          current_value?: number
           deadline?: string | null
           deleted_date?: string | null
           description?: string | null
@@ -143,7 +140,6 @@ export type Database = {
           lead_ids?: string[] | null
           linked_output_ids?: string[] | null
           member_ids?: string[] | null
-          target_value?: number
           title: string
           unit?: string
           updated_at?: string
@@ -157,7 +153,6 @@ export type Database = {
           completed?: boolean
           created_by?: string | null
           created_date?: string
-          current_value?: number
           deadline?: string | null
           deleted_date?: string | null
           description?: string | null
@@ -166,7 +161,6 @@ export type Database = {
           lead_ids?: string[] | null
           linked_output_ids?: string[] | null
           member_ids?: string[] | null
-          target_value?: number
           title?: string
           unit?: string
           updated_at?: string
