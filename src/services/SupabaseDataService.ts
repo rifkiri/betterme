@@ -87,6 +87,10 @@ export class SupabaseDataService {
     return await supabaseGoalsService.getGoals(userId);
   }
 
+  async getAllGoals() {
+    return await supabaseGoalsService.getAllGoals();
+  }
+
   async addGoal(goal: any) {
     return await supabaseGoalsService.addGoal(goal);
   }

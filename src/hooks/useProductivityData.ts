@@ -11,6 +11,7 @@ export const useProductivityData = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [weeklyOutputs, setWeeklyOutputs] = useState<WeeklyOutput[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
+  const [allGoals, setAllGoals] = useState<Goal[]>([]);
   const [archivedHabits, setArchivedHabits] = useState<Habit[]>([]);
   const [deletedTasks, setDeletedTasks] = useState<Task[]>([]);
   const [deletedWeeklyOutputs, setDeletedWeeklyOutputs] = useState<WeeklyOutput[]>([]);
@@ -62,17 +63,19 @@ export const useProductivityData = () => {
         console.log('Loading data from Supabase for authenticated user...');
         
         // Load habits for the specific date and user
-        const [habitsData, tasksData, weeklyOutputsData, goalsData] = await Promise.all([
+        const [habitsData, tasksData, weeklyOutputsData, goalsData, allGoalsData] = await Promise.all([
           supabaseDataService.getHabitsForDate(userId, targetDate),
           supabaseDataService.getTasks(userId),
           supabaseDataService.getWeeklyOutputs(userId),
-          supabaseDataService.getGoals(userId)
+          supabaseDataService.getGoals(userId),
+          supabaseDataService.getAllGoals()
         ]);
 
         console.log('Loaded habits for user', userId, 'date:', format(targetDate, 'yyyy-MM-dd'), habitsData);
         console.log('Loaded tasks for user', userId, ':', tasksData);
         console.log('Loaded weekly outputs for user', userId, ':', weeklyOutputsData);
         console.log('Loaded goals for user', userId, ':', goalsData);
+        console.log('Loaded all goals:', allGoalsData);
 
         // Filter and set data ensuring user isolation
         setHabits(habitsData.filter(h => !h.archived && !h.isDeleted));
@@ -83,6 +86,7 @@ export const useProductivityData = () => {
         setDeletedWeeklyOutputs(weeklyOutputsData.filter(w => w.isDeleted));
         setGoals(goalsData.filter(g => !g.archived));
         setDeletedGoals(goalsData.filter(g => g.archived));
+        setAllGoals(allGoalsData.filter(g => !g.archived));
         
         console.log('Data loaded successfully for user:', userId);
       } else {
@@ -119,6 +123,8 @@ export const useProductivityData = () => {
     setWeeklyOutputs,
     goals,
     setGoals,
+    allGoals,
+    setAllGoals,
     archivedHabits,
     setArchivedHabits,
     deletedTasks,

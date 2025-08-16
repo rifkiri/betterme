@@ -3,7 +3,7 @@ import { Goal } from '@/types/productivity';
 
 export class SupabaseGoalsService {
   async getGoals(userId: string): Promise<Goal[]> {
-    console.log('Getting goals for user:', userId);
+    console.log('Getting user-specific goals for user:', userId);
     
     const { data, error } = await supabase
       .from('goals')
@@ -19,6 +19,44 @@ export class SupabaseGoalsService {
     console.log('Raw goals data for user', userId, ':', data);
 
 return data.map(goal => ({
+      id: goal.id,
+      title: goal.title,
+      description: goal.description,
+      targetValue: goal.target_value,
+      currentValue: goal.current_value,
+      unit: goal.unit,
+      category: goal.category as 'work' | 'personal',
+      deadline: goal.deadline ? new Date(goal.deadline) : undefined,
+      createdDate: new Date(goal.created_date),
+      completed: goal.completed,
+      archived: goal.archived,
+      progress: goal.target_value > 0 ? Math.round((goal.current_value / goal.target_value) * 100) : 0,
+      linkedOutputIds: goal.linked_output_ids || [],
+      userId: goal.user_id,
+      coachId: goal.coach_id,
+      leadIds: goal.lead_ids || [],
+      memberIds: goal.member_ids || [],
+      createdBy: goal.created_by,
+      assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined
+    }));
+  }
+
+  async getAllGoals(): Promise<Goal[]> {
+    console.log('Getting all goals for work goal joining');
+    
+    const { data, error } = await supabase
+      .from('goals')
+      .select('*')
+      .order('created_date', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching all goals:', error);
+      throw error;
+    }
+
+    console.log('Raw all goals data:', data);
+
+    return data.map(goal => ({
       id: goal.id,
       title: goal.title,
       description: goal.description,

@@ -13,6 +13,7 @@ const Goals = () => {
   
   const {
     goals,
+    allGoals,
     deletedGoals,
     weeklyOutputs,
     addGoal,
@@ -49,6 +50,7 @@ const Goals = () => {
       
       <EnhancedGoalsSection 
         goals={goals}
+        allGoals={allGoals}
         deletedGoals={deletedGoals}
         weeklyOutputs={weeklyOutputs}
         availableUsers={users}

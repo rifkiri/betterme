@@ -10,6 +10,7 @@ import { Target, Briefcase, User, Plus, CheckCircle } from 'lucide-react';
 
 interface EnhancedGoalsSectionProps {
   goals: Goal[];
+  allGoals: Goal[];
   deletedGoals: Goal[];
   weeklyOutputs: WeeklyOutput[];
   availableUsers?: Array<{ id: string; name: string; role: string }>;
@@ -26,6 +27,7 @@ interface EnhancedGoalsSectionProps {
 
 export const EnhancedGoalsSection = ({
   goals,
+  allGoals,
   deletedGoals,
   weeklyOutputs,
   availableUsers = [],
@@ -204,7 +206,7 @@ export const EnhancedGoalsSection = ({
                 <EnhancedAddGoalDialog
                   onAddGoal={onAddGoal}
                   onJoinWorkGoal={onJoinWorkGoal}
-                  goals={goals}
+                  goals={allGoals}
                   weeklyOutputs={weeklyOutputs}
                   availableUsers={availableUsers}
                   currentUserId={currentUserId}
