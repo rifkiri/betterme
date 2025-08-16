@@ -96,14 +96,10 @@ const getCategoryColor = (category: Goal['category']) => {
                 <p className="text-sm text-gray-600">{goal.description}</p>
               )}
 
-              <div className="grid grid-cols-2 gap-4 p-3 bg-gray-50 rounded-lg">
+              <div className="grid grid-cols-1 gap-4 p-3 bg-gray-50 rounded-lg">
                 <div>
-                  <p className="text-xs text-gray-500">Target</p>
-                  <p className="font-medium">{goal.targetValue} {goal.unit}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Current Progress</p>
-                  <p className="font-medium">{goal.currentValue} {goal.unit} ({goal.progress}%)</p>
+                  <p className="text-xs text-gray-500">Progress</p>
+                  <p className="font-medium">{goal.progress}%</p>
                 </div>
               </div>
 

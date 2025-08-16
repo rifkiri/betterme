@@ -118,9 +118,6 @@ export const EnhancedAddGoalDialog = ({
     onAddGoal({
       title: data.title,
       description: data.description,
-      targetValue: 1,
-      currentValue: 0,
-      unit: '',
       category: data.category,
       deadline: deadline,
       completed: false,

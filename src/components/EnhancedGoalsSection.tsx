@@ -142,15 +142,9 @@ export const EnhancedGoalsSection = ({
           {/* Goal Details */}
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-gray-500">Current:</span>
+              <span className="text-gray-500">Progress:</span>
               <span className="font-medium ml-1">
-                {goal.currentValue} {goal.unit}
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-500">Target:</span>
-              <span className="font-medium ml-1">
-                {goal.targetValue} {goal.unit}
+                {goal.progress}%
               </span>
             </div>
           </div>

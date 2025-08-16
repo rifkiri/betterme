@@ -178,7 +178,7 @@ const getCategoryColor = (category: Goal['category']) => {
                         </div>
                         <Progress value={goal.progress} className="h-2 mb-2" />
                         <div className="flex items-center justify-between text-xs text-gray-500">
-                          <span>{goal.currentValue}/{goal.targetValue} {goal.unit}</span>
+                          <span>Progress: {goal.progress}%</span>
                           {goal.deadline && (
                             <span>Due: {format(goal.deadline, 'MMM dd')}</span>
                           )}

@@ -64,15 +64,12 @@ export interface Goal {
   userId?: string; // Owner of the goal
   title: string;
   description?: string;
-  targetValue: number;
-  currentValue: number;
-  unit: string;
   category: 'work' | 'personal';
   deadline?: Date;
   createdDate: Date;
   completed: boolean;
   archived: boolean;
-  progress: number; // 0-100, calculated from currentValue/targetValue
+  progress: number; // 0-100, manually controlled
   linkedOutputIds?: string[]; // Link to weekly outputs
   coachId?: string; // Manager responsible for goal oversight
   leadIds?: string[]; // Users leading goal execution (managers or team members)

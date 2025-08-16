@@ -32,7 +32,7 @@ export const useGoalsManager = ({
     const newGoal: Goal = {
       ...goal,
       id: crypto.randomUUID(),
-      progress: goal.targetValue > 0 ? Math.round((goal.currentValue / goal.targetValue) * 100) : 0,
+      progress: 0, // Always start with 0% progress
     };
 
     console.log('Adding goal for user:', userId, newGoal);
@@ -81,11 +81,17 @@ export const useGoalsManager = ({
       return;
     }
 
-    console.log('Updating goal progress for user:', userId, 'goal:', goalId, 'progress:', newProgress);
+    // Clamp progress between 0 and 100
+    const clampedProgress = Math.max(0, Math.min(100, newProgress));
+
+    console.log('Updating goal progress for user:', userId, 'goal:', goalId, 'progress:', clampedProgress);
 
     try {
       if (isSupabaseAvailable()) {
-        await supabaseDataService.updateGoalProgress(goalId, userId, newProgress);
+        await supabaseDataService.updateGoal(goalId, userId, { 
+          progress: clampedProgress,
+          completed: clampedProgress === 100 
+        });
         await loadAllData();
         toast.success('Goal progress updated');
       } else {

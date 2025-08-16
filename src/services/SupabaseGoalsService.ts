@@ -22,15 +22,12 @@ return data.map(goal => ({
       id: goal.id,
       title: goal.title,
       description: goal.description,
-      targetValue: goal.target_value,
-      currentValue: goal.current_value,
-      unit: goal.unit,
       category: goal.category as 'work' | 'personal',
       deadline: goal.deadline ? new Date(goal.deadline) : undefined,
       createdDate: new Date(goal.created_date),
       completed: goal.completed,
       archived: goal.archived,
-      progress: goal.target_value > 0 ? Math.round((goal.current_value / goal.target_value) * 100) : 0,
+      progress: goal.current_value && goal.target_value ? Math.round((goal.current_value / goal.target_value) * 100) : 0,
       linkedOutputIds: goal.linked_output_ids || [],
       userId: goal.user_id,
       coachId: goal.coach_id,
@@ -129,15 +126,12 @@ return data.map(goal => ({
         id: goal.id,
         title: goal.title,
         description: goal.description,
-        targetValue: goal.target_value,
-        currentValue: goal.current_value,
-        unit: goal.unit,
         category: goal.category as 'work' | 'personal',
         deadline: goal.deadline ? new Date(goal.deadline) : undefined,
         createdDate: new Date(goal.created_date),
         completed: goal.completed,
         archived: goal.archived,
-        progress: goal.target_value > 0 ? Math.round((goal.current_value / goal.target_value) * 100) : 0,
+        progress: goal.progress || 0,
         linkedOutputIds: goal.linked_output_ids || [],
         userId: goal.user_id,
         coachId,
@@ -170,15 +164,12 @@ return data.map(goal => ({
       id: goal.id,
       title: goal.title,
       description: goal.description,
-      targetValue: goal.target_value,
-      currentValue: goal.current_value,
-      unit: goal.unit,
       category: goal.category as 'work' | 'personal',
       deadline: goal.deadline ? new Date(goal.deadline) : undefined,
       createdDate: new Date(goal.created_date),
       completed: goal.completed,
       archived: goal.archived,
-      progress: goal.target_value > 0 ? Math.round((goal.current_value / goal.target_value) * 100) : 0,
+        progress: goal.current_value && goal.target_value ? Math.round((goal.current_value / goal.target_value) * 100) : 0,
       linkedOutputIds: goal.linked_output_ids || [],
       userId: goal.user_id,
       coachId: goal.coach_id,
@@ -198,14 +189,12 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
         user_id: goal.userId,
         title: goal.title,
         description: goal.description,
-        target_value: goal.targetValue,
-        current_value: goal.currentValue,
-        unit: goal.unit,
         category: goal.category,
         deadline: goal.deadline ? goal.deadline.toISOString().split('T')[0] : null,
         completed: goal.completed,
         archived: goal.archived,
         is_deleted: false,
+        progress: goal.progress || 0,
         linked_output_ids: goal.linkedOutputIds || [],
         coach_id: goal.coachId,
         lead_ids: goal.leadIds || [],
@@ -227,15 +216,13 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
     
     if (updates.title) supabaseUpdates.title = updates.title;
     if (updates.description !== undefined) supabaseUpdates.description = updates.description;
-    if (updates.targetValue !== undefined) supabaseUpdates.target_value = updates.targetValue;
-    if (updates.currentValue !== undefined) supabaseUpdates.current_value = updates.currentValue;
-    if (updates.unit) supabaseUpdates.unit = updates.unit;
     if (updates.category) supabaseUpdates.category = updates.category;
     if (updates.deadline !== undefined) {
       supabaseUpdates.deadline = updates.deadline ? updates.deadline.toISOString().split('T')[0] : null;
     }
     if (updates.completed !== undefined) supabaseUpdates.completed = updates.completed;
     if (updates.archived !== undefined) supabaseUpdates.archived = updates.archived;
+    if (updates.progress !== undefined) supabaseUpdates.progress = updates.progress;
     if (updates.linkedOutputIds !== undefined) supabaseUpdates.linked_output_ids = updates.linkedOutputIds;
     if (updates.coachId !== undefined) supabaseUpdates.coach_id = updates.coachId;
     if (updates.leadIds !== undefined) supabaseUpdates.lead_ids = updates.leadIds;
@@ -292,8 +279,8 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
     return !assignmentError && !!assignment;
   }
 
-  async updateGoalProgress(id: string, userId: string, currentValue: number): Promise<void> {
-    console.log('Updating goal progress:', id, 'for user:', userId, 'to value:', currentValue);
+  async updateGoalProgress(id: string, userId: string, progress: number): Promise<void> {
+    console.log('Updating goal progress:', id, 'for user:', userId, 'to progress:', progress);
     
     // Check if user can update this goal
     const canUpdate = await this.canUserUpdateGoal(id, userId);
@@ -304,8 +291,8 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
     const { error } = await supabase
       .from('goals')
       .update({
-        current_value: currentValue,
-        completed: currentValue >= 100 // Auto-complete if progress reaches 100%
+        progress: Math.max(0, Math.min(100, progress)),
+        completed: progress >= 100 // Auto-complete if progress reaches 100%
       })
       .eq('id', id);
 

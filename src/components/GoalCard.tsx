@@ -74,7 +74,7 @@ const getCategoryColor = (category: Goal['category']) => {
                 </Badge>
               )}
               <span className="text-xs text-gray-500">
-                {goal.currentValue}/{goal.targetValue} {goal.unit}
+                Progress: {goal.progress}%
               </span>
             </div>
             {goal.deadline && (

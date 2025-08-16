@@ -121,7 +121,7 @@ export const GoalNotificationsDialog = ({
                             <p className="text-xs text-gray-600 mb-2">{goal.description}</p>
                           )}
                           <div className="flex items-center gap-4 text-xs text-gray-500">
-                            <span>Target: {goal.targetValue} {goal.unit}</span>
+                            <span>Progress: {goal.progress}%</span>
                             <span>Progress: {goal.progress}%</span>
                             {goal.deadline && (
                               <span>Deadline: {goal.deadline.toLocaleDateString()}</span>

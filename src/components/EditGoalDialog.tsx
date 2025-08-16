@@ -18,9 +18,6 @@ import { Goal, WeeklyOutput } from '@/types/productivity';
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
-  targetValue: z.number().min(1, 'Target value must be at least 1'),
-  currentValue: z.number().min(0, 'Current value must be at least 0'),
-  unit: z.string().optional(),
   category: z.enum(['work', 'personal']),
   deadline: z.date().optional(),
   linkedOutputIds: z.array(z.string()).optional(),
@@ -42,9 +39,6 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
     defaultValues: {
       title: goal.title,
       description: goal.description || '',
-      targetValue: goal.targetValue,
-      currentValue: goal.currentValue,
-      unit: goal.unit,
       category: goal.category,
       deadline: goal.deadline,
       linkedOutputIds: goal.linkedOutputIds || [],
@@ -56,9 +50,6 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
       form.reset({
         title: goal.title,
         description: goal.description || '',
-        targetValue: goal.targetValue,
-        currentValue: goal.currentValue,
-        unit: goal.unit,
         category: goal.category,
         deadline: goal.deadline,
         linkedOutputIds: goal.linkedOutputIds || [],
@@ -73,19 +64,11 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
       deadline = new Date(deadline.getFullYear(), deadline.getMonth(), deadline.getDate(), 23, 59, 59, 999);
     }
 
-    // Calculate progress based on current/target values
-    const progress = Math.min((data.currentValue / data.targetValue) * 100, 100);
-
     onSave(goal.id, {
       title: data.title,
       description: data.description,
-      targetValue: data.targetValue,
-      currentValue: data.currentValue,
-      unit: data.unit || '',
       category: data.category,
       deadline: deadline,
-      progress: progress,
-      completed: progress >= 100,
       linkedOutputIds: data.linkedOutputIds || [],
     });
     
@@ -140,59 +123,6 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="targetValue"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Target Value *</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        min="1" 
-                        {...field} 
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="currentValue"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Current Value</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        min="0" 
-                        {...field} 
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="unit"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Unit</FormLabel>
-                  <FormControl>
-                    <Input placeholder="tasks, hours, pages, etc." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
             <FormField
               control={form.control}

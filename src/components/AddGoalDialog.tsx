@@ -18,8 +18,6 @@ import { Goal, WeeklyOutput } from '@/types/productivity';
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
-  targetValue: z.number().min(1, 'Target value must be at least 1'),
-  unit: z.string().optional(),
   category: z.enum(['work', 'personal']),
   deadline: z.date().optional(),
   linkedOutputIds: z.array(z.string()).optional(),
@@ -40,8 +38,6 @@ export const AddGoalDialog = ({ onAddGoal, weeklyOutputs = [] }: AddGoalDialogPr
 defaultValues: {
       title: '',
       description: '',
-      targetValue: 1,
-      unit: '',
       category: 'personal',
       deadline: undefined,
       linkedOutputIds: [],
@@ -58,9 +54,6 @@ defaultValues: {
     onAddGoal({
       title: data.title,
       description: data.description,
-      targetValue: data.targetValue,
-      currentValue: 0,
-      unit: data.unit || '',
       category: data.category,
       deadline: deadline,
       completed: false,
@@ -126,40 +119,6 @@ defaultValues: {
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="targetValue"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Target Value *</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        min="1" 
-                        {...field} 
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="unit"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Unit</FormLabel>
-                    <FormControl>
-                      <Input placeholder="tasks, hours, pages, etc." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
 
             <FormField
               control={form.control}
