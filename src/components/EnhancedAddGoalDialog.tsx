@@ -345,20 +345,28 @@ export const EnhancedAddGoalDialog = ({
                     <UserCheck className="h-4 w-4 text-green-600" />
                     <span className="font-medium text-sm">Leads (Optional)</span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto">
-                    {availableUsers.map(user => (
-                      <div key={user.id} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`lead-${user.id}`}
-                          checked={selectedLeads.includes(user.id)}
-                          onCheckedChange={() => toggleUserSelection(user.id, 'lead')}
-                        />
-                        <label htmlFor={`lead-${user.id}`} className="text-sm">
-                          {user.name} ({user.role})
-                        </label>
-                      </div>
-                    ))}
-                  </div>
+                  <Select 
+                    value={selectedLeads.length > 0 ? selectedLeads[selectedLeads.length - 1] : ""} 
+                    onValueChange={(value) => {
+                      if (value && !selectedLeads.includes(value)) {
+                        setSelectedLeads(prev => [...prev, value]);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Select leads (optional)" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white z-50 max-h-60 overflow-y-auto">
+                      <SelectItem value="">Add a lead</SelectItem>
+                      {availableUsers
+                        .filter(user => !selectedLeads.includes(user.id))
+                        .map(user => (
+                          <SelectItem key={user.id} value={user.id}>
+                            {user.name} ({user.role})
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
                   <div className="flex flex-wrap gap-1">
                     {getSelectedUsers('lead').map(user => (
                       <Badge key={user.id} variant="secondary" className="bg-green-100 text-green-800">
@@ -385,20 +393,28 @@ export const EnhancedAddGoalDialog = ({
                     <User className="h-4 w-4 text-purple-600" />
                     <span className="font-medium text-sm">Members (Optional)</span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto">
-                    {availableUsers.map(user => (
-                      <div key={user.id} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`member-${user.id}`}
-                          checked={selectedMembers.includes(user.id)}
-                          onCheckedChange={() => toggleUserSelection(user.id, 'member')}
-                        />
-                        <label htmlFor={`member-${user.id}`} className="text-sm">
-                          {user.name} ({user.role})
-                        </label>
-                      </div>
-                    ))}
-                  </div>
+                  <Select 
+                    value={selectedMembers.length > 0 ? selectedMembers[selectedMembers.length - 1] : ""} 
+                    onValueChange={(value) => {
+                      if (value && !selectedMembers.includes(value)) {
+                        setSelectedMembers(prev => [...prev, value]);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Select members (optional)" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white z-50 max-h-60 overflow-y-auto">
+                      <SelectItem value="">Add a member</SelectItem>
+                      {availableUsers
+                        .filter(user => !selectedMembers.includes(user.id))
+                        .map(user => (
+                          <SelectItem key={user.id} value={user.id}>
+                            {user.name} ({user.role})
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
                   <div className="flex flex-wrap gap-1">
                     {getSelectedUsers('member').map(user => (
                       <Badge key={user.id} variant="secondary" className="bg-purple-100 text-purple-800">
