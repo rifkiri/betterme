@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -453,17 +453,17 @@ export type Database = {
         Returns: number
       }
       get_habits_for_date: {
-        Args: { user_id_param: string; target_date: string }
+        Args: { target_date: string; user_id_param: string }
         Returns: {
-          id: string
-          name: string
-          description: string
-          category: string
-          streak: number
           archived: boolean
-          is_deleted: boolean
-          created_at: string
+          category: string
           completed: boolean
+          created_at: string
+          description: string
+          id: string
+          is_deleted: boolean
+          name: string
+          streak: number
         }[]
       }
       get_user_role: {
@@ -477,9 +477,9 @@ export type Database = {
       toggle_habit_completion: {
         Args: {
           habit_id_param: string
-          user_id_param: string
-          target_date: string
           is_completed: boolean
+          target_date: string
+          user_id_param: string
         }
         Returns: boolean
       }
