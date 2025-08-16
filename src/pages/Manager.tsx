@@ -9,10 +9,16 @@ const Manager = () => {
   const [selectedEmployee, setSelectedEmployee] = useState<string>('');
   const [viewMode, setViewMode] = useState<'summary' | 'dashboard'>('summary');
   
-  const { profile: currentUser } = useUserProfile();
+  const { profile: currentUser, isLoading: profileLoading } = useUserProfile();
   const { teamData, isLoading } = useTeamDataRealtime();
 
   const isManager = currentUser?.role === 'manager' || currentUser?.role === 'admin';
+
+  console.log('Manager page - Profile loading state:', {
+    profileLoading,
+    currentUser: currentUser ? { id: currentUser.id, role: currentUser.role } : null,
+    isManager
+  });
 
   const handleViewMemberDetails = (memberId: string) => {
     console.log('Manager - handleViewMemberDetails called with:', memberId);
@@ -28,7 +34,30 @@ const Manager = () => {
     console.log('Manager - Set viewMode to dashboard for member:', memberId);
   };
 
-  // Restrict access to managers and admins only
+  // Show loading state while profile is loading
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <AppNavigation />
+        <div className="max-w-7xl mx-auto p-4 sm:p-6">
+          <Card>
+            <CardContent className="text-center py-8">
+              <div className="mb-4">
+                <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 animate-spin">
+                  <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                  </svg>
+                </div>
+                <p className="text-gray-600">Loading user profile...</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Restrict access to managers and admins only (only after profile is loaded)
   if (!isManager) {
     return (
       <div className="min-h-screen bg-gray-50">
