@@ -36,6 +36,8 @@ type FormData = z.infer<typeof formSchema>;
 
 interface EnhancedAddGoalDialogProps {
   onAddGoal: (goal: Omit<Goal, 'id' | 'progress' | 'createdDate'>) => void;
+  onJoinWorkGoal: (goalId: string) => void;
+  goals: Goal[];
   weeklyOutputs?: WeeklyOutput[];
   availableUsers?: Array<{ id: string; name: string; role: string }>;
   currentUserId?: string;
@@ -43,7 +45,9 @@ interface EnhancedAddGoalDialogProps {
 }
 
 export const EnhancedAddGoalDialog = ({ 
-  onAddGoal, 
+  onAddGoal,
+  onJoinWorkGoal,
+  goals,
   weeklyOutputs = [], 
   availableUsers = [],
   currentUserId,
@@ -53,13 +57,20 @@ export const EnhancedAddGoalDialog = ({
   const [selectedCoach, setSelectedCoach] = useState<string>('');
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
-
-  // Debug logging to check if current user is in the available users
-  console.log('Current User ID:', currentUserId);
-  console.log('Available Users:', availableUsers);
-  console.log('Current user in available users:', availableUsers.find(u => u.id === currentUserId));
+  const [selectedWorkGoal, setSelectedWorkGoal] = useState<string>('');
+  const [isJoiningMode, setIsJoiningMode] = useState(false);
 
   const isManager = userRole === 'manager' || userRole === 'admin';
+  const isEmployee = userRole === 'team-member';
+
+  // Filter available work goals for joining
+  const availableWorkGoals = goals.filter(goal => 
+    goal.category === 'work' &&
+    goal.progress < 100 &&
+    !goal.memberIds?.includes(currentUserId || '') &&
+    !goal.leadIds?.includes(currentUserId || '') &&
+    goal.coachId !== currentUserId
+  );
   
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -80,6 +91,15 @@ export const EnhancedAddGoalDialog = ({
   const watchCategory = form.watch('category');
 
   const onSubmit = (data: FormData) => {
+    // Handle joining existing work goal
+    if (isJoiningMode && selectedWorkGoal) {
+      onJoinWorkGoal(selectedWorkGoal);
+      form.reset();
+      setSelectedWorkGoal('');
+      setIsJoiningMode(false);
+      setOpen(false);
+      return;
+    }
     let deadline = data.deadline;
     if (deadline) {
       deadline = new Date(deadline.getFullYear(), deadline.getMonth(), deadline.getDate(), 23, 59, 59, 999);
@@ -111,6 +131,8 @@ export const EnhancedAddGoalDialog = ({
     setSelectedCoach('');
     setSelectedLeads([]);
     setSelectedMembers([]);
+    setSelectedWorkGoal('');
+    setIsJoiningMode(false);
     setOpen(false);
   };
 
@@ -162,10 +184,13 @@ export const EnhancedAddGoalDialog = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Target className="h-5 w-5 text-blue-600" />
-            Add New Goal
+            {isJoiningMode ? 'Join Work Goal' : 'Add New Goal'}
           </DialogTitle>
           <DialogDescription>
-            Create a new goal to track your progress. Work goals allow team collaboration.
+            {isJoiningMode 
+              ? 'Select an existing work goal to join as a member and contribute to its completion.'
+              : 'Create a new goal to track your progress. Work goals allow team collaboration.'
+            }
           </DialogDescription>
         </DialogHeader>
 
@@ -179,15 +204,25 @@ export const EnhancedAddGoalDialog = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <Select onValueChange={(value) => {
-                      field.onChange(value);
-                      // Auto-assign employee as member for work goals
-                      if (value === 'work' && userRole === 'team-member' && currentUserId) {
-                        setSelectedMembers(prev => 
-                          prev.includes(currentUserId) ? prev : [...prev, currentUserId]
-                        );
-                      }
-                    }} defaultValue={field.value}>
+                     <Select onValueChange={(value) => {
+                       field.onChange(value);
+                       // Handle work category selection for employees
+                       if (value === 'work' && isEmployee) {
+                         if (availableWorkGoals.length > 0) {
+                           setIsJoiningMode(true);
+                         } else {
+                           setIsJoiningMode(false);
+                         }
+                         // Auto-assign employee as member for work goals when creating
+                         if (currentUserId && !isJoiningMode) {
+                           setSelectedMembers(prev => 
+                             prev.includes(currentUserId) ? prev : [...prev, currentUserId]
+                           );
+                         }
+                       } else {
+                         setIsJoiningMode(false);
+                       }
+                     }} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger className="bg-white">
                           <SelectValue placeholder="Select category" />
@@ -208,9 +243,26 @@ export const EnhancedAddGoalDialog = ({
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Title</FormLabel>
+                    <FormLabel>
+                      {isJoiningMode && watchCategory === 'work' && isEmployee ? 'Select Work Goal' : 'Title'}
+                    </FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter goal title" {...field} />
+                      {isJoiningMode && watchCategory === 'work' && isEmployee ? (
+                        <Select value={selectedWorkGoal} onValueChange={setSelectedWorkGoal}>
+                          <SelectTrigger className="bg-white">
+                            <SelectValue placeholder="Select a work goal to join" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white z-50">
+                            {availableWorkGoals.map(goal => (
+                              <SelectItem key={goal.id} value={goal.id}>
+                                {goal.title} ({goal.progress}% complete)
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input placeholder="Enter goal title" {...field} />
+                      )}
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -218,101 +270,105 @@ export const EnhancedAddGoalDialog = ({
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Describe your goal..." 
-                      className="resize-none" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {!isJoiningMode && (
               <FormField
                 control={form.control}
-                name="targetValue"
+                name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Target Value</FormLabel>
+                    <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="number" 
-                        placeholder="100" 
-                        {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
+                      <Textarea 
+                        placeholder="Describe your goal..." 
+                        className="resize-none" 
+                        {...field} 
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+            )}
 
-              <FormField
-                control={form.control}
-                name="unit"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Unit</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., hours, tasks" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="deadline"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Deadline (Optional)</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full pl-3 text-left font-normal bg-white",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-white z-50" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) => date < new Date()}
-                          initialFocus
+            {!isJoiningMode && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="targetValue"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Target Value</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="100" 
+                          {...field}
+                          onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
                         />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            {/* Work Goal Role Assignments */}
-            {watchCategory === 'work' && isManager && (
+                <FormField
+                  control={form.control}
+                  name="unit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Unit</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., hours, tasks" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="deadline"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Deadline (Optional)</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full pl-3 text-left font-normal bg-white",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 bg-white z-50" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) => date < new Date()}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
+            {/* Work Goal Role Assignments - only show for managers creating new goals */}
+            {watchCategory === 'work' && isManager && !isJoiningMode && (
               <Card className="p-4 bg-blue-50 border-blue-200">
                 <h3 className="font-medium text-blue-900 mb-4 flex items-center gap-2">
                   <Users className="h-4 w-4" />
@@ -454,66 +510,76 @@ export const EnhancedAddGoalDialog = ({
               </Card>
             )}
 
-            {/* Link Weekly Outputs */}
-            {availableOutputs.length > 0 && (
-              <FormField
-                control={form.control}
-                name="linkedOutputIds"
-                render={() => (
-                  <FormItem>
-                    <FormLabel>Link to Weekly Outputs (Optional)</FormLabel>
-                    <div className="space-y-2 max-h-32 overflow-y-auto">
-                      {availableOutputs.map((output) => (
-                        <FormField
-                          key={output.id}
-                          control={form.control}
-                          name="linkedOutputIds"
-                          render={({ field }) => {
-                            return (
-                              <FormItem
-                                key={output.id}
-                                className="flex flex-row items-start space-x-3 space-y-0"
-                              >
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value?.includes(output.id)}
-                                    onCheckedChange={(checked) => {
-                                      return checked
-                                        ? field.onChange([...(field.value || []), output.id])
-                                        : field.onChange(
-                                            field.value?.filter(
-                                              (value) => value !== output.id
-                                            )
-                                          )
-                                    }}
-                                  />
-                                </FormControl>
-                                <div className="space-y-1 leading-none">
-                                  <label className="text-sm font-medium">
-                                    {output.title}
-                                  </label>
-                                  <p className="text-xs text-muted-foreground">
-                                    Progress: {output.progress}%
-                                  </p>
-                                </div>
-                              </FormItem>
-                            )
-                          }}
-                        />
-                      ))}
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            {/* Link to Weekly Outputs - only show when creating new goals */}
+            {!isJoiningMode && availableOutputs.length > 0 && (
+              <div className="space-y-3">
+                <FormLabel className="text-base font-medium">Link to Weekly Outputs (Optional)</FormLabel>
+                <FormField
+                  control={form.control}
+                  name="linkedOutputIds"
+                  render={() => (
+                    <FormItem>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {availableOutputs.map((output) => (
+                          <FormField
+                            key={output.id}
+                            control={form.control}
+                            name="linkedOutputIds"
+                            render={({ field }) => {
+                              return (
+                                <FormItem
+                                  key={output.id}
+                                  className="flex flex-row items-center space-x-3 space-y-0"
+                                >
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={field.value?.includes(output.id)}
+                                      onCheckedChange={(checked) => {
+                                        return checked
+                                          ? field.onChange([...(field.value || []), output.id])
+                                          : field.onChange(
+                                              field.value?.filter(
+                                                (value) => value !== output.id
+                                              )
+                                            );
+                                      }}
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-sm font-normal cursor-pointer">
+                                    {output.title} ({output.progress}% complete)
+                                  </FormLabel>
+                                </FormItem>
+                              );
+                            }}
+                          />
+                        ))}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             )}
 
-            <div className="flex justify-end gap-2 pt-4 border-t">
-              <Button variant="outline" type="button" onClick={() => setOpen(false)}>
+            {/* Show work goal details when joining */}
+            {isJoiningMode && selectedWorkGoal && (
+              <Card className="p-4 bg-blue-50 border-blue-200">
+                <h3 className="font-medium text-blue-900 mb-2">Joining Work Goal</h3>
+                <p className="text-sm text-blue-700">
+                  You will be added as a member to this work goal and can contribute to its completion.
+                </p>
+              </Card>
+            )}
+
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                Add Goal
+              <Button 
+                type="submit" 
+                disabled={isJoiningMode && !selectedWorkGoal}
+              >
+                {isJoiningMode ? 'Join Goal' : 'Add Goal'}
               </Button>
             </div>
           </form>
