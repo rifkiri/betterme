@@ -236,13 +236,19 @@ export const EnhancedGoalsSection = ({
 
         {/* Tabs positioned below header subtitle like TeamDashboard */}
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'completed')}>
-          <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
-            <TabsTrigger value="active" className="flex items-center gap-2">
-              <Target className="h-3 w-3" />
+          <TabsList className="flex w-full h-auto p-1 bg-gray-100 rounded-lg overflow-x-auto mb-6">
+            <TabsTrigger 
+              value="active" 
+              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 py-2 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <Target className="h-3 w-3 sm:h-4 sm:w-4" />
               Active ({activeGoals.length})
             </TabsTrigger>
-            <TabsTrigger value="completed" className="flex items-center gap-2">
-              <CheckCircle className="h-3 w-3" />
+            <TabsTrigger 
+              value="completed" 
+              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 py-2 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
               Completed ({completedGoals.length})
             </TabsTrigger>
           </TabsList>
