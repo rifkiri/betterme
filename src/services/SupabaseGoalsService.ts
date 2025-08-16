@@ -276,7 +276,7 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
       .select('id')
       .eq('goal_id', goalId)
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
     return !assignmentError && !!assignment;
   }
