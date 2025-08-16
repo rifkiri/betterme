@@ -91,6 +91,11 @@ export const EnhancedAddGoalDialog = ({
   const watchCategory = form.watch('category');
 
   const onSubmit = (data: FormData) => {
+    // Prevent employees from creating work goals
+    if (isEmployee && data.category === 'work' && !isJoiningMode) {
+      return; // Block submission
+    }
+
     // Handle joining existing work goal
     if (isJoiningMode && selectedWorkGoal) {
       onJoinWorkGoal(selectedWorkGoal);
@@ -204,25 +209,16 @@ export const EnhancedAddGoalDialog = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
-                     <Select onValueChange={(value) => {
-                       field.onChange(value);
-                       // Handle work category selection for employees
-                       if (value === 'work' && isEmployee) {
-                         if (availableWorkGoals.length > 0) {
-                           setIsJoiningMode(true);
-                         } else {
-                           setIsJoiningMode(false);
-                         }
-                         // Auto-assign employee as member for work goals when creating
-                         if (currentUserId && !isJoiningMode) {
-                           setSelectedMembers(prev => 
-                             prev.includes(currentUserId) ? prev : [...prev, currentUserId]
-                           );
-                         }
-                       } else {
-                         setIsJoiningMode(false);
-                       }
-                     }} defaultValue={field.value}>
+                      <Select onValueChange={(value) => {
+                        field.onChange(value);
+                        // Handle work category selection for employees
+                        if (value === 'work' && isEmployee) {
+                          // Employees can ONLY join work goals, never create them
+                          setIsJoiningMode(true);
+                        } else {
+                          setIsJoiningMode(false);
+                        }
+                      }} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger className="bg-white">
                           <SelectValue placeholder="Select category" />
@@ -247,22 +243,28 @@ export const EnhancedAddGoalDialog = ({
                       {isJoiningMode && watchCategory === 'work' && isEmployee ? 'Select Work Goal' : 'Title'}
                     </FormLabel>
                     <FormControl>
-                      {isJoiningMode && watchCategory === 'work' && isEmployee ? (
-                        <Select value={selectedWorkGoal} onValueChange={setSelectedWorkGoal}>
-                          <SelectTrigger className="bg-white">
-                            <SelectValue placeholder="Select a work goal to join" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-white z-50">
-                            {availableWorkGoals.map(goal => (
-                              <SelectItem key={goal.id} value={goal.id}>
-                                {goal.title} ({goal.progress}% complete)
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <Input placeholder="Enter goal title" {...field} />
-                      )}
+                       {isJoiningMode && watchCategory === 'work' && isEmployee ? (
+                         availableWorkGoals.length > 0 ? (
+                           <Select value={selectedWorkGoal} onValueChange={setSelectedWorkGoal}>
+                             <SelectTrigger className="bg-white">
+                               <SelectValue placeholder="Select a work goal to join" />
+                             </SelectTrigger>
+                             <SelectContent className="bg-white z-50">
+                               {availableWorkGoals.map(goal => (
+                                 <SelectItem key={goal.id} value={goal.id}>
+                                   {goal.title} ({goal.progress}% complete)
+                                 </SelectItem>
+                               ))}
+                             </SelectContent>
+                           </Select>
+                         ) : (
+                           <div className="p-3 text-sm text-muted-foreground bg-muted rounded-md">
+                             No work goals available to join. Please contact your manager to create work goals.
+                           </div>
+                         )
+                       ) : (
+                         <Input placeholder="Enter goal title" {...field} />
+                       )}
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -577,7 +579,10 @@ export const EnhancedAddGoalDialog = ({
               </Button>
               <Button 
                 type="submit" 
-                disabled={isJoiningMode && !selectedWorkGoal}
+                disabled={
+                  (isJoiningMode && !selectedWorkGoal) || 
+                  (isEmployee && watchCategory === 'work' && availableWorkGoals.length === 0)
+                }
               >
                 {isJoiningMode ? 'Join Goal' : 'Add Goal'}
               </Button>
