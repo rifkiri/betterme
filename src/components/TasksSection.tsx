@@ -74,25 +74,23 @@ export const TasksSection = ({
 
   return (
     <Card className="h-fit">
-      <CardHeader className="pb-2 sm:pb-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div className="min-w-0">
-            <CardTitle className="text-base sm:text-lg">Tasks</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">
-              {isToday(selectedTaskDate) ? 'Today' : format(selectedTaskDate, 'MMM dd, yyyy')}
-            </CardDescription>
-          </div>
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            <DeletedTasksDialog 
-              deletedTasks={deletedTasks}
-              onRestoreTask={onRestoreTask}
-              onPermanentlyDeleteTask={onPermanentlyDeleteTask}
-            />
-            <AddTaskDialog 
-              onAddTask={(task) => onAddTask({ ...task, dueDate: selectedTaskDate, originalDueDate: selectedTaskDate })} 
-              weeklyOutputs={weeklyOutputs}
-            />
-          </div>
+      <CardHeader className="space-y-4 pb-2 sm:pb-4">
+        <div>
+          <CardTitle className="text-base sm:text-lg">Tasks</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
+            {isToday(selectedTaskDate) ? 'Today' : format(selectedTaskDate, 'MMM dd, yyyy')}
+          </CardDescription>
+        </div>
+        <div className="flex items-center gap-1 sm:gap-2">
+          <DeletedTasksDialog 
+            deletedTasks={deletedTasks}
+            onRestoreTask={onRestoreTask}
+            onPermanentlyDeleteTask={onPermanentlyDeleteTask}
+          />
+          <AddTaskDialog 
+            onAddTask={(task) => onAddTask({ ...task, dueDate: selectedTaskDate, originalDueDate: selectedTaskDate })} 
+            weeklyOutputs={weeklyOutputs}
+          />
         </div>
       </CardHeader>
       <CardContent className="space-y-2 sm:space-y-3">

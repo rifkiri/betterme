@@ -96,8 +96,8 @@ export const WeeklyOutputsSection = ({
 
   return (
     <Card className="h-fit">
-      <CardHeader className="flex flex-row items-center justify-between pb-2 sm:pb-4">
-        <div className="min-w-0">
+      <CardHeader className="space-y-4 pb-2 sm:pb-4">
+        <div>
           <CardTitle className="text-base sm:text-lg">
             <span className="truncate">Weekly Outputs</span>
           </CardTitle>
@@ -105,7 +105,7 @@ export const WeeklyOutputsSection = ({
             {isCurrentWeek ? 'This Week' : format(weekStart, 'MMM dd')} - {format(weekEnd, 'MMM dd, yyyy')}
           </CardDescription>
         </div>
-        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+        <div className="flex items-center gap-1 sm:gap-2">
           <DeletedWeeklyOutputsDialog 
             deletedWeeklyOutputs={deletedWeeklyOutputs} 
             onRestore={onRestoreWeeklyOutput} 
