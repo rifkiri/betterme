@@ -90,27 +90,61 @@ return data.map(goal => ({
     const allGoals = Array.from(allGoalsMap.values());
     console.log('Combined accessible goals for user', userId, ':', allGoals);
 
-    return allGoals.map(goal => ({
-      id: goal.id,
-      title: goal.title,
-      description: goal.description,
-      targetValue: goal.target_value,
-      currentValue: goal.current_value,
-      unit: goal.unit,
-      category: goal.category as 'work' | 'personal',
-      deadline: goal.deadline ? new Date(goal.deadline) : undefined,
-      createdDate: new Date(goal.created_date),
-      completed: goal.completed,
-      archived: goal.archived,
-      progress: goal.target_value > 0 ? Math.round((goal.current_value / goal.target_value) * 100) : 0,
-      linkedOutputIds: goal.linked_output_ids || [],
-      userId: goal.user_id,
-      coachId: goal.coach_id,
-      leadIds: goal.lead_ids || [],
-      memberIds: goal.member_ids || [],
-      createdBy: goal.created_by,
-      assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined
+    // Now fetch all assignments for each goal to build role arrays
+    const goalsWithRoles = await Promise.all(allGoals.map(async (goal) => {
+      // Get all assignments for this goal
+      const { data: assignments, error: assignmentsError } = await supabase
+        .from('goal_assignments')
+        .select('user_id, role')
+        .eq('goal_id', goal.id);
+
+      if (assignmentsError) {
+        console.error('Error fetching assignments for goal', goal.id, ':', assignmentsError);
+        // Continue with empty assignments if there's an error
+      }
+
+      // Build role arrays from assignments
+      let coachId = goal.coach_id;
+      let leadIds = goal.lead_ids || [];
+      let memberIds = goal.member_ids || [];
+
+      if (assignments && assignments.length > 0) {
+        coachId = assignments.find(a => a.role === 'coach')?.user_id || coachId;
+        leadIds = assignments.filter(a => a.role === 'lead').map(a => a.user_id);
+        memberIds = assignments.filter(a => a.role === 'member').map(a => a.user_id);
+      }
+
+      console.log('Goal role data:', {
+        goalId: goal.id,
+        title: goal.title,
+        assignments,
+        builtRoles: { coachId, leadIds, memberIds }
+      });
+
+      return {
+        id: goal.id,
+        title: goal.title,
+        description: goal.description,
+        targetValue: goal.target_value,
+        currentValue: goal.current_value,
+        unit: goal.unit,
+        category: goal.category as 'work' | 'personal',
+        deadline: goal.deadline ? new Date(goal.deadline) : undefined,
+        createdDate: new Date(goal.created_date),
+        completed: goal.completed,
+        archived: goal.archived,
+        progress: goal.target_value > 0 ? Math.round((goal.current_value / goal.target_value) * 100) : 0,
+        linkedOutputIds: goal.linked_output_ids || [],
+        userId: goal.user_id,
+        coachId,
+        leadIds,
+        memberIds,
+        createdBy: goal.created_by,
+        assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined
+      };
     }));
+
+    return goalsWithRoles;
   }
 
   async getAllGoals(): Promise<Goal[]> {
