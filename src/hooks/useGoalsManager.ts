@@ -84,21 +84,53 @@ export const useGoalsManager = ({
     // Clamp progress between 0 and 100
     const clampedProgress = Math.max(0, Math.min(100, newProgress));
 
-    console.log('Updating goal progress for user:', userId, 'goal:', goalId, 'progress:', clampedProgress);
+    console.log('🎯 [PROGRESS UPDATE] Starting - Goal:', goalId, 'Progress:', clampedProgress, 'User:', userId);
+
+    // Optimistic UI update - immediately update local state
+    const optimisticUpdates = { 
+      progress: clampedProgress,
+      completed: clampedProgress === 100 
+    };
+    
+    setGoals(prevGoals => 
+      prevGoals.map(goal => 
+        goal.id === goalId 
+          ? { ...goal, ...optimisticUpdates }
+          : goal
+      )
+    );
+    
+    console.log('🎯 [PROGRESS UPDATE] Optimistic UI update applied');
 
     try {
       if (isSupabaseAvailable()) {
-        await supabaseDataService.updateGoal(goalId, userId, { 
-          progress: clampedProgress,
-          completed: clampedProgress === 100 
-        });
+        console.log('🎯 [PROGRESS UPDATE] Calling database update...');
+        await supabaseDataService.updateGoal(goalId, userId, optimisticUpdates);
+        console.log('🎯 [PROGRESS UPDATE] Database update completed');
+        
+        console.log('🎯 [PROGRESS UPDATE] Refreshing data...');
         await loadAllData();
+        console.log('🎯 [PROGRESS UPDATE] Data refresh completed');
+        
         toast.success('Goal progress updated');
       } else {
+        // Revert optimistic update on error
+        setGoals(prevGoals => 
+          prevGoals.map(goal => 
+            goal.id === goalId 
+              ? { ...goal, progress: goal.progress, completed: goal.completed }
+              : goal
+          )
+        );
         toast.error('Please sign in to update goals');
       }
     } catch (error) {
-      console.error('Failed to update goal progress for user', userId, ':', error);
+      console.error('🎯 [PROGRESS UPDATE] Failed to update goal progress:', error);
+      
+      // Revert optimistic update on error
+      console.log('🎯 [PROGRESS UPDATE] Reverting optimistic update due to error');
+      await loadAllData(); // Reload fresh data to revert changes
+      
       toast.error('Failed to update goal progress');
     }
   };

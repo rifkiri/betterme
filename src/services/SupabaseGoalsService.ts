@@ -282,26 +282,34 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
   }
 
   async updateGoalProgress(id: string, userId: string, progress: number): Promise<void> {
-    console.log('Updating goal progress:', id, 'for user:', userId, 'to progress:', progress);
+    console.log('🔥 [DB] Updating goal progress:', id, 'for user:', userId, 'to progress:', progress);
     
     // Check if user can update this goal
     const canUpdate = await this.canUserUpdateGoal(id, userId);
     if (!canUpdate) {
+      console.log('🔥 [DB] Permission denied for goal progress update');
       throw new Error('User does not have permission to update this goal progress');
     }
 
-    const { error } = await supabase
+    console.log('🔥 [DB] Permission granted, updating database...');
+    const updateData = {
+      progress: Math.max(0, Math.min(100, progress)),
+      completed: progress >= 100 // Auto-complete if progress reaches 100%
+    };
+
+    const { data, error } = await supabase
       .from('goals')
-      .update({
-        progress: Math.max(0, Math.min(100, progress)),
-        completed: progress >= 100 // Auto-complete if progress reaches 100%
-      })
-      .eq('id', id);
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
 
     if (error) {
-      console.error('Error updating goal progress:', error);
+      console.error('🔥 [DB] Error updating goal progress:', error);
       throw error;
     }
+
+    console.log('🔥 [DB] Goal progress updated successfully:', data);
   }
 
   async permanentlyDeleteGoal(id: string, userId: string): Promise<void> {
