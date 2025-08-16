@@ -41,6 +41,78 @@ return data.map(goal => ({
     }));
   }
 
+  async getUserAccessibleGoals(userId: string): Promise<Goal[]> {
+    console.log('Getting all accessible goals for user:', userId);
+    
+    // Get goals owned by user
+    const { data: ownedGoals, error: ownedError } = await supabase
+      .from('goals')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_date', { ascending: false });
+
+    if (ownedError) {
+      console.error('Error fetching owned goals:', ownedError);
+      throw ownedError;
+    }
+
+    // Get goals assigned to user via goal_assignments
+    const { data: assignedGoals, error: assignedError } = await supabase
+      .from('goals')
+      .select(`
+        *,
+        goal_assignments!inner(
+          user_id,
+          role
+        )
+      `)
+      .eq('goal_assignments.user_id', userId)
+      .order('created_date', { ascending: false });
+
+    if (assignedError) {
+      console.error('Error fetching assigned goals:', assignedError);
+      throw assignedError;
+    }
+
+    // Combine and deduplicate goals
+    const allGoalsMap = new Map();
+    
+    // Add owned goals
+    ownedGoals?.forEach(goal => {
+      allGoalsMap.set(goal.id, goal);
+    });
+    
+    // Add assigned goals (will overwrite if already exists)
+    assignedGoals?.forEach(goal => {
+      allGoalsMap.set(goal.id, goal);
+    });
+
+    const allGoals = Array.from(allGoalsMap.values());
+    console.log('Combined accessible goals for user', userId, ':', allGoals);
+
+    return allGoals.map(goal => ({
+      id: goal.id,
+      title: goal.title,
+      description: goal.description,
+      targetValue: goal.target_value,
+      currentValue: goal.current_value,
+      unit: goal.unit,
+      category: goal.category as 'work' | 'personal',
+      deadline: goal.deadline ? new Date(goal.deadline) : undefined,
+      createdDate: new Date(goal.created_date),
+      completed: goal.completed,
+      archived: goal.archived,
+      progress: goal.target_value > 0 ? Math.round((goal.current_value / goal.target_value) * 100) : 0,
+      linkedOutputIds: goal.linked_output_ids || [],
+      userId: goal.user_id,
+      coachId: goal.coach_id,
+      leadIds: goal.lead_ids || [],
+      memberIds: goal.member_ids || [],
+      createdBy: goal.created_by,
+      assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined
+    }));
+  }
+
   async getAllGoals(): Promise<Goal[]> {
     console.log('Getting all goals for work goal joining');
     
@@ -141,11 +213,16 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
       supabaseUpdates.deleted_date = new Date().toISOString();
     }
 
+    // Check if user owns the goal OR is assigned to it
+    const canUpdate = await this.canUserUpdateGoal(id, userId);
+    if (!canUpdate) {
+      throw new Error('User does not have permission to update this goal');
+    }
+
     const { error } = await supabase
       .from('goals')
       .update(supabaseUpdates)
-      .eq('id', id)
-      .eq('user_id', userId);
+      .eq('id', id);
 
     if (error) {
       console.error('Error updating goal:', error);
@@ -153,17 +230,46 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
     }
   }
 
+  private async canUserUpdateGoal(goalId: string, userId: string): Promise<boolean> {
+    // Check if user owns the goal
+    const { data: ownedGoal, error: ownedError } = await supabase
+      .from('goals')
+      .select('id')
+      .eq('id', goalId)
+      .eq('user_id', userId)
+      .single();
+
+    if (!ownedError && ownedGoal) {
+      return true;
+    }
+
+    // Check if user is assigned to the goal
+    const { data: assignment, error: assignmentError } = await supabase
+      .from('goal_assignments')
+      .select('id')
+      .eq('goal_id', goalId)
+      .eq('user_id', userId)
+      .single();
+
+    return !assignmentError && !!assignment;
+  }
+
   async updateGoalProgress(id: string, userId: string, currentValue: number): Promise<void> {
     console.log('Updating goal progress:', id, 'for user:', userId, 'to value:', currentValue);
     
+    // Check if user can update this goal
+    const canUpdate = await this.canUserUpdateGoal(id, userId);
+    if (!canUpdate) {
+      throw new Error('User does not have permission to update this goal progress');
+    }
+
     const { error } = await supabase
       .from('goals')
       .update({
         current_value: currentValue,
         completed: currentValue >= 100 // Auto-complete if progress reaches 100%
       })
-      .eq('id', id)
-      .eq('user_id', userId);
+      .eq('id', id);
 
     if (error) {
       console.error('Error updating goal progress:', error);

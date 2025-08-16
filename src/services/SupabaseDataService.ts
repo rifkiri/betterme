@@ -84,7 +84,7 @@ export class SupabaseDataService {
 
   // Goals management
   async getGoals(userId: string) {
-    return await supabaseGoalsService.getGoals(userId);
+    return await supabaseGoalsService.getUserAccessibleGoals(userId);
   }
 
   async getAllGoals() {

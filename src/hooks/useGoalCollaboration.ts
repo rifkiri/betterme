@@ -8,6 +8,7 @@ export const useGoalCollaboration = (userId: string) => {
   const [assignments, setAssignments] = useState<GoalAssignment[]>([]);
   const [notifications, setNotifications] = useState<GoalNotification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const { loadAllData } = useProductivity();
 
   const loadAssignments = async () => {
     if (!userId) return;
@@ -96,6 +97,9 @@ export const useGoalCollaboration = (userId: string) => {
         acknowledged: true,
         selfAssigned: true
       });
+      
+      // Refresh goals data to show the newly joined goal
+      await loadAllData();
     } catch (error) {
       console.error('Error joining work goal:', error);
       throw error;
