@@ -206,15 +206,38 @@ export const EnhancedGoalsSection = ({
               </Button>
             )}
             
-            {/* Update Progress - for all assigned users and owners */}
+            {/* Progress Controls - for all assigned users and owners */}
             {(goalUserRole || isGoalOwner) && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => onUpdateGoalProgress(goal.id, goal.progress + 10)}
-              >
-                Update Progress
-              </Button>
+              <div className="flex items-center space-x-2">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => onUpdateGoalProgress(goal.id, goal.progress - 10)} 
+                  disabled={goal.progress <= 0} 
+                  className="text-xs px-2 py-1"
+                >
+                  -10%
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => onUpdateGoalProgress(goal.id, goal.progress + 10)} 
+                  disabled={goal.progress >= 100} 
+                  className="text-xs px-2 py-1"
+                >
+                  +10%
+                </Button>
+                {goal.progress !== 100 && (
+                  <Button 
+                    size="sm" 
+                    variant="default" 
+                    onClick={() => onUpdateGoalProgress(goal.id, 100)} 
+                    className="text-xs px-2 py-1"
+                  >
+                    Achieved
+                  </Button>
+                )}
+              </div>
             )}
           </div>
         </CardContent>
