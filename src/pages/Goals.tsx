@@ -9,7 +9,7 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 
 const Goals = () => {
   const { profile } = useUserProfile();
-  const { users } = useUsersData();
+  const { users, loadUsers } = useUsersData();
   
   const {
     goals,
@@ -30,15 +30,20 @@ const Goals = () => {
     joinWorkGoal
   } = useGoalCollaboration(profile?.id || '');
 
-  // Set page title
+  // Set page title and load users
   useEffect(() => {
     document.title = "My Goals - BetterMe";
+    
+    // Load users for goal role assignments
+    if (profile?.role === 'manager' || profile?.role === 'admin') {
+      loadUsers();
+    }
     
     // Cleanup: restore original title when leaving the page
     return () => {
       document.title = "BetterMe";
     };
-  }, []);
+  }, [profile?.role]);
 
   return (
     <div className="min-h-screen bg-gray-50">
