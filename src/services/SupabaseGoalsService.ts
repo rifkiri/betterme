@@ -41,7 +41,7 @@ return data.map(goal => ({
     }));
   }
 
-  async addGoal(goal: Goal & { userId: string }): Promise<void> {
+async addGoal(goal: Goal & { userId: string }): Promise<void> {
     console.log('Adding goal for user:', goal.userId, goal);
     
     const { error } = await supabase
@@ -58,7 +58,12 @@ return data.map(goal => ({
         completed: goal.completed,
         archived: goal.archived,
         is_deleted: false,
-        linked_output_ids: goal.linkedOutputIds || []
+        linked_output_ids: goal.linkedOutputIds || [],
+        coach_id: goal.coachId,
+        lead_ids: goal.leadIds || [],
+        member_ids: goal.memberIds || [],
+        created_by: goal.createdBy,
+        assignment_date: goal.assignmentDate ? goal.assignmentDate.toISOString() : null
       });
 
     if (error) {
@@ -84,6 +89,13 @@ return data.map(goal => ({
     if (updates.completed !== undefined) supabaseUpdates.completed = updates.completed;
     if (updates.archived !== undefined) supabaseUpdates.archived = updates.archived;
     if (updates.linkedOutputIds !== undefined) supabaseUpdates.linked_output_ids = updates.linkedOutputIds;
+    if (updates.coachId !== undefined) supabaseUpdates.coach_id = updates.coachId;
+    if (updates.leadIds !== undefined) supabaseUpdates.lead_ids = updates.leadIds;
+    if (updates.memberIds !== undefined) supabaseUpdates.member_ids = updates.memberIds;
+    if (updates.createdBy !== undefined) supabaseUpdates.created_by = updates.createdBy;
+    if (updates.assignmentDate !== undefined) {
+      supabaseUpdates.assignment_date = updates.assignmentDate ? updates.assignmentDate.toISOString() : null;
+    }
 
     // Handle soft delete
     if (updates.archived !== undefined && updates.archived) {

@@ -4,13 +4,20 @@ import { useProductivity } from '@/hooks/useProductivity';
 import { QuickStatsCard } from './QuickStatsCard';
 import { FeelingTracker } from './FeelingTracker';
 import { HabitsSection } from './HabitsSection';
-import { GoalsSection } from './GoalsSection';
+import { EnhancedGoalsSection } from './EnhancedGoalsSection';
+import { GoalNotificationsDialog } from './GoalNotificationsDialog';
+import { useGoalCollaboration } from '@/hooks/useGoalCollaboration';
+import { useUsersData } from '@/hooks/useUsersData';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { WeeklyOutputsSection } from './WeeklyOutputsSection';
 import { TasksSection } from './TasksSection';
 import { Goal } from '@/types/productivity';
 
 export const SimpleEmployeeDashboard = () => {
   console.log('SimpleEmployeeDashboard rendering...');
+  
+  const { profile } = useUserProfile();
+  const { users } = useUsersData();
   
   const {
     habits,
@@ -56,6 +63,13 @@ export const SimpleEmployeeDashboard = () => {
     permanentlyDeleteWeeklyOutput,
     getOverdueWeeklyOutputs
   } = useProductivity();
+
+  const {
+    notifications,
+    acknowledgeNotification,
+    acknowledgeAllNotifications,
+    joinWorkGoal
+  } = useGoalCollaboration(profile?.id || '');
 
   const overdueGoals = getOverdueGoals();
 
@@ -139,21 +153,22 @@ export const SimpleEmployeeDashboard = () => {
             />
           </div>
 
-          {/* New Goals Section */}
+          {/* Enhanced Goals Section */}
           <div className="lg:col-span-1">
-            <GoalsSection 
+            <EnhancedGoalsSection 
               goals={goals}
               deletedGoals={deletedGoals}
-              overdueGoals={overdueGoals}
-              tasks={tasks}
               weeklyOutputs={weeklyOutputs}
+              availableUsers={users}
+              currentUserId={profile?.id}
+              userRole={profile?.role}
               onAddGoal={addGoal}
               onEditGoal={editGoal}
-              onUpdateProgress={updateGoalProgress}
-              onMoveGoal={moveGoal}
               onDeleteGoal={deleteGoal}
               onRestoreGoal={restoreGoal}
               onPermanentlyDeleteGoal={permanentlyDeleteGoal}
+              onUpdateGoalProgress={updateGoalProgress}
+              onJoinWorkGoal={joinWorkGoal}
             />
           </div>
 
@@ -192,6 +207,14 @@ export const SimpleEmployeeDashboard = () => {
             />
           </div>
         </div>
+
+        {/* Goal Notifications */}
+        <GoalNotificationsDialog
+          notifications={notifications}
+          goals={goals}
+          onAcknowledge={acknowledgeNotification}
+          onAcknowledgeAll={acknowledgeAllNotifications}
+        />
       </div>
     </div>
   );
