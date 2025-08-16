@@ -56,7 +56,7 @@ return data.map(goal => ({
     }
 
     // Get work goals where user has active assignments (regardless of ownership)
-    const { data: workGoals, error: workError } = await supabase
+    const { data: assignedWorkGoals, error: assignedWorkError } = await supabase
       .from('goals')
       .select(`
         *,
@@ -70,12 +70,26 @@ return data.map(goal => ({
       .eq('is_deleted', false)
       .order('created_date', { ascending: false });
 
-    if (workError) {
-      console.error('Error fetching work goals:', workError);
-      throw workError;
+    if (assignedWorkError) {
+      console.error('Error fetching assigned work goals:', assignedWorkError);
+      throw assignedWorkError;
     }
 
-    // Combine goals
+    // Get work goals owned by the user (even if not assigned to anyone)
+    const { data: ownedWorkGoals, error: ownedWorkError } = await supabase
+      .from('goals')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('category', 'work')
+      .eq('is_deleted', false)
+      .order('created_date', { ascending: false });
+
+    if (ownedWorkError) {
+      console.error('Error fetching owned work goals:', ownedWorkError);
+      throw ownedWorkError;
+    }
+
+    // Combine goals using Map to avoid duplicates
     const allGoalsMap = new Map();
     
     // Add personal goals
@@ -83,8 +97,13 @@ return data.map(goal => ({
       allGoalsMap.set(goal.id, goal);
     });
     
-    // Add work goals (only those with active assignments)
-    workGoals?.forEach(goal => {
+    // Add assigned work goals
+    assignedWorkGoals?.forEach(goal => {
+      allGoalsMap.set(goal.id, goal);
+    });
+
+    // Add owned work goals (this will catch goals like "sewatama")
+    ownedWorkGoals?.forEach(goal => {
       allGoalsMap.set(goal.id, goal);
     });
 
