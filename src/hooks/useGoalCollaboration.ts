@@ -111,9 +111,10 @@ export const useGoalCollaboration = (userId: string, loadAllData?: () => Promise
     if (!userId) return;
     
     try {
-      // Find the user's assignment to this goal
-      const userAssignment = assignments.find(
-        assignment => assignment.goalId === goalId && assignment.userId === userId
+      // Query the database directly for the user's assignment to this goal
+      const userAssignments = await supabaseGoalAssignmentsService.getGoalAssignments(userId);
+      const userAssignment = userAssignments.find(
+        assignment => assignment.goalId === goalId
       );
       
       if (!userAssignment) {
