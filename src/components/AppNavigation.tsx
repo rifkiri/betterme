@@ -1,7 +1,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Home, Calendar, Settings, Users, LogOut, Menu, X } from 'lucide-react';
+import { Home, Calendar, Settings, Users, LogOut, Menu, X, Target } from 'lucide-react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -71,6 +71,11 @@ export const AppNavigation = () => {
       href: '/',
       icon: Home,
       description: 'Daily productivity tracking'
+    }, {
+      name: 'Goals',
+      href: '/goals',
+      icon: Target,
+      description: 'Track your goals'
     }, {
       name: 'My Progress',
       href: '/monthly',

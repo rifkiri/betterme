@@ -1,23 +1,17 @@
 
-import { Target, CheckCircle, Clock, Award, Calendar } from 'lucide-react';
+import { Target, CheckCircle, Clock, Award } from 'lucide-react';
 import { useProductivity } from '@/hooks/useProductivity';
 import { QuickStatsCard } from './QuickStatsCard';
 import { FeelingTracker } from './FeelingTracker';
 import { HabitsSection } from './HabitsSection';
-import { EnhancedGoalsSection } from './EnhancedGoalsSection';
-import { GoalNotificationsDialog } from './GoalNotificationsDialog';
-import { useGoalCollaboration } from '@/hooks/useGoalCollaboration';
-import { useUsersData } from '@/hooks/useUsersData';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { WeeklyOutputsSection } from './WeeklyOutputsSection';
 import { TasksSection } from './TasksSection';
-import { Goal } from '@/types/productivity';
 
 export const SimpleEmployeeDashboard = () => {
   console.log('SimpleEmployeeDashboard rendering...');
   
   const { profile } = useUserProfile();
-  const { users } = useUsersData();
   
   const {
     habits,
@@ -26,8 +20,6 @@ export const SimpleEmployeeDashboard = () => {
     deletedTasks,
     weeklyOutputs,
     deletedWeeklyOutputs,
-    goals,
-    deletedGoals,
     selectedDate,
     handleDateChange,
     addHabit,
@@ -36,14 +28,6 @@ export const SimpleEmployeeDashboard = () => {
     editTask,
     addWeeklyOutput,
     editWeeklyOutput,
-    addGoal,
-    editGoal,
-    updateGoalProgress,
-    moveGoal,
-    deleteGoal,
-    restoreGoal,
-    permanentlyDeleteGoal,
-    getOverdueGoals,
     toggleHabit,
     toggleTask,
     deleteTask,
@@ -64,27 +48,17 @@ export const SimpleEmployeeDashboard = () => {
     getOverdueWeeklyOutputs
   } = useProductivity();
 
-  const {
-    notifications,
-    acknowledgeNotification,
-    acknowledgeAllNotifications,
-    joinWorkGoal
-  } = useGoalCollaboration(profile?.id || '');
-
-  const overdueGoals = getOverdueGoals();
-
   console.log('Dashboard data:', {
     habitsCount: habits.length,
     tasksCount: tasks.length,
-    weeklyOutputsCount: weeklyOutputs.length,
-    goalsCount: goals.length
+    weeklyOutputsCount: weeklyOutputs.length
   });
 
   const completedHabits = habits.filter(habit => habit.completed).length;
-  const completedGoals = goals.filter(goal => goal.completed).length;
   const todaysTasks = getTodaysTasks();
   const overdueTasks = getOverdueTasks();
   const overdueWeeklyOutputs = getOverdueWeeklyOutputs();
+  const bestStreak = Math.max(...habits.map(h => h.streak), 0);
 
   console.log('Today tasks:', todaysTasks.length, 'Overdue tasks:', overdueTasks.length, 'Overdue weekly outputs:', overdueWeeklyOutputs.length);
 
@@ -101,8 +75,8 @@ export const SimpleEmployeeDashboard = () => {
           <p className="text-gray-600 text-xs sm:text-sm lg:text-base">Track your habits, achieve your goals, manage tasks, and plan your week</p>
         </div>
 
-        {/* Quick Stats - Updated to include goals */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-1 sm:gap-2 lg:gap-4 mb-2 sm:mb-4 px-1 sm:px-2">
+        {/* Quick Stats - 4 main cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-1 sm:gap-2 lg:gap-4 mb-2 sm:mb-4 px-1 sm:px-2">
           <QuickStatsCard 
             title="Habits Today" 
             value={`${completedHabits}/${habits.length}`} 
@@ -110,14 +84,8 @@ export const SimpleEmployeeDashboard = () => {
             gradient="bg-gradient-to-r from-blue-50 to-blue-100" 
           />
           <QuickStatsCard 
-            title="Goals Progress" 
-            value={`${completedGoals}/${goals.length}`} 
-            icon={Award} 
-            gradient="bg-gradient-to-r from-indigo-50 to-indigo-100" 
-          />
-          <QuickStatsCard 
             title="Best Streak" 
-            value={Math.max(...habits.map(h => h.streak), 0).toString()} 
+            value={bestStreak.toString()} 
             icon={Award} 
             gradient="bg-gradient-to-r from-purple-50 to-purple-100" 
           />
@@ -135,10 +103,14 @@ export const SimpleEmployeeDashboard = () => {
           />
         </div>
 
-        {/* Mobile-first responsive grid - Updated to 4 columns to include Goals */}
-        <div className="space-y-2 sm:space-y-4 lg:grid lg:grid-cols-4 lg:gap-3 xl:gap-6 lg:space-y-0">
-          <div className="lg:col-span-1 space-y-2 sm:space-y-4">
-            <FeelingTracker />
+        {/* Horizontal Mood Section */}
+        <div className="mb-2 sm:mb-4 px-1 sm:px-2">
+          <FeelingTracker />
+        </div>
+
+        {/* 3-Column Grid Layout */}
+        <div className="space-y-2 sm:space-y-4 lg:grid lg:grid-cols-3 lg:gap-3 xl:gap-6 lg:space-y-0">
+          <div className="lg:col-span-1">
             <HabitsSection 
               habits={habits}
               archivedHabits={archivedHabits}
@@ -153,32 +125,13 @@ export const SimpleEmployeeDashboard = () => {
             />
           </div>
 
-          {/* Enhanced Goals Section */}
-          <div className="lg:col-span-1">
-            <EnhancedGoalsSection 
-              goals={goals}
-              deletedGoals={deletedGoals}
-              weeklyOutputs={weeklyOutputs}
-              availableUsers={users}
-              currentUserId={profile?.id}
-              userRole={profile?.role}
-              onAddGoal={addGoal}
-              onEditGoal={editGoal}
-              onDeleteGoal={deleteGoal}
-              onRestoreGoal={restoreGoal}
-              onPermanentlyDeleteGoal={permanentlyDeleteGoal}
-              onUpdateGoalProgress={updateGoalProgress}
-              onJoinWorkGoal={joinWorkGoal}
-            />
-          </div>
-
           <div className="lg:col-span-1">
             <WeeklyOutputsSection 
               weeklyOutputs={weeklyOutputs}
               deletedWeeklyOutputs={deletedWeeklyOutputs}
               overdueWeeklyOutputs={overdueWeeklyOutputs}
               tasks={tasks}
-              goals={goals}
+              goals={[]}
               onAddWeeklyOutput={addWeeklyOutput}
               onEditWeeklyOutput={editWeeklyOutput}
               onUpdateProgress={updateProgress}
@@ -203,18 +156,10 @@ export const SimpleEmployeeDashboard = () => {
               onPermanentlyDeleteTask={permanentlyDeleteTask}
               getTasksByDate={getTasksByDate}
               weeklyOutputs={weeklyOutputs}
-              goals={goals}
+              goals={[]}
             />
           </div>
         </div>
-
-        {/* Goal Notifications */}
-        <GoalNotificationsDialog
-          notifications={notifications}
-          goals={goals}
-          onAcknowledge={acknowledgeNotification}
-          onAcknowledgeAll={acknowledgeAllNotifications}
-        />
       </div>
     </div>
   );
