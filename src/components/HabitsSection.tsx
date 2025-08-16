@@ -62,7 +62,7 @@ export const HabitsSection = ({
   const today = isToday(selectedDate);
 
   return (
-    <Card>
+    <Card className="h-fit">
       <CardHeader className="space-y-4">
         <div>
           <CardTitle>
