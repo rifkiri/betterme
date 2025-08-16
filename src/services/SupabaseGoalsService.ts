@@ -44,20 +44,22 @@ return data.map(goal => ({
   async getUserAccessibleGoals(userId: string): Promise<Goal[]> {
     console.log('Getting all accessible goals for user:', userId);
     
-    // Get goals owned by user
-    const { data: ownedGoals, error: ownedError } = await supabase
+    // Get personal goals (user owns them)
+    const { data: personalGoals, error: personalError } = await supabase
       .from('goals')
       .select('*')
       .eq('user_id', userId)
+      .eq('category', 'personal')
+      .eq('is_deleted', false)
       .order('created_date', { ascending: false });
 
-    if (ownedError) {
-      console.error('Error fetching owned goals:', ownedError);
-      throw ownedError;
+    if (personalError) {
+      console.error('Error fetching personal goals:', personalError);
+      throw personalError;
     }
 
-    // Get goals assigned to user via goal_assignments
-    const { data: assignedGoals, error: assignedError } = await supabase
+    // Get work goals where user has active assignments (regardless of ownership)
+    const { data: workGoals, error: workError } = await supabase
       .from('goals')
       .select(`
         *,
@@ -67,23 +69,25 @@ return data.map(goal => ({
         )
       `)
       .eq('goal_assignments.user_id', userId)
+      .eq('category', 'work')
+      .eq('is_deleted', false)
       .order('created_date', { ascending: false });
 
-    if (assignedError) {
-      console.error('Error fetching assigned goals:', assignedError);
-      throw assignedError;
+    if (workError) {
+      console.error('Error fetching work goals:', workError);
+      throw workError;
     }
 
-    // Combine and deduplicate goals
+    // Combine goals
     const allGoalsMap = new Map();
     
-    // Add owned goals
-    ownedGoals?.forEach(goal => {
+    // Add personal goals
+    personalGoals?.forEach(goal => {
       allGoalsMap.set(goal.id, goal);
     });
     
-    // Add assigned goals (will overwrite if already exists)
-    assignedGoals?.forEach(goal => {
+    // Add work goals (only those with active assignments)
+    workGoals?.forEach(goal => {
       allGoalsMap.set(goal.id, goal);
     });
 
