@@ -61,9 +61,7 @@ const Profile = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <AppNavigation />
-        <div className="max-w-7xl mx-auto py-8 px-4">
-          <div className="text-center">Loading...</div>
-        </div>
+        <div className="text-center">Loading...</div>
       </div>
     );
   }
@@ -72,9 +70,7 @@ const Profile = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <AppNavigation />
-        <div className="max-w-7xl mx-auto py-8 px-4">
-          <div className="text-center">Error loading profile</div>
-        </div>
+        <div className="text-center">Error loading profile</div>
       </div>
     );
   }
@@ -84,10 +80,8 @@ const Profile = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <AppNavigation />
-        <div className="max-w-7xl mx-auto py-8 px-4">
-          <div className="flex justify-center">
-            <PasswordChangeForm isFirstTime={true} />
-          </div>
+        <div className="flex justify-center">
+          <PasswordChangeForm isFirstTime={true} />
         </div>
       </div>
     );
@@ -96,90 +90,88 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <AppNavigation />
-      <div className="max-w-7xl mx-auto py-8 px-4">
-        <div className="max-w-2xl mx-auto space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
-              <CardDescription>Manage your personal information and settings</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Name</Label>
-                  {isEditing ? (
-                    <Input
-                      id="name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                    />
-                  ) : (
-                    <p className="text-sm text-muted-foreground mt-1">{profile.name}</p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <p className="text-sm text-muted-foreground mt-1">{profile.email}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="role">Role</Label>
-                  <p className="text-sm text-muted-foreground mt-1 capitalize">{profile.role}</p>
-                </div>
-                <div>
-                  <Label htmlFor="position">Position</Label>
-                  {isEditing ? (
-                    <Input
-                      id="position"
-                      value={position}
-                      onChange={(e) => setPosition(e.target.value)}
-                      placeholder="Your position"
-                    />
-                  ) : (
-                    <p className="text-sm text-muted-foreground mt-1">{profile.position || 'Not specified'}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex gap-2">
+      <div className="max-w-2xl mx-auto space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Profile Information</CardTitle>
+            <CardDescription>Manage your personal information and settings</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="name">Name</Label>
                 {isEditing ? (
-                  <>
-                    <Button onClick={handleSave}>Save Changes</Button>
-                    <Button variant="outline" onClick={() => setIsEditing(false)}>
-                      Cancel
-                    </Button>
-                  </>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
                 ) : (
-                  <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
+                  <p className="text-sm text-muted-foreground mt-1">{profile.name}</p>
                 )}
               </div>
-            </CardContent>
-          </Card>
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <p className="text-sm text-muted-foreground mt-1">{profile.email}</p>
+              </div>
+            </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Change Password</CardTitle>
-              <CardDescription>Update your account password</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PasswordChangeForm />
-            </CardContent>
-          </Card>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="role">Role</Label>
+                <p className="text-sm text-muted-foreground mt-1 capitalize">{profile.role}</p>
+              </div>
+              <div>
+                <Label htmlFor="position">Position</Label>
+                {isEditing ? (
+                  <Input
+                    id="position"
+                    value={position}
+                    onChange={(e) => setPosition(e.target.value)}
+                    placeholder="Your position"
+                  />
+                ) : (
+                  <p className="text-sm text-muted-foreground mt-1">{profile.position || 'Not specified'}</p>
+                )}
+              </div>
+            </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Account Actions</CardTitle>
-              <CardDescription>Manage your account</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="destructive" onClick={handleSignOut}>
-                Sign Out
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+            <div className="flex gap-2">
+              {isEditing ? (
+                <>
+                  <Button onClick={handleSave}>Save Changes</Button>
+                  <Button variant="outline" onClick={() => setIsEditing(false)}>
+                    Cancel
+                  </Button>
+                </>
+              ) : (
+                <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Change Password</CardTitle>
+            <CardDescription>Update your account password</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PasswordChangeForm />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Account Actions</CardTitle>
+            <CardDescription>Manage your account</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="destructive" onClick={handleSignOut}>
+              Sign Out
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
