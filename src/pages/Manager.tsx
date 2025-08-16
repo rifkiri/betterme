@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { AppNavigation } from "@/components/AppNavigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { IndividualDetailsSection } from "@/components/team/IndividualDetailsSection";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useTeamDataRealtime } from "@/hooks/useTeamDataRealtime";
@@ -11,8 +11,6 @@ const Manager = () => {
   
   const { profile: currentUser } = useUserProfile();
   const { teamData, isLoading } = useTeamDataRealtime();
-
-  const isManager = currentUser?.role === 'manager' || currentUser?.role === 'admin';
 
   const handleViewMemberDetails = (memberId: string) => {
     console.log('Manager - handleViewMemberDetails called with:', memberId);
@@ -27,22 +25,6 @@ const Manager = () => {
     setViewMode('dashboard');
     console.log('Manager - Set viewMode to dashboard for member:', memberId);
   };
-
-  if (!isManager) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <AppNavigation />
-        <div className="container mx-auto px-4 py-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Access Restricted</CardTitle>
-              <CardDescription>You need manager permissions to access this page.</CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   console.log('Manager state:', {
     selectedEmployee,
