@@ -2,8 +2,11 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, addDays, isToday, isSameDay } from 'date-fns';
+import { cn } from '@/lib/utils';
 import { Task, WeeklyOutput, Goal } from '@/types/productivity';
 import { AddTaskDialog } from './AddTaskDialog';
 import { TaskItem } from './TaskItem';
@@ -43,6 +46,7 @@ export const TasksSection = ({
 }: TasksSectionProps) => {
   const [selectedTaskDate, setSelectedTaskDate] = useState(new Date());
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   
   // Enhanced task filtering for selected date
   const getTasksForSelectedDate = (date: Date) => {
@@ -107,10 +111,34 @@ export const TasksSection = ({
           </Button>
           
           <div className="flex items-center gap-1 sm:gap-2 min-w-0">
-            <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 shrink-0" />
-            <span className="text-xs sm:text-sm font-medium truncate">
-              {format(selectedTaskDate, 'EEE, MMM dd')}
-            </span>
+            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-1 text-xs sm:text-sm font-medium p-1 h-auto"
+                >
+                  <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 shrink-0" />
+                  <span className="truncate">
+                    {format(selectedTaskDate, 'EEE, MMM dd')}
+                  </span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="center">
+                <Calendar
+                  mode="single"
+                  selected={selectedTaskDate}
+                  onSelect={(date) => {
+                    if (date) {
+                      setSelectedTaskDate(date);
+                      setIsCalendarOpen(false);
+                    }
+                  }}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+            
             {!isToday(selectedTaskDate) && (
               <Button
                 size="sm"
