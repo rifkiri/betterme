@@ -313,7 +313,7 @@ export const EnhancedAddGoalDialog = ({
                     <SelectContent className="bg-white z-50">
                       <SelectItem value="none">No coach assigned</SelectItem>
                       {availableUsers
-                        .filter(user => user.role === 'manager' || user.role === 'admin')
+                        .filter(user => user.role === 'manager' || user.role === 'admin' || user.role === 'team-member')
                         .map(user => (
                           <SelectItem key={user.id} value={user.id}>
                             {user.name} ({user.role})

@@ -15,10 +15,8 @@ export const filterUsersForTagging = (users: User[], currentUserId?: string): Us
     if (currentUserId && user.id === currentUserId) {
       return false;
     }
-    // Filter out admin users
-    if (user.role === 'admin') {
-      return false;
-    }
+    // Admin users are already filtered out at the database level
+    // No need to filter them here as they won't be in the list for non-admins
     return true;
   });
 };

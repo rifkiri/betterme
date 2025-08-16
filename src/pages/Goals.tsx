@@ -34,10 +34,8 @@ const Goals = () => {
   useEffect(() => {
     document.title = "My Goals - BetterMe";
     
-    // Load users for goal role assignments
-    if (profile?.role === 'manager' || profile?.role === 'admin') {
-      loadUsers();
-    }
+    // Load users for goal role assignments (all roles can see appropriate users)
+    loadUsers();
     
     // Cleanup: restore original title when leaving the page
     return () => {

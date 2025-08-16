@@ -30,10 +30,9 @@ export const useUserSelector = ({ currentUserId }: UseUserSelectorProps) => {
       // Use the authenticated user ID as the definitive current user ID
       const actualCurrentUserId = currentUser?.id || currentUserId;
       
+      // Use the secure role-based filtering function
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, name, email, role')
-        .eq('user_status', 'active');
+        .rpc('get_filtered_users_for_role');
 
       if (error) {
         console.error('Error fetching users:', error);
@@ -42,8 +41,16 @@ export const useUserSelector = ({ currentUserId }: UseUserSelectorProps) => {
         return;
       }
 
-      // Filter users using utility function
-      const filteredUsers = filterUsersForTagging(data || [], actualCurrentUserId);
+      // Transform data and apply additional filtering
+      const transformedUsers = (data || []).map(profile => ({
+        id: profile.id,
+        name: profile.name,
+        email: profile.email,
+        role: profile.role as 'admin' | 'manager' | 'team-member'
+      }));
+
+      // Apply final filtering for current user
+      const filteredUsers = filterUsersForTagging(transformedUsers, actualCurrentUserId);
       setUsers(filteredUsers);
     } catch (error) {
       console.error('Error fetching users:', error);
