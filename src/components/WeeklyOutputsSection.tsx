@@ -96,25 +96,23 @@ export const WeeklyOutputsSection = ({
 
   return (
     <Card className="h-fit">
-      <CardHeader className="pb-2 sm:pb-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div className="min-w-0">
-            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <Target className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="truncate">Weekly Outputs</span>
-            </CardTitle>
-            <CardDescription className="text-xs sm:text-sm">
-              {isCurrentWeek ? 'This Week' : format(weekStart, 'MMM dd')} - {format(weekEnd, 'MMM dd, yyyy')}
-            </CardDescription>
-          </div>
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            <DeletedWeeklyOutputsDialog 
-              deletedWeeklyOutputs={deletedWeeklyOutputs} 
-              onRestore={onRestoreWeeklyOutput} 
-              onPermanentlyDelete={onPermanentlyDeleteWeeklyOutput} 
-            />
-            <AddWeeklyOutputDialog onAddWeeklyOutput={onAddWeeklyOutput} />
-          </div>
+      <CardHeader className="flex flex-row items-center justify-between pb-2 sm:pb-4">
+        <div className="min-w-0">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Target className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="truncate">Weekly Outputs</span>
+          </CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
+            {isCurrentWeek ? 'This Week' : format(weekStart, 'MMM dd')} - {format(weekEnd, 'MMM dd, yyyy')}
+          </CardDescription>
+        </div>
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          <DeletedWeeklyOutputsDialog 
+            deletedWeeklyOutputs={deletedWeeklyOutputs} 
+            onRestore={onRestoreWeeklyOutput} 
+            onPermanentlyDelete={onPermanentlyDeleteWeeklyOutput} 
+          />
+          <AddWeeklyOutputDialog onAddWeeklyOutput={onAddWeeklyOutput} />
         </div>
       </CardHeader>
       <CardContent>
