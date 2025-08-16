@@ -91,9 +91,9 @@ export const EnhancedAddGoalDialog = ({
       completed: false,
       archived: false,
       linkedOutputIds: data.linkedOutputIds || [],
-      coachId: data.category === 'work' ? selectedCoach : undefined,
-      leadIds: data.category === 'work' ? selectedLeads : undefined,
-      memberIds: data.category === 'work' ? selectedMembers : undefined,
+      coachId: data.category === 'work' ? (selectedCoach || undefined) : undefined,
+      leadIds: data.category === 'work' ? (selectedLeads.length > 0 ? selectedLeads : undefined) : undefined,
+      memberIds: data.category === 'work' ? (selectedMembers.length > 0 ? selectedMembers : undefined) : undefined,
       createdBy: data.category === 'work' ? currentUserId : undefined,
     });
     form.reset();
@@ -304,13 +304,14 @@ export const EnhancedAddGoalDialog = ({
                 <div className="space-y-3 mb-4">
                   <div className="flex items-center gap-2">
                     <UserCog className="h-4 w-4 text-blue-600" />
-                    <span className="font-medium text-sm">Coach (Required)</span>
+                    <span className="font-medium text-sm">Coach (Optional)</span>
                   </div>
                   <Select value={selectedCoach} onValueChange={setSelectedCoach}>
                     <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Select a coach" />
+                      <SelectValue placeholder="Select a coach (optional)" />
                     </SelectTrigger>
                     <SelectContent className="bg-white z-50">
+                      <SelectItem value="">No coach assigned</SelectItem>
                       {availableUsers
                         .filter(user => user.role === 'manager' || user.role === 'admin')
                         .map(user => (
