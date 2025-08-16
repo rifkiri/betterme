@@ -63,7 +63,7 @@ export const HabitsSection = ({
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="space-y-4">
         <div>
           <CardTitle>
             {today ? 'Daily Habits' : `Habits for ${format(selectedDate, 'MMM d, yyyy')}`}
