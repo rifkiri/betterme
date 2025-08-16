@@ -533,6 +533,18 @@ export type Database = {
         Args: { habit_id_param: string; user_id_param: string }
         Returns: number
       }
+      get_filtered_users_for_role: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          role: string
+          user_position: string
+          user_status: string
+        }[]
+      }
       get_habits_for_date: {
         Args: { target_date: string; user_id_param: string }
         Returns: {
