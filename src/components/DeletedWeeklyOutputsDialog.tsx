@@ -20,8 +20,8 @@ export const DeletedWeeklyOutputsDialog = ({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Archive className="h-4 w-4 mr-2" />
+        <Button variant="outline" size="sm" className="flex items-center gap-2">
+          <Archive className="h-4 w-4" />
           Deleted ({deletedWeeklyOutputs.length})
         </Button>
       </DialogTrigger>

@@ -63,8 +63,8 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput }: AddWeeklyOutputDial
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="flex-1 mr-2">
-          <Plus className="h-4 w-4 mr-2" />
+        <Button size="sm" variant="outline" className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
           Add Outputs
         </Button>
       </DialogTrigger>
