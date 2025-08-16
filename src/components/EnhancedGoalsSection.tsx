@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { EnhancedAddGoalDialog } from './EnhancedAddGoalDialog';
 import { WorkGoalSelectionDialog } from './WorkGoalSelectionDialog';
 import { Goal, WeeklyOutput } from '@/types/productivity';
-import { Target, Briefcase, User, Plus } from 'lucide-react';
+import { Target, Briefcase, User, Plus, CheckCircle } from 'lucide-react';
 
 interface EnhancedGoalsSectionProps {
   goals: Goal[];
@@ -40,11 +40,16 @@ export const EnhancedGoalsSection = ({
   onUpdateGoalProgress,
   onJoinWorkGoal
 }: EnhancedGoalsSectionProps) => {
-  const [activeTab, setActiveTab] = useState<'personal' | 'work'>('personal');
+  const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
 
-  const personalGoals = goals.filter(goal => goal.category === 'personal');
-  const workGoals = goals.filter(goal => goal.category === 'work');
-  const availableWorkGoals = workGoals.filter(goal => 
+  // Filter goals by completion status instead of category
+  const activeGoals = goals.filter(goal => goal.progress < 100 && !goal.archived);
+  const completedGoals = goals.filter(goal => goal.progress >= 100);
+  
+  // Filter available work goals for joining
+  const availableWorkGoals = goals.filter(goal => 
+    goal.category === 'work' &&
+    goal.progress < 100 &&
     !goal.memberIds?.includes(currentUserId || '') &&
     !goal.leadIds?.includes(currentUserId || '') &&
     goal.coachId !== currentUserId
@@ -186,38 +191,31 @@ export const EnhancedGoalsSection = ({
           </p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-blue-600" />
-              Goals
-            </CardTitle>
-            <CardDescription>
-              Track your personal and work goals. Join team goals to collaborate.
-            </CardDescription>
-          </CardHeader>
-      <CardContent>
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'personal' | 'work')}>
+        {/* Tabs positioned below header subtitle like TeamDashboard */}
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'completed')}>
           <div className="flex items-center justify-between mb-6">
             <TabsList className="grid w-full max-w-md grid-cols-2">
-              <TabsTrigger value="personal" className="flex items-center gap-2">
-                <User className="h-3 w-3" />
-                Personal ({personalGoals.length})
+              <TabsTrigger value="active" className="flex items-center gap-2">
+                <Target className="h-3 w-3" />
+                Active ({activeGoals.length})
               </TabsTrigger>
-              <TabsTrigger value="work" className="flex items-center gap-2">
-                <Briefcase className="h-3 w-3" />
-                Work ({workGoals.length})
+              <TabsTrigger value="completed" className="flex items-center gap-2">
+                <CheckCircle className="h-3 w-3" />
+                Completed ({completedGoals.length})
               </TabsTrigger>
             </TabsList>
 
             <div className="flex gap-2">
-              <EnhancedAddGoalDialog
-                onAddGoal={onAddGoal}
-                weeklyOutputs={weeklyOutputs}
-                availableUsers={availableUsers}
-                currentUserId={currentUserId}
-                userRole={userRole}
-              />
+              {/* Role-based button display */}
+              {isManager && (
+                <EnhancedAddGoalDialog
+                  onAddGoal={onAddGoal}
+                  weeklyOutputs={weeklyOutputs}
+                  availableUsers={availableUsers}
+                  currentUserId={currentUserId}
+                  userRole={userRole}
+                />
+              )}
               {availableWorkGoals.length > 0 && (
                 <WorkGoalSelectionDialog
                   availableGoals={availableWorkGoals}
@@ -227,41 +225,47 @@ export const EnhancedGoalsSection = ({
             </div>
           </div>
 
-          <TabsContent value="personal" className="space-y-4">
-            {personalGoals.length === 0 ? (
+          <TabsContent value="active" className="space-y-4">
+            {/* Add Goal button only shows in active section for non-managers */}
+            {!isManager && (
+              <div className="mb-4">
+                <EnhancedAddGoalDialog
+                  onAddGoal={onAddGoal}
+                  weeklyOutputs={weeklyOutputs}
+                  availableUsers={availableUsers}
+                  currentUserId={currentUserId}
+                  userRole={userRole}
+                />
+              </div>
+            )}
+            
+            {activeGoals.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                <User className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>No personal goals yet</p>
-                <p className="text-sm mt-1">Create your first personal goal to get started.</p>
+                <Target className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p>No active goals yet</p>
+                <p className="text-sm mt-1">Create your first goal to get started.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {personalGoals.map(renderGoalCard)}
+                {activeGoals.map(renderGoalCard)}
               </div>
             )}
           </TabsContent>
 
-          <TabsContent value="work" className="space-y-4">
-            {workGoals.length === 0 ? (
+          <TabsContent value="completed" className="space-y-4">
+            {completedGoals.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                <Briefcase className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>No work goals yet</p>
-                <p className="text-sm mt-1">
-                  {isManager 
-                    ? "Create work goals for your team or join existing ones."
-                    : "Join work goals created by your manager or wait for assignments."
-                  }
-                </p>
+                <CheckCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p>No completed goals yet</p>
+                <p className="text-sm mt-1">Complete some goals to see them here.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {workGoals.map(renderGoalCard)}
+                {completedGoals.map(renderGoalCard)}
               </div>
             )}
           </TabsContent>
         </Tabs>
-      </CardContent>
-    </Card>
       </div>
     </div>
   );

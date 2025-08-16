@@ -85,6 +85,12 @@ export const EnhancedAddGoalDialog = ({
       deadline = new Date(deadline.getFullYear(), deadline.getMonth(), deadline.getDate(), 23, 59, 59, 999);
     }
 
+    // Auto-assign current user as member for work goals if they're not a manager
+    let finalMemberIds = selectedMembers;
+    if (data.category === 'work' && userRole === 'team-member' && currentUserId && !finalMemberIds.includes(currentUserId)) {
+      finalMemberIds = [...finalMemberIds, currentUserId];
+    }
+
     onAddGoal({
       title: data.title,
       description: data.description,
@@ -98,7 +104,7 @@ export const EnhancedAddGoalDialog = ({
       linkedOutputIds: data.linkedOutputIds || [],
       coachId: data.category === 'work' ? (selectedCoach || undefined) : undefined,
       leadIds: data.category === 'work' ? (selectedLeads.length > 0 ? selectedLeads : undefined) : undefined,
-      memberIds: data.category === 'work' ? (selectedMembers.length > 0 ? selectedMembers : undefined) : undefined,
+      memberIds: data.category === 'work' ? (finalMemberIds.length > 0 ? finalMemberIds : undefined) : undefined,
       createdBy: data.category === 'work' ? currentUserId : undefined,
     });
     form.reset();
@@ -165,8 +171,38 @@ export const EnhancedAddGoalDialog = ({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Basic Information */}
+            {/* Basic Information - Category moved above title */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <Select onValueChange={(value) => {
+                      field.onChange(value);
+                      // Auto-assign employee as member for work goals
+                      if (value === 'work' && userRole === 'team-member' && currentUserId) {
+                        setSelectedMembers(prev => 
+                          prev.includes(currentUserId) ? prev : [...prev, currentUserId]
+                        );
+                      }
+                    }} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="bg-white">
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-white z-50">
+                        <SelectItem value="personal">Personal</SelectItem>
+                        <SelectItem value="work">Work</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="title"
@@ -176,28 +212,6 @@ export const EnhancedAddGoalDialog = ({
                     <FormControl>
                       <Input placeholder="Enter goal title" {...field} />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="bg-white">
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-white z-50">
-                        <SelectItem value="personal">Personal</SelectItem>
-                        {isManager && <SelectItem value="work">Work</SelectItem>}
-                      </SelectContent>
-                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
