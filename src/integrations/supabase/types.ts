@@ -14,11 +14,80 @@ export type Database = {
   }
   public: {
     Tables: {
+      goal_assignments: {
+        Row: {
+          acknowledged: boolean
+          assigned_by: string
+          assigned_date: string
+          created_at: string
+          goal_id: string
+          id: string
+          role: string
+          self_assigned: boolean
+          user_id: string
+        }
+        Insert: {
+          acknowledged?: boolean
+          assigned_by: string
+          assigned_date?: string
+          created_at?: string
+          goal_id: string
+          id?: string
+          role: string
+          self_assigned?: boolean
+          user_id: string
+        }
+        Update: {
+          acknowledged?: boolean
+          assigned_by?: string
+          assigned_date?: string
+          created_at?: string
+          goal_id?: string
+          id?: string
+          role?: string
+          self_assigned?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
+      goal_notifications: {
+        Row: {
+          acknowledged: boolean
+          created_date: string
+          goal_id: string
+          id: string
+          notification_type: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          acknowledged?: boolean
+          created_date?: string
+          goal_id: string
+          id?: string
+          notification_type: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          acknowledged?: boolean
+          created_date?: string
+          goal_id?: string
+          id?: string
+          notification_type?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       goals: {
         Row: {
           archived: boolean
+          assignment_date: string | null
           category: string
+          coach_id: string | null
           completed: boolean
+          created_by: string | null
           created_date: string
           current_value: number
           deadline: string | null
@@ -26,7 +95,9 @@ export type Database = {
           description: string | null
           id: string
           is_deleted: boolean
+          lead_ids: string[] | null
           linked_output_ids: string[] | null
+          member_ids: string[] | null
           target_value: number
           title: string
           unit: string
@@ -35,8 +106,11 @@ export type Database = {
         }
         Insert: {
           archived?: boolean
+          assignment_date?: string | null
           category?: string
+          coach_id?: string | null
           completed?: boolean
+          created_by?: string | null
           created_date?: string
           current_value?: number
           deadline?: string | null
@@ -44,7 +118,9 @@ export type Database = {
           description?: string | null
           id?: string
           is_deleted?: boolean
+          lead_ids?: string[] | null
           linked_output_ids?: string[] | null
+          member_ids?: string[] | null
           target_value?: number
           title: string
           unit?: string
@@ -53,8 +129,11 @@ export type Database = {
         }
         Update: {
           archived?: boolean
+          assignment_date?: string | null
           category?: string
+          coach_id?: string | null
           completed?: boolean
+          created_by?: string | null
           created_date?: string
           current_value?: number
           deadline?: string | null
@@ -62,7 +141,9 @@ export type Database = {
           description?: string | null
           id?: string
           is_deleted?: boolean
+          lead_ids?: string[] | null
           linked_output_ids?: string[] | null
+          member_ids?: string[] | null
           target_value?: number
           title?: string
           unit?: string
