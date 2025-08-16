@@ -54,6 +54,11 @@ export const EnhancedAddGoalDialog = ({
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
 
+  // Debug logging to check if current user is in the available users
+  console.log('Current User ID:', currentUserId);
+  console.log('Available Users:', availableUsers);
+  console.log('Current user in available users:', availableUsers.find(u => u.id === currentUserId));
+
   const isManager = userRole === 'manager' || userRole === 'admin';
   
   const form = useForm<FormData>({
