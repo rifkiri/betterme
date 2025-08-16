@@ -27,7 +27,7 @@ return data.map(goal => ({
       createdDate: new Date(goal.created_date),
       completed: goal.completed,
       archived: goal.archived,
-      progress: goal.current_value || 0, // Use current_value as progress temporarily
+      progress: goal.progress || 0,
       linkedOutputIds: goal.linked_output_ids || [],
       userId: goal.user_id,
       coachId: goal.coach_id,
@@ -169,7 +169,7 @@ return data.map(goal => ({
       createdDate: new Date(goal.created_date),
       completed: goal.completed,
       archived: goal.archived,
-        progress: goal.current_value || 0, // Use current_value as progress temporarily
+        progress: goal.progress || 0,
       linkedOutputIds: goal.linked_output_ids || [],
       userId: goal.user_id,
       coachId: goal.coach_id,
@@ -223,8 +223,7 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
     if (updates.completed !== undefined) supabaseUpdates.completed = updates.completed;
     if (updates.archived !== undefined) supabaseUpdates.archived = updates.archived;
     if (updates.progress !== undefined) {
-      // Map progress (0-100) to current_value since progress column doesn't exist yet
-      supabaseUpdates.current_value = updates.progress;
+      supabaseUpdates.progress = updates.progress;
     }
     if (updates.linkedOutputIds !== undefined) supabaseUpdates.linked_output_ids = updates.linkedOutputIds;
     if (updates.coachId !== undefined) supabaseUpdates.coach_id = updates.coachId;
@@ -294,7 +293,7 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
     const { error } = await supabase
       .from('goals')
       .update({
-        current_value: Math.max(0, Math.min(100, progress)), // Store progress as current_value temporarily
+        progress: Math.max(0, Math.min(100, progress)),
         completed: progress >= 100 // Auto-complete if progress reaches 100%
       })
       .eq('id', id);

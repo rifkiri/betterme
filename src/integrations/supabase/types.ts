@@ -119,6 +119,7 @@ export type Database = {
           lead_ids: string[] | null
           linked_output_ids: string[] | null
           member_ids: string[] | null
+          progress: number
           title: string
           unit: string
           updated_at: string
@@ -140,6 +141,7 @@ export type Database = {
           lead_ids?: string[] | null
           linked_output_ids?: string[] | null
           member_ids?: string[] | null
+          progress?: number
           title: string
           unit?: string
           updated_at?: string
@@ -161,6 +163,7 @@ export type Database = {
           lead_ids?: string[] | null
           linked_output_ids?: string[] | null
           member_ids?: string[] | null
+          progress?: number
           title?: string
           unit?: string
           updated_at?: string
