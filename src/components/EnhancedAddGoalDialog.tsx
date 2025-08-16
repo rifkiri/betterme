@@ -19,8 +19,8 @@ import { cn } from '@/lib/utils';
 import { z } from 'zod';
 import { Goal, WeeklyOutput } from '@/types/productivity';
 
-const formSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
+const createFormSchema = (isJoiningMode: boolean) => z.object({
+  title: isJoiningMode ? z.string().optional() : z.string().min(1, 'Title is required'),
   description: z.string().optional(),
   targetValue: z.number().min(1, 'Target value must be at least 1'),
   unit: z.string().optional(),
@@ -32,7 +32,7 @@ const formSchema = z.object({
   memberIds: z.array(z.string()).optional(),
 });
 
-type FormData = z.infer<typeof formSchema>;
+type FormData = z.infer<ReturnType<typeof createFormSchema>>;
 
 interface EnhancedAddGoalDialogProps {
   onAddGoal: (goal: Omit<Goal, 'id' | 'progress' | 'createdDate'>) => void;
@@ -73,7 +73,7 @@ export const EnhancedAddGoalDialog = ({
   );
   
   const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(createFormSchema(isJoiningMode)),
     defaultValues: {
       title: '',
       description: '',
@@ -87,6 +87,11 @@ export const EnhancedAddGoalDialog = ({
       memberIds: [],
     },
   });
+
+  // Update form validation when joining mode changes
+  React.useEffect(() => {
+    form.clearErrors();
+  }, [isJoiningMode, form]);
 
   const watchCategory = form.watch('category');
 
