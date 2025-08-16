@@ -73,10 +73,28 @@ export const EnhancedGoalsSection = ({
     const progressColor = goal.progress >= 80 ? 'bg-green-500' : 
                          goal.progress >= 50 ? 'bg-yellow-500' : 'bg-blue-500';
     
+    // Debug logging
+    console.log('Goal debug:', {
+      goalId: goal.id,
+      title: goal.title,
+      category: goal.category,
+      userId: goal.userId,
+      currentUserId,
+      goalUserRole,
+      coachId: goal.coachId,
+      leadIds: goal.leadIds,
+      memberIds: goal.memberIds,
+      createdBy: goal.createdBy
+    });
+    
     // Determine if user owns the goal or is just assigned to it
     const isGoalOwner = goal.userId === currentUserId;
     const isAssignedUser = goalUserRole && !isGoalOwner;
     const canManageGoal = isGoalOwner || isManager;
+    
+    // For work goals, show both Delete (if owner/manager) and Leave (if assigned) options
+    const showLeaveOption = goal.category === 'work' && goalUserRole && (goal.memberIds?.includes(currentUserId!) || goal.leadIds?.includes(currentUserId!) || goal.coachId === currentUserId);
+    const showDeleteOption = canManageGoal;
 
     return (
       <Card key={goal.id} className="hover:shadow-md transition-shadow">
@@ -169,12 +187,15 @@ export const EnhancedGoalsSection = ({
               </Button>
             )}
             
-            {/* Delete vs Leave button based on ownership */}
-            {canManageGoal ? (
+            {/* Delete button - for goal owners and managers */}
+            {showDeleteOption && (
               <Button variant="outline" size="sm" onClick={() => onDeleteGoal(goal.id)}>
                 Delete
               </Button>
-            ) : isAssignedUser ? (
+            )}
+            
+            {/* Leave Goal button - for work goals where user has a role */}
+            {showLeaveOption && (
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -183,7 +204,7 @@ export const EnhancedGoalsSection = ({
               >
                 Leave Goal
               </Button>
-            ) : null}
+            )}
             
             {/* Update Progress - for all assigned users and owners */}
             {(goalUserRole || isGoalOwner) && (
