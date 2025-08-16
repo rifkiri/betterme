@@ -306,12 +306,12 @@ export const EnhancedAddGoalDialog = ({
                     <UserCog className="h-4 w-4 text-blue-600" />
                     <span className="font-medium text-sm">Coach (Optional)</span>
                   </div>
-                  <Select value={selectedCoach} onValueChange={setSelectedCoach}>
+                  <Select value={selectedCoach} onValueChange={(value) => setSelectedCoach(value === 'none' ? '' : value)}>
                     <SelectTrigger className="bg-white">
                       <SelectValue placeholder="Select a coach (optional)" />
                     </SelectTrigger>
                     <SelectContent className="bg-white z-50">
-                      <SelectItem value="">No coach assigned</SelectItem>
+                      <SelectItem value="none">No coach assigned</SelectItem>
                       {availableUsers
                         .filter(user => user.role === 'manager' || user.role === 'admin')
                         .map(user => (
@@ -347,17 +347,17 @@ export const EnhancedAddGoalDialog = ({
                   </div>
                   <Select 
                     value={selectedLeads.length > 0 ? selectedLeads[selectedLeads.length - 1] : ""} 
-                    onValueChange={(value) => {
-                      if (value && !selectedLeads.includes(value)) {
-                        setSelectedLeads(prev => [...prev, value]);
-                      }
-                    }}
+                     onValueChange={(value) => {
+                       if (value && value !== 'add_lead' && !selectedLeads.includes(value)) {
+                         setSelectedLeads(prev => [...prev, value]);
+                       }
+                     }}
                   >
                     <SelectTrigger className="bg-white">
                       <SelectValue placeholder="Select leads (optional)" />
                     </SelectTrigger>
                     <SelectContent className="bg-white z-50 max-h-60 overflow-y-auto">
-                      <SelectItem value="">Add a lead</SelectItem>
+                      <SelectItem value="add_lead">Add a lead</SelectItem>
                       {availableUsers
                         .filter(user => !selectedLeads.includes(user.id))
                         .map(user => (
@@ -395,17 +395,17 @@ export const EnhancedAddGoalDialog = ({
                   </div>
                   <Select 
                     value={selectedMembers.length > 0 ? selectedMembers[selectedMembers.length - 1] : ""} 
-                    onValueChange={(value) => {
-                      if (value && !selectedMembers.includes(value)) {
-                        setSelectedMembers(prev => [...prev, value]);
-                      }
-                    }}
+                     onValueChange={(value) => {
+                       if (value && value !== 'add_member' && !selectedMembers.includes(value)) {
+                         setSelectedMembers(prev => [...prev, value]);
+                       }
+                     }}
                   >
                     <SelectTrigger className="bg-white">
                       <SelectValue placeholder="Select members (optional)" />
                     </SelectTrigger>
                     <SelectContent className="bg-white z-50 max-h-60 overflow-y-auto">
-                      <SelectItem value="">Add a member</SelectItem>
+                      <SelectItem value="add_member">Add a member</SelectItem>
                       {availableUsers
                         .filter(user => !selectedMembers.includes(user.id))
                         .map(user => (
