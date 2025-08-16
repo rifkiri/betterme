@@ -16,6 +16,7 @@ const Goals = () => {
     allGoals,
     deletedGoals,
     weeklyOutputs,
+    loadAllData,
     addGoal,
     editGoal,
     updateGoalProgress,
@@ -30,7 +31,7 @@ const Goals = () => {
     acknowledgeAllNotifications,
     joinWorkGoal,
     leaveWorkGoal
-  } = useGoalCollaboration(profile?.id || '');
+  } = useGoalCollaboration(profile?.id || '', loadAllData);
 
   // Set page title and load users
   useEffect(() => {

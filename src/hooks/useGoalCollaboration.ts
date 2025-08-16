@@ -1,15 +1,13 @@
-import { useProductivity } from './useProductivity';
 import { supabaseGoalAssignmentsService } from '@/services/SupabaseGoalAssignmentsService';
 import { supabaseGoalNotificationsService } from '@/services/SupabaseGoalNotificationsService';
 import { useState, useEffect } from 'react';
 import { GoalAssignment, GoalNotification } from '@/types/productivity';
 import { toast } from 'sonner';
 
-export const useGoalCollaboration = (userId: string) => {
+export const useGoalCollaboration = (userId: string, loadAllData?: () => Promise<void>) => {
   const [assignments, setAssignments] = useState<GoalAssignment[]>([]);
   const [notifications, setNotifications] = useState<GoalNotification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { loadAllData } = useProductivity();
 
   const loadAssignments = async () => {
     if (!userId) return;
@@ -100,7 +98,9 @@ export const useGoalCollaboration = (userId: string) => {
       });
       
       // Refresh goals data to show the newly joined goal
-      await loadAllData();
+      if (loadAllData) {
+        await loadAllData();
+      }
     } catch (error) {
       console.error('Error joining work goal:', error);
       throw error;
@@ -126,7 +126,9 @@ export const useGoalCollaboration = (userId: string) => {
       
       // Refresh assignments and goals data
       await loadAssignments();
-      await loadAllData();
+      if (loadAllData) {
+        await loadAllData();
+      }
       
       toast.success('Successfully left the work goal');
     } catch (error) {
