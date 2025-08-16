@@ -72,7 +72,7 @@ export const AppNavigation = () => {
       icon: Home,
       description: 'Daily productivity tracking'
     }, {
-      name: 'Goals',
+      name: 'My Goals',
       href: '/goals',
       icon: Target,
       description: 'Track your goals'
