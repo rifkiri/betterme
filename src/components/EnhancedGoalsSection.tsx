@@ -175,16 +175,27 @@ export const EnhancedGoalsSection = ({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Target className="h-5 w-5 text-blue-600" />
-          Goals
-        </CardTitle>
-        <CardDescription>
-          Track your personal and work goals. Join team goals to collaborate.
-        </CardDescription>
-      </CardHeader>
+    <div className="bg-gradient-to-br from-blue-50 via-white to-green-50 min-h-screen">
+      <div className="max-w-full mx-auto p-1 sm:p-2 lg:p-4">
+        <div className="text-center mb-2 sm:mb-4 px-2">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
+            My Goals
+          </h1>
+          <p className="text-gray-600 text-xs sm:text-sm lg:text-base">
+            Track your personal and work goals, collaborate with your team
+          </p>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-blue-600" />
+              Goals
+            </CardTitle>
+            <CardDescription>
+              Track your personal and work goals. Join team goals to collaborate.
+            </CardDescription>
+          </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'personal' | 'work')}>
           <div className="flex items-center justify-between mb-6">
@@ -251,5 +262,7 @@ export const EnhancedGoalsSection = ({
         </Tabs>
       </CardContent>
     </Card>
+      </div>
+    </div>
   );
 };

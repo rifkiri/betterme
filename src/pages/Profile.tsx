@@ -88,9 +88,20 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
       <AppNavigation />
-      <div className="max-w-2xl mx-auto space-y-6">
+      
+      <div className="max-w-full mx-auto p-1 sm:p-2 lg:p-4">
+        <div className="text-center mb-2 sm:mb-4 px-2">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
+            My Profile
+          </h1>
+          <p className="text-gray-600 text-xs sm:text-sm lg:text-base">
+            Manage your account information and preferences
+          </p>
+        </div>
+      
+        <div className="max-w-2xl mx-auto space-y-6">
         <Card>
           <CardHeader>
             <CardTitle>Profile Information</CardTitle>
@@ -172,6 +183,7 @@ const Profile = () => {
             </Button>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );

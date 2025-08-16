@@ -30,10 +30,20 @@ const Settings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
       <AppNavigation />
       
-      <Tabs defaultValue={profile?.role === 'admin' ? 'users' : 'data'} className="w-full">
+      <div className="max-w-full mx-auto p-1 sm:p-2 lg:p-4">
+        <div className="text-center mb-2 sm:mb-4 px-2">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
+            Settings
+          </h1>
+          <p className="text-gray-600 text-xs sm:text-sm lg:text-base">
+            Manage your application preferences and data
+          </p>
+        </div>
+      
+        <Tabs defaultValue={profile?.role === 'admin' ? 'users' : 'data'} className="w-full">
         <TabsList className="flex w-full h-auto p-1 bg-gray-100 rounded-lg overflow-x-auto">
           {profile?.role === 'admin' && (
             <TabsTrigger 
@@ -84,6 +94,7 @@ const Settings = () => {
           <PreferencesSection />
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 };
