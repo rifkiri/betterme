@@ -56,6 +56,7 @@ export const EnhancedAddGoalDialog = ({
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [selectedWorkGoal, setSelectedWorkGoal] = useState<string>('');
   const [isJoiningMode, setIsJoiningMode] = useState(false);
+  const [managerJoinMode, setManagerJoinMode] = useState(false);
 
   const isManager = userRole === 'manager' || userRole === 'admin';
   const isEmployee = userRole === 'team-member';
@@ -95,12 +96,23 @@ export const EnhancedAddGoalDialog = ({
       return; // Block submission
     }
 
-    // Handle joining existing work goal
+    // Handle joining existing work goal (for employees)
     if (isJoiningMode && selectedWorkGoal) {
       onJoinWorkGoal(selectedWorkGoal);
       form.reset();
       setSelectedWorkGoal('');
       setIsJoiningMode(false);
+      setManagerJoinMode(false);
+      setOpen(false);
+      return;
+    }
+
+    // Handle manager joining existing work goal
+    if (managerJoinMode && selectedWorkGoal) {
+      onJoinWorkGoal(selectedWorkGoal);
+      form.reset();
+      setSelectedWorkGoal('');
+      setManagerJoinMode(false);
       setOpen(false);
       return;
     }
@@ -134,6 +146,7 @@ export const EnhancedAddGoalDialog = ({
     setSelectedMembers([]);
     setSelectedWorkGoal('');
     setIsJoiningMode(false);
+    setManagerJoinMode(false);
     setOpen(false);
   };
 
@@ -185,10 +198,10 @@ export const EnhancedAddGoalDialog = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Target className="h-5 w-5 text-blue-600" />
-            {isJoiningMode ? 'Join Work Goal' : 'Add New Goal'}
+            {(isJoiningMode || managerJoinMode) ? 'Join Work Goal' : 'Add New Goal'}
           </DialogTitle>
           <DialogDescription>
-            {isJoiningMode 
+            {(isJoiningMode || managerJoinMode)
               ? 'Select an existing work goal to join as a member and contribute to its completion.'
               : 'Create a new goal to track your progress. Work goals allow team collaboration.'
             }
@@ -205,16 +218,18 @@ export const EnhancedAddGoalDialog = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
-                      <Select onValueChange={(value) => {
-                        field.onChange(value);
-                        // Handle work category selection for employees
-                        if (value === 'work' && isEmployee) {
-                          // Employees can ONLY join work goals, never create them
-                          setIsJoiningMode(true);
-                        } else {
-                          setIsJoiningMode(false);
-                        }
-                      }} defaultValue={field.value}>
+                       <Select onValueChange={(value) => {
+                         field.onChange(value);
+                         // Handle work category selection for employees
+                         if (value === 'work' && isEmployee) {
+                           // Employees can ONLY join work goals, never create them
+                           setIsJoiningMode(true);
+                         } else {
+                           setIsJoiningMode(false);
+                           setManagerJoinMode(false);
+                           setSelectedWorkGoal('');
+                         }
+                       }} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger className="bg-white">
                           <SelectValue placeholder="Select category" />
@@ -264,11 +279,49 @@ export const EnhancedAddGoalDialog = ({
                     </FormControl>
                     <FormMessage />
                   </FormItem>
-                )}
-              />
+                 )}
+               />
+
+              {/* Manager dropdown for existing work goals */}
+              {watchCategory === 'work' && isManager && !isJoiningMode && availableWorkGoals.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Or select an existing work goal to join:</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setManagerJoinMode(!managerJoinMode);
+                        if (!managerJoinMode) {
+                          setSelectedWorkGoal('');
+                        }
+                      }}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      {managerJoinMode ? 'Create New Goal' : 'Join Existing Goal'}
+                    </Button>
+                  </div>
+                  
+                  {managerJoinMode && (
+                    <Select value={selectedWorkGoal} onValueChange={setSelectedWorkGoal}>
+                      <SelectTrigger className="bg-white">
+                        <SelectValue placeholder="Select a work goal to join" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white z-50">
+                        {availableWorkGoals.map(goal => (
+                          <SelectItem key={goal.id} value={goal.id}>
+                            {goal.title} ({goal.progress}% complete)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              )}
             </div>
 
-            {!isJoiningMode && (
+            {!isJoiningMode && !managerJoinMode && (
               <FormField
                 control={form.control}
                 name="description"
@@ -492,10 +545,11 @@ export const EnhancedAddGoalDialog = ({
                 type="submit" 
                 disabled={
                   (isJoiningMode && !selectedWorkGoal) || 
+                  (managerJoinMode && !selectedWorkGoal) ||
                   (isEmployee && watchCategory === 'work' && availableWorkGoals.length === 0)
                 }
               >
-                {isJoiningMode ? 'Join Goal' : 'Add Goal'}
+                {(isJoiningMode || managerJoinMode) ? 'Join Goal' : 'Add Goal'}
               </Button>
             </div>
           </form>
