@@ -2,6 +2,21 @@ import { supabase } from '@/integrations/supabase/client';
 import { Goal } from '@/types/productivity';
 
 export class SupabaseGoalsService {
+  private async getUserRole(userId: string): Promise<string | null> {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
+
+    if (error || !data) {
+      console.error('Error fetching user role:', error);
+      return null;
+    }
+
+    return data.role;
+  }
+
   async getGoals(userId: string): Promise<Goal[]> {
     console.log('Getting user-specific goals for user:', userId);
     
@@ -277,6 +292,12 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
   }
 
   private async canUserUpdateGoal(goalId: string, userId: string): Promise<boolean> {
+    // Check if user is manager or admin
+    const userRole = await this.getUserRole(userId);
+    if (userRole === 'manager' || userRole === 'admin') {
+      return true;
+    }
+
     // Check if user owns the goal
     const { data: ownedGoal, error: ownedError } = await supabase
       .from('goals')
@@ -334,11 +355,21 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
   async permanentlyDeleteGoal(id: string, userId: string): Promise<void> {
     console.log('Permanently deleting goal:', id, 'for user:', userId);
     
-    const { error } = await supabase
+    // Check if user has permission to delete this goal
+    const userRole = await this.getUserRole(userId);
+    const isManagerOrAdmin = userRole === 'manager' || userRole === 'admin';
+    
+    let query = supabase
       .from('goals')
       .delete()
-      .eq('id', id)
-      .eq('user_id', userId);
+      .eq('id', id);
+    
+    // Only restrict to user's own goals if they're not a manager/admin
+    if (!isManagerOrAdmin) {
+      query = query.eq('user_id', userId);
+    }
+
+    const { error } = await query;
 
     if (error) {
       console.error('Error permanently deleting goal:', error);
