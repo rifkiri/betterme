@@ -62,13 +62,23 @@ export const EnhancedAddGoalDialog = ({
   const isEmployee = userRole === 'team-member';
 
   // Filter available work goals for joining
-  const availableWorkGoals = goals.filter(goal => 
-    goal.category === 'work' &&
-    goal.progress < 100 &&
-    !goal.memberIds?.includes(currentUserId || '') &&
-    !goal.leadIds?.includes(currentUserId || '') &&
-    goal.coachId !== currentUserId
-  );
+  const availableWorkGoals = goals.filter(goal => {
+    const canJoin = goal.category === 'work' &&
+      goal.progress < 100 &&
+      goal.userId !== currentUserId && // Don't show own goals
+      !goal.memberIds?.includes(currentUserId || ''); // Not already a member
+    
+    console.log('Goal filtering:', goal.title, canJoin, {
+      isWork: goal.category === 'work',
+      notComplete: goal.progress < 100,
+      notOwnGoal: goal.userId !== currentUserId,
+      notMember: !goal.memberIds?.includes(currentUserId || ''),
+      userId: goal.userId,
+      currentUserId: currentUserId
+    });
+    
+    return canJoin;
+  });
   
   const form = useForm<FormData>({
     resolver: zodResolver(createFormSchema(isJoiningMode || managerJoinMode)),
