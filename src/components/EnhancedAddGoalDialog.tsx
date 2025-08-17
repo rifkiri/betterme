@@ -71,7 +71,7 @@ export const EnhancedAddGoalDialog = ({
   );
   
   const form = useForm<FormData>({
-    resolver: zodResolver(createFormSchema(isJoiningMode)),
+    resolver: zodResolver(createFormSchema(isJoiningMode || managerJoinMode)),
     defaultValues: {
       title: '',
       description: '',
@@ -86,7 +86,7 @@ export const EnhancedAddGoalDialog = ({
   // Update form validation when joining mode changes
   React.useEffect(() => {
     form.clearErrors();
-  }, [isJoiningMode, form]);
+  }, [isJoiningMode, managerJoinMode, form]);
 
   const watchCategory = form.watch('category');
 
