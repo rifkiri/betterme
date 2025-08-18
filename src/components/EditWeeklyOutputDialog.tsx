@@ -1,8 +1,8 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Calendar as CalendarIcon, Link, ChevronDown, Target, User } from 'lucide-react';
+import { Calendar as CalendarIcon, Target, X } from 'lucide-react';
 import { format } from 'date-fns';
 import * as z from 'zod';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -12,17 +12,18 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import { WeeklyOutput, Goal } from '@/types/productivity';
+import { itemLinkageService } from '@/services/ItemLinkageService';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 const weeklyOutputSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
   dueDate: z.date().optional(),
-  // linkedGoalIds removed - now handled by ItemLinkageService
+  selectedGoalIds: z.array(z.string()).optional(),
 });
 
 type WeeklyOutputFormValues = z.infer<typeof weeklyOutputSchema>;
@@ -36,30 +37,68 @@ interface EditWeeklyOutputDialogProps {
 }
 
 export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSave, goals = [] }: EditWeeklyOutputDialogProps) => {
-  const [isGoalSectionOpen, setIsGoalSectionOpen] = useState(false);
+  const [selectedGoals, setSelectedGoals] = useState<Goal[]>([]);
+  const [isGoalDropdownOpen, setIsGoalDropdownOpen] = useState(false);
+  const { currentUser } = useCurrentUser();
+  
   const form = useForm<WeeklyOutputFormValues>({
     resolver: zodResolver(weeklyOutputSchema),
     defaultValues: {
       title: weeklyOutput.title,
       description: weeklyOutput.description || '',
       dueDate: weeklyOutput.dueDate || undefined,
-      // linkedGoalIds removed
+      selectedGoalIds: [],
     }
   });
 
-  const handleSubmit = (values: WeeklyOutputFormValues) => {
+  useEffect(() => {
+    const fetchLinkedGoals = async () => {
+      if (currentUser?.id && open) {
+        try {
+          const linkedItems = await itemLinkageService.getLinkedItems('weekly_output', weeklyOutput.id, currentUser.id);
+          const goalIds = linkedItems.filter(item => item.type === 'goal').map(item => item.id);
+          const linkedGoals = goals.filter(goal => goalIds.includes(goal.id));
+          setSelectedGoals(linkedGoals);
+          form.setValue('selectedGoalIds', goalIds);
+        } catch (error) {
+          console.error('Error fetching linked goals:', error);
+        }
+      }
+    };
+
+    if (open) {
+      fetchLinkedGoals();
+      form.reset({
+        title: weeklyOutput.title,
+        description: weeklyOutput.description || '',
+        dueDate: weeklyOutput.dueDate || undefined,
+      });
+    }
+  }, [weeklyOutput, open, currentUser?.id, goals, form]);
+
+  const handleSubmit = async (values: WeeklyOutputFormValues) => {
     // Ensure the due date is set to end of day in local time to avoid timezone issues
     let dueDate = values.dueDate;
     if (dueDate) {
       dueDate = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate(), 23, 59, 59, 999);
     }
 
+    // Save the weekly output updates
     onSave(weeklyOutput.id, {
       title: values.title,
       description: values.description,
       dueDate: dueDate,
-      // linkedGoalIds removed - handled separately
     });
+
+    // Update goal linkages
+    if (currentUser?.id && values.selectedGoalIds) {
+      try {
+        await itemLinkageService.updateLinks('weekly_output', weeklyOutput.id, 'goal', values.selectedGoalIds, currentUser.id);
+      } catch (error) {
+        console.error('Error updating goal links:', error);
+      }
+    }
+
     onOpenChange(false);
   };
 
@@ -72,9 +111,30 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
     !goal.completed && !goal.archived
   );
 
-  // Separate work and personal goals
-  const workGoals = activeGoals.filter(goal => goal.category === 'work');
-  const personalGoals = activeGoals.filter(goal => goal.category === 'personal');
+  const toggleGoalSelection = (goal: Goal) => {
+    const currentIds = form.getValues('selectedGoalIds') || [];
+    const isSelected = currentIds.includes(goal.id);
+    
+    if (isSelected) {
+      const newIds = currentIds.filter(id => id !== goal.id);
+      const newSelectedGoals = selectedGoals.filter(g => g.id !== goal.id);
+      setSelectedGoals(newSelectedGoals);
+      form.setValue('selectedGoalIds', newIds);
+    } else {
+      const newIds = [...currentIds, goal.id];
+      const newSelectedGoals = [...selectedGoals, goal];
+      setSelectedGoals(newSelectedGoals);
+      form.setValue('selectedGoalIds', newIds);
+    }
+  };
+
+  const removeGoal = (goalId: string) => {
+    const currentIds = form.getValues('selectedGoalIds') || [];
+    const newIds = currentIds.filter(id => id !== goalId);
+    const newSelectedGoals = selectedGoals.filter(g => g.id !== goalId);
+    setSelectedGoals(newSelectedGoals);
+    form.setValue('selectedGoalIds', newIds);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -171,7 +231,118 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
               )}
             />
 
-            {/* Goal linking now handled via LinkGoalsDialog */}
+            {/* Goal Linking Section */}
+            {activeGoals.length > 0 && (
+              <FormField
+                control={form.control}
+                name="selectedGoalIds"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Target className="h-4 w-4" />
+                      Link to Goals (Optional)
+                    </FormLabel>
+                    
+                    <Popover open={isGoalDropdownOpen} onOpenChange={setIsGoalDropdownOpen}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className="w-full justify-between"
+                          >
+                            {selectedGoals.length === 0 
+                              ? "Select goals to link..." 
+                              : `${selectedGoals.length} goal${selectedGoals.length !== 1 ? 's' : ''} selected`
+                            }
+                            <Target className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Search goals..." />
+                          <CommandList>
+                            <CommandEmpty>No goals found.</CommandEmpty>
+                            <CommandGroup>
+                              {activeGoals.map((goal) => (
+                                <CommandItem
+                                  key={goal.id}
+                                  onSelect={() => toggleGoalSelection(goal)}
+                                  className="flex items-center justify-between p-3"
+                                >
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className="font-medium text-sm">{goal.title}</span>
+                                      <Badge 
+                                        className={`text-xs ${
+                                          goal.category === 'work' 
+                                            ? 'bg-blue-100 text-blue-800' 
+                                            : 'bg-green-100 text-green-800'
+                                        }`}
+                                      >
+                                        {goal.category}
+                                      </Badge>
+                                    </div>
+                                    {goal.description && (
+                                      <p className="text-xs text-muted-foreground">{goal.description}</p>
+                                    )}
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <span className="text-xs text-muted-foreground">Progress: {goal.progress}%</span>
+                                    </div>
+                                  </div>
+                                  <div className="ml-2">
+                                    {(field.value || []).includes(goal.id) && (
+                                      <div className="h-4 w-4 bg-primary rounded-sm flex items-center justify-center">
+                                        <span className="text-xs text-primary-foreground">✓</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+
+                    {/* Selected Goals Display */}
+                    {selectedGoals.length > 0 && (
+                      <div className="mt-3 p-3 bg-muted rounded-lg">
+                        <div className="text-sm font-medium mb-2">
+                          Selected Goals ({selectedGoals.length}):
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedGoals.map((goal) => (
+                            <Badge 
+                              key={goal.id} 
+                              variant="secondary" 
+                              className="flex items-center gap-1"
+                            >
+                              {goal.title}
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-4 w-4 p-0 hover:bg-transparent"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  removeGoal(goal.id);
+                                }}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             
             <div className="flex justify-end space-x-2">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

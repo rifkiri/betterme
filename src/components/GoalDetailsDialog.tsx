@@ -15,8 +15,9 @@ import {
 } from 'lucide-react';
 import { Goal, Task, WeeklyOutput } from '@/types/productivity';
 import { format, isBefore } from 'date-fns';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { EditGoalDialog } from './EditGoalDialog';
+import { itemLinkageService } from '@/services/ItemLinkageService';
 
 interface GoalDetailsDialogProps {
   goal: Goal;
@@ -40,6 +41,29 @@ export const GoalDetailsDialog = ({
   currentUserId
 }: GoalDetailsDialogProps) => {
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
+  const [linkedOutputs, setLinkedOutputs] = useState<WeeklyOutput[]>([]);
+  const [loadingLinkedOutputs, setLoadingLinkedOutputs] = useState(false);
+
+  useEffect(() => {
+    const fetchLinkedOutputs = async () => {
+      if (currentUserId && open) {
+        setLoadingLinkedOutputs(true);
+        try {
+          const linkedItems = await itemLinkageService.getLinkedItems('goal', goal.id, currentUserId);
+          const outputIds = linkedItems.filter(item => item.type === 'weekly_output').map(item => item.id);
+          const outputs = weeklyOutputs.filter(output => outputIds.includes(output.id));
+          setLinkedOutputs(outputs);
+        } catch (error) {
+          console.error('Error fetching linked outputs:', error);
+          setLinkedOutputs([]);
+        } finally {
+          setLoadingLinkedOutputs(false);
+        }
+      }
+    };
+
+    fetchLinkedOutputs();
+  }, [goal.id, currentUserId, open, weeklyOutputs]);
 
 const getCategoryColor = (category: Goal['category']) => {
     switch (category) {
@@ -49,8 +73,6 @@ const getCategoryColor = (category: Goal['category']) => {
     }
   };
 
-  // Note: This will need to be updated to use ItemLinkageService to fetch linked outputs
-  const linkedOutputs: WeeklyOutput[] = [];
 
   const relatedTasks = tasks.filter(task => 
     linkedOutputs.some(output => output.id === task.weeklyOutputId)
@@ -158,7 +180,9 @@ const getCategoryColor = (category: Goal['category']) => {
                 Linked Outputs ({linkedOutputs.length})
               </h4>
               
-              {linkedOutputs.length === 0 ? (
+              {loadingLinkedOutputs ? (
+                <p className="text-sm text-gray-500 py-2">Loading linked outputs...</p>
+              ) : linkedOutputs.length === 0 ? (
                 <p className="text-sm text-gray-500 py-2">No outputs linked to this goal</p>
               ) : (
                 <div className="space-y-2">

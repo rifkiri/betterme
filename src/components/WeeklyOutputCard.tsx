@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,8 @@ import { isWeeklyOutputOverdue } from '@/utils/dateUtils';
 import { EditWeeklyOutputDialog } from './EditWeeklyOutputDialog';
 import { MoveWeeklyOutputDialog } from './MoveWeeklyOutputDialog';
 import { OutputDetailsDialog } from './OutputDetailsDialog';
+import { itemLinkageService } from '@/services/ItemLinkageService';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface WeeklyOutputCardProps {
   output: WeeklyOutput;
@@ -31,6 +33,24 @@ export const WeeklyOutputCard = ({
   goals = []
 }: WeeklyOutputCardProps) => {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [linkedGoalsCount, setLinkedGoalsCount] = useState(0);
+  const { currentUser } = useCurrentUser();
+  
+  useEffect(() => {
+    const fetchLinkedGoals = async () => {
+      if (currentUser?.id) {
+        try {
+          const linkedItems = await itemLinkageService.getLinkedItems('weekly_output', output.id, currentUser.id);
+          const goalCount = linkedItems.filter(item => item.type === 'goal').length;
+          setLinkedGoalsCount(goalCount);
+        } catch (error) {
+          console.error('Error fetching linked goals:', error);
+        }
+      }
+    };
+
+    fetchLinkedGoals();
+  }, [output.id, currentUser?.id]);
   
   const isOverdue = () => {
     return output.dueDate && isWeeklyOutputOverdue(output.dueDate, output.progress, output.completedDate, output.createdDate);
@@ -59,6 +79,12 @@ export const WeeklyOutputCard = ({
                 <Badge variant="outline" className="text-xs flex items-center gap-1 bg-green-50 text-green-600 border-green-200">
                   <Link className="h-2 w-2" />
                   {linkedTasksCount} task{linkedTasksCount !== 1 ? 's' : ''} linked
+                </Badge>
+              )}
+              {linkedGoalsCount > 0 && (
+                <Badge variant="outline" className="text-xs flex items-center gap-1 bg-blue-50 text-blue-600 border-blue-200">
+                  <Link className="h-2 w-2" />
+                  {linkedGoalsCount} goal{linkedGoalsCount !== 1 ? 's' : ''} linked
                 </Badge>
               )}
             </div>

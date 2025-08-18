@@ -16,6 +16,11 @@ import { z } from 'zod';
 import { cn } from '@/lib/utils';
 import { Goal, WeeklyOutput } from '@/types/productivity';
 import { getSubcategoryOptions, mapSubcategoryDisplayToDatabase, mapSubcategoryDatabaseToDisplay } from '@/utils/goalCategoryUtils';
+import { itemLinkageService } from '@/services/ItemLinkageService';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Badge } from '@/components/ui/badge';
+import { Target, X } from 'lucide-react';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -23,6 +28,7 @@ const formSchema = z.object({
   category: z.enum(['work', 'personal']),
   subcategory: z.string().optional(),
   deadline: z.date().optional(),
+  selectedOutputIds: z.array(z.string()).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -36,6 +42,10 @@ interface EditGoalDialogProps {
 }
 
 export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs = [] }: EditGoalDialogProps) => {
+  const [selectedOutputs, setSelectedOutputs] = useState<WeeklyOutput[]>([]);
+  const [isOutputDropdownOpen, setIsOutputDropdownOpen] = useState(false);
+  const { currentUser } = useCurrentUser();
+  
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -44,11 +54,27 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
       category: goal.category,
       subcategory: goal.subcategory ? mapSubcategoryDatabaseToDisplay(goal.subcategory) : "none",
       deadline: goal.deadline,
+      selectedOutputIds: [],
     },
   });
 
   useEffect(() => {
+    const fetchLinkedOutputs = async () => {
+      if (currentUser?.id && open) {
+        try {
+          const linkedItems = await itemLinkageService.getLinkedItems('goal', goal.id, currentUser.id);
+          const outputIds = linkedItems.filter(item => item.type === 'weekly_output').map(item => item.id);
+          const linkedOutputs = weeklyOutputs.filter(output => outputIds.includes(output.id));
+          setSelectedOutputs(linkedOutputs);
+          form.setValue('selectedOutputIds', outputIds);
+        } catch (error) {
+          console.error('Error fetching linked outputs:', error);
+        }
+      }
+    };
+
     if (open && goal) {
+      fetchLinkedOutputs();
       form.reset({
         title: goal.title,
         description: goal.description || '',
@@ -57,15 +83,16 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
         deadline: goal.deadline,
       });
     }
-  }, [goal, open, form]);
+  }, [goal, open, currentUser?.id, weeklyOutputs, form]);
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = async (data: FormData) => {
     // Ensure the due date is set to end of day in local time to avoid timezone issues
     let deadline = data.deadline;
     if (deadline) {
       deadline = new Date(deadline.getFullYear(), deadline.getMonth(), deadline.getDate(), 23, 59, 59, 999);
     }
 
+    // Save the goal updates
     onSave(goal.id, {
       title: data.title,
       description: data.description,
@@ -73,6 +100,15 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
       subcategory: data.subcategory === "none" ? undefined : mapSubcategoryDisplayToDatabase(data.subcategory),
       deadline: deadline,
     });
+
+    // Update output linkages
+    if (currentUser?.id && data.selectedOutputIds) {
+      try {
+        await itemLinkageService.updateLinks('goal', goal.id, 'weekly_output', data.selectedOutputIds, currentUser.id);
+      } catch (error) {
+        console.error('Error updating output links:', error);
+      }
+    }
     
     onOpenChange(false);
   };
@@ -83,6 +119,31 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
 
   // Filter available outputs (not completed)
   const availableOutputs = weeklyOutputs.filter(output => output.progress < 100);
+
+  const toggleOutputSelection = (output: WeeklyOutput) => {
+    const currentIds = form.getValues('selectedOutputIds') || [];
+    const isSelected = currentIds.includes(output.id);
+    
+    if (isSelected) {
+      const newIds = currentIds.filter(id => id !== output.id);
+      const newSelectedOutputs = selectedOutputs.filter(o => o.id !== output.id);
+      setSelectedOutputs(newSelectedOutputs);
+      form.setValue('selectedOutputIds', newIds);
+    } else {
+      const newIds = [...currentIds, output.id];
+      const newSelectedOutputs = [...selectedOutputs, output];
+      setSelectedOutputs(newSelectedOutputs);
+      form.setValue('selectedOutputIds', newIds);
+    }
+  };
+
+  const removeOutput = (outputId: string) => {
+    const currentIds = form.getValues('selectedOutputIds') || [];
+    const newIds = currentIds.filter(id => id !== outputId);
+    const newSelectedOutputs = selectedOutputs.filter(o => o.id !== outputId);
+    setSelectedOutputs(newSelectedOutputs);
+    form.setValue('selectedOutputIds', newIds);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -227,6 +288,116 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
               )}
             />
 
+            {/* Output Linking Section */}
+            {availableOutputs.length > 0 && (
+              <FormField
+                control={form.control}
+                name="selectedOutputIds"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Target className="h-4 w-4" />
+                      Link to Weekly Outputs (Optional)
+                    </FormLabel>
+                    
+                    <Popover open={isOutputDropdownOpen} onOpenChange={setIsOutputDropdownOpen}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className="w-full justify-between"
+                          >
+                            {selectedOutputs.length === 0 
+                              ? "Select outputs to link..." 
+                              : `${selectedOutputs.length} output${selectedOutputs.length !== 1 ? 's' : ''} selected`
+                            }
+                            <Target className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Search outputs..." />
+                          <CommandList>
+                            <CommandEmpty>No outputs found.</CommandEmpty>
+                            <CommandGroup>
+                              {availableOutputs.map((output) => (
+                                <CommandItem
+                                  key={output.id}
+                                  onSelect={() => toggleOutputSelection(output)}
+                                  className="flex items-center justify-between p-3"
+                                >
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className="font-medium text-sm">{output.title}</span>
+                                      <Badge variant="secondary" className="text-xs">
+                                        {output.progress}%
+                                      </Badge>
+                                    </div>
+                                    {output.description && (
+                                      <p className="text-xs text-muted-foreground">{output.description}</p>
+                                    )}
+                                    {output.dueDate && (
+                                      <div className="flex items-center gap-1 mt-1">
+                                        <span className="text-xs text-muted-foreground">
+                                          Due: {format(output.dueDate, 'MMM dd')}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="ml-2">
+                                    {(field.value || []).includes(output.id) && (
+                                      <div className="h-4 w-4 bg-primary rounded-sm flex items-center justify-center">
+                                        <span className="text-xs text-primary-foreground">✓</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+
+                    {/* Selected Outputs Display */}
+                    {selectedOutputs.length > 0 && (
+                      <div className="mt-3 p-3 bg-muted rounded-lg">
+                        <div className="text-sm font-medium mb-2">
+                          Selected Outputs ({selectedOutputs.length}):
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedOutputs.map((output) => (
+                            <Badge 
+                              key={output.id} 
+                              variant="secondary" 
+                              className="flex items-center gap-1"
+                            >
+                              {output.title}
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-4 w-4 p-0 hover:bg-transparent"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  removeOutput(output.id);
+                                }}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             </form>
           </Form>
