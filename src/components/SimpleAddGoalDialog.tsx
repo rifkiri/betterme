@@ -176,7 +176,7 @@ export const SimpleAddGoalDialog = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">No subcategory</SelectItem>
+                      <SelectItem value="none">No subcategory</SelectItem>
                       {getSubcategoryOptions(watchCategory).map((subcategory) => (
                         <SelectItem key={subcategory} value={subcategory}>
                           {subcategory}

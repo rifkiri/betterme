@@ -58,7 +58,7 @@ export const getSubcategoryOptions = (mainCategory: string): string[] => {
 
 // Map display subcategory to database value
 export const mapSubcategoryDisplayToDatabase = (subcategory: string | undefined): string | undefined => {
-  if (!subcategory || subcategory === 'No subcategory') return undefined;
+  if (!subcategory || subcategory === 'No subcategory' || subcategory === 'none') return undefined;
   
   // Check personal subcategories
   const personalKey = Object.keys(PERSONAL_SUBCATEGORY_DISPLAY_MAP).find(
