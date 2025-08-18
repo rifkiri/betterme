@@ -340,7 +340,7 @@ class TeamDataService {
         membersSummary.push({
           id: member.id,
           name: member.name,
-          role: member.position || 'Team Member',
+          role: member.role,
           habitsRate,
           tasksRate,
           outputsRate,
