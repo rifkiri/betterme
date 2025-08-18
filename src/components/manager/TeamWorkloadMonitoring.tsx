@@ -351,64 +351,28 @@ export const TeamWorkloadMonitoring = ({
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Team Workload Overview</CardTitle>
-                <CardDescription>Goals, Outputs, and Tasks per team member</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip 
-                      formatter={(value, name) => [value, name === 'goals' ? 'Goals' : name === 'outputs' ? 'Outputs' : 'Tasks']}
-                      labelFormatter={(label) => `${chartData.find(d => d.name === label)?.fullName || label}`}
-                    />
-                    <Bar dataKey="goals" fill="#3B82F6" name="goals" />
-                    <Bar dataKey="outputs" fill="#10B981" name="outputs" />
-                    <Bar dataKey="tasks" fill="#8B5CF6" name="tasks" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Work Goal Categories</CardTitle>
-                <CardDescription>Distribution of work goals by subcategory</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {subcategoryData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={subcategoryData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {subcategoryData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="text-center py-12 text-gray-500">
-                    No work goals categorized yet
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Team Workload Overview</CardTitle>
+              <CardDescription>Goals, Outputs, and Tasks per team member</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip 
+                    formatter={(value, name) => [value, name === 'goals' ? 'Goals' : name === 'outputs' ? 'Outputs' : 'Tasks']}
+                    labelFormatter={(label) => `${chartData.find(d => d.name === label)?.fullName || label}`}
+                  />
+                  <Bar dataKey="goals" fill="#3B82F6" name="goals" />
+                  <Bar dataKey="outputs" fill="#10B981" name="outputs" />
+                  <Bar dataKey="tasks" fill="#8B5CF6" name="tasks" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
 
           <Card>
             <CardHeader>
@@ -511,11 +475,90 @@ export const TeamWorkloadMonitoring = ({
               <p className="text-gray-500">Loading workload data...</p>
             </div>
           ) : (
-            <TeamWorkloadCharts 
-              chartData={chartData} 
-              chartType="goals" 
-              onMemberClick={onSelectEmployee}
-            />
+            <div className="space-y-6">
+              <TeamWorkloadCharts 
+                chartData={chartData} 
+                chartType="goals" 
+                onMemberClick={onSelectEmployee}
+              />
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Goal Assignments</CardTitle>
+                  <CardDescription>Work goals with team member assignments</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {workloadData.workGoals.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {workloadData.workGoals.map((goal) => {
+                        const totalAssigned = (goal.coach ? 1 : 0) + goal.leads.length + goal.members.length;
+                        return (
+                          <Card key={goal.id} className="p-4 hover:shadow-md transition-shadow">
+                            <div className="space-y-3">
+                              <div className="flex items-start justify-between">
+                                <h3 className="font-medium text-gray-900 leading-tight">{goal.title}</h3>
+                                <Badge variant="outline" className="ml-2 flex-shrink-0">
+                                  {totalAssigned} {totalAssigned === 1 ? 'person' : 'people'}
+                                </Badge>
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="text-gray-600">Progress:</span>
+                                  <span className="font-medium">{goal.progress}%</span>
+                                </div>
+                                <Progress value={goal.progress} className="h-2" />
+                              </div>
+
+                              {totalAssigned > 0 && (
+                                <div className="space-y-2 text-sm">
+                                  {goal.coach && (
+                                    <div className="flex items-center gap-2">
+                                      <UserCog className="h-3 w-3 text-blue-600" />
+                                      <span className="text-gray-600">Coach:</span>
+                                      <span className="font-medium">{goal.coach}</span>
+                                    </div>
+                                  )}
+                                  
+                                  {goal.leads.length > 0 && (
+                                    <div className="flex items-center gap-2">
+                                      <UserCheck className="h-3 w-3 text-green-600" />
+                                      <span className="text-gray-600">Leads:</span>
+                                      <span className="font-medium">{goal.leads.join(', ')}</span>
+                                    </div>
+                                  )}
+                                  
+                                  {goal.members.length > 0 && (
+                                    <div className="flex items-center gap-2">
+                                      <Users className="h-3 w-3 text-purple-600" />
+                                      <span className="text-gray-600">Members:</span>
+                                      <span className="font-medium">{goal.members.join(', ')}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              
+                              {goal.outputs.length > 0 && (
+                                <div className="pt-2 border-t">
+                                  <div className="text-xs text-gray-500 flex items-center gap-1">
+                                    <Calendar className="h-3 w-3" />
+                                    {goal.outputs.length} linked output{goal.outputs.length > 1 ? 's' : ''}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-gray-500">
+                      No work goals with assignments found
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           )}
         </TabsContent>
 
