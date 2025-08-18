@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Habit } from '@/types/productivity';
+import { getCategoryOptions, mapDisplayToDatabase, mapDatabaseToDisplay } from '@/utils/habitCategoryUtils';
 
 const habitSchema = z.object({
   name: z.string().min(1, 'Habit name is required'),
@@ -26,16 +27,7 @@ interface EditHabitDialogProps {
   onSave: (habitId: string, updates: Partial<Habit>) => void;
 }
 
-const categoryOptions = [
-  'Health',
-  'Mental',
-  'Personal',
-  'Productivity',
-  'Relationship',
-  'Social',
-  'Spiritual',
-  'Wealth'
-];
+const categoryOptions = getCategoryOptions();
 
 export const EditHabitDialog = ({ habit, open, onOpenChange, onSave }: EditHabitDialogProps) => {
   const form = useForm<HabitFormValues>({
@@ -43,7 +35,7 @@ export const EditHabitDialog = ({ habit, open, onOpenChange, onSave }: EditHabit
     defaultValues: {
       name: habit.name,
       description: habit.description || '',
-      category: habit.category || ''
+      category: mapDatabaseToDisplay(habit.category)
     }
   });
 
@@ -51,7 +43,7 @@ export const EditHabitDialog = ({ habit, open, onOpenChange, onSave }: EditHabit
     onSave(habit.id, {
       name: values.name,
       description: values.description || undefined,
-      category: values.category || undefined
+      category: mapDisplayToDatabase(values.category)
     });
     onOpenChange(false);
   };

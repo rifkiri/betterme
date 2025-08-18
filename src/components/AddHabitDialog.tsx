@@ -31,6 +31,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { getCategoryOptions, mapDisplayToDatabase } from '@/utils/habitCategoryUtils';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Habit name is required'),
@@ -44,16 +45,7 @@ interface AddHabitDialogProps {
   onAddHabit: (habit: { name: string; description?: string; category?: string }) => void;
 }
 
-const categoryOptions = [
-  'Health',
-  'Mental',
-  'Personal',
-  'Productivity',
-  'Relationship',
-  'Social',
-  'Spiritual',
-  'Wealth'
-];
+const categoryOptions = getCategoryOptions();
 
 export const AddHabitDialog = ({ onAddHabit }: AddHabitDialogProps) => {
   const [open, setOpen] = useState(false);
@@ -71,7 +63,7 @@ export const AddHabitDialog = ({ onAddHabit }: AddHabitDialogProps) => {
     onAddHabit({
       name: values.name,
       description: values.description || undefined,
-      category: values.category || undefined,
+      category: mapDisplayToDatabase(values.category),
     });
     form.reset();
     setOpen(false);
