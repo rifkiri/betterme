@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Users, Target, User, UserCheck, UserCog, Calendar, CheckCircle } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Users, Target, User, UserCheck, UserCog, Calendar, CheckCircle, AlertTriangle, TrendingUp } from 'lucide-react';
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { supabaseGoalsService } from '@/services/SupabaseGoalsService';
 import { supabaseGoalAssignmentsService } from '@/services/SupabaseGoalAssignmentsService';
@@ -37,6 +38,8 @@ interface MemberWorkload {
   memberCount: number;
   totalTasks: number;
   totalOutputs: number;
+  totalWorkloadScore: number;
+  workloadLevel: 'low' | 'medium' | 'high' | 'overloaded';
 }
 
 export const TeamWorkloadMonitoring = ({ 
@@ -50,6 +53,7 @@ export const TeamWorkloadMonitoring = ({
     workGoals: WorkGoal[];
   }>({ memberWorkloads: [], workGoals: [] });
   const [loadingWorkload, setLoadingWorkload] = useState(false);
+  const [sortBy, setSortBy] = useState<'workload-high' | 'workload-low' | 'name' | 'role'>('workload-high');
 
   useEffect(() => {
     console.log('TeamWorkloadMonitoring useEffect - teamData:', teamData);
@@ -94,6 +98,17 @@ export const TeamWorkloadMonitoring = ({
         const tasks = await supabaseDataService.getTasks(member.id);
         const outputs = await supabaseDataService.getWeeklyOutputs(member.id);
         
+        // Calculate workload score
+        const workloadScore = calculateWorkloadScore({
+          workGoals: workGoalsCount,
+          personalGoals: personalGoalsCount,
+          coachingCount,
+          leadingCount,
+          memberCount,
+          totalTasks: tasks.filter(t => !t.isDeleted).length,
+          totalOutputs: outputs.filter(o => !o.isDeleted).length
+        });
+
         memberWorkloads.push({
           id: member.id,
           name: member.name,
@@ -104,7 +119,9 @@ export const TeamWorkloadMonitoring = ({
           leadingCount,
           memberCount,
           totalTasks: tasks.filter(t => !t.isDeleted).length,
-          totalOutputs: outputs.filter(o => !o.isDeleted).length
+          totalOutputs: outputs.filter(o => !o.isDeleted).length,
+          totalWorkloadScore: workloadScore,
+          workloadLevel: getWorkloadLevel(workloadScore)
         });
       }
 
@@ -159,6 +176,63 @@ export const TeamWorkloadMonitoring = ({
     } finally {
       setLoadingWorkload(false);
     }
+  };
+
+  const calculateWorkloadScore = (workload: Omit<MemberWorkload, 'id' | 'name' | 'role' | 'totalWorkloadScore' | 'workloadLevel'>) => {
+    return (
+      workload.workGoals * 3 +           // Work goals: 3 points each
+      workload.personalGoals * 1 +       // Personal goals: 1 point each
+      workload.coachingCount * 5 +       // Coaching roles: 5 points each (highest responsibility)
+      workload.leadingCount * 3 +        // Lead roles: 3 points each
+      workload.memberCount * 1 +         // Member roles: 1 point each
+      workload.totalTasks * 1 +          // Active tasks: 1 point each
+      workload.totalOutputs * 2          // Active outputs: 2 points each
+    );
+  };
+
+  const getWorkloadLevel = (score: number): 'low' | 'medium' | 'high' | 'overloaded' => {
+    if (score <= 5) return 'low';
+    if (score <= 10) return 'medium';
+    if (score <= 15) return 'high';
+    return 'overloaded';
+  };
+
+  const getWorkloadColor = (level: string) => {
+    switch (level) {
+      case 'low': return 'bg-green-100 text-green-800 border-green-200';
+      case 'medium': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'high': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'overloaded': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const sortedMembers = [...workloadData.memberWorkloads].sort((a, b) => {
+    switch (sortBy) {
+      case 'workload-high':
+        return b.totalWorkloadScore - a.totalWorkloadScore;
+      case 'workload-low':
+        return a.totalWorkloadScore - b.totalWorkloadScore;
+      case 'name':
+        return a.name.localeCompare(b.name);
+      case 'role':
+        return a.role.localeCompare(b.role);
+      default:
+        return 0;
+    }
+  });
+
+  const highestWorkloadMember = workloadData.memberWorkloads.reduce((max, member) => 
+    member.totalWorkloadScore > max.totalWorkloadScore ? member : max,
+    workloadData.memberWorkloads[0]
+  );
+
+  const teamWorkloadStats = {
+    averageWorkload: workloadData.memberWorkloads.length > 0 
+      ? workloadData.memberWorkloads.reduce((sum, m) => sum + m.totalWorkloadScore, 0) / workloadData.memberWorkloads.length 
+      : 0,
+    overloadedCount: workloadData.memberWorkloads.filter(m => m.workloadLevel === 'overloaded').length,
+    highWorkloadCount: workloadData.memberWorkloads.filter(m => m.workloadLevel === 'high').length
   };
 
   console.log('TeamWorkloadMonitoring - teamData:', teamData);
@@ -228,8 +302,38 @@ export const TeamWorkloadMonitoring = ({
         <TabsContent value="members" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Team Members View</CardTitle>
-              <CardDescription>Overview of each team member's workload and role distribution</CardDescription>
+              <CardTitle className="flex items-center justify-between">
+                <span>Team Members View</span>
+                <div className="flex items-center gap-4">
+                  <Select value={sortBy} onValueChange={(value) => setSortBy(value as any)}>
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder="Sort by..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="workload-high">Workload (High to Low)</SelectItem>
+                      <SelectItem value="workload-low">Workload (Low to High)</SelectItem>
+                      <SelectItem value="name">Name (A-Z)</SelectItem>
+                      <SelectItem value="role">Role</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardTitle>
+              <CardDescription>
+                Overview of each team member's workload and role distribution
+                {workloadData.memberWorkloads.length > 0 && (
+                  <div className="mt-2 text-sm">
+                    <span className="font-medium">Team Stats:</span> 
+                    Avg. Workload: {Math.round(teamWorkloadStats.averageWorkload)} points • 
+                    High Load: {teamWorkloadStats.highWorkloadCount} members • 
+                    Overloaded: {teamWorkloadStats.overloadedCount} members
+                    {highestWorkloadMember && (
+                      <span className="ml-2 text-red-600 font-medium">
+                        Highest: {highestWorkloadMember.name} ({highestWorkloadMember.totalWorkloadScore} pts)
+                      </span>
+                    )}
+                  </div>
+                )}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {loadingWorkload ? (
@@ -239,14 +343,42 @@ export const TeamWorkloadMonitoring = ({
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {workloadData.memberWorkloads.map((member) => (
-                    <Card key={member.id} className="p-4 hover:shadow-md transition-shadow">
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-medium text-gray-900">{member.name}</h3>
-                        <Badge variant="outline" className="text-xs">
-                          {member.role}
-                        </Badge>
-                      </div>
+                  {sortedMembers.map((member) => {
+                    const isHighestWorkload = highestWorkloadMember && member.id === highestWorkloadMember.id;
+                    return (
+                      <Card key={member.id} className={`p-4 hover:shadow-md transition-shadow ${
+                        isHighestWorkload ? 'ring-2 ring-red-500 bg-red-50' : ''
+                      }`}>
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-medium text-gray-900">{member.name}</h3>
+                            {isHighestWorkload && (
+                              <div title="Highest Workload">
+                                <TrendingUp className="h-4 w-4 text-red-500" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">
+                              {member.role}
+                            </Badge>
+                          </div>
+                        </div>
+                        
+                        {/* Workload Score and Level */}
+                        <div className="mb-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-gray-700">Total Workload</span>
+                            <span className="text-lg font-bold text-gray-900">{member.totalWorkloadScore} pts</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <Progress value={Math.min((member.totalWorkloadScore / 20) * 100, 100)} className="flex-1 mr-2" />
+                            <Badge className={`text-xs ${getWorkloadColor(member.workloadLevel)}`}>
+                              {member.workloadLevel.toUpperCase()}
+                              {member.workloadLevel === 'overloaded' && <AlertTriangle className="h-3 w-3 ml-1" />}
+                            </Badge>
+                          </div>
+                        </div>
                       
                       <div className="space-y-2 text-sm text-gray-600">
                         <div className="flex justify-between">
@@ -281,16 +413,17 @@ export const TeamWorkloadMonitoring = ({
                         </div>
                       </div>
                       
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full mt-3"
-                        onClick={() => onSelectEmployee(member.id)}
-                      >
-                        View Details
-                      </Button>
-                    </Card>
-                  ))}
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full mt-3"
+                          onClick={() => onSelectEmployee(member.id)}
+                        >
+                          View Details
+                        </Button>
+                      </Card>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
