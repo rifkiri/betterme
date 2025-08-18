@@ -23,7 +23,7 @@ const formSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
   dueDate: z.date().optional(),
-  linkedGoalIds: z.array(z.string()).optional(),
+  // linkedGoalIds removed - now handled by ItemLinkageService
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -43,7 +43,7 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
       title: '',
       description: '',
       dueDate: undefined,
-      linkedGoalIds: [],
+      // linkedGoalIds removed
     },
   });
 
@@ -59,7 +59,7 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
       description: data.description,
       progress: 0,
       dueDate: dueDate,
-      linkedGoalIds: data.linkedGoalIds || [],
+      // linkedGoalIds removed - handled separately
     });
     form.reset();
     setOpen(false);
@@ -178,122 +178,7 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
               )}
             />
 
-            {/* Goal Linking Section */}
-            {activeGoals.length > 0 && (
-              <FormField
-                control={form.control}
-                name="linkedGoalIds"
-                render={({ field }) => (
-                  <FormItem>
-                    <Collapsible open={isGoalSectionOpen} onOpenChange={setIsGoalSectionOpen}>
-                      <CollapsibleTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="w-full justify-between"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Link className="h-4 w-4" />
-                            <span>Link to Goals ({field.value?.length || 0} selected)</span>
-                          </div>
-                          <ChevronDown className={cn("h-4 w-4 transition-transform", isGoalSectionOpen && "rotate-180")} />
-                        </Button>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="space-y-3 mt-3">
-                        {/* Work Goals */}
-                        {workGoals.length > 0 && (
-                          <div>
-                            <div className="flex items-center gap-2 mb-2">
-                              <Target className="h-4 w-4 text-blue-600" />
-                              <span className="text-sm font-medium">Work Goals</span>
-                              <Badge variant="secondary" className="text-xs">{workGoals.length}</Badge>
-                            </div>
-                            <div className="space-y-2 pl-6">
-                              {workGoals.map((goal) => (
-                                <div key={goal.id} className="flex items-start space-x-2">
-                                  <Checkbox
-                                    checked={field.value?.includes(goal.id) || false}
-                                    onCheckedChange={(checked) => {
-                                      const currentIds = field.value || [];
-                                      if (checked) {
-                                        field.onChange([...currentIds, goal.id]);
-                                      } else {
-                                        field.onChange(currentIds.filter(id => id !== goal.id));
-                                      }
-                                    }}
-                                  />
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium truncate">{goal.title}</p>
-                                    {goal.description && (
-                                      <p className="text-xs text-muted-foreground truncate">{goal.description}</p>
-                                    )}
-                                    <div className="flex items-center gap-2 mt-1">
-                                      <Badge variant="outline" className="text-xs">
-                                        {goal.progress}%
-                                      </Badge>
-                                      {goal.deadline && (
-                                        <span className="text-xs text-muted-foreground">
-                                          Due {format(goal.deadline, 'MMM dd')}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Personal Goals */}
-                        {personalGoals.length > 0 && (
-                          <div>
-                            <div className="flex items-center gap-2 mb-2">
-                              <User className="h-4 w-4 text-green-600" />
-                              <span className="text-sm font-medium">Personal Goals</span>
-                              <Badge variant="secondary" className="text-xs">{personalGoals.length}</Badge>
-                            </div>
-                            <div className="space-y-2 pl-6">
-                              {personalGoals.map((goal) => (
-                                <div key={goal.id} className="flex items-start space-x-2">
-                                  <Checkbox
-                                    checked={field.value?.includes(goal.id) || false}
-                                    onCheckedChange={(checked) => {
-                                      const currentIds = field.value || [];
-                                      if (checked) {
-                                        field.onChange([...currentIds, goal.id]);
-                                      } else {
-                                        field.onChange(currentIds.filter(id => id !== goal.id));
-                                      }
-                                    }}
-                                  />
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium truncate">{goal.title}</p>
-                                    {goal.description && (
-                                      <p className="text-xs text-muted-foreground truncate">{goal.description}</p>
-                                    )}
-                                    <div className="flex items-center gap-2 mt-1">
-                                      <Badge variant="outline" className="text-xs">
-                                        {goal.progress}%
-                                      </Badge>
-                                      {goal.deadline && (
-                                        <span className="text-xs text-muted-foreground">
-                                          Due {format(goal.deadline, 'MMM dd')}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </CollapsibleContent>
-                    </Collapsible>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+            {/* Goal linking now handled via LinkGoalsDialog after creation */}
 
             </form>
           </Form>

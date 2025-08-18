@@ -2,6 +2,7 @@
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { WeeklyOutput, Goal } from '@/types/productivity';
 import { toast } from 'sonner';
+import { itemLinkageService } from '@/services/ItemLinkageService';
 
 interface UseWeeklyOutputsManagerProps {
   userId: string | null;
@@ -25,50 +26,14 @@ export const useWeeklyOutputsManager = ({
   goals,
 }: UseWeeklyOutputsManagerProps) => {
 
-  // Helper function to update bidirectional goal-output linking
-  const updateGoalLinks = async (outputId: string, linkedGoalIds: string[] = [], previousLinkedGoalIds: string[] = []) => {
+  // Helper function to update bidirectional goal-output linking using new service
+  const updateGoalLinks = async (outputId: string, linkedGoalIds: string[] = []) => {
     if (!userId) return;
 
     try {
-      // Goals to add the output to (new links)
-      const goalsToAddTo = linkedGoalIds.filter(goalId => !previousLinkedGoalIds.includes(goalId));
-      
-      // Goals to remove the output from (removed links)
-      const goalsToRemoveFrom = previousLinkedGoalIds.filter(goalId => !linkedGoalIds.includes(goalId));
-
-      console.log('🔥 [Manager] Updating goal links for output:', outputId);
-      console.log('🔥 [Manager] Goals to link:', goalsToAddTo);
-      console.log('🔥 [Manager] Goals to unlink:', goalsToRemoveFrom);
-
-      // Link to new goals using database function
-      for (const goalId of goalsToAddTo) {
-        const goal = goals.find(g => g.id === goalId);
-        if (goal) {
-          try {
-            console.log('🔥 [Manager] Linking output', outputId, 'to goal', goalId);
-            await supabaseDataService.linkOutputToGoal(outputId, goalId, userId);
-            console.log('Successfully linked output', outputId, 'to goal', goalId);
-          } catch (linkError) {
-            console.error('Failed to link output to goal:', goalId, linkError);
-            toast.error(`Failed to link to goal: ${goal.title}`);
-          }
-        }
-      }
-
-      // Unlink from removed goals using database function
-      for (const goalId of goalsToRemoveFrom) {
-        const goal = goals.find(g => g.id === goalId);
-        if (goal) {
-          try {
-            console.log('🔥 [Manager] Unlinking output', outputId, 'from goal', goalId);
-            await supabaseDataService.unlinkOutputFromGoal(outputId, goalId, userId);
-            console.log('Successfully unlinked output', outputId, 'from goal', goalId);
-          } catch (unlinkError) {
-            console.error('Failed to unlink output from goal:', goalId, unlinkError);
-            toast.error(`Failed to unlink from goal: ${goal.title}`);
-          }
-        }
-      }
+      console.log('🔥 [Manager] Updating goal links for output:', outputId, 'with goals:', linkedGoalIds);
+      await itemLinkageService.updateLinks('weekly_output', outputId, 'goal', linkedGoalIds, userId);
+      console.log('🔥 [Manager] Successfully updated goal links');
     } catch (error) {
       console.error('Failed to update goal links:', error);
       toast.error('Failed to update goal links');
@@ -93,10 +58,8 @@ export const useWeeklyOutputsManager = ({
         console.log('Attempting to save to Supabase...');
         await supabaseDataService.addWeeklyOutput({ ...newOutput, userId });
         
-        // Update bidirectional goal linking
-        if (newOutput.linkedGoalIds && newOutput.linkedGoalIds.length > 0) {
-          await updateGoalLinks(newOutput.id, newOutput.linkedGoalIds, []);
-        }
+        // Goal linking is now handled separately through ItemLinkageService
+        // The UI components will handle linking after creation
         
         console.log('Successfully saved to Supabase, reloading data...');
         await loadAllData();
@@ -120,18 +83,10 @@ export const useWeeklyOutputsManager = ({
 
     try {
       if (isSupabaseAvailable()) {
-        // Get the current output to compare linkedGoalIds
-        const currentOutput = weeklyOutputs.find(output => output.id === id);
-        const previousLinkedGoalIds = currentOutput?.linkedGoalIds || [];
-        const newLinkedGoalIds = updates.linkedGoalIds || previousLinkedGoalIds;
-
         console.log('Attempting to update in Supabase...');
         await supabaseDataService.updateWeeklyOutput(id, userId, updates);
         
-        // Update bidirectional goal linking if linkedGoalIds changed
-        if (updates.linkedGoalIds !== undefined) {
-          await updateGoalLinks(id, newLinkedGoalIds, previousLinkedGoalIds);
-        }
+        // Goal linking is now handled separately through ItemLinkageService
         
         console.log('Successfully updated in Supabase, reloading data...');
         await loadAllData();

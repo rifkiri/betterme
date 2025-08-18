@@ -27,7 +27,7 @@ export class SupabaseWeeklyOutputsService {
       completedDate: output.completed_date ? new Date(output.completed_date) : undefined,
       deletedDate: output.deleted_date ? new Date(output.deleted_date) : undefined,
       createdDate: new Date(output.created_date),
-      linkedGoalIds: output.linked_goal_ids || []
+      linkedGoalIds: [] // Now handled by ItemLinkageService
     }));
   }
 

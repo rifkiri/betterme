@@ -44,7 +44,7 @@ return data.map(goal => ({
       completed: goal.completed,
       archived: goal.archived,
       progress: goal.progress || 0,
-      linkedOutputIds: goal.linked_output_ids || [],
+      linkedOutputIds: [], // Now handled by ItemLinkageService
       userId: goal.user_id,
       coachId: goal.coach_id,
       leadIds: goal.lead_ids || [],
@@ -168,7 +168,7 @@ return data.map(goal => ({
         completed: goal.completed,
         archived: goal.archived,
         progress: goal.progress || 0,
-        linkedOutputIds: goal.linked_output_ids || [],
+        linkedOutputIds: [], // Now handled by ItemLinkageService
         userId: goal.user_id,
         coachId,
         leadIds,
@@ -207,7 +207,7 @@ return data.map(goal => ({
       completed: goal.completed,
       archived: goal.archived,
         progress: goal.progress || 0,
-      linkedOutputIds: goal.linked_output_ids || [],
+      linkedOutputIds: [], // Now handled by ItemLinkageService
       userId: goal.user_id,
       coachId: goal.coach_id,
       leadIds: goal.lead_ids || [],
@@ -233,7 +233,7 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
         archived: goal.archived,
         is_deleted: false,
         progress: 0, // Always start with 0% progress
-        linked_output_ids: goal.linkedOutputIds || [],
+        // linked_output_ids removed - now handled by ItemLinkageService
         coach_id: goal.coachId,
         lead_ids: goal.leadIds || [],
         member_ids: goal.memberIds || [],
@@ -264,7 +264,7 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
     if (updates.progress !== undefined) {
       supabaseUpdates.progress = updates.progress;
     }
-    if (updates.linkedOutputIds !== undefined) supabaseUpdates.linked_output_ids = updates.linkedOutputIds;
+    // linkedOutputIds now handled by ItemLinkageService
     if (updates.coachId !== undefined) supabaseUpdates.coach_id = updates.coachId;
     if (updates.leadIds !== undefined) supabaseUpdates.lead_ids = updates.leadIds;
     if (updates.memberIds !== undefined) supabaseUpdates.member_ids = updates.memberIds;

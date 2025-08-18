@@ -56,7 +56,7 @@ export interface WeeklyOutput {
   isMoved?: boolean;
   isDeleted?: boolean;
   deletedDate?: Date;
-  linkedGoalIds?: string[]; // Link to goals
+  // linkedGoalIds removed - now handled by ItemLinkageService
 }
 
 export interface Goal {
@@ -71,7 +71,7 @@ export interface Goal {
   completed: boolean;
   archived: boolean;
   progress: number; // 0-100, manually controlled
-  linkedOutputIds?: string[]; // Link to weekly outputs
+  // linkedOutputIds removed - now handled by ItemLinkageService
   coachId?: string; // Manager responsible for goal oversight
   leadIds?: string[]; // Users leading goal execution (managers or team members)
   memberIds?: string[]; // Users executing goal tasks (managers or team members)  

@@ -117,7 +117,6 @@ export type Database = {
           id: string
           is_deleted: boolean
           lead_ids: string[] | null
-          linked_output_ids: string[] | null
           member_ids: string[] | null
           progress: number
           subcategory: string | null
@@ -140,7 +139,6 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           lead_ids?: string[] | null
-          linked_output_ids?: string[] | null
           member_ids?: string[] | null
           progress?: number
           subcategory?: string | null
@@ -163,7 +161,6 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           lead_ids?: string[] | null
-          linked_output_ids?: string[] | null
           member_ids?: string[] | null
           progress?: number
           subcategory?: string | null
@@ -258,6 +255,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      item_linkages: {
+        Row: {
+          created_at: string
+          id: string
+          source_id: string
+          source_type: string
+          target_id: string
+          target_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          source_id: string
+          source_type: string
+          target_id: string
+          target_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          source_id?: string
+          source_type?: string
+          target_id?: string
+          target_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       mood_entries: {
         Row: {
@@ -487,7 +517,6 @@ export type Database = {
           id: string
           is_deleted: boolean
           is_moved: boolean
-          linked_goal_ids: string[] | null
           original_due_date: string | null
           progress: number
           project_id: string | null
@@ -504,7 +533,6 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           is_moved?: boolean
-          linked_goal_ids?: string[] | null
           original_due_date?: string | null
           progress?: number
           project_id?: string | null
@@ -521,7 +549,6 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           is_moved?: boolean
-          linked_goal_ids?: string[] | null
           original_due_date?: string | null
           progress?: number
           project_id?: string | null
@@ -579,6 +606,14 @@ export type Database = {
           is_deleted: boolean
           name: string
           streak: number
+        }[]
+      }
+      get_item_linkages: {
+        Args: { p_item_id: string; p_item_type: string; p_user_id: string }
+        Returns: {
+          created_at: string
+          target_id: string
+          target_type: string
         }[]
       }
       get_user_role: {

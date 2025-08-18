@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,26 +6,62 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Link } from 'lucide-react';
 import { Goal } from '@/types/productivity';
 import { format } from 'date-fns';
+import { itemLinkageService } from '@/services/ItemLinkageService';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface LinkGoalsDialogProps {
   outputId: string;
-  linkedGoalIds: string[];
   availableGoals: Goal[];
   onUpdateLinks: (outputId: string, goalIds: string[]) => void;
 }
 
 export const LinkGoalsDialog = ({
   outputId,
-  linkedGoalIds,
   availableGoals,
   onUpdateLinks
 }: LinkGoalsDialogProps) => {
   const [open, setOpen] = useState(false);
-  const [selectedGoalIds, setSelectedGoalIds] = useState<string[]>(linkedGoalIds);
+  const [selectedGoalIds, setSelectedGoalIds] = useState<string[]>([]);
+  const [linkedGoalIds, setLinkedGoalIds] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { currentUser } = useCurrentUser();
 
-  const handleSave = () => {
-    onUpdateLinks(outputId, selectedGoalIds);
-    setOpen(false);
+  // Load current linkages when dialog opens
+  useEffect(() => {
+    if (open && currentUser) {
+      loadLinkedGoals();
+    }
+  }, [open, currentUser, outputId]);
+
+  const loadLinkedGoals = async () => {
+    if (!currentUser) return;
+    
+    try {
+      setLoading(true);
+      const linkedIds = await itemLinkageService.getLinkedGoalIds(outputId, currentUser.id);
+      setLinkedGoalIds(linkedIds);
+      setSelectedGoalIds(linkedIds);
+    } catch (error) {
+      console.error('Error loading linked goals:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!currentUser) return;
+    
+    try {
+      setLoading(true);
+      await itemLinkageService.updateLinks('weekly_output', outputId, 'goal', selectedGoalIds, currentUser.id);
+      onUpdateLinks(outputId, selectedGoalIds);
+      setLinkedGoalIds(selectedGoalIds);
+      setOpen(false);
+    } catch (error) {
+      console.error('Error updating goal links:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoalToggle = (goalId: string, checked: boolean) => {
@@ -47,7 +83,7 @@ const getCategoryColor = (category: Goal['category']) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1 text-xs">
+        <Button variant="outline" size="sm" className="gap-1 text-xs" disabled={loading}>
           <Link className="h-3 w-3" />
           Link Goals ({linkedGoalIds.length})
         </Button>
@@ -119,11 +155,11 @@ const getCategoryColor = (category: Goal['category']) => {
             {selectedGoalIds.length} goal{selectedGoalIds.length !== 1 ? 's' : ''} selected
           </span>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setOpen(false)}>
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>
               Cancel
             </Button>
-            <Button onClick={handleSave}>
-              Update Links
+            <Button onClick={handleSave} disabled={loading}>
+              {loading ? 'Updating...' : 'Update Links'}
             </Button>
           </div>
         </div>
