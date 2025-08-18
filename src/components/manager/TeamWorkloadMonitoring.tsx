@@ -76,24 +76,19 @@ export const TeamWorkloadMonitoring = ({
       // First, fetch all user profiles to create a proper user lookup
       const allUsers = await supabaseDataService.getUsers();
       const userProfilesMap = new Map<string, User>();
-      const teamMemberIds = teamData.membersSummary.map((m: any) => m.id);
       
-      // Filter to team members and managers, create lookup map
-      allUsers
-        .filter(user => teamMemberIds.includes(user.id))
-        .forEach(user => {
-          userProfilesMap.set(user.id, user);
-        });
+      // Include all users (not just those in membersSummary)
+      allUsers.forEach(user => {
+        userProfilesMap.set(user.id, user);
+      });
       
       setUserProfiles(userProfilesMap);
 
       const memberWorkloads: MemberWorkload[] = [];
       const workGoals: WorkGoal[] = [];
 
-      // Process each team member using user IDs
-      for (const memberSummary of teamData.membersSummary) {
-        const userProfile = userProfilesMap.get(memberSummary.id);
-        if (!userProfile) continue;
+      // Process all users (not just those in membersSummary)
+      for (const userProfile of allUsers) {
         
         // Generate initials from profile name (first 3 letters)
         const initials = userProfile.name.length >= 3 
