@@ -87,7 +87,10 @@ export const TeamWorkloadCharts = ({ chartData, chartType, onMemberClick }: Team
                   }
                   return [value, config.title.split(' ')[0]];
                 }}
-                labelFormatter={(label) => `${chartData.find(d => d.name === label)?.fullName || label}`}
+                labelFormatter={(label) => {
+                  const member = chartData.find(d => d.name === label);
+                  return member ? member.fullName : label;
+                }}
               />
               {chartType === 'goals' && config.stackedBars ? (
                 config.stackedBars.map((bar, index) => (
