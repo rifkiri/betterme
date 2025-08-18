@@ -3,14 +3,14 @@ import { Habit } from '@/types/productivity';
 import { format } from 'date-fns';
 
 export class SupabaseHabitsService {
-  private mapAppCategoryToDatabase(appCategory?: string): 'health' | 'productivity' | 'personal' | 'fitness' | 'learning' | 'other' {
-    if (!appCategory) return 'other';
+  private mapAppCategoryToDatabase(appCategory?: string): 'health' | 'productivity' | 'personal' | 'fitness' | 'learning' | 'other' | 'mental' | 'relationship' | 'social' | 'spiritual' | 'wealth' | undefined {
+    if (!appCategory || appCategory === 'No category') return undefined;
     
-    const validCategories = ['health', 'productivity', 'personal', 'fitness', 'learning', 'other'] as const;
+    const validCategories = ['health', 'productivity', 'personal', 'fitness', 'learning', 'other', 'mental', 'relationship', 'social', 'spiritual', 'wealth'] as const;
     const lowerCategory = appCategory.toLowerCase();
     
     if (validCategories.includes(lowerCategory as any)) {
-      return lowerCategory as 'health' | 'productivity' | 'personal' | 'fitness' | 'learning' | 'other';
+      return lowerCategory as 'health' | 'productivity' | 'personal' | 'fitness' | 'learning' | 'other' | 'mental' | 'relationship' | 'social' | 'spiritual' | 'wealth';
     }
     
     return 'other';
@@ -110,7 +110,7 @@ export class SupabaseHabitsService {
     if (updates.description !== undefined) supabaseUpdates.description = updates.description;
     if (updates.completed !== undefined) supabaseUpdates.completed = updates.completed;
     if (updates.streak !== undefined) supabaseUpdates.streak = updates.streak;
-    if (updates.category) supabaseUpdates.category = this.mapAppCategoryToDatabase(updates.category);
+    if (updates.category !== undefined) supabaseUpdates.category = this.mapAppCategoryToDatabase(updates.category);
     if (updates.archived !== undefined) supabaseUpdates.archived = updates.archived;
     if (updates.isDeleted !== undefined) supabaseUpdates.is_deleted = updates.isDeleted;
 
