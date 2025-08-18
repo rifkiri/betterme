@@ -88,6 +88,18 @@ export const useGoalCollaboration = (userId: string, loadAllData?: () => Promise
     if (!userId) return;
     
     try {
+      // Check if user already has an assignment to this goal
+      const userAssignments = await supabaseGoalAssignmentsService.getGoalAssignments(userId);
+      const existingAssignment = userAssignments.find(
+        assignment => assignment.goalId === goalId
+      );
+      
+      // If user already has an assignment, delete it first (role switching)
+      if (existingAssignment) {
+        await supabaseGoalAssignmentsService.deleteGoalAssignment(existingAssignment.id);
+      }
+      
+      // Create new assignment with selected role
       await createAssignment({
         goalId,
         userId,
@@ -102,7 +114,8 @@ export const useGoalCollaboration = (userId: string, loadAllData?: () => Promise
         await loadAllData();
       }
       
-      toast.success(`Successfully joined goal as ${role}`);
+      const actionText = existingAssignment ? `switched to ${role}` : `joined goal as ${role}`;
+      toast.success(`Successfully ${actionText}`);
     } catch (error) {
       console.error('Error joining work goal:', error);
       toast.error('Failed to join goal');
