@@ -33,7 +33,7 @@ type FormData = z.infer<ReturnType<typeof createFormSchema>>;
 
 interface EnhancedAddGoalDialogProps {
   onAddGoal: (goal: Omit<Goal, 'id' | 'progress' | 'createdDate'>) => void;
-  onJoinWorkGoal: (goalId: string) => void;
+  onJoinWorkGoal: (goalId: string, role?: 'coach' | 'lead' | 'member') => void;
   goals: Goal[];
   weeklyOutputs?: WeeklyOutput[];
   availableUsers?: Array<{ id: string; name: string; role: string }>;

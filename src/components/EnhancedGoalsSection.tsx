@@ -23,7 +23,7 @@ interface EnhancedGoalsSectionProps {
   onRestoreGoal: (id: string) => void;
   onPermanentlyDeleteGoal: (id: string) => void;
   onUpdateGoalProgress: (goalId: string, progress: number) => void;
-  onJoinWorkGoal: (goalId: string) => void;
+  onJoinWorkGoal: (goalId: string, role?: 'coach' | 'lead' | 'member') => void;
   onLeaveWorkGoal: (goalId: string) => void;
 }
 
@@ -296,7 +296,7 @@ export const EnhancedGoalsSection = ({
                     )}
                     availableUsers={availableUsers}
                     currentUserId={currentUserId}
-                    onJoinGoal={(goalId, role) => onJoinWorkGoal(goalId)}
+                    onJoinGoal={(goalId, role) => onJoinWorkGoal(goalId, role)}
                   />
                 </div>
               </div>
