@@ -38,9 +38,10 @@ export const MoveGoalDialog = ({ onMoveGoal, disabled = false }: MoveGoalDialogP
           size="sm" 
           variant="outline" 
           disabled={disabled}
-          className="text-xs px-2 py-1 text-blue-600 hover:bg-blue-50"
+          className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50"
+          title="Move Goal Deadline"
         >
-          <Clock className="h-3 w-3" />
+          <Clock className="h-4 w-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">

@@ -31,10 +31,10 @@ export const MoveWeeklyOutputDialog = ({ onMoveOutput, disabled }: MoveWeeklyOut
           size="sm" 
           variant="outline" 
           disabled={disabled}
-          className="flex items-center gap-1 text-xs"
+          className="h-8 w-8 p-0"
+          title="Move Weekly Output"
         >
-          <ArrowRight className="h-3 w-3" />
-          Move
+          <ArrowRight className="h-4 w-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] max-h-[90vh] flex flex-col">
