@@ -95,9 +95,11 @@ const getCategoryColor = (category: Goal['category']) => {
         
         <div className="flex-1 overflow-y-auto space-y-3">
           {availableGoals.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">No goals available to link</p>
+            <p className="text-center text-gray-500 py-8">No active goals available to link</p>
           ) : (
-            availableGoals.map((goal) => {
+            availableGoals
+              .filter(goal => !goal.completed && !goal.archived && goal.progress < 100)
+              .map((goal) => {
               const isSelected = selectedGoalIds.includes(goal.id);
               const isLinked = linkedGoalIds.includes(goal.id);
               

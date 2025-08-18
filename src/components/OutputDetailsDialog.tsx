@@ -15,8 +15,11 @@ import {
 } from 'lucide-react';
 import { WeeklyOutput, Task, Goal } from '@/types/productivity';
 import { format } from 'date-fns';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { EditWeeklyOutputDialog } from './EditWeeklyOutputDialog';
+import { LinkGoalsDialog } from './LinkGoalsDialog';
+import { itemLinkageService } from '@/services/ItemLinkageService';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface OutputDetailsDialogProps {
   output: WeeklyOutput;
@@ -26,6 +29,7 @@ interface OutputDetailsDialogProps {
   onUpdateProgress: (outputId: string, newProgress: number) => void;
   goals: Goal[];
   tasks: Task[];
+  onUpdateLinks?: (outputId: string, goalIds: string[]) => void;
 }
 
 export const OutputDetailsDialog = ({
@@ -35,12 +39,38 @@ export const OutputDetailsDialog = ({
   onEditWeeklyOutput,
   onUpdateProgress,
   goals,
-  tasks
+  tasks,
+  onUpdateLinks
 }: OutputDetailsDialogProps) => {
   const [editingOutput, setEditingOutput] = useState<WeeklyOutput | null>(null);
+  const [linkedGoalIds, setLinkedGoalIds] = useState<string[]>([]);
+  const [loadingLinks, setLoadingLinks] = useState(false);
+  const { currentUser } = useCurrentUser();
 
-  // Note: This will need to be updated to use ItemLinkageService to fetch linked goals
-  const linkedGoals: Goal[] = [];
+  // Load linked goals when dialog opens
+  useEffect(() => {
+    if (open && output.id && currentUser?.id) {
+      setLoadingLinks(true);
+      itemLinkageService.getLinkedGoalIds(output.id, currentUser.id)
+        .then(setLinkedGoalIds)
+        .catch(console.error)
+        .finally(() => setLoadingLinks(false));
+    }
+  }, [open, output.id, currentUser?.id]);
+
+  const linkedGoals = goals.filter(goal => linkedGoalIds.includes(goal.id));
+  
+  // Filter to only show active goals for linking
+  const availableGoals = goals.filter(goal => 
+    !goal.archived && goal.progress < 100
+  );
+
+  const handleUpdateLinks = async (outputId: string, goalIds: string[]) => {
+    setLinkedGoalIds(goalIds);
+    if (onUpdateLinks) {
+      onUpdateLinks(outputId, goalIds);
+    }
+  };
 
   const linkedTasks = tasks.filter(task => 
     task.weeklyOutputId === output.id
@@ -139,12 +169,21 @@ export const OutputDetailsDialog = ({
 
             {/* Contributing Goals */}
             <div className="space-y-3">
-              <h4 className="font-medium text-gray-900 flex items-center gap-2">
-                <ArrowUp className="h-4 w-4 text-indigo-600" />
-                Contributing to Goals ({linkedGoals.length})
-              </h4>
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                  <ArrowUp className="h-4 w-4 text-indigo-600" />
+                  Contributing to Goals ({loadingLinks ? '...' : linkedGoals.length})
+                </h4>
+                <LinkGoalsDialog
+                  outputId={output.id}
+                  availableGoals={availableGoals}
+                  onUpdateLinks={handleUpdateLinks}
+                />
+              </div>
               
-              {linkedGoals.length === 0 ? (
+              {loadingLinks ? (
+                <p className="text-sm text-gray-500 py-2">Loading linked goals...</p>
+              ) : linkedGoals.length === 0 ? (
                 <p className="text-sm text-gray-500 py-2">This output is not linked to any goals</p>
               ) : (
                 <div className="space-y-2">

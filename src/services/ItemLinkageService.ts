@@ -18,7 +18,57 @@ export interface LinkedItem {
 
 export class ItemLinkageService {
   /**
-   * Create a bidirectional link between two items
+   * Validate if an item is active (not deleted/archived)
+   */
+  private async validateItemActive(
+    itemType: ItemLinkage['sourceType'],
+    itemId: string,
+    userId: string
+  ): Promise<boolean> {
+    switch (itemType) {
+      case 'goal': {
+        const { data } = await supabase
+          .from('goals')
+          .select('is_deleted, archived')
+          .eq('id', itemId)
+          .eq('user_id', userId)
+          .single();
+        return data && !data.is_deleted && !data.archived;
+      }
+      case 'weekly_output': {
+        const { data } = await supabase
+          .from('weekly_outputs')
+          .select('is_deleted')
+          .eq('id', itemId)
+          .eq('user_id', userId)
+          .single();
+        return data && !data.is_deleted;
+      }
+      case 'task': {
+        const { data } = await supabase
+          .from('tasks')
+          .select('is_deleted')
+          .eq('id', itemId)
+          .eq('user_id', userId)
+          .single();
+        return data && !data.is_deleted;
+      }
+      case 'habit': {
+        const { data } = await supabase
+          .from('habits')
+          .select('is_deleted, archived')
+          .eq('id', itemId)
+          .eq('user_id', userId)
+          .single();
+        return data && !data.is_deleted && !data.archived;
+      }
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Create a bidirectional link between two items (only if both are active)
    */
   async createLink(
     sourceType: ItemLinkage['sourceType'],
@@ -27,6 +77,19 @@ export class ItemLinkageService {
     targetId: string,
     userId: string
   ): Promise<void> {
+    // Validate both items are active before creating link
+    const [sourceActive, targetActive] = await Promise.all([
+      this.validateItemActive(sourceType, sourceId, userId),
+      this.validateItemActive(targetType, targetId, userId)
+    ]);
+
+    if (!sourceActive) {
+      throw new Error(`Source ${sourceType} is not active or not found`);
+    }
+    if (!targetActive) {
+      throw new Error(`Target ${targetType} is not active or not found`);
+    }
+
     const { error } = await supabase
       .from('item_linkages')
       .insert({
@@ -148,6 +211,16 @@ export class ItemLinkageService {
       if (error) {
         throw new Error(`Failed to update links: ${error.message}`);
       }
+    }
+  }
+
+  /**
+   * Remove stale linkages for a user (cleanup method)
+   */
+  async removeStaleLinksForUser(userId: string): Promise<void> {
+    const { error } = await supabase.rpc('cleanup_stale_linkages');
+    if (error) {
+      throw new Error(`Failed to cleanup stale linkages: ${error.message}`);
     }
   }
 

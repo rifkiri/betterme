@@ -582,6 +582,10 @@ export type Database = {
         Args: { habit_id_param: string; user_id_param: string }
         Returns: number
       }
+      cleanup_stale_linkages: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       get_filtered_users_for_role: {
         Args: Record<PropertyKey, never>
         Returns: {
