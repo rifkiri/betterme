@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Archive, RotateCcw, Trash2 } from 'lucide-react';
@@ -27,14 +28,16 @@ export const ArchivedHabitsDialog = ({
           Archived ({archivedHabits.length})
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
+      <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
+        <DialogHeader className="shrink-0">
           <DialogTitle>Archived Habits</DialogTitle>
           <DialogDescription>
             Restore or permanently delete your archived habits
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-3 max-h-80 overflow-y-auto">
+        
+        <ScrollArea className="flex-1 px-1">
+          <div className="space-y-3">
           {archivedHabits.length === 0 ? (
             <p className="text-center text-gray-500 py-4">No archived habits</p>
           ) : (
@@ -72,7 +75,8 @@ export const ArchivedHabitsDialog = ({
               </div>
             ))
           )}
-        </div>
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -57,15 +58,17 @@ export const EditHabitDialog = ({ habit, open, onOpenChange, onSave }: EditHabit
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] flex flex-col">
+        <DialogHeader className="shrink-0">
           <DialogTitle>Edit Habit</DialogTitle>
           <DialogDescription>
             Update your habit details.
           </DialogDescription>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        
+        <ScrollArea className="flex-1 px-1">
+          <Form {...form}>
+            <form id="edit-habit-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="name"
@@ -106,7 +109,7 @@ export const EditHabitDialog = ({ habit, open, onOpenChange, onSave }: EditHabit
                         <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="bg-background z-50 max-h-60">
                       <SelectItem value="none">No category</SelectItem>
                       {categoryOptions.map((category) => (
                         <SelectItem key={category} value={category}>
@@ -119,15 +122,16 @@ export const EditHabitDialog = ({ habit, open, onOpenChange, onSave }: EditHabit
                 </FormItem>
               )}
             />
-            
-            <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="submit">Save Changes</Button>
-            </div>
-          </form>
-        </Form>
+            </form>
+          </Form>
+        </ScrollArea>
+        
+        <div className="flex justify-end space-x-2 pt-4 shrink-0">
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button type="submit" form="edit-habit-form">Save Changes</Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

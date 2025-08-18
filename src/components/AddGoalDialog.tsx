@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -140,13 +141,14 @@ export const AddGoalDialog = ({
           <span className="sm:hidden">Add</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
+        <DialogHeader className="shrink-0">
           <DialogTitle>Add New Goal</DialogTitle>
         </DialogHeader>
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <ScrollArea className="flex-1 px-1">
+          <Form {...form}>
+            <form id="goal-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="title"
@@ -187,7 +189,7 @@ export const AddGoalDialog = ({
                           <SelectValue placeholder={titleValue && titleValue.trim() ? "Clear title to select a goal" : "Select a work goal to join"} />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="bg-background border border-border shadow-lg z-50">
+                       <SelectContent className="bg-background border border-border shadow-lg z-50 max-h-60">
                         <SelectItem value="" className="hover:bg-accent">
                           <span className="text-muted-foreground">None - Create new goal</span>
                         </SelectItem>
@@ -243,7 +245,7 @@ export const AddGoalDialog = ({
                           <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="bg-background border border-border shadow-lg z-50">
+                       <SelectContent className="bg-background border border-border shadow-lg z-50 max-h-60">
                         <SelectItem value="work" className="hover:bg-accent">Work</SelectItem>
                         <SelectItem value="personal" className="hover:bg-accent">Personal</SelectItem>
                       </SelectContent>
@@ -329,7 +331,7 @@ export const AddGoalDialog = ({
                         <SelectTrigger className="bg-background border border-border">
                           <SelectValue placeholder="Select outputs to link" />
                         </SelectTrigger>
-                        <SelectContent className="bg-background border border-border shadow-lg z-50">
+                        <SelectContent className="bg-background border border-border shadow-lg z-50 max-h-60">
                           {availableOutputs.map((output) => (
                             <SelectItem key={output.id} value={output.id} className="hover:bg-accent">
                               {output.title} ({output.progress}%)
@@ -365,34 +367,37 @@ export const AddGoalDialog = ({
               />
             )}
 
-            <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={() => {
-                form.reset();
-                setIsJoiningGoal(false);
-                setOpen(false);
-              }}>
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={!canSubmit}
-                className={isJoiningGoal ? "bg-blue-600 hover:bg-blue-700" : ""}
-              >
-                {isJoiningGoal ? (
-                  <>
-                    <Users className="h-4 w-4 mr-2" />
-                    Join Goal
-                  </>
-                ) : (
-                  <>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Goal
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
-        </Form>
+            </form>
+          </Form>
+        </ScrollArea>
+        
+        <div className="flex justify-end space-x-2 pt-4 shrink-0">
+          <Button type="button" variant="outline" onClick={() => {
+            form.reset();
+            setIsJoiningGoal(false);
+            setOpen(false);
+          }}>
+            Cancel
+          </Button>
+          <Button 
+            type="submit" 
+            form="goal-form"
+            disabled={!canSubmit}
+            className={isJoiningGoal ? "bg-blue-600 hover:bg-blue-700" : ""}
+          >
+            {isJoiningGoal ? (
+              <>
+                <Users className="h-4 w-4 mr-2" />
+                Join Goal
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Goal
+              </>
+            )}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
