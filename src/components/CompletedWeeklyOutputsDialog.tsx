@@ -2,8 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Slider } from '@/components/ui/slider';
-import { Trophy, RotateCcw } from 'lucide-react';
+import { Trophy, Minus, Plus } from 'lucide-react';
 import { WeeklyOutput } from '@/types/productivity';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -61,22 +60,26 @@ export const CompletedWeeklyOutputsDialog = ({
                 
                 <div className="mb-3 space-y-2">
                   <Progress value={output.progress} className="h-2" />
-                  <div className="flex items-center gap-2">
-                    <Slider
-                      value={[output.progress]}
-                      onValueChange={(values) => handleProgressChange(output.id, values[0])}
-                      max={100}
-                      step={5}
-                      className="flex-1"
-                    />
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleProgressChange(output.id, 95)}
-                      className="flex items-center gap-1 text-xs"
+                  <div className="flex items-center space-x-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => handleProgressChange(output.id, output.progress - 10)} 
+                      disabled={output.progress <= 0} 
+                      className="h-8 w-8 p-0"
+                      title="Decrease Progress"
                     >
-                      <RotateCcw className="h-3 w-3" />
-                      Revert
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => handleProgressChange(output.id, output.progress + 10)} 
+                      disabled={output.progress >= 100} 
+                      className="h-8 w-8 p-0"
+                      title="Increase Progress"
+                    >
+                      <Plus className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>

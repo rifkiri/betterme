@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Trophy, Clock, RotateCcw } from 'lucide-react';
+import { Trophy, Clock, CheckCircle } from 'lucide-react';
 import { Task } from '@/types/productivity';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -54,22 +53,9 @@ export const CompletedTasksDialog = ({
             completedTasks.map(task => (
               <div key={task.id} className="p-3 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-lg">
                 <div className="flex items-start gap-3">
-                  <div className="flex items-center gap-2 mt-1">
-                    <Checkbox
-                      checked={true}
-                      onCheckedChange={() => handleToggleTask(task.id)}
-                      className="data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
-                    />
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleToggleTask(task.id)}
-                      className="flex items-center gap-1 text-xs h-6 px-2"
-                    >
-                      <RotateCcw className="h-3 w-3" />
-                      Revert
-                    </Button>
-                  </div>
+                  <button onClick={() => handleToggleTask(task.id)} className="mt-1">
+                    <CheckCircle className="h-4 w-4 text-amber-600" />
+                  </button>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-foreground">{task.title}</p>
                     <div className="flex items-center space-x-2 mt-1">
