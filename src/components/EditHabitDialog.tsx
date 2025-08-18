@@ -35,7 +35,7 @@ export const EditHabitDialog = ({ habit, open, onOpenChange, onSave }: EditHabit
     defaultValues: {
       name: habit.name,
       description: habit.description || '',
-      category: mapDatabaseToDisplay(habit.category)
+      category: habit.category ? mapDatabaseToDisplay(habit.category) : 'none'
     }
   });
 
@@ -43,7 +43,7 @@ export const EditHabitDialog = ({ habit, open, onOpenChange, onSave }: EditHabit
     onSave(habit.id, {
       name: values.name,
       description: values.description || undefined,
-      category: mapDisplayToDatabase(values.category)
+      category: values.category === 'none' ? undefined : mapDisplayToDatabase(values.category)
     });
     onOpenChange(false);
   };

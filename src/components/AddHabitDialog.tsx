@@ -63,7 +63,7 @@ export const AddHabitDialog = ({ onAddHabit }: AddHabitDialogProps) => {
     onAddHabit({
       name: values.name,
       description: values.description || undefined,
-      category: mapDisplayToDatabase(values.category),
+      category: values.category === 'none' ? undefined : mapDisplayToDatabase(values.category),
     });
     form.reset();
     setOpen(false);

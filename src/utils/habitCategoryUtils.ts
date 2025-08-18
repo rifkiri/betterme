@@ -32,7 +32,6 @@ export const CATEGORY_DISPLAY_MAP = {
 
 // Reverse mapping for display to database (only show new categories to users)
 export const DISPLAY_TO_DATABASE_MAP = {
-  'No category': undefined,
   'Health': 'health',
   'Mental': 'mental',
   'Personal': 'personal',
@@ -53,12 +52,12 @@ export const getCategoryOptions = (): DisplayCategory[] => {
 
 // Map display category to database value
 export const mapDisplayToDatabase = (displayCategory: string | undefined): string | undefined => {
-  if (!displayCategory || displayCategory === 'none') return undefined;
-  return DISPLAY_TO_DATABASE_MAP[displayCategory as DisplayCategory] || 'other';
+  if (!displayCategory || displayCategory === 'No category') return undefined;
+  return DISPLAY_TO_DATABASE_MAP[displayCategory as keyof typeof DISPLAY_TO_DATABASE_MAP] as string || undefined;
 };
 
 // Map database category to display value
 export const mapDatabaseToDisplay = (databaseCategory: string | undefined): string => {
-  if (!databaseCategory) return '';
+  if (!databaseCategory) return 'No category';
   return CATEGORY_DISPLAY_MAP[databaseCategory as DatabaseCategory] || 'Other';
 };
