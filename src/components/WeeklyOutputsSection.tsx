@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Target } from 'lucide-react';
 import { DeletedWeeklyOutputsDialog } from './DeletedWeeklyOutputsDialog';
+import { CompletedWeeklyOutputsDialog } from './CompletedWeeklyOutputsDialog';
 import { AddWeeklyOutputDialog } from './AddWeeklyOutputDialog';
 import { WeeklyOutputCard } from './WeeklyOutputCard';
 import { WeekNavigator } from './WeekNavigator';
@@ -111,6 +112,7 @@ export const WeeklyOutputsSection = ({
             onRestore={onRestoreWeeklyOutput} 
             onPermanentlyDelete={onPermanentlyDeleteWeeklyOutput} 
           />
+          <CompletedWeeklyOutputsDialog weeklyOutputs={weeklyOutputs} />
           <AddWeeklyOutputDialog onAddWeeklyOutput={onAddWeeklyOutput} />
         </div>
       </CardHeader>

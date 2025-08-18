@@ -11,6 +11,7 @@ import { Task, WeeklyOutput, Goal } from '@/types/productivity';
 import { AddTaskDialog } from './AddTaskDialog';
 import { TaskItem } from './TaskItem';
 import { DeletedTasksDialog } from './DeletedTasksDialog';
+import { CompletedTasksDialog } from './CompletedTasksDialog';
 import { TaskDetailsDialog } from './TaskDetailsDialog';
 
 interface TasksSectionProps {
@@ -91,6 +92,7 @@ export const TasksSection = ({
             onRestoreTask={onRestoreTask}
             onPermanentlyDeleteTask={onPermanentlyDeleteTask}
           />
+          <CompletedTasksDialog tasks={tasks} />
           <AddTaskDialog 
             onAddTask={(task) => onAddTask({ ...task, dueDate: selectedTaskDate, originalDueDate: selectedTaskDate })} 
             weeklyOutputs={weeklyOutputs}
