@@ -3,11 +3,12 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Circle, Archive, Loader2 } from 'lucide-react';
+import { CheckCircle, Circle, Archive, Loader2, Eye } from 'lucide-react';
 import { Habit } from '@/types/productivity';
 import { AddHabitDialog } from './AddHabitDialog';
 import { ArchivedHabitsDialog } from './ArchivedHabitsDialog';
 import { EditHabitDialog } from './EditHabitDialog';
+import { HabitDetailsDialog } from './HabitDetailsDialog';
 import { StreakDatesDialog } from './StreakDatesDialog';
 import { DateNavigator } from './DateNavigator';
 import { mapDatabaseToDisplay } from '@/utils/habitCategoryUtils';
@@ -40,6 +41,7 @@ export const HabitsSection = ({
 }: HabitsSectionProps) => {
   const [togglingHabitId, setTogglingHabitId] = useState<string | null>(null);
   const [streakDialogHabit, setStreakDialogHabit] = useState<Habit | null>(null);
+  const [viewingHabit, setViewingHabit] = useState<Habit | null>(null);
 
   console.log('HabitsSection rendering with habits:', habits);
 
@@ -126,8 +128,18 @@ export const HabitsSection = ({
                 <Button
                   variant="ghost"
                   size="sm"
+                  onClick={() => setViewingHabit(habit)}
+                  className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
+                  title="View Details"
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => onArchiveHabit(habit.id)}
                   className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
+                  title="Archive Habit"
                 >
                   <Archive className="h-4 w-4" />
                 </Button>
@@ -144,6 +156,15 @@ export const HabitsSection = ({
           streak={streakDialogHabit.streak}
           open={true}
           onOpenChange={(open) => !open && setStreakDialogHabit(null)}
+        />
+      )}
+
+      {viewingHabit && (
+        <HabitDetailsDialog
+          habit={viewingHabit}
+          open={true}
+          onOpenChange={(open) => !open && setViewingHabit(null)}
+          onEditHabit={onEditHabit}
         />
       )}
     </Card>
