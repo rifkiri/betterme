@@ -4,7 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { EnhancedAddGoalDialog } from './EnhancedAddGoalDialog';
+import { SimpleAddGoalDialog } from './SimpleAddGoalDialog';
+import { JoinGoalDialog } from './JoinGoalDialog';
 import { Goal, WeeklyOutput } from '@/types/productivity';
 import { Target, Briefcase, User, Plus, CheckCircle } from 'lucide-react';
 
@@ -277,15 +278,23 @@ export const EnhancedGoalsSection = ({
                   <h3 className="text-lg font-medium">Active Goals</h3>
                   <p className="text-sm text-gray-600">Goals currently in progress</p>
                 </div>
-                <EnhancedAddGoalDialog
-                  onAddGoal={onAddGoal}
-                  onJoinWorkGoal={onJoinWorkGoal}
-                  goals={allGoals}
-                  weeklyOutputs={weeklyOutputs}
-                  availableUsers={availableUsers}
-                  currentUserId={currentUserId}
-                  userRole={userRole}
-                />
+                <div className="flex gap-3">
+                  <SimpleAddGoalDialog onAddGoal={onAddGoal} />
+                  <JoinGoalDialog
+                    availableGoals={allGoals.filter(goal => 
+                      goal.category === 'work' && 
+                      goal.progress < 100 && 
+                      !goal.archived && 
+                      goal.userId !== currentUserId &&
+                      !goal.memberIds?.includes(currentUserId || '') &&
+                      !goal.leadIds?.includes(currentUserId || '') &&
+                      goal.coachId !== currentUserId
+                    )}
+                    availableUsers={availableUsers}
+                    currentUserId={currentUserId}
+                    onJoinGoal={(goalId, role) => onJoinWorkGoal(goalId)}
+                  />
+                </div>
               </div>
               
               {activeGoals.length === 0 ? (

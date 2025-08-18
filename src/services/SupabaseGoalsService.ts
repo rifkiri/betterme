@@ -355,21 +355,12 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
   async permanentlyDeleteGoal(id: string, userId: string): Promise<void> {
     console.log('Permanently deleting goal:', id, 'for user:', userId);
     
-    // Check if user has permission to delete this goal
-    const userRole = await this.getUserRole(userId);
-    const isManagerOrAdmin = userRole === 'manager' || userRole === 'admin';
-    
-    let query = supabase
+    // Only allow goal creators to delete their goals - simplified permission model
+    const { error } = await supabase
       .from('goals')
       .delete()
-      .eq('id', id);
-    
-    // Only restrict to user's own goals if they're not a manager/admin
-    if (!isManagerOrAdmin) {
-      query = query.eq('user_id', userId);
-    }
-
-    const { error } = await query;
+      .eq('id', id)
+      .eq('user_id', userId); // Only goal creators can delete
 
     if (error) {
       console.error('Error permanently deleting goal:', error);

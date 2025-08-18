@@ -84,14 +84,14 @@ export const useGoalCollaboration = (userId: string, loadAllData?: () => Promise
     }
   };
 
-  const joinWorkGoal = async (goalId: string) => {
+  const joinWorkGoal = async (goalId: string, role: 'coach' | 'lead' | 'member' = 'member') => {
     if (!userId) return;
     
     try {
       await createAssignment({
         goalId,
         userId,
-        role: 'member',
+        role,
         assignedBy: userId, // Self-assigned
         acknowledged: true,
         selfAssigned: true
@@ -101,8 +101,11 @@ export const useGoalCollaboration = (userId: string, loadAllData?: () => Promise
       if (loadAllData) {
         await loadAllData();
       }
+      
+      toast.success(`Successfully joined goal as ${role}`);
     } catch (error) {
       console.error('Error joining work goal:', error);
+      toast.error('Failed to join goal');
       throw error;
     }
   };
