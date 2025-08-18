@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Users, Target, User, UserCheck, UserCog, Calendar, CheckCircle } from 'lucide-react';
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { supabaseGoalsService } from '@/services/SupabaseGoalsService';
+import { supabaseGoalAssignmentsService } from '@/services/SupabaseGoalAssignmentsService';
 
 interface TeamWorkloadMonitoringProps {
   teamData: any;
@@ -110,6 +111,14 @@ export const TeamWorkloadMonitoring = ({
       // Get all work goals for goals view
       const allGoals = await supabaseGoalsService.getAllGoals();
       for (const goal of allGoals.filter(g => g.category === 'work' && !g.archived)) {
+        // Get goal assignments from goal_assignments table
+        const assignments = await supabaseGoalAssignmentsService.getAssignmentsForGoal(goal.id);
+        
+        // Group assignments by role
+        const coach = assignments.find(a => a.role === 'coach');
+        const leads = assignments.filter(a => a.role === 'lead');
+        const members = assignments.filter(a => a.role === 'member');
+        
         // Get linked outputs and tasks
         const outputs = await Promise.all(
           goal.linkedOutputIds?.map(async (outputId) => {
@@ -136,9 +145,9 @@ export const TeamWorkloadMonitoring = ({
           id: goal.id,
           title: goal.title,
           progress: goal.progress,
-          coach: goal.coachId ? userMap.get(goal.coachId) : undefined,
-          leads: goal.leadIds?.map(id => userMap.get(id)).filter(Boolean) || [],
-          members: goal.memberIds?.map(id => userMap.get(id)).filter(Boolean) || [],
+          coach: coach ? userMap.get(coach.userId) : undefined,
+          leads: leads.map(l => userMap.get(l.userId)).filter(Boolean),
+          members: members.map(m => userMap.get(m.userId)).filter(Boolean),
           outputs: outputs.filter(Boolean),
           tasks
         });
