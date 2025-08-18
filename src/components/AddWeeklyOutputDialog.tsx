@@ -54,6 +54,8 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
       dueDate = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate(), 23, 59, 59, 999);
     }
 
+    console.log('🔥 [AddDialog] Submitting with selected goal IDs:', data.selectedGoalIds);
+
     onAddWeeklyOutput({
       title: data.title,
       description: data.description,

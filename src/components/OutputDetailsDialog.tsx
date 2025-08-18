@@ -17,7 +17,7 @@ import { WeeklyOutput, Task, Goal } from '@/types/productivity';
 import { format } from 'date-fns';
 import { useState, useEffect } from 'react';
 import { EditWeeklyOutputDialog } from './EditWeeklyOutputDialog';
-import { LinkGoalsDialog } from './LinkGoalsDialog';
+
 import { itemLinkageService } from '@/services/ItemLinkageService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
@@ -47,28 +47,27 @@ export const OutputDetailsDialog = ({
   const [loadingLinks, setLoadingLinks] = useState(false);
   const { currentUser } = useCurrentUser();
 
-  // Load linked goals when dialog opens
+  // Load linked goals when dialog opens or output changes
   useEffect(() => {
     if (open && output.id && currentUser?.id) {
-      setLoadingLinks(true);
-      itemLinkageService.getLinkedGoalIds(output.id, currentUser.id)
-        .then(setLinkedGoalIds)
-        .catch(console.error)
-        .finally(() => setLoadingLinks(false));
+      refreshLinkedGoals();
     }
   }, [open, output.id, currentUser?.id]);
 
   const linkedGoals = goals.filter(goal => linkedGoalIds.includes(goal.id));
   
-  // Filter to only show active goals for linking
-  const availableGoals = goals.filter(goal => 
-    !goal.archived && goal.progress < 100
-  );
-
-  const handleUpdateLinks = async (outputId: string, goalIds: string[]) => {
-    setLinkedGoalIds(goalIds);
-    if (onUpdateLinks) {
-      onUpdateLinks(outputId, goalIds);
+  // Refresh linked goals data when dialog opens or after edits
+  const refreshLinkedGoals = async () => {
+    if (output.id && currentUser?.id) {
+      setLoadingLinks(true);
+      try {
+        const linkedIds = await itemLinkageService.getLinkedGoalIds(output.id, currentUser.id);
+        setLinkedGoalIds(linkedIds);
+      } catch (error) {
+        console.error('Error refreshing linked goals:', error);
+      } finally {
+        setLoadingLinks(false);
+      }
     }
   };
 
@@ -174,11 +173,6 @@ export const OutputDetailsDialog = ({
                   <ArrowUp className="h-4 w-4 text-indigo-600" />
                   Contributing to Goals ({loadingLinks ? '...' : linkedGoals.length})
                 </h4>
-                <LinkGoalsDialog
-                  outputId={output.id}
-                  availableGoals={availableGoals}
-                  onUpdateLinks={handleUpdateLinks}
-                />
               </div>
               
               {loadingLinks ? (
@@ -317,7 +311,13 @@ const getCategoryColor = (category: Goal['category']) => {
         <EditWeeklyOutputDialog 
           weeklyOutput={editingOutput} 
           open={true} 
-          onOpenChange={open => !open && setEditingOutput(null)} 
+          onOpenChange={open => {
+            if (!open) {
+              setEditingOutput(null);
+              // Refresh linked goals after edit dialog closes
+              setTimeout(refreshLinkedGoals, 100);
+            }
+          }} 
           onSave={onEditWeeklyOutput}
           goals={goals}
         />

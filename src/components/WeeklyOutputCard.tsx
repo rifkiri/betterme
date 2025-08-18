@@ -36,21 +36,27 @@ export const WeeklyOutputCard = ({
   const [linkedGoalsCount, setLinkedGoalsCount] = useState(0);
   const { currentUser } = useCurrentUser();
   
-  useEffect(() => {
-    const fetchLinkedGoals = async () => {
-      if (currentUser?.id) {
-        try {
-          const linkedItems = await itemLinkageService.getLinkedItems('weekly_output', output.id, currentUser.id);
-          const goalCount = linkedItems.filter(item => item.type === 'goal').length;
-          setLinkedGoalsCount(goalCount);
-        } catch (error) {
-          console.error('Error fetching linked goals:', error);
-        }
+  // Refresh linked goals count
+  const fetchLinkedGoals = async () => {
+    if (currentUser?.id) {
+      try {
+        const linkedItems = await itemLinkageService.getLinkedItems('weekly_output', output.id, currentUser.id);
+        const goalCount = linkedItems.filter(item => item.type === 'goal').length;
+        setLinkedGoalsCount(goalCount);
+      } catch (error) {
+        console.error('Error fetching linked goals:', error);
       }
-    };
+    }
+  };
 
+  useEffect(() => {
     fetchLinkedGoals();
   }, [output.id, currentUser?.id]);
+
+  // Add key prop listener for when output is updated to refresh count
+  useEffect(() => {
+    fetchLinkedGoals();
+  }, [output.title, output.description, output.progress]);
   
   const isOverdue = () => {
     return output.dueDate && isWeeklyOutputOverdue(output.dueDate, output.progress, output.completedDate, output.createdDate);
@@ -166,7 +172,13 @@ export const WeeklyOutputCard = ({
       <OutputDetailsDialog
         output={output}
         open={showDetailsDialog}
-        onOpenChange={setShowDetailsDialog}
+        onOpenChange={(open) => {
+          setShowDetailsDialog(open);
+          // Refresh linked goals count when details dialog closes
+          if (!open) {
+            setTimeout(fetchLinkedGoals, 100);
+          }
+        }}
         onEditWeeklyOutput={onEditWeeklyOutput}
         onUpdateProgress={onUpdateProgress}
         goals={goals}
