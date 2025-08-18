@@ -34,11 +34,11 @@ export const useGoalCollaboration = (userId: string, loadAllData?: () => Promise
     }
   };
 
-  const createAssignment = async (assignment: Omit<GoalAssignment, 'id' | 'assignedDate'>) => {
+  const createAssignment = async (assignment: Omit<GoalAssignment, 'id' | 'assignedDate'>, goalCreatorId?: string) => {
     try {
       await supabaseGoalAssignmentsService.createGoalAssignment(assignment);
       
-      // Create notification for the assigned user
+      // Create notification for the assigned user (when manager assigns)
       if (!assignment.selfAssigned) {
         await supabaseGoalNotificationsService.createNotification({
           userId: assignment.userId,
@@ -48,11 +48,10 @@ export const useGoalCollaboration = (userId: string, loadAllData?: () => Promise
         });
       }
       
-      // If self-assigned, notify managers
-      if (assignment.selfAssigned) {
-        // This would need to be implemented to notify coaches/leads
+      // If self-assigned, notify goal creator
+      if (assignment.selfAssigned && goalCreatorId) {
         await supabaseGoalNotificationsService.createNotification({
-          userId: assignment.assignedBy, // The manager who created the goal
+          userId: goalCreatorId, // The goal creator
           goalId: assignment.goalId,
           notificationType: 'self_assignment',
           role: assignment.role
@@ -88,6 +87,15 @@ export const useGoalCollaboration = (userId: string, loadAllData?: () => Promise
     if (!userId) return;
     
     try {
+      // First, get the goal to find its creator for notifications
+      const { supabaseGoalsService } = await import('@/services/SupabaseGoalsService');
+      const allGoals = await supabaseGoalsService.getAllGoals();
+      const goal = allGoals.find(g => g.id === goalId);
+      
+      if (!goal) {
+        throw new Error('Goal not found');
+      }
+      
       // Check if user already has an assignment to this goal
       const userAssignments = await supabaseGoalAssignmentsService.getGoalAssignments(userId);
       const existingAssignment = userAssignments.find(
@@ -107,7 +115,7 @@ export const useGoalCollaboration = (userId: string, loadAllData?: () => Promise
         assignedBy: userId, // Self-assigned
         acknowledged: true,
         selfAssigned: true
-      });
+      }, goal.userId); // Pass goal creator ID for notification
       
       // Refresh goals data to show the newly joined goal
       if (loadAllData) {
