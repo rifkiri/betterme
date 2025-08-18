@@ -95,12 +95,10 @@ export const TeamWorkloadMonitoring = ({
         const userProfile = userProfilesMap.get(memberSummary.id);
         if (!userProfile) continue;
         
-        // Generate initials from profile name
-        const initials = userProfile.name
-          .split(' ')
-          .map(n => n[0])
-          .join('')
-          .toUpperCase();
+        // Generate initials from profile name (first 3 letters)
+        const initials = userProfile.name.length >= 3 
+          ? userProfile.name.substring(0, 3).toUpperCase()
+          : userProfile.name.toUpperCase();
         
         // Get member's goals
         const goals = await supabaseGoalsService.getUserAccessibleGoals(userProfile.id);
