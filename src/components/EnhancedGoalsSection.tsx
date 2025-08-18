@@ -279,7 +279,11 @@ export const EnhancedGoalsSection = ({
                   <p className="text-sm text-gray-600">Goals currently in progress</p>
                 </div>
                 <div className="flex gap-3">
-                  <SimpleAddGoalDialog onAddGoal={onAddGoal} />
+                  <SimpleAddGoalDialog 
+                    onAddGoal={onAddGoal} 
+                    availableUsers={availableUsers}
+                    currentUserId={currentUserId}
+                  />
                   <JoinGoalDialog
                     availableGoals={allGoals.filter(goal => 
                       goal.category === 'work' && 

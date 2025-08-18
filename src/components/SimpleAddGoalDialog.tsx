@@ -7,9 +7,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CalendarIcon, Plus, Target } from 'lucide-react';
+import { CalendarIcon, Plus, Target, Users, UserCog, UserCheck, User, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { z } from 'zod';
@@ -20,16 +23,28 @@ const formSchema = z.object({
   description: z.string().optional(),
   category: z.enum(['work', 'personal']),
   deadline: z.date().optional(),
+  coachId: z.string().optional(),
+  leadIds: z.array(z.string()).optional(),
+  memberIds: z.array(z.string()).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
 interface SimpleAddGoalDialogProps {
   onAddGoal: (goal: Omit<Goal, 'id' | 'progress' | 'createdDate'>) => void;
+  availableUsers?: Array<{ id: string; name: string; role: string }>;
+  currentUserId?: string;
 }
 
-export const SimpleAddGoalDialog = ({ onAddGoal }: SimpleAddGoalDialogProps) => {
+export const SimpleAddGoalDialog = ({ 
+  onAddGoal, 
+  availableUsers = [], 
+  currentUserId 
+}: SimpleAddGoalDialogProps) => {
   const [open, setOpen] = useState(false);
+  const [selectedCoach, setSelectedCoach] = useState<string>('');
+  const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -38,8 +53,13 @@ export const SimpleAddGoalDialog = ({ onAddGoal }: SimpleAddGoalDialogProps) => 
       description: '',
       category: 'personal',
       deadline: undefined,
+      coachId: '',
+      leadIds: [],
+      memberIds: [],
     },
   });
+
+  const watchCategory = form.watch('category');
 
   const onSubmit = (data: FormData) => {
     let deadline = data.deadline;
@@ -55,10 +75,51 @@ export const SimpleAddGoalDialog = ({ onAddGoal }: SimpleAddGoalDialogProps) => 
       completed: false,
       archived: false,
       linkedOutputIds: [],
+      coachId: data.category === 'work' ? (selectedCoach || undefined) : undefined,
+      leadIds: data.category === 'work' ? (selectedLeads.length > 0 ? selectedLeads : undefined) : undefined,
+      memberIds: data.category === 'work' ? (selectedMembers.length > 0 ? selectedMembers : undefined) : undefined,
+      createdBy: data.category === 'work' ? currentUserId : undefined,
     });
 
     form.reset();
+    setSelectedCoach('');
+    setSelectedLeads([]);
+    setSelectedMembers([]);
     setOpen(false);
+  };
+
+  const toggleUserSelection = (userId: string, type: 'lead' | 'member') => {
+    if (type === 'lead') {
+      setSelectedLeads(prev => 
+        prev.includes(userId) 
+          ? prev.filter(id => id !== userId)
+          : [...prev, userId]
+      );
+    } else {
+      setSelectedMembers(prev => 
+        prev.includes(userId) 
+          ? prev.filter(id => id !== userId)
+          : [...prev, userId]
+      );
+    }
+  };
+
+  const removeUser = (userId: string, type: 'lead' | 'member') => {
+    if (type === 'lead') {
+      setSelectedLeads(prev => prev.filter(id => id !== userId));
+    } else {
+      setSelectedMembers(prev => prev.filter(id => id !== userId));
+    }
+  };
+
+  const getSelectedUsers = (type: 'coach' | 'lead' | 'member') => {
+    if (type === 'coach') {
+      return selectedCoach ? availableUsers.filter(u => u.id === selectedCoach) : [];
+    }
+    if (type === 'lead') {
+      return availableUsers.filter(u => selectedLeads.includes(u.id));
+    }
+    return availableUsers.filter(u => selectedMembers.includes(u.id));
   };
 
   return (
@@ -175,6 +236,147 @@ export const SimpleAddGoalDialog = ({ onAddGoal }: SimpleAddGoalDialogProps) => 
                 </FormItem>
               )}
             />
+
+            {/* Work Goal Role Assignments */}
+            {watchCategory === 'work' && (
+              <Card className="p-4 bg-blue-50 border-blue-200">
+                <h3 className="font-medium text-blue-900 mb-4 flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Role Assignments (Optional)
+                </h3>
+                
+                {/* Coach Selection */}
+                <div className="space-y-3 mb-4">
+                  <div className="flex items-center gap-2">
+                    <UserCog className="h-4 w-4 text-blue-600" />
+                    <span className="font-medium text-sm">Coach</span>
+                  </div>
+                  <Select value={selectedCoach} onValueChange={(value) => setSelectedCoach(value === 'none' ? '' : value)}>
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Select a coach (optional)" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white z-50">
+                      <SelectItem value="none">No coach assigned</SelectItem>
+                      {availableUsers.map(user => (
+                        <SelectItem key={user.id} value={user.id}>
+                          {user.name} ({user.role})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {getSelectedUsers('coach').map(user => (
+                    <Badge key={user.id} variant="secondary" className="bg-blue-100 text-blue-800">
+                      <UserCog className="h-3 w-3 mr-1" />
+                      {user.name}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-4 w-4 p-0 ml-1"
+                        onClick={() => setSelectedCoach('')}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </Badge>
+                  ))}
+                </div>
+
+                <Separator className="my-4" />
+
+                {/* Leads Selection */}
+                <div className="space-y-3 mb-4">
+                  <div className="flex items-center gap-2">
+                    <UserCheck className="h-4 w-4 text-green-600" />
+                    <span className="font-medium text-sm">Leads</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {availableUsers.map(user => (
+                      <div
+                        key={user.id}
+                        className={cn(
+                          "flex items-center space-x-2 p-2 rounded-md border cursor-pointer transition-colors",
+                          selectedLeads.includes(user.id)
+                            ? "bg-green-50 border-green-300"
+                            : "bg-white border-gray-200 hover:bg-gray-50"
+                        )}
+                        onClick={() => toggleUserSelection(user.id, 'lead')}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedLeads.includes(user.id)}
+                          onChange={() => toggleUserSelection(user.id, 'lead')}
+                          className="rounded border-gray-300"
+                        />
+                        <span className="text-sm">{user.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {getSelectedUsers('lead').map(user => (
+                      <Badge key={user.id} variant="secondary" className="bg-green-100 text-green-800">
+                        <UserCheck className="h-3 w-3 mr-1" />
+                        {user.name}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-4 w-4 p-0 ml-1"
+                          onClick={() => removeUser(user.id, 'lead')}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <Separator className="my-4" />
+
+                {/* Members Selection */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-purple-600" />
+                    <span className="font-medium text-sm">Members</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {availableUsers.map(user => (
+                      <div
+                        key={user.id}
+                        className={cn(
+                          "flex items-center space-x-2 p-2 rounded-md border cursor-pointer transition-colors",
+                          selectedMembers.includes(user.id)
+                            ? "bg-purple-50 border-purple-300"
+                            : "bg-white border-gray-200 hover:bg-gray-50"
+                        )}
+                        onClick={() => toggleUserSelection(user.id, 'member')}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedMembers.includes(user.id)}
+                          onChange={() => toggleUserSelection(user.id, 'member')}
+                          className="rounded border-gray-300"
+                        />
+                        <span className="text-sm">{user.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {getSelectedUsers('member').map(user => (
+                      <Badge key={user.id} variant="secondary" className="bg-purple-100 text-purple-800">
+                        <User className="h-3 w-3 mr-1" />
+                        {user.name}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-4 w-4 p-0 ml-1"
+                          onClick={() => removeUser(user.id, 'member')}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+            )}
 
             <div className="flex justify-end gap-3 pt-4">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
