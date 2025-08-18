@@ -55,6 +55,7 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
     }
 
     console.log('🔥 [AddDialog] Submitting with selected goal IDs:', data.selectedGoalIds);
+    console.log('🔥 [AddDialog] onAddWeeklyOutput callback exists:', typeof onAddWeeklyOutput);
 
     onAddWeeklyOutput({
       title: data.title,

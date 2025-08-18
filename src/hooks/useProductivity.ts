@@ -6,6 +6,7 @@ import { useGoalsManager } from './useGoalsManager';
 import { useGoalCollaboration } from './useGoalCollaboration';
 import { useTaskHelpers } from './useTaskHelpers';
 import { useWeeklyOutputHelpers } from './useWeeklyOutputHelpers';
+import { WeeklyOutput } from '@/types/productivity';
 
 export const useProductivity = () => {
   const productivityData = useProductivityData();
@@ -41,6 +42,12 @@ export const useProductivity = () => {
     setDeletedWeeklyOutputs: productivityData.setDeletedWeeklyOutputs,
     goals: productivityData.goals,
   });
+
+  // Wrap addWeeklyOutput to handle selectedGoalIds parameter
+  const addWeeklyOutputWithGoals = (output: Omit<WeeklyOutput, 'id' | 'createdDate'>, selectedGoalIds?: string[]) => {
+    console.log('🚀 [useProductivity] addWeeklyOutputWithGoals called with selectedGoalIds:', selectedGoalIds);
+    return weeklyOutputsManager.addWeeklyOutput(output, selectedGoalIds || []);
+  };
 
   const goalsManager = useGoalsManager({
     userId: productivityData.userId,
@@ -83,7 +90,13 @@ export const useProductivity = () => {
     ...taskHelpers,
     
     // Weekly Outputs
-    ...weeklyOutputsManager,
+    addWeeklyOutput: addWeeklyOutputWithGoals,
+    editWeeklyOutput: weeklyOutputsManager.editWeeklyOutput,
+    updateProgress: weeklyOutputsManager.updateProgress,
+    moveWeeklyOutput: weeklyOutputsManager.moveWeeklyOutput,
+    deleteWeeklyOutput: weeklyOutputsManager.deleteWeeklyOutput,
+    restoreWeeklyOutput: weeklyOutputsManager.restoreWeeklyOutput,
+    permanentlyDeleteWeeklyOutput: weeklyOutputsManager.permanentlyDeleteWeeklyOutput,
     ...weeklyOutputHelpers,
     
     // Goals
