@@ -10,6 +10,7 @@ import { ArchivedHabitsDialog } from './ArchivedHabitsDialog';
 import { EditHabitDialog } from './EditHabitDialog';
 import { StreakDatesDialog } from './StreakDatesDialog';
 import { DateNavigator } from './DateNavigator';
+import { mapDatabaseToDisplay } from '@/utils/habitCategoryUtils';
 import { format, isToday } from 'date-fns';
 
 interface HabitsSectionProps {
@@ -115,7 +116,7 @@ export const HabitsSection = ({
                   <span className={`font-medium ${habit.completed ? 'text-green-700' : 'text-gray-700'}`}>
                     {habit.name}
                   </span>
-                  {habit.category && <p className="text-xs text-gray-500">{habit.category}</p>}
+                  {habit.category && <p className="text-xs text-gray-500">{mapDatabaseToDisplay(habit.category)}</p>}
                 </div>
               </div>
               <div className="flex items-center gap-2">
