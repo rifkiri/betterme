@@ -121,7 +121,10 @@ export const WeeklyOutputsSection = ({
             weeklyOutputs={weeklyOutputs} 
             onUpdateProgress={onUpdateProgress} 
           />
-          <AddWeeklyOutputDialog onAddWeeklyOutput={onAddWeeklyOutput} />
+          <AddWeeklyOutputDialog 
+            onAddWeeklyOutput={onAddWeeklyOutput}
+            availableGoals={goals}
+          />
         </div>
       </CardHeader>
       <CardContent>
