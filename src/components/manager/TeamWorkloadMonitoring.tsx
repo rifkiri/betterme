@@ -3,12 +3,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Target, User, UserCheck, UserCog, Calendar, CheckCircle, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Users, Target, BarChart3, TrendingUp, User, UserCog, UserCheck, Calendar, CheckCircle } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { supabaseGoalsService } from '@/services/SupabaseGoalsService';
 import { supabaseGoalAssignmentsService } from '@/services/SupabaseGoalAssignmentsService';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { TeamWorkloadCharts } from './TeamWorkloadCharts';
 
 interface TeamWorkloadMonitoringProps {
   teamData: any;
@@ -31,15 +33,14 @@ interface MemberWorkload {
   id: string;
   name: string;
   role: string;
-  workGoals: number;
-  personalGoals: number;
-  coachingCount: number;
-  leadingCount: number;
-  memberCount: number;
-  totalTasks: number;
-  totalOutputs: number;
-  totalWorkloadScore: number;
-  workloadLevel: 'low' | 'medium' | 'high' | 'overloaded';
+  goalsAssigned: number;
+  weeklyOutputs: number;
+  activeTasks: number;
+  workGoalSubcategories: {
+    project: number;
+    sales: number;
+    internal: number;
+  };
 }
 
 export const TeamWorkloadMonitoring = ({ 
@@ -47,13 +48,13 @@ export const TeamWorkloadMonitoring = ({
   isLoading, 
   onSelectEmployee 
 }: TeamWorkloadMonitoringProps) => {
-  const [viewMode, setViewMode] = useState<'members' | 'goals' | 'coach' | 'lead' | 'member'>('members');
+  const [viewMode, setViewMode] = useState<'goals' | 'outputs' | 'tasks' | 'overview'>('overview');
   const [workloadData, setWorkloadData] = useState<{
     memberWorkloads: MemberWorkload[];
     workGoals: WorkGoal[];
   }>({ memberWorkloads: [], workGoals: [] });
   const [loadingWorkload, setLoadingWorkload] = useState(false);
-  const [sortBy, setSortBy] = useState<'workload-high' | 'workload-low' | 'name' | 'role'>('workload-high');
+  const [sortBy, setSortBy] = useState<'goals' | 'outputs' | 'tasks' | 'name'>('goals');
 
   useEffect(() => {
     console.log('TeamWorkloadMonitoring useEffect - teamData:', teamData);
@@ -78,50 +79,30 @@ export const TeamWorkloadMonitoring = ({
         
         // Get member's goals
         const goals = await supabaseGoalsService.getUserAccessibleGoals(member.id);
-        const workGoalsCount = goals.filter(g => g.category === 'work' && !g.archived).length;
-        const personalGoalsCount = goals.filter(g => g.category === 'personal' && !g.archived).length;
+        const totalGoals = goals.filter(g => !g.archived).length;
         
-        // Count role assignments
-        let coachingCount = 0;
-        let leadingCount = 0;
-        let memberCount = 0;
-        
-        for (const goal of goals) {
-          if (goal.category === 'work' && !goal.archived) {
-            if (goal.coachId === member.id) coachingCount++;
-            if (goal.leadIds?.includes(member.id)) leadingCount++;
-            if (goal.memberIds?.includes(member.id)) memberCount++;
-          }
-        }
+        // Count work goal subcategories
+        const workGoals = goals.filter(g => g.category === 'work' && !g.archived);
+        const workGoalSubcategories = {
+          project: workGoals.filter(g => g.subcategory === 'project').length,
+          sales: workGoals.filter(g => g.subcategory === 'sales').length,
+          internal: workGoals.filter(g => g.subcategory === 'internal').length,
+        };
         
         // Get tasks and outputs counts
         const tasks = await supabaseDataService.getTasks(member.id);
         const outputs = await supabaseDataService.getWeeklyOutputs(member.id);
-        
-        // Calculate workload score
-        const workloadScore = calculateWorkloadScore({
-          workGoals: workGoalsCount,
-          personalGoals: personalGoalsCount,
-          coachingCount,
-          leadingCount,
-          memberCount,
-          totalTasks: tasks.filter(t => !t.isDeleted).length,
-          totalOutputs: outputs.filter(o => !o.isDeleted).length
-        });
+        const activeTasks = tasks.filter(t => !t.completed && !t.isDeleted).length;
+        const activeOutputs = outputs.filter(o => !o.isDeleted).length;
 
         memberWorkloads.push({
           id: member.id,
           name: member.name,
           role: member.role,
-          workGoals: workGoalsCount,
-          personalGoals: personalGoalsCount,
-          coachingCount,
-          leadingCount,
-          memberCount,
-          totalTasks: tasks.filter(t => !t.isDeleted).length,
-          totalOutputs: outputs.filter(o => !o.isDeleted).length,
-          totalWorkloadScore: workloadScore,
-          workloadLevel: getWorkloadLevel(workloadScore)
+          goalsAssigned: totalGoals,
+          weeklyOutputs: activeOutputs,
+          activeTasks: activeTasks,
+          workGoalSubcategories
         });
       }
 
@@ -178,61 +159,80 @@ export const TeamWorkloadMonitoring = ({
     }
   };
 
-  const calculateWorkloadScore = (workload: Omit<MemberWorkload, 'id' | 'name' | 'role' | 'totalWorkloadScore' | 'workloadLevel'>) => {
-    return (
-      workload.workGoals * 3 +           // Work goals: 3 points each
-      workload.personalGoals * 1 +       // Personal goals: 1 point each
-      workload.coachingCount * 5 +       // Coaching roles: 5 points each (highest responsibility)
-      workload.leadingCount * 3 +        // Lead roles: 3 points each
-      workload.memberCount * 1 +         // Member roles: 1 point each
-      workload.totalTasks * 1 +          // Active tasks: 1 point each
-      workload.totalOutputs * 2          // Active outputs: 2 points each
-    );
-  };
-
-  const getWorkloadLevel = (score: number): 'low' | 'medium' | 'high' | 'overloaded' => {
-    if (score <= 5) return 'low';
-    if (score <= 10) return 'medium';
-    if (score <= 15) return 'high';
-    return 'overloaded';
+  const getWorkloadLevel = (totalCount: number): 'low' | 'medium' | 'high' => {
+    if (totalCount <= 5) return 'low';
+    if (totalCount <= 10) return 'medium';
+    return 'high';
   };
 
   const getWorkloadColor = (level: string) => {
     switch (level) {
       case 'low': return 'bg-green-100 text-green-800 border-green-200';
-      case 'medium': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'high': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'overloaded': return 'bg-red-100 text-red-800 border-red-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'high': return 'bg-red-100 text-red-800 border-red-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
+  const COLORS = {
+    project: '#3B82F6',
+    sales: '#10B981', 
+    internal: '#8B5CF6'
+  };
+
   const sortedMembers = [...workloadData.memberWorkloads].sort((a, b) => {
     switch (sortBy) {
-      case 'workload-high':
-        return b.totalWorkloadScore - a.totalWorkloadScore;
-      case 'workload-low':
-        return a.totalWorkloadScore - b.totalWorkloadScore;
+      case 'goals':
+        return b.goalsAssigned - a.goalsAssigned;
+      case 'outputs':
+        return b.weeklyOutputs - a.weeklyOutputs;
+      case 'tasks':
+        return b.activeTasks - a.activeTasks;
       case 'name':
         return a.name.localeCompare(b.name);
-      case 'role':
-        return a.role.localeCompare(b.role);
       default:
         return 0;
     }
   });
 
-  const highestWorkloadMember = workloadData.memberWorkloads.reduce((max, member) => 
-    member.totalWorkloadScore > max.totalWorkloadScore ? member : max,
-    workloadData.memberWorkloads[0]
-  );
+  // Prepare chart data
+  const chartData = workloadData.memberWorkloads.map(member => ({
+    name: member.name.split(' ').map(n => n[0]).join(''), // Initials for chart
+    fullName: member.name,
+    goals: member.goalsAssigned,
+    outputs: member.weeklyOutputs,
+    tasks: member.activeTasks,
+    project: member.workGoalSubcategories.project,
+    sales: member.workGoalSubcategories.sales,
+    internal: member.workGoalSubcategories.internal,
+    total: member.goalsAssigned + member.weeklyOutputs + member.activeTasks,
+    workloadLevel: getWorkloadLevel(member.goalsAssigned + member.weeklyOutputs + member.activeTasks)
+  }));
 
-  const teamWorkloadStats = {
-    averageWorkload: workloadData.memberWorkloads.length > 0 
-      ? workloadData.memberWorkloads.reduce((sum, m) => sum + m.totalWorkloadScore, 0) / workloadData.memberWorkloads.length 
-      : 0,
-    overloadedCount: workloadData.memberWorkloads.filter(m => m.workloadLevel === 'overloaded').length,
-    highWorkloadCount: workloadData.memberWorkloads.filter(m => m.workloadLevel === 'high').length
+  // Subcategory distribution for pie chart
+  const subcategoryData = [
+    { 
+      name: 'Project Goals', 
+      value: workloadData.memberWorkloads.reduce((sum, m) => sum + m.workGoalSubcategories.project, 0),
+      color: COLORS.project
+    },
+    { 
+      name: 'Sales Goals', 
+      value: workloadData.memberWorkloads.reduce((sum, m) => sum + m.workGoalSubcategories.sales, 0),
+      color: COLORS.sales
+    },
+    { 
+      name: 'Internal Goals', 
+      value: workloadData.memberWorkloads.reduce((sum, m) => sum + m.workGoalSubcategories.internal, 0),
+      color: COLORS.internal
+    }
+  ].filter(item => item.value > 0);
+
+  const teamStats = {
+    totalGoals: workloadData.memberWorkloads.reduce((sum, m) => sum + m.goalsAssigned, 0),
+    totalOutputs: workloadData.memberWorkloads.reduce((sum, m) => sum + m.weeklyOutputs, 0),
+    totalTasks: workloadData.memberWorkloads.reduce((sum, m) => sum + m.activeTasks, 0),
+    highWorkloadCount: chartData.filter(m => m.workloadLevel === 'high').length
   };
 
   console.log('TeamWorkloadMonitoring - teamData:', teamData);
@@ -276,64 +276,136 @@ export const TeamWorkloadMonitoring = ({
       </Card>
 
       <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as any)} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="members" className="flex items-center gap-1">
-            <Users className="h-3 w-3" />
-            By Members
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview" className="flex items-center gap-1">
+            <BarChart3 className="h-3 w-3" />
+            Overview
           </TabsTrigger>
           <TabsTrigger value="goals" className="flex items-center gap-1">
             <Target className="h-3 w-3" />
-            By Goals
+            Goals
           </TabsTrigger>
-          <TabsTrigger value="coach" className="flex items-center gap-1">
-            <UserCog className="h-3 w-3" />
-            By Coach
+          <TabsTrigger value="outputs" className="flex items-center gap-1">
+            <TrendingUp className="h-3 w-3" />
+            Outputs
           </TabsTrigger>
-          <TabsTrigger value="lead" className="flex items-center gap-1">
-            <UserCheck className="h-3 w-3" />
-            By Lead
-          </TabsTrigger>
-          <TabsTrigger value="member" className="flex items-center gap-1">
-            <User className="h-3 w-3" />
-            By Member
+          <TabsTrigger value="tasks" className="flex items-center gap-1">
+            <Users className="h-3 w-3" />
+            Tasks
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="members" className="space-y-4">
+        <TabsContent value="overview" className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">{teamStats.totalGoals}</div>
+                  <div className="text-sm text-gray-600">Total Goals</div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">{teamStats.totalOutputs}</div>
+                  <div className="text-sm text-gray-600">Active Outputs</div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-600">{teamStats.totalTasks}</div>
+                  <div className="text-sm text-gray-600">Active Tasks</div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-red-600">{teamStats.highWorkloadCount}</div>
+                  <div className="text-sm text-gray-600">High Workload</div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Team Workload Overview</CardTitle>
+                <CardDescription>Goals, Outputs, and Tasks per team member</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip 
+                      formatter={(value, name) => [value, name === 'goals' ? 'Goals' : name === 'outputs' ? 'Outputs' : 'Tasks']}
+                      labelFormatter={(label) => `${chartData.find(d => d.name === label)?.fullName || label}`}
+                    />
+                    <Bar dataKey="goals" fill="#3B82F6" name="goals" />
+                    <Bar dataKey="outputs" fill="#10B981" name="outputs" />
+                    <Bar dataKey="tasks" fill="#8B5CF6" name="tasks" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Work Goal Categories</CardTitle>
+                <CardDescription>Distribution of work goals by subcategory</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {subcategoryData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={subcategoryData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {subcategoryData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="text-center py-12 text-gray-500">
+                    No work goals categorized yet
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>Team Members View</span>
-                <div className="flex items-center gap-4">
-                  <Select value={sortBy} onValueChange={(value) => setSortBy(value as any)}>
-                    <SelectTrigger className="w-48">
-                      <SelectValue placeholder="Sort by..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="workload-high">Workload (High to Low)</SelectItem>
-                      <SelectItem value="workload-low">Workload (Low to High)</SelectItem>
-                      <SelectItem value="name">Name (A-Z)</SelectItem>
-                      <SelectItem value="role">Role</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <span>Team Members Summary</span>
+                <Select value={sortBy} onValueChange={(value) => setSortBy(value as any)}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="goals">Sort by Goals</SelectItem>
+                    <SelectItem value="outputs">Sort by Outputs</SelectItem>
+                    <SelectItem value="tasks">Sort by Tasks</SelectItem>
+                    <SelectItem value="name">Sort by Name</SelectItem>
+                  </SelectContent>
+                </Select>
               </CardTitle>
-              <CardDescription>
-                Overview of each team member's workload and role distribution
-                {workloadData.memberWorkloads.length > 0 && (
-                  <div className="mt-2 text-sm">
-                    <span className="font-medium">Team Stats:</span> 
-                    Avg. Workload: {Math.round(teamWorkloadStats.averageWorkload)} points • 
-                    High Load: {teamWorkloadStats.highWorkloadCount} members • 
-                    Overloaded: {teamWorkloadStats.overloadedCount} members
-                    {highestWorkloadMember && (
-                      <span className="ml-2 text-red-600 font-medium">
-                        Highest: {highestWorkloadMember.name} ({highestWorkloadMember.totalWorkloadScore} pts)
-                      </span>
-                    )}
-                  </div>
-                )}
-              </CardDescription>
             </CardHeader>
             <CardContent>
               {loadingWorkload ? (
@@ -344,75 +416,57 @@ export const TeamWorkloadMonitoring = ({
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {sortedMembers.map((member) => {
-                    const isHighestWorkload = highestWorkloadMember && member.id === highestWorkloadMember.id;
+                    const totalWorkload = member.goalsAssigned + member.weeklyOutputs + member.activeTasks;
+                    const workloadLevel = getWorkloadLevel(totalWorkload);
                     return (
-                      <Card key={member.id} className={`p-4 hover:shadow-md transition-shadow ${
-                        isHighestWorkload ? 'ring-2 ring-red-500 bg-red-50' : ''
-                      }`}>
+                      <Card key={member.id} className="p-4 hover:shadow-md transition-shadow">
                         <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-medium text-gray-900">{member.name}</h3>
-                            {isHighestWorkload && (
-                              <div title="Highest Workload">
-                                <TrendingUp className="h-4 w-4 text-red-500" />
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs">
-                              {member.role}
-                            </Badge>
-                          </div>
+                          <h3 className="font-medium text-gray-900">{member.name}</h3>
+                          <Badge className={`text-xs ${getWorkloadColor(workloadLevel)}`}>
+                            {workloadLevel.toUpperCase()}
+                          </Badge>
                         </div>
                         
-                        {/* Workload Score and Level */}
-                        <div className="mb-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-gray-700">Total Workload</span>
-                            <span className="text-lg font-bold text-gray-900">{member.totalWorkloadScore} pts</span>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span>Goals Assigned:</span>
+                            <span className="font-medium text-blue-600">{member.goalsAssigned}</span>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <Progress value={Math.min((member.totalWorkloadScore / 20) * 100, 100)} className="flex-1 mr-2" />
-                            <Badge className={`text-xs ${getWorkloadColor(member.workloadLevel)}`}>
-                              {member.workloadLevel.toUpperCase()}
-                              {member.workloadLevel === 'overloaded' && <AlertTriangle className="h-3 w-3 ml-1" />}
-                            </Badge>
+                          <div className="flex justify-between">
+                            <span>Active Outputs:</span>
+                            <span className="font-medium text-green-600">{member.weeklyOutputs}</span>
                           </div>
-                        </div>
-                      
-                      <div className="space-y-2 text-sm text-gray-600">
-                        <div className="flex justify-between">
-                          <span>Work Goals:</span>
-                          <span className="font-medium text-blue-600">{member.workGoals}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Personal Goals:</span>
-                          <span className="font-medium text-green-600">{member.personalGoals}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Tasks:</span>
-                          <span className="font-medium text-purple-600">{member.totalTasks}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Outputs:</span>
-                          <span className="font-medium text-orange-600">{member.totalOutputs}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Role Distribution:</span>
-                          <div className="flex gap-1">
-                            <Badge variant="secondary" className="text-xs px-1" title="Coach">
-                              C:{member.coachingCount}
-                            </Badge>
-                            <Badge variant="secondary" className="text-xs px-1" title="Lead">
-                              L:{member.leadingCount}
-                            </Badge>
-                            <Badge variant="secondary" className="text-xs px-1" title="Member">
-                              M:{member.memberCount}
-                            </Badge>
+                          <div className="flex justify-between">
+                            <span>Active Tasks:</span>
+                            <span className="font-medium text-purple-600">{member.activeTasks}</span>
                           </div>
+                          
+                          {(member.workGoalSubcategories.project > 0 || 
+                            member.workGoalSubcategories.sales > 0 || 
+                            member.workGoalSubcategories.internal > 0) && (
+                            <div className="mt-3 pt-3 border-t">
+                              <div className="text-xs text-gray-500 mb-2">Work Goal Breakdown:</div>
+                              <div className="flex gap-1 flex-wrap">
+                                {member.workGoalSubcategories.project > 0 && (
+                                  <Badge style={{ backgroundColor: COLORS.project, color: 'white' }} className="text-xs">
+                                    Project: {member.workGoalSubcategories.project}
+                                  </Badge>
+                                )}
+                                {member.workGoalSubcategories.sales > 0 && (
+                                  <Badge style={{ backgroundColor: COLORS.sales, color: 'white' }} className="text-xs">
+                                    Sales: {member.workGoalSubcategories.sales}
+                                  </Badge>
+                                )}
+                                {member.workGoalSubcategories.internal > 0 && (
+                                  <Badge style={{ backgroundColor: COLORS.internal, color: 'white' }} className="text-xs">
+                                    Internal: {member.workGoalSubcategories.internal}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                      
+                        
                         <Button 
                           variant="outline" 
                           size="sm" 
@@ -431,157 +485,48 @@ export const TeamWorkloadMonitoring = ({
         </TabsContent>
 
         <TabsContent value="goals" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Goals View</CardTitle>
-              <CardDescription>Work goals with their assigned team members and roles</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loadingWorkload ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                  <p className="text-gray-500">Loading workload data...</p>
-                </div>
-              ) : workloadData.workGoals.length > 0 ? (
-                <div className="space-y-4">
-                  {workloadData.workGoals.map((goal) => (
-                    <Card key={goal.id} className="p-4 border-l-4 border-l-blue-500">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <h3 className="font-medium text-gray-900 mb-1">{goal.title}</h3>
-                          <div className="flex items-center gap-2 mb-2">
-                            <Progress value={goal.progress} className="flex-1 h-2" />
-                            <span className="text-sm font-medium text-gray-600">{goal.progress}%</span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                        <div>
-                          <h4 className="font-medium text-gray-700 mb-2 flex items-center gap-1">
-                            <UserCog className="h-3 w-3" />
-                            Coach
-                          </h4>
-                          {goal.coach ? (
-                            <Badge variant="outline" className="text-xs">
-                              {goal.coach}
-                            </Badge>
-                          ) : (
-                            <span className="text-gray-400">Not assigned</span>
-                          )}
-                        </div>
-                        
-                        <div>
-                          <h4 className="font-medium text-gray-700 mb-2 flex items-center gap-1">
-                            <UserCheck className="h-3 w-3" />
-                            Leads ({goal.leads.length})
-                          </h4>
-                          <div className="flex flex-wrap gap-1">
-                            {goal.leads.length > 0 ? (
-                              goal.leads.map((lead, index) => (
-                                <Badge key={index} variant="secondary" className="text-xs">
-                                  {lead}
-                                </Badge>
-                              ))
-                            ) : (
-                              <span className="text-gray-400">No leads assigned</span>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <h4 className="font-medium text-gray-700 mb-2 flex items-center gap-1">
-                            <User className="h-3 w-3" />
-                            Members ({goal.members.length})
-                          </h4>
-                          <div className="flex flex-wrap gap-1">
-                            {goal.members.length > 0 ? (
-                              goal.members.map((member, index) => (
-                                <Badge key={index} variant="secondary" className="text-xs">
-                                  {member}
-                                </Badge>
-                              ))
-                            ) : (
-                              <span className="text-gray-400">No members assigned</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-4 pt-3 border-t border-gray-200">
-                        <div className="flex justify-between items-center text-sm text-gray-600">
-                          <div className="flex items-center gap-4">
-                            <span className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              Outputs: {goal.outputs.length}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <CheckCircle className="h-3 w-3" />
-                              Tasks: {goal.tasks.length}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Target className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p>No work goals created yet.</p>
-                  <p className="text-sm mt-1">Create work goals to see them here with their role assignments.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {loadingWorkload ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-500">Loading workload data...</p>
+            </div>
+          ) : (
+            <TeamWorkloadCharts 
+              chartData={chartData} 
+              chartType="goals" 
+              onMemberClick={onSelectEmployee}
+            />
+          )}
         </TabsContent>
 
-        <TabsContent value="coach" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Coach View</CardTitle>
-              <CardDescription>Team members in coaching roles and their responsibilities</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <UserCog className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>No coaching assignments yet.</p>
-                <p className="text-sm mt-1">Assign coaches to work goals to see coaching workload.</p>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="outputs" className="space-y-4">
+          {loadingWorkload ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-500">Loading workload data...</p>
+            </div>
+          ) : (
+            <TeamWorkloadCharts 
+              chartData={chartData} 
+              chartType="outputs" 
+              onMemberClick={onSelectEmployee}
+            />
+          )}
         </TabsContent>
 
-        <TabsContent value="lead" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Lead View</CardTitle>
-              <CardDescription>Team members in leadership roles across goals</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <UserCheck className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>No leadership assignments yet.</p>
-                <p className="text-sm mt-1">Assign leads to work goals to see leadership workload.</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="member" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Member View</CardTitle>
-              <CardDescription>Team members executing goals and their workload</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <User className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>No member assignments yet.</p>
-                <p className="text-sm mt-1">Assign members to work goals or allow self-assignment to see execution workload.</p>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="tasks" className="space-y-4">
+          {loadingWorkload ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-500">Loading workload data...</p>
+            </div>
+          ) : (
+            <TeamWorkloadCharts 
+              chartData={chartData} 
+              chartType="tasks" 
+              onMemberClick={onSelectEmployee}
+            />
+          )}
         </TabsContent>
       </Tabs>
     </div>
