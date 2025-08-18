@@ -74,7 +74,7 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput }: AddWeeklyOutputDial
           <DialogTitle>Add Weekly Output</DialogTitle>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 px-1">
+        <ScrollArea className="h-[60vh] px-1">
           <Form {...form}>
             <form id="add-output-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField

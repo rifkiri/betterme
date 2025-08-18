@@ -53,7 +53,7 @@ export const EditTaskDialog = ({ task, open, onOpenChange, onSave, weeklyOutputs
           </DialogDescription>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 px-1">
+        <ScrollArea className="h-[60vh] px-1">
           <div className="pb-4">
             <TaskForm 
               initialValues={taskAsFormValues}

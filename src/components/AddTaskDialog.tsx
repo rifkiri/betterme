@@ -53,7 +53,7 @@ export const AddTaskDialog = ({
           </DialogDescription>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 px-1">
+        <ScrollArea className="h-[60vh] px-1">
           <div className="pb-4">
             <TaskForm 
               onSubmit={handleSubmit}
