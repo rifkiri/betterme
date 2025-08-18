@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { WeeklyOutput, Task } from '@/types/productivity';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { TaskForm } from './task/TaskForm';
 import { TaskFormValues } from './task/taskFormSchema';
 
@@ -44,19 +45,24 @@ export const EditTaskDialog = ({ task, open, onOpenChange, onSave, weeklyOutputs
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] flex flex-col">
+        <DialogHeader className="shrink-0">
           <DialogTitle>Edit Task</DialogTitle>
           <DialogDescription>
             Update your task details.
           </DialogDescription>
         </DialogHeader>
-        <TaskForm 
-          initialValues={taskAsFormValues}
-          onSubmit={handleSubmit}
-          onCancel={handleCancel}
-          weeklyOutputs={weeklyOutputs}
-        />
+        
+        <ScrollArea className="flex-1 px-1">
+          <div className="pb-4">
+            <TaskForm 
+              initialValues={taskAsFormValues}
+              onSubmit={handleSubmit}
+              onCancel={handleCancel}
+              weeklyOutputs={weeklyOutputs}
+            />
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { WeeklyOutput, Task } from '@/types/productivity';
 import { TaskForm } from './task/TaskForm';
 import { TaskFormValues } from './task/taskFormSchema';
@@ -44,18 +45,23 @@ export const AddTaskDialog = ({
           Add Task
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] flex flex-col">
+        <DialogHeader className="shrink-0">
           <DialogTitle>Add New Task</DialogTitle>
           <DialogDescription>
             Create a new task to track your work progress.
           </DialogDescription>
         </DialogHeader>
-        <TaskForm 
-          onSubmit={handleSubmit}
-          onCancel={handleCancel}
-          weeklyOutputs={weeklyOutputs}
-        />
+        
+        <ScrollArea className="flex-1 px-1">
+          <div className="pb-4">
+            <TaskForm 
+              onSubmit={handleSubmit}
+              onCancel={handleCancel}
+              weeklyOutputs={weeklyOutputs}
+            />
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

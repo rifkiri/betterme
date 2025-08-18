@@ -2,6 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Trash2, RotateCcw, Archive } from 'lucide-react';
 import { Goal } from '@/types/productivity';
 import { format } from 'date-fns';
@@ -38,12 +39,13 @@ const getCategoryColor = (category: Goal['category']) => {
           <span className="sm:hidden">({deletedGoals.length})</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
+        <DialogHeader className="shrink-0">
           <DialogTitle>Deleted Goals ({deletedGoals.length})</DialogTitle>
         </DialogHeader>
         
-        <div className="flex-1 overflow-y-auto space-y-3">
+        <ScrollArea className="flex-1">
+          <div className="space-y-3 p-1">
           {deletedGoals.map((goal) => (
             <div key={goal.id} className="border rounded-lg p-3 bg-gray-50">
               <div className="flex items-start justify-between gap-2 mb-2">
@@ -91,9 +93,10 @@ const getCategoryColor = (category: Goal['category']) => {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        </ScrollArea>
         
-        <div className="flex justify-end pt-4 border-t">
+        <div className="flex justify-end pt-4 border-t shrink-0">
           <Button variant="outline" onClick={() => {}}>
             Close
           </Button>
