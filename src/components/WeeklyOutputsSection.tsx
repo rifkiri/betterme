@@ -61,6 +61,11 @@ export const WeeklyOutputsSection = ({
         return true;
       }
       
+      // Show completed outputs that were completed in this week (even if they were overdue)
+      if (output.progress >= 100 && output.completedDate && isWithinInterval(output.completedDate, { start: weekStart, end: weekEnd })) {
+        return true;
+      }
+      
       // Show outputs without due dates in all weeks
       if (!output.dueDate) {
         return true;
