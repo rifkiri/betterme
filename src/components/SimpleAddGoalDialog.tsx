@@ -132,10 +132,10 @@ export const SimpleAddGoalDialog = ({
           </DialogDescription>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col">
-            <ScrollArea className="flex-1 px-1">
-              <div className="space-y-4 pb-4">
+        <ScrollArea className="flex-1 px-1">
+          <div className="pb-4">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
               control={form.control}
               name="category"
@@ -351,19 +351,18 @@ export const SimpleAddGoalDialog = ({
                 </div>
               </Card>
             )}
-              </div>
-            </ScrollArea>
-            
-            <div className="flex justify-end gap-3 pt-4 border-t shrink-0">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit">
-                Create Goal
-              </Button>
-            </div>
-          </form>
-        </Form>
+                <div className="flex justify-end gap-3 pt-4 border-t">
+                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">
+                    Create Goal
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
