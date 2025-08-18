@@ -608,6 +608,11 @@ export type Database = {
         | "fitness"
         | "learning"
         | "other"
+        | "mental"
+        | "relationship"
+        | "social"
+        | "spiritual"
+        | "wealth"
       task_priority: "low" | "medium" | "high" | "urgent"
       user_role: "admin" | "manager" | "team-member"
       user_status: "pending" | "active"
@@ -745,6 +750,11 @@ export const Constants = {
         "fitness",
         "learning",
         "other",
+        "mental",
+        "relationship",
+        "social",
+        "spiritual",
+        "wealth",
       ],
       task_priority: ["low", "medium", "high", "urgent"],
       user_role: ["admin", "manager", "team-member"],

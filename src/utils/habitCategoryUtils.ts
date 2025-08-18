@@ -1,8 +1,14 @@
 // Database enum values for habit categories
 export const DATABASE_CATEGORIES = [
   'health',
-  'productivity', 
+  'mental',
   'personal',
+  'productivity',
+  'relationship',
+  'social', 
+  'spiritual',
+  'wealth',
+  // Keep old categories for backward compatibility
   'fitness',
   'learning',
   'other'
@@ -11,21 +17,30 @@ export const DATABASE_CATEGORIES = [
 // User-friendly display names for categories
 export const CATEGORY_DISPLAY_MAP = {
   health: 'Health',
-  productivity: 'Productivity',
-  personal: 'Personal', 
+  mental: 'Mental',
+  personal: 'Personal',
+  productivity: 'Productivity', 
+  relationship: 'Relationship',
+  social: 'Social',
+  spiritual: 'Spiritual',
+  wealth: 'Wealth',
+  // Backward compatibility
   fitness: 'Fitness',
   learning: 'Learning',
   other: 'Other'
 } as const;
 
-// Reverse mapping for display to database
+// Reverse mapping for display to database (only show new categories to users)
 export const DISPLAY_TO_DATABASE_MAP = {
+  'No category': undefined,
   'Health': 'health',
-  'Productivity': 'productivity',
+  'Mental': 'mental',
   'Personal': 'personal',
-  'Fitness': 'fitness', 
-  'Learning': 'learning',
-  'Other': 'other'
+  'Productivity': 'productivity',
+  'Relationship': 'relationship',
+  'Social': 'social',
+  'Spiritual': 'spiritual',
+  'Wealth': 'wealth'
 } as const;
 
 export type DatabaseCategory = typeof DATABASE_CATEGORIES[number];
