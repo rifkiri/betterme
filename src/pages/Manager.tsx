@@ -1,13 +1,17 @@
 import React, { useState } from "react";
 import { AppNavigation } from "@/components/AppNavigation";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { IndividualDetailsSection } from "@/components/team/IndividualDetailsSection";
+import { TeamWorkloadMonitoring } from "@/components/manager/TeamWorkloadMonitoring";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useTeamDataRealtime } from "@/hooks/useTeamDataRealtime";
+import { Target, Users } from "lucide-react";
 
 const Manager = () => {
   const [selectedEmployee, setSelectedEmployee] = useState<string>('');
   const [viewMode, setViewMode] = useState<'summary' | 'dashboard'>('summary');
+  const [activeTab, setActiveTab] = useState<'workload' | 'individual'>('workload');
   
   const { profile: currentUser, isLoading: profileLoading } = useUserProfile();
   const { teamData, isLoading } = useTeamDataRealtime();
@@ -32,6 +36,14 @@ const Manager = () => {
     setSelectedEmployee(memberId);
     setViewMode('dashboard');
     console.log('Manager - Set viewMode to dashboard for member:', memberId);
+  };
+
+  const handleSelectEmployee = (employeeId: string) => {
+    console.log('Manager - handleSelectEmployee called with:', employeeId);
+    setSelectedEmployee(employeeId);
+    setViewMode('summary');
+    setActiveTab('individual');
+    console.log('Manager - Switched to Individual Details tab for employee:', employeeId);
   };
 
   // Show loading state while profile is loading
@@ -100,23 +112,62 @@ const Manager = () => {
           </p>
         </div>
       
-        {teamData ? (
-        <IndividualDetailsSection 
-          teamData={teamData} 
-          onViewMemberDetails={handleViewMemberDetails} 
-          onViewMemberDashboard={handleViewMemberDashboard} 
-          selectedMemberId={selectedEmployee} 
-          viewMode={viewMode} 
-        />
-      ) : (
-        <Card>
-          <CardContent className="text-center py-8">
-            <p className="text-gray-500">
-              {isLoading ? 'Loading team data...' : 'No team data available'}
-            </p>
-          </CardContent>
-        </Card>
-      )}
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'workload' | 'individual')} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 bg-gray-100 rounded-lg p-1">
+            <TabsTrigger 
+              value="workload" 
+              className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+            >
+              <Target className="w-4 h-4" />
+              <span className="hidden sm:inline-flex">Team Workload</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="individual" 
+              className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+            >
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline-flex">Individual Details</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="workload" className="mt-4">
+            {teamData ? (
+              <TeamWorkloadMonitoring 
+                teamData={teamData} 
+                isLoading={isLoading}
+                onSelectEmployee={handleSelectEmployee}
+              />
+            ) : (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <p className="text-gray-500">
+                    {isLoading ? 'Loading team data...' : 'No team data available'}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="individual" className="mt-4">
+            {teamData ? (
+              <IndividualDetailsSection 
+                teamData={teamData} 
+                onViewMemberDetails={handleViewMemberDetails} 
+                onViewMemberDashboard={handleViewMemberDashboard} 
+                selectedMemberId={selectedEmployee} 
+                viewMode={viewMode} 
+              />
+            ) : (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <p className="text-gray-500">
+                    {isLoading ? 'Loading team data...' : 'No team data available'}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
