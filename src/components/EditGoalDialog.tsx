@@ -43,7 +43,7 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
       title: goal.title,
       description: goal.description || '',
       category: goal.category,
-      subcategory: mapSubcategoryDatabaseToDisplay(goal.subcategory),
+      subcategory: goal.subcategory ? mapSubcategoryDatabaseToDisplay(goal.subcategory) : "none",
       deadline: goal.deadline,
       linkedOutputIds: goal.linkedOutputIds || [],
     },
@@ -55,7 +55,7 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
         title: goal.title,
         description: goal.description || '',
         category: goal.category,
-        subcategory: mapSubcategoryDatabaseToDisplay(goal.subcategory),
+        subcategory: goal.subcategory ? mapSubcategoryDatabaseToDisplay(goal.subcategory) : "none",
         deadline: goal.deadline,
         linkedOutputIds: goal.linkedOutputIds || [],
       });
@@ -73,7 +73,7 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
       title: data.title,
       description: data.description,
       category: data.category,
-      subcategory: mapSubcategoryDisplayToDatabase(data.subcategory),
+      subcategory: data.subcategory === "none" ? undefined : mapSubcategoryDisplayToDatabase(data.subcategory),
       deadline: deadline,
       linkedOutputIds: data.linkedOutputIds || [],
     });
@@ -144,7 +144,7 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">No subcategory</SelectItem>
+                      <SelectItem value="none">No subcategory</SelectItem>
                       {getSubcategoryOptions(form.watch('category')).map((subcategory) => (
                         <SelectItem key={subcategory} value={subcategory}>
                           {subcategory}

@@ -60,7 +60,7 @@ export const AddGoalDialog = ({
   });
 
   const onSubmit = (data: FormData) => {
-    if (isJoiningGoal && data.selectedGoalId && onJoinWorkGoal) {
+    if (isJoiningGoal && data.selectedGoalId && data.selectedGoalId !== "none" && onJoinWorkGoal) {
       // Join existing goal
       onJoinWorkGoal(data.selectedGoalId);
     } else if (data.title && data.title.trim()) {
@@ -111,7 +111,7 @@ export const AddGoalDialog = ({
 
   // Update button state based on form interaction
   const handleGoalSelection = (goalId: string) => {
-    if (goalId) {
+    if (goalId && goalId !== "none") {
       setIsJoiningGoal(true);
       form.setValue('title', ''); // Clear title when selecting a goal
       form.setValue('selectedGoalId', goalId);
@@ -130,7 +130,7 @@ export const AddGoalDialog = ({
   };
 
   // Validation for submit
-  const canSubmit = isJoiningGoal ? !!selectedGoalId : !!(titleValue && titleValue.trim());
+  const canSubmit = isJoiningGoal ? !!(selectedGoalId && selectedGoalId !== "none") : !!(titleValue && titleValue.trim());
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -190,9 +190,9 @@ export const AddGoalDialog = ({
                         </SelectTrigger>
                       </FormControl>
                        <SelectContent className="bg-background border border-border shadow-lg z-50 max-h-60">
-                        <SelectItem value="" className="hover:bg-accent">
-                          <span className="text-muted-foreground">None - Create new goal</span>
-                        </SelectItem>
+                         <SelectItem value="none" className="hover:bg-accent">
+                           <span className="text-muted-foreground">None - Create new goal</span>
+                         </SelectItem>
                         {availableWorkGoals.map((goal) => (
                           <SelectItem key={goal.id} value={goal.id} className="hover:bg-accent">
                             <div className="flex flex-col items-start">
