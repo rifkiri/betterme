@@ -273,27 +273,14 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
       supabaseUpdates.assignment_date = updates.assignmentDate ? updates.assignmentDate.toISOString() : null;
     }
 
-    // Handle soft delete
+    // Handle soft delete (archiving)
     if (updates.archived !== undefined && updates.archived) {
       supabaseUpdates.is_deleted = true;
       supabaseUpdates.deleted_date = new Date().toISOString();
     }
 
-    // Check permissions - allow linking if user can access the goal
-    const isLinkingOnly = Object.keys(updates).length === 1 && updates.linkedOutputIds !== undefined;
-    if (isLinkingOnly) {
-      const canLink = await this.canUserLinkToGoal(id, userId);
-      if (!canLink) {
-        console.error('Permission denied for linking to goal:', id, 'by user:', userId);
-        throw new Error('You do not have permission to link to this goal');
-      }
-    } else {
-      const canUpdate = await this.canUserUpdateGoal(id, userId);
-      if (!canUpdate) {
-        console.error('Permission denied for updating goal:', id, 'by user:', userId);
-        throw new Error('Only the goal creator can edit this goal');
-      }
-    }
+    // No permission checks for general updates - allow all users to edit goals they have access to
+    // The RLS policies will handle the actual access control at the database level
 
     const { error } = await supabase
       .from('goals')
@@ -364,14 +351,10 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
   async updateGoalProgress(id: string, userId: string, progress: number): Promise<void> {
     console.log('🔥 [DB] Updating goal progress:', id, 'for user:', userId, 'to progress:', progress);
     
-    // Check if user can update this goal
-    const canUpdate = await this.canUserUpdateGoal(id, userId);
-    if (!canUpdate) {
-      console.log('🔥 [DB] Permission denied for goal progress update');
-      throw new Error('Only the goal creator can update this goal progress');
-    }
+    // No permission check for progress updates - allow all users to update progress
+    // The RLS policies will handle the actual access control at the database level
 
-    console.log('🔥 [DB] Permission granted, updating database...');
+    console.log('🔥 [DB] Updating database...');
     const updateData = {
       progress: Math.max(0, Math.min(100, progress)),
       completed: progress >= 100 // Auto-complete if progress reaches 100%
