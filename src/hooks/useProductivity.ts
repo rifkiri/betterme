@@ -39,6 +39,7 @@ export const useProductivity = () => {
     setWeeklyOutputs: productivityData.setWeeklyOutputs,
     deletedWeeklyOutputs: productivityData.deletedWeeklyOutputs,
     setDeletedWeeklyOutputs: productivityData.setDeletedWeeklyOutputs,
+    goals: productivityData.goals,
   });
 
   const goalsManager = useGoalsManager({

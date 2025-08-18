@@ -1,6 +1,6 @@
 
 import { supabaseDataService } from '@/services/SupabaseDataService';
-import { WeeklyOutput } from '@/types/productivity';
+import { WeeklyOutput, Goal } from '@/types/productivity';
 import { toast } from 'sonner';
 
 interface UseWeeklyOutputsManagerProps {
@@ -11,6 +11,7 @@ interface UseWeeklyOutputsManagerProps {
   setWeeklyOutputs: (outputs: WeeklyOutput[] | ((prev: WeeklyOutput[]) => WeeklyOutput[])) => void;
   deletedWeeklyOutputs: WeeklyOutput[];
   setDeletedWeeklyOutputs: (outputs: WeeklyOutput[] | ((prev: WeeklyOutput[]) => WeeklyOutput[])) => void;
+  goals: Goal[];
 }
 
 export const useWeeklyOutputsManager = ({
@@ -21,7 +22,47 @@ export const useWeeklyOutputsManager = ({
   setWeeklyOutputs,
   deletedWeeklyOutputs,
   setDeletedWeeklyOutputs,
+  goals,
 }: UseWeeklyOutputsManagerProps) => {
+
+  // Helper function to update bidirectional goal-output linking
+  const updateGoalLinks = async (outputId: string, linkedGoalIds: string[] = [], previousLinkedGoalIds: string[] = []) => {
+    if (!userId) return;
+
+    try {
+      // Goals to add the output to (new links)
+      const goalsToAddTo = linkedGoalIds.filter(goalId => !previousLinkedGoalIds.includes(goalId));
+      
+      // Goals to remove the output from (removed links)
+      const goalsToRemoveFrom = previousLinkedGoalIds.filter(goalId => !linkedGoalIds.includes(goalId));
+
+      // Update goals that should have this output added to their linkedOutputIds
+      for (const goalId of goalsToAddTo) {
+        const goal = goals.find(g => g.id === goalId);
+        if (goal) {
+          const currentLinkedOutputIds = goal.linkedOutputIds || [];
+          if (!currentLinkedOutputIds.includes(outputId)) {
+            const updatedLinkedOutputIds = [...currentLinkedOutputIds, outputId];
+            await supabaseDataService.updateGoal(goalId, userId, { linkedOutputIds: updatedLinkedOutputIds });
+          }
+        }
+      }
+
+      // Update goals that should have this output removed from their linkedOutputIds
+      for (const goalId of goalsToRemoveFrom) {
+        const goal = goals.find(g => g.id === goalId);
+        if (goal) {
+          const currentLinkedOutputIds = goal.linkedOutputIds || [];
+          if (currentLinkedOutputIds.includes(outputId)) {
+            const updatedLinkedOutputIds = currentLinkedOutputIds.filter(id => id !== outputId);
+            await supabaseDataService.updateGoal(goalId, userId, { linkedOutputIds: updatedLinkedOutputIds });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update goal links:', error);
+    }
+  };
   const addWeeklyOutput = async (output: Omit<WeeklyOutput, 'id' | 'createdDate'>) => {
     if (!userId) {
       console.error('No user ID found');
@@ -40,6 +81,12 @@ export const useWeeklyOutputsManager = ({
       if (isSupabaseAvailable()) {
         console.log('Attempting to save to Supabase...');
         await supabaseDataService.addWeeklyOutput({ ...newOutput, userId });
+        
+        // Update bidirectional goal linking
+        if (newOutput.linkedGoalIds && newOutput.linkedGoalIds.length > 0) {
+          await updateGoalLinks(newOutput.id, newOutput.linkedGoalIds, []);
+        }
+        
         console.log('Successfully saved to Supabase, reloading data...');
         await loadAllData();
         toast.success('Weekly output added successfully');
@@ -62,8 +109,19 @@ export const useWeeklyOutputsManager = ({
 
     try {
       if (isSupabaseAvailable()) {
+        // Get the current output to compare linkedGoalIds
+        const currentOutput = weeklyOutputs.find(output => output.id === id);
+        const previousLinkedGoalIds = currentOutput?.linkedGoalIds || [];
+        const newLinkedGoalIds = updates.linkedGoalIds || previousLinkedGoalIds;
+
         console.log('Attempting to update in Supabase...');
         await supabaseDataService.updateWeeklyOutput(id, userId, updates);
+        
+        // Update bidirectional goal linking if linkedGoalIds changed
+        if (updates.linkedGoalIds !== undefined) {
+          await updateGoalLinks(id, newLinkedGoalIds, previousLinkedGoalIds);
+        }
+        
         console.log('Successfully updated in Supabase, reloading data...');
         await loadAllData();
         toast.success('Weekly output updated successfully');
