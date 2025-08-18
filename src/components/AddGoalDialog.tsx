@@ -21,7 +21,6 @@ const formSchema = z.object({
   description: z.string().optional(),
   category: z.enum(['work', 'personal']),
   deadline: z.date().optional(),
-  linkedOutputIds: z.array(z.string()).optional(),
   selectedGoalId: z.string().optional(),
 });
 
@@ -54,7 +53,6 @@ export const AddGoalDialog = ({
       description: '',
       category: 'personal',
       deadline: undefined,
-      linkedOutputIds: [],
       selectedGoalId: '',
     },
   });
@@ -77,7 +75,6 @@ export const AddGoalDialog = ({
         deadline: deadline,
         completed: false,
         archived: false,
-        linkedOutputIds: data.linkedOutputIds || [],
       });
     }
     
@@ -310,62 +307,6 @@ export const AddGoalDialog = ({
               />
             )}
 
-            {!isJoiningGoal && availableOutputs.length > 0 && (
-              <FormField
-                control={form.control}
-                name="linkedOutputIds"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Link to Outputs (Optional)</FormLabel>
-                    <FormControl>
-                      <Select 
-                        onValueChange={(value) => {
-                          const currentIds = field.value || [];
-                          if (currentIds.includes(value)) {
-                            field.onChange(currentIds.filter(id => id !== value));
-                          } else {
-                            field.onChange([...currentIds, value]);
-                          }
-                        }}
-                      >
-                        <SelectTrigger className="bg-background border border-border">
-                          <SelectValue placeholder="Select outputs to link" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background border border-border shadow-lg z-50 max-h-60">
-                          {availableOutputs.map((output) => (
-                            <SelectItem key={output.id} value={output.id} className="hover:bg-accent">
-                              {output.title} ({output.progress}%)
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    {field.value && field.value.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {field.value.map((outputId) => {
-                          const output = availableOutputs.find(o => o.id === outputId);
-                          return output ? (
-                            <span key={outputId} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                              {output.title}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  field.onChange(field.value?.filter(id => id !== outputId));
-                                }}
-                                className="text-blue-600 hover:text-blue-800"
-                              >
-                                ×
-                              </button>
-                            </span>
-                          ) : null;
-                        })}
-                      </div>
-                    )}
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
 
             </form>
           </Form>

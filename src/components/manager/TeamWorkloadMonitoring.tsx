@@ -137,17 +137,8 @@ export const TeamWorkloadMonitoring = ({
         const leads = assignments.filter(a => a.role === 'lead');
         const members = assignments.filter(a => a.role === 'member');
         
-        // Get linked outputs and tasks
-        const outputs = await Promise.all(
-          goal.linkedOutputIds?.map(async (outputId) => {
-            try {
-              const output = await supabaseDataService.getWeeklyOutputs(goal.userId!);
-              return output.find(o => o.id === outputId);
-            } catch {
-              return null;
-            }
-          }) || []
-        );
+        // Get linked outputs and tasks - Note: will need to use ItemLinkageService in the future
+        const outputs: any[] = [];
 
         const tasks = [];
         for (const output of outputs.filter(Boolean)) {

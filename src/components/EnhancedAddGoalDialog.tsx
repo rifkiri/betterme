@@ -158,7 +158,7 @@ export const EnhancedAddGoalDialog = ({
       deadline: deadline,
       completed: false,
       archived: false,
-      linkedOutputIds: [],
+      
       coachId: data.category === 'work' ? (selectedCoach || undefined) : undefined,
       leadIds: data.category === 'work' ? (selectedLeads.length > 0 ? selectedLeads : undefined) : undefined,
       memberIds: data.category === 'work' ? (finalMemberIds.length > 0 ? finalMemberIds : undefined) : undefined,

@@ -26,8 +26,7 @@ export class SupabaseWeeklyOutputsService {
       isDeleted: output.is_deleted,
       completedDate: output.completed_date ? new Date(output.completed_date) : undefined,
       deletedDate: output.deleted_date ? new Date(output.deleted_date) : undefined,
-      createdDate: new Date(output.created_date),
-      linkedGoalIds: [] // Now handled by ItemLinkageService
+      createdDate: new Date(output.created_date)
     }));
   }
 
@@ -45,8 +44,7 @@ export class SupabaseWeeklyOutputsService {
         is_deleted: output.isDeleted,
         completed_date: output.completedDate?.toISOString(),
         deleted_date: output.deletedDate?.toISOString(),
-        created_date: output.createdDate.toISOString(),
-        linked_goal_ids: output.linkedGoalIds || []
+        created_date: output.createdDate.toISOString()
       });
 
     if (error) {
@@ -67,7 +65,6 @@ export class SupabaseWeeklyOutputsService {
     if (updates.isDeleted !== undefined) supabaseUpdates.is_deleted = updates.isDeleted;
     if (updates.completedDate) supabaseUpdates.completed_date = updates.completedDate.toISOString();
     if (updates.deletedDate) supabaseUpdates.deleted_date = updates.deletedDate.toISOString();
-    if (updates.linkedGoalIds !== undefined) supabaseUpdates.linked_goal_ids = updates.linkedGoalIds;
 
     const { error } = await supabase
       .from('weekly_outputs')

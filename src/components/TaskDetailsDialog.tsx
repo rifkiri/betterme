@@ -43,9 +43,8 @@ export const TaskDetailsDialog = ({
 
   const linkedOutput = weeklyOutputs.find(output => output.id === task.weeklyOutputId);
   
-  const relatedGoals = goals.filter(goal => 
-    linkedOutput && goal.linkedOutputIds?.includes(linkedOutput.id)
-  );
+  // Note: This will need to be updated to use ItemLinkageService to fetch related goals
+  const relatedGoals: Goal[] = [];
 
   const isOverdue = task.dueDate && isBefore(task.dueDate, new Date()) && !task.completed;
 

@@ -42,8 +42,9 @@ const getCategoryColor = (category: Goal['category']) => {
     }
   };
 
-  const linkedOutputsCount = goal.linkedOutputIds?.length || 0;
-  const linkedOutputs = weeklyOutputs.filter(output => goal.linkedOutputIds?.includes(output.id));
+  // Note: Linked outputs will be fetched dynamically via ItemLinkageService when needed
+  const linkedOutputsCount = 0; // Placeholder - will be implemented with LinkGoalsDialog
+  const linkedOutputs: WeeklyOutput[] = [];
 
   return (
     <>
@@ -66,12 +67,7 @@ const getCategoryColor = (category: Goal['category']) => {
               )}
             </div>
             <div className="flex items-center gap-2 mb-2">
-              {linkedOutputsCount > 0 && (
-                <Badge variant="outline" className="text-xs flex items-center gap-1 bg-green-50 text-green-600 border-green-200">
-                  <Link className="h-2 w-2" />
-                  {linkedOutputsCount} output{linkedOutputsCount !== 1 ? 's' : ''} linked
-                </Badge>
-              )}
+              {/* Note: Will show linked outputs when ItemLinkageService is integrated */}
               <span className="text-xs text-gray-500">
                 Progress: {goal.progress}%
               </span>

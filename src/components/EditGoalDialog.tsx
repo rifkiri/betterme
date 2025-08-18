@@ -23,7 +23,6 @@ const formSchema = z.object({
   category: z.enum(['work', 'personal']),
   subcategory: z.string().optional(),
   deadline: z.date().optional(),
-  linkedOutputIds: z.array(z.string()).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -45,7 +44,6 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
       category: goal.category,
       subcategory: goal.subcategory ? mapSubcategoryDatabaseToDisplay(goal.subcategory) : "none",
       deadline: goal.deadline,
-      linkedOutputIds: goal.linkedOutputIds || [],
     },
   });
 
@@ -57,7 +55,6 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
         category: goal.category,
         subcategory: goal.subcategory ? mapSubcategoryDatabaseToDisplay(goal.subcategory) : "none",
         deadline: goal.deadline,
-        linkedOutputIds: goal.linkedOutputIds || [],
       });
     }
   }, [goal, open, form]);
@@ -75,7 +72,6 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
       category: data.category,
       subcategory: data.subcategory === "none" ? undefined : mapSubcategoryDisplayToDatabase(data.subcategory),
       deadline: deadline,
-      linkedOutputIds: data.linkedOutputIds || [],
     });
     
     onOpenChange(false);
@@ -231,62 +227,6 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
               )}
             />
 
-            {availableOutputs.length > 0 && (
-              <FormField
-                control={form.control}
-                name="linkedOutputIds"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Link to Outputs (Optional)</FormLabel>
-                    <FormControl>
-                      <Select 
-                        onValueChange={(value) => {
-                          const currentIds = field.value || [];
-                          if (currentIds.includes(value)) {
-                            field.onChange(currentIds.filter(id => id !== value));
-                          } else {
-                            field.onChange([...currentIds, value]);
-                          }
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select outputs to link" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {availableOutputs.map((output) => (
-                            <SelectItem key={output.id} value={output.id}>
-                              {output.title} ({output.progress}%)
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    {field.value && field.value.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {field.value.map((outputId) => {
-                          const output = availableOutputs.find(o => o.id === outputId);
-                          return output ? (
-                            <span key={outputId} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                              {output.title}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  field.onChange(field.value?.filter(id => id !== outputId));
-                                }}
-                                className="text-blue-600 hover:text-blue-800"
-                              >
-                                ×
-                              </button>
-                            </span>
-                          ) : null;
-                        })}
-                      </div>
-                    )}
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
 
             </form>
           </Form>

@@ -39,9 +39,8 @@ export const OutputDetailsDialog = ({
 }: OutputDetailsDialogProps) => {
   const [editingOutput, setEditingOutput] = useState<WeeklyOutput | null>(null);
 
-  const linkedGoals = goals.filter(goal => 
-    goal.linkedOutputIds?.includes(output.id)
-  );
+  // Note: This will need to be updated to use ItemLinkageService to fetch linked goals
+  const linkedGoals: Goal[] = [];
 
   const linkedTasks = tasks.filter(task => 
     task.weeklyOutputId === output.id

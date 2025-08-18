@@ -49,9 +49,8 @@ const getCategoryColor = (category: Goal['category']) => {
     }
   };
 
-  const linkedOutputs = weeklyOutputs.filter(output => 
-    goal.linkedOutputIds?.includes(output.id)
-  );
+  // Note: This will need to be updated to use ItemLinkageService to fetch linked outputs
+  const linkedOutputs: WeeklyOutput[] = [];
 
   const relatedTasks = tasks.filter(task => 
     linkedOutputs.some(output => output.id === task.weeklyOutputId)

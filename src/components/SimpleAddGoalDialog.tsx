@@ -79,7 +79,7 @@ export const SimpleAddGoalDialog = ({
       deadline: deadline,
       completed: false,
       archived: false,
-      linkedOutputIds: [],
+      
       coachId: data.category === 'work' ? (selectedCoach || undefined) : undefined,
       leadIds: data.category === 'work' ? (selectedLead ? [selectedLead] : undefined) : undefined,
       memberIds: data.category === 'work' ? (selectedMembers.length > 0 ? selectedMembers : undefined) : undefined,
