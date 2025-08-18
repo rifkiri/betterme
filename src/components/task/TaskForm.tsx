@@ -53,7 +53,7 @@ export const TaskForm = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3 p-1">
+      <form id="task-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3 p-1">
         <FormField
           control={form.control}
           name="title"
@@ -211,12 +211,6 @@ export const TaskForm = ({
           )}
         />
         
-        <div className="flex justify-end space-x-2 pt-2 border-t">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="submit">{initialValues ? 'Save Changes' : 'Add Task'}</Button>
-        </div>
       </form>
     </Form>
   );

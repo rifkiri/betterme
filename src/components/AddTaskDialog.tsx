@@ -62,6 +62,13 @@ export const AddTaskDialog = ({
             />
           </div>
         </ScrollArea>
+        
+        <div className="flex justify-end space-x-2 pt-4 border-t shrink-0">
+          <Button type="button" variant="outline" onClick={handleCancel}>
+            Cancel
+          </Button>
+          <Button type="submit" form="task-form">Add Task</Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -165,7 +165,7 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput }: AddWeeklyOutputDial
           </Form>
         </ScrollArea>
         
-        <div className="flex justify-end space-x-2 pt-4 shrink-0">
+        <div className="flex justify-end space-x-2 pt-4 border-t shrink-0">
           <Button type="button" variant="outline" onClick={() => setOpen(false)}>
             Cancel
           </Button>

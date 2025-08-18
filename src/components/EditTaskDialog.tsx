@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { WeeklyOutput, Task } from '@/types/productivity';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { TaskForm } from './task/TaskForm';
 import { TaskFormValues } from './task/taskFormSchema';
@@ -63,6 +64,13 @@ export const EditTaskDialog = ({ task, open, onOpenChange, onSave, weeklyOutputs
             />
           </div>
         </ScrollArea>
+        
+        <div className="flex justify-end space-x-2 pt-4 border-t shrink-0">
+          <Button type="button" variant="outline" onClick={handleCancel}>
+            Cancel
+          </Button>
+          <Button type="submit" form="task-form">Save Changes</Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
