@@ -20,6 +20,7 @@ export const SimpleEmployeeDashboard = () => {
     deletedTasks,
     weeklyOutputs,
     deletedWeeklyOutputs,
+    goals,
     selectedDate,
     handleDateChange,
     addHabit,
@@ -131,7 +132,7 @@ export const SimpleEmployeeDashboard = () => {
               deletedWeeklyOutputs={deletedWeeklyOutputs}
               overdueWeeklyOutputs={overdueWeeklyOutputs}
               tasks={tasks}
-              goals={[]}
+              goals={goals}
               onAddWeeklyOutput={addWeeklyOutput}
               onEditWeeklyOutput={editWeeklyOutput}
               onUpdateProgress={updateProgress}
@@ -156,7 +157,7 @@ export const SimpleEmployeeDashboard = () => {
               onPermanentlyDeleteTask={permanentlyDeleteTask}
               getTasksByDate={getTasksByDate}
               weeklyOutputs={weeklyOutputs}
-              goals={[]}
+              goals={goals}
             />
           </div>
         </div>
