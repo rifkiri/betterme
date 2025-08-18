@@ -43,7 +43,13 @@ export const useWeeklyOutputsManager = ({
           const currentLinkedOutputIds = goal.linkedOutputIds || [];
           if (!currentLinkedOutputIds.includes(outputId)) {
             const updatedLinkedOutputIds = [...currentLinkedOutputIds, outputId];
-            await supabaseDataService.updateGoal(goalId, userId, { linkedOutputIds: updatedLinkedOutputIds });
+            try {
+              await supabaseDataService.updateGoal(goalId, userId, { linkedOutputIds: updatedLinkedOutputIds });
+              console.log('Successfully linked output', outputId, 'to goal', goalId);
+            } catch (linkError) {
+              console.error('Failed to link output to goal:', goalId, linkError);
+              toast.error(`Failed to link to goal: ${goal.title}`);
+            }
           }
         }
       }
@@ -55,12 +61,19 @@ export const useWeeklyOutputsManager = ({
           const currentLinkedOutputIds = goal.linkedOutputIds || [];
           if (currentLinkedOutputIds.includes(outputId)) {
             const updatedLinkedOutputIds = currentLinkedOutputIds.filter(id => id !== outputId);
-            await supabaseDataService.updateGoal(goalId, userId, { linkedOutputIds: updatedLinkedOutputIds });
+            try {
+              await supabaseDataService.updateGoal(goalId, userId, { linkedOutputIds: updatedLinkedOutputIds });
+              console.log('Successfully unlinked output', outputId, 'from goal', goalId);
+            } catch (unlinkError) {
+              console.error('Failed to unlink output from goal:', goalId, unlinkError);
+              toast.error(`Failed to unlink from goal: ${goal.title}`);
+            }
           }
         }
       }
     } catch (error) {
       console.error('Failed to update goal links:', error);
+      toast.error('Failed to update goal links');
     }
   };
   const addWeeklyOutput = async (output: Omit<WeeklyOutput, 'id' | 'createdDate'>) => {

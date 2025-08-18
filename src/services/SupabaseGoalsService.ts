@@ -279,10 +279,20 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
       supabaseUpdates.deleted_date = new Date().toISOString();
     }
 
-    // Check if user is the goal creator
-    const canUpdate = await this.canUserUpdateGoal(id, userId);
-    if (!canUpdate) {
-      throw new Error('Only the goal creator can edit this goal');
+    // Check permissions - allow linking if user can access the goal
+    const isLinkingOnly = Object.keys(updates).length === 1 && updates.linkedOutputIds !== undefined;
+    if (isLinkingOnly) {
+      const canLink = await this.canUserLinkToGoal(id, userId);
+      if (!canLink) {
+        console.error('Permission denied for linking to goal:', id, 'by user:', userId);
+        throw new Error('You do not have permission to link to this goal');
+      }
+    } else {
+      const canUpdate = await this.canUserUpdateGoal(id, userId);
+      if (!canUpdate) {
+        console.error('Permission denied for updating goal:', id, 'by user:', userId);
+        throw new Error('Only the goal creator can edit this goal');
+      }
     }
 
     const { error } = await supabase
@@ -314,6 +324,41 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
     const isOwner = goal.user_id === userId;
     
     return isCreator || isOwner;
+  }
+
+  private async canUserLinkToGoal(goalId: string, userId: string): Promise<boolean> {
+    // Allow linking if user can view the goal (has access to it)
+    const { data: goal, error: goalError } = await supabase
+      .from('goals')
+      .select('id, user_id, category')
+      .eq('id', goalId)
+      .single();
+
+    if (goalError || !goal) {
+      console.error('Error fetching goal for linking permission check:', goalError);
+      return false;
+    }
+
+    // Personal goals: only owner can link
+    if (goal.category === 'personal') {
+      return goal.user_id === userId;
+    }
+
+    // Work goals: check if user has any assignment to this goal
+    const { data: assignment, error: assignmentError } = await supabase
+      .from('goal_assignments')
+      .select('id')
+      .eq('goal_id', goalId)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (assignmentError) {
+      console.error('Error checking goal assignment for linking:', assignmentError);
+      return false;
+    }
+
+    // Allow linking if user is assigned to the goal or owns it
+    return !!assignment || goal.user_id === userId;
   }
 
   async updateGoalProgress(id: string, userId: string, progress: number): Promise<void> {
