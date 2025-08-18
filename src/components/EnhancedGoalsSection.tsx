@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { SimpleAddGoalDialog } from './SimpleAddGoalDialog';
 import { JoinGoalDialog } from './JoinGoalDialog';
 import { Goal, WeeklyOutput } from '@/types/productivity';
-import { Target, Briefcase, User, Plus, CheckCircle } from 'lucide-react';
+import { Target, Briefcase, User, Plus, CheckCircle, Minus, Edit, Trash2, Eye } from 'lucide-react';
 
 interface EnhancedGoalsSectionProps {
   goals: Goal[];
@@ -175,17 +175,39 @@ export const EnhancedGoalsSection = ({
 
           {/* Action Buttons */}
           <div className="flex gap-2 pt-2 border-t">
+            {/* View Details button */}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 w-8 p-0"
+              title="View Details"
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+
             {/* Edit button - only for goal owners and managers */}
             {canManageGoal && (
-              <Button variant="outline" size="sm" onClick={() => onEditGoal(goal.id, {})}>
-                Edit
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-8 w-8 p-0"
+                onClick={() => onEditGoal(goal.id, {})}
+                title="Edit Goal"
+              >
+                <Edit className="h-4 w-4" />
               </Button>
             )}
             
             {/* Delete button - for goal owners and managers */}
             {showDeleteOption && (
-              <Button variant="outline" size="sm" onClick={() => onDeleteGoal(goal.id)}>
-                Delete
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-8 w-8 p-0"
+                onClick={() => onDeleteGoal(goal.id)}
+                title="Delete Goal"
+              >
+                <Trash2 className="h-4 w-4" />
               </Button>
             )}
             
@@ -209,27 +231,30 @@ export const EnhancedGoalsSection = ({
                   variant="outline" 
                   onClick={() => onUpdateGoalProgress(goal.id, goal.progress - 10)} 
                   disabled={goal.progress <= 0} 
-                  className="text-xs px-2 py-1"
+                  className="h-8 w-8 p-0"
+                  title="Decrease Progress"
                 >
-                  -10%
+                  <Minus className="h-4 w-4" />
                 </Button>
                 <Button 
                   size="sm" 
                   variant="outline" 
                   onClick={() => onUpdateGoalProgress(goal.id, goal.progress + 10)} 
                   disabled={goal.progress >= 100} 
-                  className="text-xs px-2 py-1"
+                  className="h-8 w-8 p-0"
+                  title="Increase Progress"
                 >
-                  +10%
+                  <Plus className="h-4 w-4" />
                 </Button>
                 {goal.progress !== 100 && (
                   <Button 
                     size="sm" 
                     variant="default" 
                     onClick={() => onUpdateGoalProgress(goal.id, 100)} 
-                    className="text-xs px-2 py-1"
+                    className="h-8 w-8 p-0"
+                    title="Mark as Achieved"
                   >
-                    Achieved
+                    <CheckCircle className="h-4 w-4" />
                   </Button>
                 )}
               </div>
