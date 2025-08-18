@@ -281,6 +281,7 @@ const getCategoryColor = (category: Goal['category']) => {
           open={true} 
           onOpenChange={open => !open && setEditingOutput(null)} 
           onSave={onEditWeeklyOutput}
+          goals={goals}
         />
       )}
     </>
