@@ -363,6 +363,7 @@ export const EnhancedGoalsSection = ({
           onUpdateProgress={onUpdateGoalProgress}
           weeklyOutputs={weeklyOutputs}
           tasks={[]}
+          currentUserId={currentUserId}
         />
       )}
     </div>

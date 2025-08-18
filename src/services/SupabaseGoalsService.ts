@@ -279,10 +279,10 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
       supabaseUpdates.deleted_date = new Date().toISOString();
     }
 
-    // Check if user owns the goal OR is assigned to it
+    // Check if user is the goal creator
     const canUpdate = await this.canUserUpdateGoal(id, userId);
     if (!canUpdate) {
-      throw new Error('User does not have permission to update this goal');
+      throw new Error('Only the goal creator can edit this goal');
     }
 
     const { error } = await supabase
@@ -297,33 +297,23 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
   }
 
   private async canUserUpdateGoal(goalId: string, userId: string): Promise<boolean> {
-    // Check if user is manager or admin
-    const userRole = await this.getUserRole(userId);
-    if (userRole === 'manager' || userRole === 'admin') {
-      return true;
-    }
-
-    // Check if user owns the goal
-    const { data: ownedGoal, error: ownedError } = await supabase
+    // Only allow goal creators to edit goals
+    const { data: goal, error: goalError } = await supabase
       .from('goals')
-      .select('id')
+      .select('created_by, user_id')
       .eq('id', goalId)
-      .eq('user_id', userId)
       .single();
 
-    if (!ownedError && ownedGoal) {
-      return true;
+    if (goalError || !goal) {
+      console.error('Error fetching goal for permission check:', goalError);
+      return false;
     }
 
-    // Check if user is assigned to the goal
-    const { data: assignment, error: assignmentError } = await supabase
-      .from('goal_assignments')
-      .select('id')
-      .eq('goal_id', goalId)
-      .eq('user_id', userId)
-      .maybeSingle();
-
-    return !assignmentError && !!assignment;
+    // Check if user is the creator or owner of the goal
+    const isCreator = goal.created_by === userId;
+    const isOwner = goal.user_id === userId;
+    
+    return isCreator || isOwner;
   }
 
   async updateGoalProgress(id: string, userId: string, progress: number): Promise<void> {
@@ -333,7 +323,7 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
     const canUpdate = await this.canUserUpdateGoal(id, userId);
     if (!canUpdate) {
       console.log('🔥 [DB] Permission denied for goal progress update');
-      throw new Error('User does not have permission to update this goal progress');
+      throw new Error('Only the goal creator can update this goal progress');
     }
 
     console.log('🔥 [DB] Permission granted, updating database...');

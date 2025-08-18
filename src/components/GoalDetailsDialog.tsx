@@ -26,6 +26,7 @@ interface GoalDetailsDialogProps {
   onUpdateProgress: (goalId: string, newProgress: number) => void;
   weeklyOutputs: WeeklyOutput[];
   tasks: Task[];
+  currentUserId?: string;
 }
 
 export const GoalDetailsDialog = ({
@@ -35,7 +36,8 @@ export const GoalDetailsDialog = ({
   onEditGoal,
   onUpdateProgress,
   weeklyOutputs,
-  tasks
+  tasks,
+  currentUserId
 }: GoalDetailsDialogProps) => {
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
 
@@ -56,6 +58,9 @@ const getCategoryColor = (category: Goal['category']) => {
   );
 
   const isOverdue = goal.deadline && isBefore(goal.deadline, new Date()) && goal.progress < 100;
+  
+  // Only show edit button to goal creator
+  const canEditGoal = currentUserId && (goal.createdBy === currentUserId || goal.userId === currentUserId);
 
   return (
     <>
@@ -259,10 +264,12 @@ const getCategoryColor = (category: Goal['category']) => {
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Close
             </Button>
-            <Button onClick={() => setEditingGoal(goal)}>
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Goal
-            </Button>
+            {canEditGoal && (
+              <Button onClick={() => setEditingGoal(goal)}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Goal
+              </Button>
+            )}
           </div>
         </DialogContent>
       </Dialog>
