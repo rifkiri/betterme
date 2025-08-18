@@ -32,7 +32,6 @@ export const GoalCard = ({
   isOverdue = false,
   isCompleted = false
 }: GoalCardProps) => {
-  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   
 const getCategoryColor = (category: Goal['category']) => {
@@ -94,9 +93,6 @@ const getCategoryColor = (category: Goal['category']) => {
             <Button size="sm" variant="outline" onClick={() => setShowDetailsDialog(true)} className="text-xs px-2 py-1" title="View Details">
               <Eye className="h-3 w-3" />
             </Button>
-            <Button size="sm" variant="outline" onClick={() => setEditingGoal(goal)} className="text-xs px-2 py-1">
-              Edit
-            </Button>
             <MoveGoalDialog onMoveGoal={newDeadline => onMoveGoal(goal.id, newDeadline)} disabled={goal.progress === 100} />
             <Button size="sm" variant="outline" onClick={() => onDeleteGoal(goal.id)} className="text-xs px-2 py-1 text-red-600 hover:bg-red-50">
               <Trash2 className="h-3 w-3" />
@@ -144,16 +140,6 @@ const getCategoryColor = (category: Goal['category']) => {
         weeklyOutputs={weeklyOutputs}
         tasks={tasks}
       />
-      
-      {editingGoal && (
-        <EditGoalDialog 
-          goal={editingGoal} 
-          open={true} 
-          onOpenChange={open => !open && setEditingGoal(null)} 
-          onSave={onEditGoal}
-          weeklyOutputs={weeklyOutputs}
-        />
-      )}
     </>
   );
 };

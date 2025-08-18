@@ -30,7 +30,6 @@ export const WeeklyOutputCard = ({
   tasks = [],
   goals = []
 }: WeeklyOutputCardProps) => {
-  const [editingOutput, setEditingOutput] = useState<WeeklyOutput | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   
   const isOverdue = () => {
@@ -80,9 +79,6 @@ export const WeeklyOutputCard = ({
             <Button size="sm" variant="outline" onClick={() => setShowDetailsDialog(true)} className="text-xs px-2 py-1" title="View Details">
               <Eye className="h-3 w-3" />
             </Button>
-            <Button size="sm" variant="outline" onClick={() => setEditingOutput(output)} className="text-xs px-2 py-1">
-              Edit
-            </Button>
             <MoveWeeklyOutputDialog onMoveOutput={newDueDate => onMoveWeeklyOutput(output.id, newDueDate)} disabled={output.progress === 100} />
             <Button size="sm" variant="outline" onClick={() => onDeleteWeeklyOutput(output.id)} className="text-xs px-2 py-1 text-red-600 hover:bg-red-50">
               <Trash2 className="h-3 w-3" />
@@ -118,15 +114,6 @@ export const WeeklyOutputCard = ({
         goals={goals}
         tasks={tasks}
       />
-      
-      {editingOutput && (
-        <EditWeeklyOutputDialog 
-          weeklyOutput={editingOutput} 
-          open={true} 
-          onOpenChange={open => !open && setEditingOutput(null)} 
-          onSave={onEditWeeklyOutput} 
-        />
-      )}
     </>
   );
 };

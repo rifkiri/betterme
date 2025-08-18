@@ -24,7 +24,6 @@ interface TaggedUser {
 }
 
 export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteTask, onViewDetails, weeklyOutputs = [] }: TaskItemProps) => {
-  const [editingTask, setEditingTask] = useState(false);
   const [taggedUsers, setTaggedUsers] = useState<TaggedUser[]>([]);
   const linkedOutput = task.weeklyOutputId ? weeklyOutputs.find(output => output.id === task.weeklyOutputId) : null;
 
@@ -89,14 +88,9 @@ export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteT
         </button>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <div 
-              className="cursor-pointer hover:bg-gray-100 rounded p-1 -m-1 transition-colors"
-              onClick={() => setEditingTask(true)}
-            >
-              <p className={`text-sm font-medium ${task.completed ? 'line-through text-gray-500' : ''}`}>
-                {task.title}
-              </p>
-            </div>
+            <p className={`text-sm font-medium ${task.completed ? 'line-through text-gray-500' : ''}`}>
+              {task.title}
+            </p>
             {task.isMoved && (
               <Badge variant="outline" className="text-xs flex items-center gap-1">
                 <ArrowRight className="h-2 w-2" />
@@ -147,17 +141,15 @@ export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteT
         </div>
       </div>
       <div className="flex items-center gap-2">
-        {onViewDetails && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onViewDetails}
-            className="h-8 w-8 p-0"
-            title="View Details"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onViewDetails}
+          className="h-8 w-8 p-0"
+          title="View Details"
+        >
+          <Eye className="h-4 w-4" />
+        </Button>
         {!task.completed && (
           <MoveTaskDialog 
             onMoveTask={(newDate) => onMoveTask(task.id, newDate)}
@@ -172,16 +164,6 @@ export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteT
           <Trash2 className="h-4 w-4" />
         </Button>
       </div>
-      
-      {editingTask && (
-        <EditTaskDialog
-          task={task}
-          open={true}
-          onOpenChange={(open) => !open && setEditingTask(false)}
-          onSave={onEditTask}
-          weeklyOutputs={weeklyOutputs}
-        />
-      )}
     </div>
   );
 };

@@ -38,7 +38,6 @@ export const HabitsSection = ({
   onRestoreHabit,
   onPermanentlyDeleteHabit
 }: HabitsSectionProps) => {
-  const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [togglingHabitId, setTogglingHabitId] = useState<string | null>(null);
   const [streakDialogHabit, setStreakDialogHabit] = useState<Habit | null>(null);
 
@@ -109,10 +108,7 @@ export const HabitsSection = ({
                     <Circle className="h-5 w-5 text-gray-400" />
                   )}
                 </button>
-                <div 
-                  className="cursor-pointer hover:bg-gray-100 rounded p-1 -m-1 transition-colors"
-                  onClick={() => setEditingHabit(habit)}
-                >
+                <div>
                   <span className={`font-medium ${habit.completed ? 'text-green-700' : 'text-gray-700'}`}>
                     {habit.name}
                   </span>
@@ -140,15 +136,6 @@ export const HabitsSection = ({
           ))
         )}
       </CardContent>
-      
-      {editingHabit && (
-        <EditHabitDialog
-          habit={editingHabit}
-          open={true}
-          onOpenChange={(open) => !open && setEditingHabit(null)}
-          onSave={onEditHabit}
-        />
-      )}
 
       {streakDialogHabit && (
         <StreakDatesDialog
