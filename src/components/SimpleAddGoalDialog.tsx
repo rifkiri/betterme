@@ -18,11 +18,13 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { z } from 'zod';
 import { Goal } from '@/types/productivity';
+import { getSubcategoryOptions, mapSubcategoryDisplayToDatabase } from '@/utils/goalCategoryUtils';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
   category: z.enum(['work', 'personal']),
+  subcategory: z.string().optional(),
   deadline: z.date().optional(),
   coachId: z.string().optional(),
   leadId: z.string().optional(),
@@ -53,6 +55,7 @@ export const SimpleAddGoalDialog = ({
       title: '',
       description: '',
       category: 'personal',
+      subcategory: '',
       deadline: undefined,
       coachId: '',
       leadId: '',
@@ -72,6 +75,7 @@ export const SimpleAddGoalDialog = ({
       title: data.title,
       description: data.description,
       category: data.category,
+      subcategory: mapSubcategoryDisplayToDatabase(data.subcategory),
       deadline: deadline,
       completed: false,
       archived: false,
@@ -151,6 +155,33 @@ export const SimpleAddGoalDialog = ({
                     <SelectContent>
                       <SelectItem value="personal">Personal</SelectItem>
                       <SelectItem value="work">Work</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+            )}
+            />
+
+            {/* Subcategory Field */}
+            <FormField
+              control={form.control}
+              name="subcategory"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Subcategory (Optional)</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select subcategory" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="">No subcategory</SelectItem>
+                      {getSubcategoryOptions(watchCategory).map((subcategory) => (
+                        <SelectItem key={subcategory} value={subcategory}>
+                          {subcategory}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />

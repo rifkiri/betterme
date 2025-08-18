@@ -15,11 +15,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '@/lib/utils';
 import { Goal, WeeklyOutput } from '@/types/productivity';
+import { getSubcategoryOptions, mapSubcategoryDisplayToDatabase, mapSubcategoryDatabaseToDisplay } from '@/utils/goalCategoryUtils';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
   category: z.enum(['work', 'personal']),
+  subcategory: z.string().optional(),
   deadline: z.date().optional(),
   linkedOutputIds: z.array(z.string()).optional(),
 });
@@ -41,6 +43,7 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
       title: goal.title,
       description: goal.description || '',
       category: goal.category,
+      subcategory: mapSubcategoryDatabaseToDisplay(goal.subcategory),
       deadline: goal.deadline,
       linkedOutputIds: goal.linkedOutputIds || [],
     },
@@ -52,6 +55,7 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
         title: goal.title,
         description: goal.description || '',
         category: goal.category,
+        subcategory: mapSubcategoryDatabaseToDisplay(goal.subcategory),
         deadline: goal.deadline,
         linkedOutputIds: goal.linkedOutputIds || [],
       });
@@ -69,6 +73,7 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
       title: data.title,
       description: data.description,
       category: data.category,
+      subcategory: mapSubcategoryDisplayToDatabase(data.subcategory),
       deadline: deadline,
       linkedOutputIds: data.linkedOutputIds || [],
     });
@@ -122,9 +127,35 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
                   </FormControl>
                   <FormMessage />
                 </FormItem>
-              )}
+            )}
             />
 
+            {/* Subcategory Field */}
+            <FormField
+              control={form.control}
+              name="subcategory"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Subcategory (Optional)</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select subcategory" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="">No subcategory</SelectItem>
+                      {getSubcategoryOptions(form.watch('category')).map((subcategory) => (
+                        <SelectItem key={subcategory} value={subcategory}>
+                          {subcategory}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}

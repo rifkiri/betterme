@@ -65,6 +65,7 @@ export interface Goal {
   title: string;
   description?: string;
   category: 'work' | 'personal';
+  subcategory?: string; // Subcategory for more specific classification
   deadline?: Date;
   createdDate: Date;
   completed: boolean;

@@ -120,6 +120,7 @@ export type Database = {
           linked_output_ids: string[] | null
           member_ids: string[] | null
           progress: number
+          subcategory: string | null
           title: string
           unit: string
           updated_at: string
@@ -142,6 +143,7 @@ export type Database = {
           linked_output_ids?: string[] | null
           member_ids?: string[] | null
           progress?: number
+          subcategory?: string | null
           title: string
           unit?: string
           updated_at?: string
@@ -164,6 +166,7 @@ export type Database = {
           linked_output_ids?: string[] | null
           member_ids?: string[] | null
           progress?: number
+          subcategory?: string | null
           title?: string
           unit?: string
           updated_at?: string

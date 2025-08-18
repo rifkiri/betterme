@@ -38,6 +38,7 @@ return data.map(goal => ({
       title: goal.title,
       description: goal.description,
       category: goal.category as 'work' | 'personal',
+      subcategory: goal.subcategory,
       deadline: goal.deadline ? new Date(goal.deadline) : undefined,
       createdDate: new Date(goal.created_date),
       completed: goal.completed,
@@ -161,6 +162,7 @@ return data.map(goal => ({
         title: goal.title,
         description: goal.description,
         category: goal.category as 'work' | 'personal',
+        subcategory: goal.subcategory,
         deadline: goal.deadline ? new Date(goal.deadline) : undefined,
         createdDate: new Date(goal.created_date),
         completed: goal.completed,
@@ -199,6 +201,7 @@ return data.map(goal => ({
       title: goal.title,
       description: goal.description,
       category: goal.category as 'work' | 'personal',
+      subcategory: goal.subcategory,
       deadline: goal.deadline ? new Date(goal.deadline) : undefined,
       createdDate: new Date(goal.created_date),
       completed: goal.completed,
@@ -224,6 +227,7 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
         title: goal.title,
         description: goal.description,
         category: goal.category,
+        subcategory: goal.subcategory,
         deadline: goal.deadline ? goal.deadline.toISOString().split('T')[0] : null,
         completed: goal.completed,
         archived: goal.archived,
@@ -251,6 +255,7 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
     if (updates.title) supabaseUpdates.title = updates.title;
     if (updates.description !== undefined) supabaseUpdates.description = updates.description;
     if (updates.category) supabaseUpdates.category = updates.category;
+    if (updates.subcategory !== undefined) supabaseUpdates.subcategory = updates.subcategory;
     if (updates.deadline !== undefined) {
       supabaseUpdates.deadline = updates.deadline ? updates.deadline.toISOString().split('T')[0] : null;
     }
