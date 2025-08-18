@@ -4,11 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Target, BarChart3, TrendingUp, User, UserCog, UserCheck, Calendar, CheckCircle } from 'lucide-react';
+import { Users, Target, BarChart3, TrendingUp, UserCog, UserCheck, Calendar, CheckCircle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { supabaseGoalsService } from '@/services/SupabaseGoalsService';
 import { supabaseGoalAssignmentsService } from '@/services/SupabaseGoalAssignmentsService';
+import { User } from '@/types/userTypes';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { TeamWorkloadCharts } from './TeamWorkloadCharts';
 
@@ -32,7 +33,9 @@ interface WorkGoal {
 interface MemberWorkload {
   id: string;
   name: string;
+  email: string;
   role: string;
+  initials: string;
   goalsAssigned: number;
   weeklyOutputs: number;
   activeTasks: number;
@@ -55,6 +58,7 @@ export const TeamWorkloadMonitoring = ({
   }>({ memberWorkloads: [], workGoals: [] });
   const [loadingWorkload, setLoadingWorkload] = useState(false);
   const [sortBy, setSortBy] = useState<'goals' | 'outputs' | 'tasks' | 'name'>('goals');
+  const [userProfiles, setUserProfiles] = useState<Map<string, User>>(new Map());
 
   useEffect(() => {
     console.log('TeamWorkloadMonitoring useEffect - teamData:', teamData);
@@ -69,16 +73,37 @@ export const TeamWorkloadMonitoring = ({
   const loadWorkloadData = async () => {
     setLoadingWorkload(true);
     try {
+      // First, fetch all user profiles to create a proper user lookup
+      const allUsers = await supabaseDataService.getUsers();
+      const userProfilesMap = new Map<string, User>();
+      const teamMemberIds = teamData.membersSummary.map((m: any) => m.id);
+      
+      // Filter to team members and managers, create lookup map
+      allUsers
+        .filter(user => teamMemberIds.includes(user.id))
+        .forEach(user => {
+          userProfilesMap.set(user.id, user);
+        });
+      
+      setUserProfiles(userProfilesMap);
+
       const memberWorkloads: MemberWorkload[] = [];
       const workGoals: WorkGoal[] = [];
-      const userMap = new Map();
 
-      // Process each team member
-      for (const member of teamData.membersSummary) {
-        userMap.set(member.id, member.name);
+      // Process each team member using user IDs
+      for (const memberSummary of teamData.membersSummary) {
+        const userProfile = userProfilesMap.get(memberSummary.id);
+        if (!userProfile) continue;
+        
+        // Generate initials from profile name
+        const initials = userProfile.name
+          .split(' ')
+          .map(n => n[0])
+          .join('')
+          .toUpperCase();
         
         // Get member's goals
-        const goals = await supabaseGoalsService.getUserAccessibleGoals(member.id);
+        const goals = await supabaseGoalsService.getUserAccessibleGoals(userProfile.id);
         const totalGoals = goals.filter(g => !g.archived).length;
         
         // Count work goal subcategories
@@ -90,15 +115,17 @@ export const TeamWorkloadMonitoring = ({
         };
         
         // Get tasks and outputs counts
-        const tasks = await supabaseDataService.getTasks(member.id);
-        const outputs = await supabaseDataService.getWeeklyOutputs(member.id);
+        const tasks = await supabaseDataService.getTasks(userProfile.id);
+        const outputs = await supabaseDataService.getWeeklyOutputs(userProfile.id);
         const activeTasks = tasks.filter(t => !t.completed && !t.isDeleted).length;
         const activeOutputs = outputs.filter(o => !o.isDeleted).length;
 
         memberWorkloads.push({
-          id: member.id,
-          name: member.name,
-          role: member.role,
+          id: userProfile.id,
+          name: userProfile.name,
+          email: userProfile.email,
+          role: userProfile.role,
+          initials: initials,
           goalsAssigned: totalGoals,
           weeklyOutputs: activeOutputs,
           activeTasks: activeTasks,
@@ -143,9 +170,9 @@ export const TeamWorkloadMonitoring = ({
           id: goal.id,
           title: goal.title,
           progress: goal.progress,
-          coach: coach ? userMap.get(coach.userId) : undefined,
-          leads: leads.map(l => userMap.get(l.userId)).filter(Boolean),
-          members: members.map(m => userMap.get(m.userId)).filter(Boolean),
+          coach: coach ? userProfilesMap.get(coach.userId)?.name : undefined,
+          leads: leads.map(l => userProfilesMap.get(l.userId)?.name).filter(Boolean),
+          members: members.map(m => userProfilesMap.get(m.userId)?.name).filter(Boolean),
           outputs: outputs.filter(Boolean),
           tasks
         });
@@ -195,10 +222,10 @@ export const TeamWorkloadMonitoring = ({
     }
   });
 
-  // Prepare chart data
+  // Prepare chart data using user ID-based lookup
   const chartData = workloadData.memberWorkloads.map(member => ({
-    name: member.name.split(' ').map(n => n[0]).join(''), // Initials for chart
-    fullName: member.name,
+    name: member.initials, // Use consistent initials from profile
+    fullName: member.name, // Use name from profile
     goals: member.goalsAssigned,
     outputs: member.weeklyOutputs,
     tasks: member.activeTasks,
