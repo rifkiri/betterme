@@ -51,8 +51,12 @@ export const TeamWorkloadMonitoring = ({
   const [loadingWorkload, setLoadingWorkload] = useState(false);
 
   useEffect(() => {
+    console.log('TeamWorkloadMonitoring useEffect - teamData:', teamData);
     if (teamData?.membersSummary?.length > 0) {
+      console.log('Loading workload data for members:', teamData.membersSummary);
       loadWorkloadData();
+    } else {
+      console.log('No members found in teamData:', teamData);
     }
   }, [teamData]);
 
@@ -148,6 +152,9 @@ export const TeamWorkloadMonitoring = ({
     }
   };
 
+  console.log('TeamWorkloadMonitoring - teamData:', teamData);
+  console.log('TeamWorkloadMonitoring - isLoading:', isLoading);
+
   if (isLoading) {
     return (
       <Card>
@@ -159,7 +166,8 @@ export const TeamWorkloadMonitoring = ({
     );
   }
 
-  if (!teamData || !teamData.members) {
+  if (!teamData || !teamData.membersSummary) {
+    console.log('No team data or membersSummary available:', teamData);
     return (
       <Card>
         <CardHeader>
