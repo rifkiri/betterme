@@ -107,6 +107,14 @@ export class SupabaseDataService {
     return await supabaseGoalsService.permanentlyDeleteGoal(id, userId);
   }
 
+  async linkOutputToGoal(outputId: string, goalId: string, userId: string) {
+    return await supabaseGoalsService.linkOutputToGoal(outputId, goalId, userId);
+  }
+
+  async unlinkOutputFromGoal(outputId: string, goalId: string, userId: string) {
+    return await supabaseGoalsService.unlinkOutputFromGoal(outputId, goalId, userId);
+  }
+
   // Mood tracking
   async getMoodData(userId: string) {
     return await supabaseMoodService.getMoodData(userId);

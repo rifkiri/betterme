@@ -390,6 +390,40 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
       throw error;
     }
   }
+
+  async linkOutputToGoal(outputId: string, goalId: string, userId: string): Promise<void> {
+    console.log('🔥 [DB] Linking output to goal via database function:', { outputId, goalId, userId });
+    
+    const { data, error } = await supabase.rpc('link_output_to_goal', {
+      output_id: outputId,
+      goal_id: goalId,
+      user_id_param: userId
+    });
+
+    if (error) {
+      console.error('Error linking output to goal:', error);
+      throw error;
+    }
+
+    console.log('🔥 [DB] Successfully linked output to goal');
+  }
+
+  async unlinkOutputFromGoal(outputId: string, goalId: string, userId: string): Promise<void> {
+    console.log('🔥 [DB] Unlinking output from goal via database function:', { outputId, goalId, userId });
+    
+    const { data, error } = await supabase.rpc('unlink_output_from_goal', {
+      output_id: outputId,
+      goal_id: goalId,
+      user_id_param: userId
+    });
+
+    if (error) {
+      console.error('Error unlinking output from goal:', error);
+      throw error;
+    }
+
+    console.log('🔥 [DB] Successfully unlinked output from goal');
+  }
 }
 
 export const supabaseGoalsService = new SupabaseGoalsService();

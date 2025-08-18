@@ -589,6 +589,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      link_output_to_goal: {
+        Args: { goal_id: string; output_id: string; user_id_param: string }
+        Returns: boolean
+      }
       toggle_habit_completion: {
         Args: {
           habit_id_param: string
@@ -596,6 +600,10 @@ export type Database = {
           target_date: string
           user_id_param: string
         }
+        Returns: boolean
+      }
+      unlink_output_from_goal: {
+        Args: { goal_id: string; output_id: string; user_id_param: string }
         Returns: boolean
       }
       validate_password_strength: {

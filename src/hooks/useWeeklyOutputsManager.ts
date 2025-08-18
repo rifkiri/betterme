@@ -36,38 +36,36 @@ export const useWeeklyOutputsManager = ({
       // Goals to remove the output from (removed links)
       const goalsToRemoveFrom = previousLinkedGoalIds.filter(goalId => !linkedGoalIds.includes(goalId));
 
-      // Update goals that should have this output added to their linkedOutputIds
+      console.log('🔥 [Manager] Updating goal links for output:', outputId);
+      console.log('🔥 [Manager] Goals to link:', goalsToAddTo);
+      console.log('🔥 [Manager] Goals to unlink:', goalsToRemoveFrom);
+
+      // Link to new goals using database function
       for (const goalId of goalsToAddTo) {
         const goal = goals.find(g => g.id === goalId);
         if (goal) {
-          const currentLinkedOutputIds = goal.linkedOutputIds || [];
-          if (!currentLinkedOutputIds.includes(outputId)) {
-            const updatedLinkedOutputIds = [...currentLinkedOutputIds, outputId];
-            try {
-              await supabaseDataService.updateGoal(goalId, userId, { linkedOutputIds: updatedLinkedOutputIds });
-              console.log('Successfully linked output', outputId, 'to goal', goalId);
-            } catch (linkError) {
-              console.error('Failed to link output to goal:', goalId, linkError);
-              toast.error(`Failed to link to goal: ${goal.title}`);
-            }
+          try {
+            console.log('🔥 [Manager] Linking output', outputId, 'to goal', goalId);
+            await supabaseDataService.linkOutputToGoal(outputId, goalId, userId);
+            console.log('Successfully linked output', outputId, 'to goal', goalId);
+          } catch (linkError) {
+            console.error('Failed to link output to goal:', goalId, linkError);
+            toast.error(`Failed to link to goal: ${goal.title}`);
           }
         }
       }
 
-      // Update goals that should have this output removed from their linkedOutputIds
+      // Unlink from removed goals using database function
       for (const goalId of goalsToRemoveFrom) {
         const goal = goals.find(g => g.id === goalId);
         if (goal) {
-          const currentLinkedOutputIds = goal.linkedOutputIds || [];
-          if (currentLinkedOutputIds.includes(outputId)) {
-            const updatedLinkedOutputIds = currentLinkedOutputIds.filter(id => id !== outputId);
-            try {
-              await supabaseDataService.updateGoal(goalId, userId, { linkedOutputIds: updatedLinkedOutputIds });
-              console.log('Successfully unlinked output', outputId, 'from goal', goalId);
-            } catch (unlinkError) {
-              console.error('Failed to unlink output from goal:', goalId, unlinkError);
-              toast.error(`Failed to unlink from goal: ${goal.title}`);
-            }
+          try {
+            console.log('🔥 [Manager] Unlinking output', outputId, 'from goal', goalId);
+            await supabaseDataService.unlinkOutputFromGoal(outputId, goalId, userId);
+            console.log('Successfully unlinked output', outputId, 'from goal', goalId);
+          } catch (unlinkError) {
+            console.error('Failed to unlink output from goal:', goalId, unlinkError);
+            toast.error(`Failed to unlink from goal: ${goal.title}`);
           }
         }
       }
