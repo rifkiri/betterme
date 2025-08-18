@@ -44,7 +44,7 @@ export const WeeklyOutputCard = ({
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
             <div className="cursor-pointer hover:bg-blue-100 rounded p-1 -m-1 transition-colors" onClick={() => setShowDetailsDialog(true)}>
-              <p className="text-sm text-gray-700 leading-relaxed mb-2">{output.title}</p>
+              <p className={`text-sm leading-relaxed mb-2 ${output.progress >= 100 ? 'line-through text-gray-500' : 'text-gray-700'}`}>{output.title}</p>
               {output.description && (
                 <p className="text-xs text-gray-600 mb-2">{output.description}</p>
               )}
