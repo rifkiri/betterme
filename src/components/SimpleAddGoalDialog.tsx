@@ -24,7 +24,7 @@ const formSchema = z.object({
   category: z.enum(['work', 'personal']),
   deadline: z.date().optional(),
   coachId: z.string().optional(),
-  leadIds: z.array(z.string()).optional(),
+  leadId: z.string().optional(),
   memberIds: z.array(z.string()).optional(),
 });
 
@@ -43,7 +43,7 @@ export const SimpleAddGoalDialog = ({
 }: SimpleAddGoalDialogProps) => {
   const [open, setOpen] = useState(false);
   const [selectedCoach, setSelectedCoach] = useState<string>('');
-  const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
+  const [selectedLead, setSelectedLead] = useState<string>('');
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
 
   const form = useForm<FormData>({
@@ -54,7 +54,7 @@ export const SimpleAddGoalDialog = ({
       category: 'personal',
       deadline: undefined,
       coachId: '',
-      leadIds: [],
+      leadId: '',
       memberIds: [],
     },
   });
@@ -76,40 +76,26 @@ export const SimpleAddGoalDialog = ({
       archived: false,
       linkedOutputIds: [],
       coachId: data.category === 'work' ? (selectedCoach || undefined) : undefined,
-      leadIds: data.category === 'work' ? (selectedLeads.length > 0 ? selectedLeads : undefined) : undefined,
+      leadIds: data.category === 'work' ? (selectedLead ? [selectedLead] : undefined) : undefined,
       memberIds: data.category === 'work' ? (selectedMembers.length > 0 ? selectedMembers : undefined) : undefined,
       createdBy: data.category === 'work' ? currentUserId : undefined,
     });
 
     form.reset();
     setSelectedCoach('');
-    setSelectedLeads([]);
+    setSelectedLead('');
     setSelectedMembers([]);
     setOpen(false);
   };
 
-  const toggleUserSelection = (userId: string, type: 'lead' | 'member') => {
-    if (type === 'lead') {
-      setSelectedLeads(prev => 
-        prev.includes(userId) 
-          ? prev.filter(id => id !== userId)
-          : [...prev, userId]
-      );
-    } else {
-      setSelectedMembers(prev => 
-        prev.includes(userId) 
-          ? prev.filter(id => id !== userId)
-          : [...prev, userId]
-      );
+  const addMember = (userId: string) => {
+    if (!selectedMembers.includes(userId)) {
+      setSelectedMembers(prev => [...prev, userId]);
     }
   };
 
-  const removeUser = (userId: string, type: 'lead' | 'member') => {
-    if (type === 'lead') {
-      setSelectedLeads(prev => prev.filter(id => id !== userId));
-    } else {
-      setSelectedMembers(prev => prev.filter(id => id !== userId));
-    }
+  const removeMember = (userId: string) => {
+    setSelectedMembers(prev => prev.filter(id => id !== userId));
   };
 
   const getSelectedUsers = (type: 'coach' | 'lead' | 'member') => {
@@ -117,9 +103,13 @@ export const SimpleAddGoalDialog = ({
       return selectedCoach ? availableUsers.filter(u => u.id === selectedCoach) : [];
     }
     if (type === 'lead') {
-      return availableUsers.filter(u => selectedLeads.includes(u.id));
+      return selectedLead ? availableUsers.filter(u => u.id === selectedLead) : [];
     }
     return availableUsers.filter(u => selectedMembers.includes(u.id));
+  };
+
+  const getAvailableMembers = () => {
+    return availableUsers.filter(user => !selectedMembers.includes(user.id));
   };
 
   return (
@@ -282,50 +272,39 @@ export const SimpleAddGoalDialog = ({
 
                 <Separator className="my-4" />
 
-                {/* Leads Selection */}
+                {/* Lead Selection */}
                 <div className="space-y-3 mb-4">
                   <div className="flex items-center gap-2">
                     <UserCheck className="h-4 w-4 text-green-600" />
-                    <span className="font-medium text-sm">Leads</span>
+                    <span className="font-medium text-sm">Lead</span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {availableUsers.map(user => (
-                      <div
-                        key={user.id}
-                        className={cn(
-                          "flex items-center space-x-2 p-2 rounded-md border cursor-pointer transition-colors",
-                          selectedLeads.includes(user.id)
-                            ? "bg-green-50 border-green-300"
-                            : "bg-white border-gray-200 hover:bg-gray-50"
-                        )}
-                        onClick={() => toggleUserSelection(user.id, 'lead')}
+                  <Select value={selectedLead} onValueChange={(value) => setSelectedLead(value === 'none' ? '' : value)}>
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Select a lead (optional)" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white z-50">
+                      <SelectItem value="none">No lead assigned</SelectItem>
+                      {availableUsers.map(user => (
+                        <SelectItem key={user.id} value={user.id}>
+                          {user.name} ({user.role})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {getSelectedUsers('lead').map(user => (
+                    <Badge key={user.id} variant="secondary" className="bg-green-100 text-green-800">
+                      <UserCheck className="h-3 w-3 mr-1" />
+                      {user.name}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-4 w-4 p-0 ml-1"
+                        onClick={() => setSelectedLead('')}
                       >
-                        <input
-                          type="checkbox"
-                          checked={selectedLeads.includes(user.id)}
-                          onChange={() => toggleUserSelection(user.id, 'lead')}
-                          className="rounded border-gray-300"
-                        />
-                        <span className="text-sm">{user.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {getSelectedUsers('lead').map(user => (
-                      <Badge key={user.id} variant="secondary" className="bg-green-100 text-green-800">
-                        <UserCheck className="h-3 w-3 mr-1" />
-                        {user.name}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-4 w-4 p-0 ml-1"
-                          onClick={() => removeUser(user.id, 'lead')}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </Badge>
-                    ))}
-                  </div>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </Badge>
+                  ))}
                 </div>
 
                 <Separator className="my-4" />
@@ -336,28 +315,20 @@ export const SimpleAddGoalDialog = ({
                     <User className="h-4 w-4 text-purple-600" />
                     <span className="font-medium text-sm">Members</span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {availableUsers.map(user => (
-                      <div
-                        key={user.id}
-                        className={cn(
-                          "flex items-center space-x-2 p-2 rounded-md border cursor-pointer transition-colors",
-                          selectedMembers.includes(user.id)
-                            ? "bg-purple-50 border-purple-300"
-                            : "bg-white border-gray-200 hover:bg-gray-50"
-                        )}
-                        onClick={() => toggleUserSelection(user.id, 'member')}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedMembers.includes(user.id)}
-                          onChange={() => toggleUserSelection(user.id, 'member')}
-                          className="rounded border-gray-300"
-                        />
-                        <span className="text-sm">{user.name}</span>
-                      </div>
-                    ))}
-                  </div>
+                  {getAvailableMembers().length > 0 && (
+                    <Select value="" onValueChange={(value) => value !== '' && addMember(value)}>
+                      <SelectTrigger className="bg-white">
+                        <SelectValue placeholder="Add a member (optional)" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white z-50">
+                        {getAvailableMembers().map(user => (
+                          <SelectItem key={user.id} value={user.id}>
+                            {user.name} ({user.role})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                   <div className="flex flex-wrap gap-2">
                     {getSelectedUsers('member').map(user => (
                       <Badge key={user.id} variant="secondary" className="bg-purple-100 text-purple-800">
@@ -367,7 +338,7 @@ export const SimpleAddGoalDialog = ({
                           variant="ghost"
                           size="sm"
                           className="h-4 w-4 p-0 ml-1"
-                          onClick={() => removeUser(user.id, 'member')}
+                          onClick={() => removeMember(user.id)}
                         >
                           <X className="h-3 w-3" />
                         </Button>
