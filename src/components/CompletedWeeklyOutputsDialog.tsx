@@ -2,18 +2,33 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Trophy } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { Trophy, RotateCcw } from 'lucide-react';
 import { WeeklyOutput } from '@/types/productivity';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 interface CompletedWeeklyOutputsDialogProps {
   weeklyOutputs: WeeklyOutput[];
+  onUpdateProgress: (outputId: string, newProgress: number) => void;
 }
 
 export const CompletedWeeklyOutputsDialog = ({ 
-  weeklyOutputs
+  weeklyOutputs,
+  onUpdateProgress
 }: CompletedWeeklyOutputsDialogProps) => {
+  const { toast } = useToast();
   const completedOutputs = weeklyOutputs.filter(output => output.progress >= 100);
+
+  const handleProgressChange = (outputId: string, newProgress: number) => {
+    onUpdateProgress(outputId, newProgress);
+    if (newProgress < 100) {
+      toast({
+        title: "Output reverted",
+        description: "Weekly output moved back to active status",
+      });
+    }
+  };
 
   return (
     <Dialog>
@@ -44,8 +59,26 @@ export const CompletedWeeklyOutputsDialog = ({
                   </Badge>
                 </div>
                 
-                <div className="mb-3">
+                <div className="mb-3 space-y-2">
                   <Progress value={output.progress} className="h-2" />
+                  <div className="flex items-center gap-2">
+                    <Slider
+                      value={[output.progress]}
+                      onValueChange={(values) => handleProgressChange(output.id, values[0])}
+                      max={100}
+                      step={5}
+                      className="flex-1"
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleProgressChange(output.id, 95)}
+                      className="flex items-center gap-1 text-xs"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                      Revert
+                    </Button>
+                  </div>
                 </div>
                 
                 {output.dueDate && (

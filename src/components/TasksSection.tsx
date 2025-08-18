@@ -92,7 +92,7 @@ export const TasksSection = ({
             onRestoreTask={onRestoreTask}
             onPermanentlyDeleteTask={onPermanentlyDeleteTask}
           />
-          <CompletedTasksDialog tasks={tasks} />
+          <CompletedTasksDialog tasks={tasks} onToggleTask={onToggleTask} />
           <AddTaskDialog 
             onAddTask={(task) => onAddTask({ ...task, dueDate: selectedTaskDate, originalDueDate: selectedTaskDate })} 
             weeklyOutputs={weeklyOutputs}

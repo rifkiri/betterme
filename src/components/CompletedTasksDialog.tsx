@@ -2,19 +2,32 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trophy, Clock } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Trophy, Clock, RotateCcw } from 'lucide-react';
 import { Task } from '@/types/productivity';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 interface CompletedTasksDialogProps {
   tasks: Task[];
+  onToggleTask: (id: string) => void;
 }
 
 export const CompletedTasksDialog = ({ 
-  tasks
+  tasks,
+  onToggleTask
 }: CompletedTasksDialogProps) => {
   const [open, setOpen] = useState(false);
+  const { toast } = useToast();
   const completedTasks = tasks.filter(task => task.completed);
+
+  const handleToggleTask = (taskId: string) => {
+    onToggleTask(taskId);
+    toast({
+      title: "Task reverted",
+      description: "Task moved back to active status",
+    });
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -40,27 +53,45 @@ export const CompletedTasksDialog = ({
           ) : (
             completedTasks.map(task => (
               <div key={task.id} className="p-3 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-lg">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">{task.title}</p>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <Badge variant={
-                      task.priority === 'High' ? 'destructive' : 
-                      task.priority === 'Medium' ? 'default' : 'secondary'
-                    } className="text-xs">
-                      {task.priority}
-                    </Badge>
-                    {task.estimatedTime && (
-                      <span className="text-xs text-muted-foreground flex items-center">
-                        <Clock className="h-3 w-3 mr-1" />
-                        {task.estimatedTime}
-                      </span>
+                <div className="flex items-start gap-3">
+                  <div className="flex items-center gap-2 mt-1">
+                    <Checkbox
+                      checked={true}
+                      onCheckedChange={() => handleToggleTask(task.id)}
+                      className="data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleToggleTask(task.id)}
+                      className="flex items-center gap-1 text-xs h-6 px-2"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                      Revert
+                    </Button>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-foreground">{task.title}</p>
+                    <div className="flex items-center space-x-2 mt-1">
+                      <Badge variant={
+                        task.priority === 'High' ? 'destructive' : 
+                        task.priority === 'Medium' ? 'default' : 'secondary'
+                      } className="text-xs">
+                        {task.priority}
+                      </Badge>
+                      {task.estimatedTime && (
+                        <span className="text-xs text-muted-foreground flex items-center">
+                          <Clock className="h-3 w-3 mr-1" />
+                          {task.estimatedTime}
+                        </span>
+                      )}
+                    </div>
+                    {task.dueDate && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Due: {format(new Date(task.dueDate), 'MMM dd, yyyy')}
+                      </p>
                     )}
                   </div>
-                  {task.dueDate && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Due: {format(new Date(task.dueDate), 'MMM dd, yyyy')}
-                    </p>
-                  )}
                 </div>
               </div>
             ))

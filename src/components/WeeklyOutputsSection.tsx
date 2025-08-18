@@ -117,7 +117,10 @@ export const WeeklyOutputsSection = ({
             onRestore={onRestoreWeeklyOutput} 
             onPermanentlyDelete={onPermanentlyDeleteWeeklyOutput} 
           />
-          <CompletedWeeklyOutputsDialog weeklyOutputs={weeklyOutputs} />
+          <CompletedWeeklyOutputsDialog 
+            weeklyOutputs={weeklyOutputs} 
+            onUpdateProgress={onUpdateProgress} 
+          />
           <AddWeeklyOutputDialog onAddWeeklyOutput={onAddWeeklyOutput} />
         </div>
       </CardHeader>
