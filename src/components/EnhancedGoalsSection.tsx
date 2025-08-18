@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { SimpleAddGoalDialog } from './SimpleAddGoalDialog';
 import { JoinGoalDialog } from './JoinGoalDialog';
+import { GoalDetailsDialog } from './GoalDetailsDialog';
 import { Goal, WeeklyOutput } from '@/types/productivity';
 import { Target, Briefcase, User, Plus, CheckCircle, Minus, Edit, Trash2, Eye } from 'lucide-react';
 
@@ -45,6 +46,7 @@ export const EnhancedGoalsSection = ({
   onLeaveWorkGoal
 }: EnhancedGoalsSectionProps) => {
   const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
+  const [viewingGoal, setViewingGoal] = useState<Goal | null>(null);
 
   // Filter goals by completion status instead of category
   const activeGoals = goals.filter(goal => goal.progress < 100 && !goal.archived);
@@ -180,23 +182,11 @@ export const EnhancedGoalsSection = ({
               variant="outline" 
               size="sm" 
               className="h-8 w-8 p-0"
+              onClick={() => setViewingGoal(goal)}
               title="View Details"
             >
               <Eye className="h-4 w-4" />
             </Button>
-
-            {/* Edit button - only for goal owners and managers */}
-            {canManageGoal && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="h-8 w-8 p-0"
-                onClick={() => onEditGoal(goal.id, {})}
-                title="Edit Goal"
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-            )}
             
             {/* Delete button - for goal owners and managers */}
             {showDeleteOption && (
@@ -362,6 +352,19 @@ export const EnhancedGoalsSection = ({
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Goal Details Dialog */}
+      {viewingGoal && (
+        <GoalDetailsDialog
+          goal={viewingGoal}
+          open={!!viewingGoal}
+          onOpenChange={() => setViewingGoal(null)}
+          onEditGoal={onEditGoal}
+          onUpdateProgress={onUpdateGoalProgress}
+          weeklyOutputs={weeklyOutputs}
+          tasks={[]}
+        />
+      )}
     </div>
   );
 };

@@ -118,29 +118,29 @@ const getCategoryColor = (category: Goal['category']) => {
                     variant="outline"
                     onClick={() => onUpdateProgress(goal.id, Math.max(0, goal.progress - 10))}
                     disabled={goal.progress <= 0}
-                    className="text-xs px-3"
+                    className="h-8 w-8 p-0"
+                    title="Decrease Progress"
                   >
-                    <Minus className="h-3 w-3 mr-1" />
-                    -10%
+                    <Minus className="h-4 w-4" />
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => onUpdateProgress(goal.id, Math.min(100, goal.progress + 10))}
                     disabled={goal.progress >= 100}
-                    className="text-xs px-3"
+                    className="h-8 w-8 p-0"
+                    title="Increase Progress"
                   >
-                    <Plus className="h-3 w-3 mr-1" />
-                    +10%
+                    <Plus className="h-4 w-4" />
                   </Button>
                   {goal.progress !== 100 && (
                     <Button
                       size="sm"
                       onClick={() => onUpdateProgress(goal.id, 100)}
-                      className="text-xs px-3"
+                      className="h-8 w-8 p-0"
+                      title="Mark as Complete"
                     >
-                      <CheckCircle2 className="h-3 w-3 mr-1" />
-                      Complete
+                      <CheckCircle2 className="h-4 w-4" />
                     </Button>
                   )}
                 </div>
