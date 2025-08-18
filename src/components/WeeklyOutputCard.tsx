@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { CalendarIcon, Trash2, Link, Eye } from 'lucide-react';
+import { CalendarIcon, Trash2, Link, Eye, Minus, Plus, CheckCircle } from 'lucide-react';
 import { WeeklyOutput, Task, Goal } from '@/types/productivity';
 import { format, isToday, isTomorrow } from 'date-fns';
 import { isWeeklyOutputOverdue } from '@/utils/dateUtils';
@@ -76,12 +76,24 @@ export const WeeklyOutputCard = ({
             <Badge variant={output.progress === 100 ? 'default' : isOverdue() ? 'destructive' : 'secondary'} className="text-xs">
               {output.progress}%
             </Badge>
-            <Button size="sm" variant="outline" onClick={() => setShowDetailsDialog(true)} className="text-xs px-2 py-1" title="View Details">
-              <Eye className="h-3 w-3" />
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => setShowDetailsDialog(true)} 
+              className="h-8 w-8 p-0" 
+              title="View Details"
+            >
+              <Eye className="h-4 w-4" />
             </Button>
             <MoveWeeklyOutputDialog onMoveOutput={newDueDate => onMoveWeeklyOutput(output.id, newDueDate)} disabled={output.progress === 100} />
-            <Button size="sm" variant="outline" onClick={() => onDeleteWeeklyOutput(output.id)} className="text-xs px-2 py-1 text-red-600 hover:bg-red-50">
-              <Trash2 className="h-3 w-3" />
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => onDeleteWeeklyOutput(output.id)} 
+              className="h-8 w-8 p-0 text-red-600 hover:bg-red-50" 
+              title="Delete"
+            >
+              <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -91,15 +103,35 @@ export const WeeklyOutputCard = ({
         </div>
         
         <div className="flex items-center space-x-2">
-          <Button size="sm" variant="outline" onClick={() => onUpdateProgress(output.id, output.progress - 10)} disabled={output.progress <= 0} className="text-xs px-2 py-1">
-            -10%
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={() => onUpdateProgress(output.id, output.progress - 10)} 
+            disabled={output.progress <= 0} 
+            className="h-8 w-8 p-0"
+            title="Decrease Progress"
+          >
+            <Minus className="h-4 w-4" />
           </Button>
-          <Button size="sm" variant="outline" onClick={() => onUpdateProgress(output.id, output.progress + 10)} disabled={output.progress >= 100} className="text-xs px-2 py-1">
-            +10%
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={() => onUpdateProgress(output.id, output.progress + 10)} 
+            disabled={output.progress >= 100} 
+            className="h-8 w-8 p-0"
+            title="Increase Progress"
+          >
+            <Plus className="h-4 w-4" />
           </Button>
           {output.progress !== 100 && (
-            <Button size="sm" variant="default" onClick={() => onUpdateProgress(output.id, 100)} className="text-xs px-2 py-1">
-              Achieved
+            <Button 
+              size="sm" 
+              variant="default" 
+              onClick={() => onUpdateProgress(output.id, 100)} 
+              className="h-8 w-8 p-0"
+              title="Mark as Achieved"
+            >
+              <CheckCircle className="h-4 w-4" />
             </Button>
           )}
         </div>
