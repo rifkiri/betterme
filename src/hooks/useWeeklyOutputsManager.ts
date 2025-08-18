@@ -39,7 +39,7 @@ export const useWeeklyOutputsManager = ({
       toast.error('Failed to update goal links');
     }
   };
-  const addWeeklyOutput = async (output: Omit<WeeklyOutput, 'id' | 'createdDate'>) => {
+  const addWeeklyOutput = async (output: Omit<WeeklyOutput, 'id' | 'createdDate'>, selectedGoalIds: string[] = []) => {
     if (!userId) {
       console.error('No user ID found');
       return;
@@ -58,8 +58,11 @@ export const useWeeklyOutputsManager = ({
         console.log('Attempting to save to Supabase...');
         await supabaseDataService.addWeeklyOutput({ ...newOutput, userId });
         
-        // Goal linking is now handled separately through ItemLinkageService
-        // The UI components will handle linking after creation
+        // Create goal linkages if any were selected
+        if (selectedGoalIds.length > 0) {
+          console.log('Creating goal linkages for output:', newOutput.id, 'with goals:', selectedGoalIds);
+          await updateGoalLinks(newOutput.id, selectedGoalIds);
+        }
         
         console.log('Successfully saved to Supabase, reloading data...');
         await loadAllData();

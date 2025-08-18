@@ -23,13 +23,13 @@ const formSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
   dueDate: z.date().optional(),
-  // linkedGoalIds removed - now handled by ItemLinkageService
+  selectedGoalIds: z.array(z.string()).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
 interface AddWeeklyOutputDialogProps {
-  onAddWeeklyOutput: (output: Omit<WeeklyOutput, 'id' | 'createdDate'>) => void;
+  onAddWeeklyOutput: (output: Omit<WeeklyOutput, 'id' | 'createdDate'>, selectedGoalIds?: string[]) => void;
   availableGoals?: Goal[];
 }
 
@@ -43,7 +43,7 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
       title: '',
       description: '',
       dueDate: undefined,
-      // linkedGoalIds removed
+      selectedGoalIds: [],
     },
   });
 
@@ -59,8 +59,8 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
       description: data.description,
       progress: 0,
       dueDate: dueDate,
-      // linkedGoalIds removed - handled separately
-    });
+    }, data.selectedGoalIds || []);
+    
     form.reset();
     setOpen(false);
   };
@@ -178,7 +178,154 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
               )}
             />
 
-            {/* Goal linking now handled via LinkGoalsDialog after creation */}
+            {/* Link to Goals */}
+            {activeGoals.length > 0 && (
+              <div className="space-y-3">
+                <FormField
+                  control={form.control}
+                  name="selectedGoalIds"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Target className="h-4 w-4" />
+                        Link to Goals (Optional)
+                      </FormLabel>
+                      
+                      {/* Work Goals */}
+                      {workGoals.length > 0 && (
+                        <Collapsible open={isGoalSectionOpen} onOpenChange={setIsGoalSectionOpen}>
+                          <CollapsibleTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="w-full justify-between"
+                              onClick={() => setIsGoalSectionOpen(!isGoalSectionOpen)}
+                            >
+                              <span className="flex items-center gap-2">
+                                <Link className="h-4 w-4" />
+                                Work Goals ({workGoals.length})
+                              </span>
+                              <ChevronDown 
+                                className={cn("h-4 w-4 transition-transform", 
+                                  isGoalSectionOpen && "rotate-180"
+                                )} 
+                              />
+                            </Button>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="space-y-2 mt-2">
+                            {workGoals.map((goal) => (
+                              <div key={goal.id} className="flex items-center space-x-2 p-2 border rounded-lg bg-blue-50">
+                                <Checkbox
+                                  id={`goal-${goal.id}`}
+                                  checked={field.value?.includes(goal.id) || false}
+                                  onCheckedChange={(checked) => {
+                                    const currentIds = field.value || [];
+                                    if (checked) {
+                                      field.onChange([...currentIds, goal.id]);
+                                    } else {
+                                      field.onChange(currentIds.filter(id => id !== goal.id));
+                                    }
+                                  }}
+                                />
+                                <label 
+                                  htmlFor={`goal-${goal.id}`} 
+                                  className="flex-1 cursor-pointer"
+                                >
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <p className="text-sm font-medium text-gray-900">{goal.title}</p>
+                                      {goal.description && (
+                                        <p className="text-xs text-gray-600 mt-1">{goal.description}</p>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-2 ml-2">
+                                      <Badge className="bg-blue-100 text-blue-800 text-xs">
+                                        Work
+                                      </Badge>
+                                      <span className="text-xs text-gray-500">{goal.progress}%</span>
+                                    </div>
+                                  </div>
+                                </label>
+                              </div>
+                            ))}
+                          </CollapsibleContent>
+                        </Collapsible>
+                      )}
+
+                      {/* Personal Goals */}
+                      {personalGoals.length > 0 && (
+                        <div className="space-y-2">
+                          <div className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                            <User className="h-4 w-4" />
+                            Personal Goals ({personalGoals.length})
+                          </div>
+                          {personalGoals.map((goal) => (
+                            <div key={goal.id} className="flex items-center space-x-2 p-2 border rounded-lg bg-green-50">
+                              <Checkbox
+                                id={`goal-${goal.id}`}
+                                checked={field.value?.includes(goal.id) || false}
+                                onCheckedChange={(checked) => {
+                                  const currentIds = field.value || [];
+                                  if (checked) {
+                                    field.onChange([...currentIds, goal.id]);
+                                  } else {
+                                    field.onChange(currentIds.filter(id => id !== goal.id));
+                                  }
+                                }}
+                              />
+                              <label 
+                                htmlFor={`goal-${goal.id}`} 
+                                className="flex-1 cursor-pointer"
+                              >
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <p className="text-sm font-medium text-gray-900">{goal.title}</p>
+                                    {goal.description && (
+                                      <p className="text-xs text-gray-600 mt-1">{goal.description}</p>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 ml-2">
+                                    <Badge className="bg-green-100 text-green-800 text-xs">
+                                      Personal
+                                    </Badge>
+                                    <span className="text-xs text-gray-500">{goal.progress}%</span>
+                                  </div>
+                                </div>
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Selected Goals Summary */}
+                      {field.value && field.value.length > 0 && (
+                        <div className="mt-3 p-2 bg-gray-50 rounded-lg">
+                          <div className="text-sm font-medium text-gray-700 mb-2">
+                            Selected Goals ({field.value.length}):
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {field.value.map((goalId) => {
+                              const goal = activeGoals.find(g => g.id === goalId);
+                              return goal ? (
+                                <Badge 
+                                  key={goalId} 
+                                  variant="secondary" 
+                                  className="text-xs bg-blue-100 text-blue-800"
+                                >
+                                  {goal.title}
+                                </Badge>
+                              ) : null;
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
 
             </form>
           </Form>
