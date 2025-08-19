@@ -39,7 +39,6 @@ export class ItemLinkageService {
           .from('weekly_outputs')
           .select('is_deleted')
           .eq('id', itemId)
-          .eq('user_id', userId)
           .maybeSingle(); // Use maybeSingle to avoid 406 errors
         return data && !data.is_deleted;
       }
