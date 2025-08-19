@@ -32,10 +32,12 @@ export const useWeeklyOutputsManager = ({
       return;
     }
 
+    const outputId = crypto.randomUUID();
     const newOutput: WeeklyOutput = {
       ...output,
-      id: crypto.randomUUID(),
+      id: outputId,
       createdDate: new Date(),
+      linkedGoalIds: selectedGoalIds, // Store linked goals during creation
     };
 
     console.log('🔥 [Manager] Adding weekly output:', newOutput);
@@ -47,15 +49,16 @@ export const useWeeklyOutputsManager = ({
         await supabaseDataService.addWeeklyOutput({ ...newOutput, userId });
         console.log('🔥 [Manager] Output saved to Supabase successfully');
         
-        // Create goal linkages if any were selected
+        // Synchronize linkages to item_linkages table if any were selected
         if (selectedGoalIds.length > 0) {
-          console.log('🔥 [Manager] Creating goal linkages for output:', newOutput.id, 'with goals:', selectedGoalIds);
+          console.log('🔥 [Manager] Synchronizing linkages to item_linkages table...');
           try {
-            await supabaseWeeklyOutputsService.linkToGoals(newOutput.id, selectedGoalIds, userId);
-            console.log('🔥 [Manager] Goal linkages created successfully');
+            const { linkageSynchronizationService } = await import('@/services/LinkageSynchronizationService');
+            await linkageSynchronizationService.syncWeeklyOutputCreation(outputId, selectedGoalIds, userId);
+            console.log('🔥 [Manager] Linkage synchronization completed successfully');
           } catch (linkError) {
-            console.error('🔥 [Manager] Failed to create goal linkages:', linkError);
-            toast.error('Output created but failed to link to goals');
+            console.error('🔥 [Manager] Failed to synchronize linkages:', linkError);
+            toast.error('Output created but failed to synchronize linkages');
           }
         }
         
