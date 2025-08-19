@@ -71,44 +71,50 @@ export class LinkageSynchronizationService {
   async syncWeeklyOutputCreation(outputId: string, linkedGoalIds: string[], userId: string): Promise<void> {
     console.log('🔗 syncWeeklyOutputCreation called with:', { outputId, linkedGoalIds, userId });
     
-    // Ensure the output exists with linked_goal_ids populated
-    console.log('🔗 Updating weekly output with linked_goal_ids...');
-    const { error: updateError } = await supabase
-      .from('weekly_outputs')
-      .update({ linked_goal_ids: linkedGoalIds })
-      .eq('id', outputId)
-      .eq('user_id', userId);
+    try {
+      // Ensure the output exists with linked_goal_ids populated
+      console.log('🔗 Updating weekly output with linked_goal_ids...');
+      const { error: updateError } = await supabase
+        .from('weekly_outputs')
+        .update({ linked_goal_ids: linkedGoalIds })
+        .eq('id', outputId)
+        .eq('user_id', userId);
 
-    if (updateError) {
-      console.error('❌ Failed to update weekly output linked_goal_ids:', updateError);
-      throw new Error(`Failed to update weekly output linked_goal_ids: ${updateError.message}`);
-    }
-    console.log('✅ Successfully updated weekly output with linked_goal_ids');
-
-    // Directly sync to item_linkages table using the linkedGoalIds we already have
-    console.log('🔗 Clearing existing output linkages...');
-    await this.clearOutputLinkages(outputId, userId);
-
-    // Create new linkages in item_linkages table
-    if (linkedGoalIds.length > 0) {
-      console.log('🔗 Creating new item linkages...');
-      try {
-        const linkagePromises = linkedGoalIds.map(async (goalId) => {
-          console.log(`🔗 Creating link: weekly_output(${outputId}) -> goal(${goalId})`);
-          return itemLinkageService.createLink('weekly_output', outputId, 'goal', goalId, userId);
-        });
-        await Promise.all(linkagePromises);
-        console.log('✅ Successfully created item linkages');
-      } catch (error) {
-        console.error('❌ Failed to create item linkages:', error);
-        throw error;
+      if (updateError) {
+        console.error('❌ Failed to update weekly output linked_goal_ids:', updateError);
+        throw new Error(`Failed to update weekly output linked_goal_ids: ${updateError.message}`);
       }
-    }
+      console.log('✅ Successfully updated weekly output with linked_goal_ids');
 
-    // Update goals with linked_output_ids for consistency
-    console.log('🔗 Updating goals with output links...');
-    await this.updateGoalsWithOutputLinks(linkedGoalIds, outputId);
-    console.log('✅ Successfully updated goals with output links');
+      // Directly sync to item_linkages table using the linkedGoalIds we already have
+      console.log('🔗 Clearing existing output linkages...');
+      await this.clearOutputLinkages(outputId, userId);
+
+      // Create new linkages in item_linkages table
+      if (linkedGoalIds.length > 0) {
+        console.log('🔗 Creating new item linkages...');
+        try {
+          const linkagePromises = linkedGoalIds.map(async (goalId) => {
+            console.log(`🔗 Creating link: weekly_output(${outputId}) -> goal(${goalId})`);
+            return itemLinkageService.createLink('weekly_output', outputId, 'goal', goalId, userId);
+          });
+          await Promise.all(linkagePromises);
+          console.log('✅ Successfully created item linkages');
+        } catch (error) {
+          console.error('❌ Failed to create item linkages:', error);
+          throw error;
+        }
+      }
+
+      // Update goals with linked_output_ids for consistency
+      console.log('🔗 Updating goals with output links...');
+      await this.updateGoalsWithOutputLinks(linkedGoalIds, outputId);
+      console.log('✅ Successfully updated goals with output links');
+      
+    } catch (error) {
+      console.error('❌ syncWeeklyOutputCreation failed:', error);
+      throw error; // Re-throw to propagate to caller
+    }
   }
 
   /**
