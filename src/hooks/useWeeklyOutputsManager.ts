@@ -28,58 +28,77 @@ export const useWeeklyOutputsManager = ({
 }: UseWeeklyOutputsManagerProps) => {
 
   const addWeeklyOutput = async (output: Omit<WeeklyOutput, 'id' | 'createdDate'>, selectedGoalIds: string[] = []) => {
-    console.log('🔥 [Manager] addWeeklyOutput called with:', { output, selectedGoalIds });
+    console.log('🚀 [Manager] addWeeklyOutput called with:', { 
+      title: output.title, 
+      selectedGoalIds, 
+      userId 
+    });
     
     if (!userId) {
-      console.error('No user ID found');
+      console.error('❌ [Manager] No user ID found');
+      toast.error('Please sign in to add weekly outputs');
       return;
     }
 
-    const outputId = crypto.randomUUID();
+    // Create the output object (provide dummy ID since database will generate the real one)
     const newOutput: WeeklyOutput = {
       ...output,
-      id: outputId,
+      id: 'temp-id', // This will be replaced by database-generated ID
       createdDate: new Date(),
-      linkedGoalIds: selectedGoalIds, // Store linked goals during creation
+      linkedGoalIds: selectedGoalIds,
     };
 
-    console.log('🔥 [Manager] Adding weekly output:', newOutput);
-    console.log('🔥 [Manager] Selected goal IDs:', selectedGoalIds);
+    console.log('📝 [Manager] Creating output in database...');
 
     try {
       if (isSupabaseAvailable()) {
-        console.log('🔥 [Manager] Attempting to save to Supabase...');
+        // Step 1: Create the output in database (database will generate the real ID)
         await supabaseWeeklyOutputsService.addWeeklyOutput({ ...newOutput, userId });
-        console.log('🔥 [Manager] Output saved to Supabase successfully');
+        console.log('✅ [Manager] Output created in database');
         
-        // Synchronize linkages to item_linkages table if any were selected
-        if (selectedGoalIds.length > 0) {
-          console.log('🔥 [Manager] Synchronizing linkages to item_linkages table...');
-          try {
-            console.log('🔥 [Manager] About to call syncWeeklyOutputCreation with:', { outputId, selectedGoalIds, userId });
-            await linkageSynchronizationService.syncWeeklyOutputCreation(outputId, selectedGoalIds, userId);
-            console.log('🔥 [Manager] Linkage synchronization completed successfully');
-          } catch (linkError) {
-            console.error('🔥 [Manager] Failed to synchronize linkages:', linkError);
-            console.error('🔥 [Manager] LinkError details:', {
-              message: linkError.message,
-              stack: linkError.stack,
-              name: linkError.name
-            });
-            toast.error('Output created but failed to synchronize linkages');
-          }
+        // Step 2: Find the created output to get the real database-generated ID
+        console.log('🔍 [Manager] Fetching created output to get real ID...');
+        const outputs = await supabaseWeeklyOutputsService.getWeeklyOutputs(userId);
+        const createdOutput = outputs
+          .sort((a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime())
+          .find(wo => wo.title === output.title && wo.description === output.description);
+        
+        if (!createdOutput) {
+          console.error('❌ [Manager] Could not find created output');
+          toast.error('Output created but linking failed - could not locate output');
+          return;
         }
         
-        console.log('🔥 [Manager] Reloading all data...');
+        console.log('🎯 [Manager] Found created output with real ID:', createdOutput.id);
+        
+        // Step 3: Synchronize linkages using the real database ID
+        if (selectedGoalIds.length > 0) {
+          console.log('🔗 [Manager] Starting linkage synchronization...');
+          try {
+            await linkageSynchronizationService.syncWeeklyOutputCreation(
+              createdOutput.id, 
+              selectedGoalIds, 
+              userId
+            );
+            console.log('✅ [Manager] Linkage synchronization completed');
+          } catch (linkError) {
+            console.error('❌ [Manager] Linkage synchronization failed:', linkError);
+            toast.error('Output created but goal linking failed');
+          }
+        } else {
+          console.log('ℹ️ [Manager] No goals to link');
+        }
+        
+        console.log('🔄 [Manager] Reloading data...');
         await loadAllData();
-        console.log('🔥 [Manager] Data reload complete');
         toast.success('Weekly output added successfully');
+        
       } else {
         toast.error('Please sign in to add weekly outputs');
       }
     } catch (error) {
-      console.error('🔥 [Manager] Failed to save weekly output:', error);
-      toast.error('Failed to save weekly output: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      console.error('❌ [Manager] Failed to create weekly output:', error);
+      toast.error('Failed to create weekly output: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
