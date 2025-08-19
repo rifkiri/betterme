@@ -52,12 +52,20 @@ export const useWeeklyOutputsManager = ({
         // Synchronize linkages to item_linkages table if any were selected
         if (selectedGoalIds.length > 0) {
           console.log('🔥 [Manager] Synchronizing linkages to item_linkages table...');
+          console.log('🔥 [Manager] About to import LinkageSynchronizationService...');
           try {
             const { linkageSynchronizationService } = await import('@/services/LinkageSynchronizationService');
+            console.log('🔥 [Manager] Successfully imported LinkageSynchronizationService');
+            console.log('🔥 [Manager] About to call syncWeeklyOutputCreation with:', { outputId, selectedGoalIds, userId });
             await linkageSynchronizationService.syncWeeklyOutputCreation(outputId, selectedGoalIds, userId);
             console.log('🔥 [Manager] Linkage synchronization completed successfully');
           } catch (linkError) {
             console.error('🔥 [Manager] Failed to synchronize linkages:', linkError);
+            console.error('🔥 [Manager] LinkError details:', {
+              message: linkError.message,
+              stack: linkError.stack,
+              name: linkError.name
+            });
             toast.error('Output created but failed to synchronize linkages');
           }
         }
