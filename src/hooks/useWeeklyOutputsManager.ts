@@ -51,27 +51,37 @@ export const useWeeklyOutputsManager = ({
       createdDate: new Date(),
     };
 
-    console.log('Adding weekly output:', newOutput);
+    console.log('🔥 [Manager] Adding weekly output:', newOutput);
+    console.log('🔥 [Manager] Selected goal IDs:', selectedGoalIds);
 
     try {
       if (isSupabaseAvailable()) {
-        console.log('Attempting to save to Supabase...');
+        console.log('🔥 [Manager] Attempting to save to Supabase...');
         await supabaseDataService.addWeeklyOutput({ ...newOutput, userId });
+        console.log('🔥 [Manager] Output saved to Supabase successfully');
         
-        // Create goal linkages if any were selected
+        // Create goal linkages if any were selected - BEFORE reloading data
         if (selectedGoalIds.length > 0) {
-          console.log('Creating goal linkages for output:', newOutput.id, 'with goals:', selectedGoalIds);
-          await updateGoalLinks(newOutput.id, selectedGoalIds);
+          console.log('🔥 [Manager] Creating goal linkages for output:', newOutput.id, 'with goals:', selectedGoalIds);
+          try {
+            await updateGoalLinks(newOutput.id, selectedGoalIds);
+            console.log('🔥 [Manager] Goal linkages created successfully');
+          } catch (linkError) {
+            console.error('🔥 [Manager] Failed to create goal linkages:', linkError);
+            // Don't fail the entire operation, but warn the user
+            toast.error('Output created but failed to link to goals');
+          }
         }
         
-        console.log('Successfully saved to Supabase, reloading data...');
+        console.log('🔥 [Manager] Reloading all data...');
         await loadAllData();
+        console.log('🔥 [Manager] Data reload complete');
         toast.success('Weekly output added successfully');
       } else {
         toast.error('Please sign in to add weekly outputs');
       }
     } catch (error) {
-      console.error('Failed to save weekly output:', error);
+      console.error('🔥 [Manager] Failed to save weekly output:', error);
       toast.error('Failed to save weekly output: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
