@@ -27,6 +27,7 @@ export class ItemLinkageService {
   ): Promise<boolean> {
     switch (itemType) {
       case 'goal': {
+        // Goals are globally accessible via RLS, so don't filter by user_id
         const { data } = await supabase
           .from('goals')
           .select('is_deleted, archived')

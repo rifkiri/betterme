@@ -92,11 +92,17 @@ export class LinkageSynchronizationService {
     // Create new linkages in item_linkages table
     if (linkedGoalIds.length > 0) {
       console.log('🔗 Creating new item linkages...');
-      const linkagePromises = linkedGoalIds.map(goalId =>
-        itemLinkageService.createLink('weekly_output', outputId, 'goal', goalId, userId)
-      );
-      await Promise.all(linkagePromises);
-      console.log('✅ Successfully created item linkages');
+      try {
+        const linkagePromises = linkedGoalIds.map(async (goalId) => {
+          console.log(`🔗 Creating link: weekly_output(${outputId}) -> goal(${goalId})`);
+          return itemLinkageService.createLink('weekly_output', outputId, 'goal', goalId, userId);
+        });
+        await Promise.all(linkagePromises);
+        console.log('✅ Successfully created item linkages');
+      } catch (error) {
+        console.error('❌ Failed to create item linkages:', error);
+        throw error;
+      }
     }
 
     // Update goals with linked_output_ids for consistency
@@ -109,15 +115,22 @@ export class LinkageSynchronizationService {
    * Clear all linkages for a weekly output
    */
   private async clearOutputLinkages(outputId: string, userId: string): Promise<void> {
+    console.log('🔗 Clearing linkages for output:', { outputId, userId });
+    
+    // Clear linkages where weekly_output is the source
     const { error } = await supabase
       .from('item_linkages')
       .delete()
       .eq('user_id', userId)
-      .or(`and(source_type.eq.weekly_output,source_id.eq.${outputId}),and(target_type.eq.weekly_output,target_id.eq.${outputId})`);
+      .eq('source_type', 'weekly_output')
+      .eq('source_id', outputId);
 
     if (error) {
+      console.error('❌ Failed to clear output linkages:', error);
       throw new Error(`Failed to clear output linkages: ${error.message}`);
     }
+    
+    console.log('✅ Successfully cleared output linkages');
   }
 
   /**
