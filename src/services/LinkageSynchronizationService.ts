@@ -80,8 +80,19 @@ export class LinkageSynchronizationService {
       throw new Error(`Failed to update weekly output linked_goal_ids: ${updateError.message}`);
     }
 
-    // Sync to item_linkages table
-    await this.syncWeeklyOutputLinkages(outputId, userId);
+    // Directly sync to item_linkages table using the linkedGoalIds we already have
+    await this.clearOutputLinkages(outputId, userId);
+
+    // Create new linkages in item_linkages table
+    if (linkedGoalIds.length > 0) {
+      const linkagePromises = linkedGoalIds.map(goalId =>
+        itemLinkageService.createLink('weekly_output', outputId, 'goal', goalId, userId)
+      );
+      await Promise.all(linkagePromises);
+    }
+
+    // Update goals with linked_output_ids for consistency
+    await this.updateGoalsWithOutputLinks(linkedGoalIds, outputId);
   }
 
   /**
