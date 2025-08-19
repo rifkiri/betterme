@@ -28,6 +28,8 @@ export const useWeeklyOutputsManager = ({
 }: UseWeeklyOutputsManagerProps) => {
 
   const addWeeklyOutput = async (output: Omit<WeeklyOutput, 'id' | 'createdDate'>, selectedGoalIds: string[] = []) => {
+    console.log('🔥 [Manager] addWeeklyOutput called with:', { output, selectedGoalIds });
+    
     if (!userId) {
       console.error('No user ID found');
       return;
