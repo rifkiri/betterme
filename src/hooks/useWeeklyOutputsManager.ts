@@ -46,7 +46,7 @@ export const useWeeklyOutputsManager = ({
     try {
       if (isSupabaseAvailable()) {
         console.log('🔥 [Manager] Attempting to save to Supabase...');
-        await supabaseDataService.addWeeklyOutput({ ...newOutput, userId });
+        await supabaseWeeklyOutputsService.addWeeklyOutput({ ...newOutput, userId });
         console.log('🔥 [Manager] Output saved to Supabase successfully');
         
         // Synchronize linkages to item_linkages table if any were selected

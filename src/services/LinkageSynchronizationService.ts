@@ -69,7 +69,10 @@ export class LinkageSynchronizationService {
    * Full bidirectional sync for weekly output creation
    */
   async syncWeeklyOutputCreation(outputId: string, linkedGoalIds: string[], userId: string): Promise<void> {
+    console.log('🔗 syncWeeklyOutputCreation called with:', { outputId, linkedGoalIds, userId });
+    
     // Ensure the output exists with linked_goal_ids populated
+    console.log('🔗 Updating weekly output with linked_goal_ids...');
     const { error: updateError } = await supabase
       .from('weekly_outputs')
       .update({ linked_goal_ids: linkedGoalIds })
@@ -77,22 +80,29 @@ export class LinkageSynchronizationService {
       .eq('user_id', userId);
 
     if (updateError) {
+      console.error('❌ Failed to update weekly output linked_goal_ids:', updateError);
       throw new Error(`Failed to update weekly output linked_goal_ids: ${updateError.message}`);
     }
+    console.log('✅ Successfully updated weekly output with linked_goal_ids');
 
     // Directly sync to item_linkages table using the linkedGoalIds we already have
+    console.log('🔗 Clearing existing output linkages...');
     await this.clearOutputLinkages(outputId, userId);
 
     // Create new linkages in item_linkages table
     if (linkedGoalIds.length > 0) {
+      console.log('🔗 Creating new item linkages...');
       const linkagePromises = linkedGoalIds.map(goalId =>
         itemLinkageService.createLink('weekly_output', outputId, 'goal', goalId, userId)
       );
       await Promise.all(linkagePromises);
+      console.log('✅ Successfully created item linkages');
     }
 
     // Update goals with linked_output_ids for consistency
+    console.log('🔗 Updating goals with output links...');
     await this.updateGoalsWithOutputLinks(linkedGoalIds, outputId);
+    console.log('✅ Successfully updated goals with output links');
   }
 
   /**
