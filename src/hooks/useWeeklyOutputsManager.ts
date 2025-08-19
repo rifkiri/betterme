@@ -3,6 +3,7 @@ import { supabaseDataService } from '@/services/SupabaseDataService';
 import { WeeklyOutput, Goal } from '@/types/productivity';
 import { toast } from 'sonner';
 import { supabaseWeeklyOutputsService } from '@/services/SupabaseWeeklyOutputsService';
+import { linkageSynchronizationService } from '@/services/LinkageSynchronizationService';
 
 interface UseWeeklyOutputsManagerProps {
   userId: string | null;
@@ -52,10 +53,7 @@ export const useWeeklyOutputsManager = ({
         // Synchronize linkages to item_linkages table if any were selected
         if (selectedGoalIds.length > 0) {
           console.log('🔥 [Manager] Synchronizing linkages to item_linkages table...');
-          console.log('🔥 [Manager] About to import LinkageSynchronizationService...');
           try {
-            const { linkageSynchronizationService } = await import('@/services/LinkageSynchronizationService');
-            console.log('🔥 [Manager] Successfully imported LinkageSynchronizationService');
             console.log('🔥 [Manager] About to call syncWeeklyOutputCreation with:', { outputId, selectedGoalIds, userId });
             await linkageSynchronizationService.syncWeeklyOutputCreation(outputId, selectedGoalIds, userId);
             console.log('🔥 [Manager] Linkage synchronization completed successfully');
