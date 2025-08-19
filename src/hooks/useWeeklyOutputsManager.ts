@@ -2,7 +2,7 @@
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { WeeklyOutput, Goal } from '@/types/productivity';
 import { toast } from 'sonner';
-import { itemLinkageService } from '@/services/ItemLinkageService';
+import { supabaseWeeklyOutputsService } from '@/services/SupabaseWeeklyOutputsService';
 
 interface UseWeeklyOutputsManagerProps {
   userId: string | null;
@@ -26,19 +26,6 @@ export const useWeeklyOutputsManager = ({
   goals,
 }: UseWeeklyOutputsManagerProps) => {
 
-  // Helper function to update bidirectional goal-output linking using new service
-  const updateGoalLinks = async (outputId: string, linkedGoalIds: string[] = []) => {
-    if (!userId) return;
-
-    try {
-      console.log('🔥 [Manager] Updating goal links for output:', outputId, 'with goals:', linkedGoalIds);
-      await itemLinkageService.updateLinks('weekly_output', outputId, 'goal', linkedGoalIds, userId);
-      console.log('🔥 [Manager] Successfully updated goal links');
-    } catch (error) {
-      console.error('Failed to update goal links:', error);
-      toast.error('Failed to update goal links');
-    }
-  };
   const addWeeklyOutput = async (output: Omit<WeeklyOutput, 'id' | 'createdDate'>, selectedGoalIds: string[] = []) => {
     if (!userId) {
       console.error('No user ID found');
@@ -60,15 +47,14 @@ export const useWeeklyOutputsManager = ({
         await supabaseDataService.addWeeklyOutput({ ...newOutput, userId });
         console.log('🔥 [Manager] Output saved to Supabase successfully');
         
-        // Create goal linkages if any were selected - BEFORE reloading data
+        // Create goal linkages if any were selected
         if (selectedGoalIds.length > 0) {
           console.log('🔥 [Manager] Creating goal linkages for output:', newOutput.id, 'with goals:', selectedGoalIds);
           try {
-            await updateGoalLinks(newOutput.id, selectedGoalIds);
+            await supabaseWeeklyOutputsService.linkToGoals(newOutput.id, selectedGoalIds, userId);
             console.log('🔥 [Manager] Goal linkages created successfully');
           } catch (linkError) {
             console.error('🔥 [Manager] Failed to create goal linkages:', linkError);
-            // Don't fail the entire operation, but warn the user
             toast.error('Output created but failed to link to goals');
           }
         }

@@ -117,6 +117,7 @@ export type Database = {
           id: string
           is_deleted: boolean
           lead_ids: string[] | null
+          linked_output_ids: string[] | null
           member_ids: string[] | null
           progress: number
           subcategory: string | null
@@ -139,6 +140,7 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           lead_ids?: string[] | null
+          linked_output_ids?: string[] | null
           member_ids?: string[] | null
           progress?: number
           subcategory?: string | null
@@ -161,6 +163,7 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           lead_ids?: string[] | null
+          linked_output_ids?: string[] | null
           member_ids?: string[] | null
           progress?: number
           subcategory?: string | null
@@ -517,6 +520,7 @@ export type Database = {
           id: string
           is_deleted: boolean
           is_moved: boolean
+          linked_goal_ids: string[] | null
           original_due_date: string | null
           progress: number
           project_id: string | null
@@ -533,6 +537,7 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           is_moved?: boolean
+          linked_goal_ids?: string[] | null
           original_due_date?: string | null
           progress?: number
           project_id?: string | null
@@ -549,6 +554,7 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           is_moved?: boolean
+          linked_goal_ids?: string[] | null
           original_due_date?: string | null
           progress?: number
           project_id?: string | null

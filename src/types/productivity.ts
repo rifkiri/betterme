@@ -56,7 +56,7 @@ export interface WeeklyOutput {
   isMoved?: boolean;
   isDeleted?: boolean;
   deletedDate?: Date;
-  // linkedGoalIds removed - now handled by ItemLinkageService
+  linkedGoalIds?: string[];
 }
 
 export interface Goal {

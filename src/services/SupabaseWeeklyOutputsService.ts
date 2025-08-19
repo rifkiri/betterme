@@ -26,7 +26,8 @@ export class SupabaseWeeklyOutputsService {
       isDeleted: output.is_deleted,
       completedDate: output.completed_date ? new Date(output.completed_date) : undefined,
       deletedDate: output.deleted_date ? new Date(output.deleted_date) : undefined,
-      createdDate: new Date(output.created_date)
+      createdDate: new Date(output.created_date),
+      linkedGoalIds: output.linked_goal_ids || []
     }));
   }
 
@@ -87,6 +88,43 @@ export class SupabaseWeeklyOutputsService {
 
     if (error) {
       console.error('Error permanently deleting weekly output:', error);
+      throw error;
+    }
+  }
+
+  async linkToGoals(outputId: string, goalIds: string[], userId: string): Promise<void> {
+    console.log('🔗 [Service] Linking output', outputId, 'to goals:', goalIds);
+    
+    for (const goalId of goalIds) {
+      try {
+        const { data, error } = await supabase.rpc('link_output_to_goal', {
+          output_id: outputId,
+          goal_id: goalId,
+          user_id_param: userId
+        });
+
+        if (error) {
+          console.error('🔗 [Service] Error linking to goal', goalId, ':', error);
+          throw error;
+        }
+        
+        console.log('🔗 [Service] Successfully linked to goal', goalId);
+      } catch (error) {
+        console.error('🔗 [Service] Failed to link to goal', goalId, ':', error);
+        throw error;
+      }
+    }
+  }
+
+  async unlinkFromGoal(outputId: string, goalId: string, userId: string): Promise<void> {
+    const { error } = await supabase.rpc('unlink_output_from_goal', {
+      output_id: outputId,
+      goal_id: goalId,
+      user_id_param: userId
+    });
+
+    if (error) {
+      console.error('Error unlinking output from goal:', error);
       throw error;
     }
   }
