@@ -48,6 +48,9 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
   });
 
   const onSubmit = (data: FormData) => {
+    console.log('🔥 [AddDialog] Form submitted!');
+    console.log('🔥 [AddDialog] Form data:', data);
+    
     // Ensure the due date is set to end of day in local time to avoid timezone issues
     let dueDate = data.dueDate;
     if (dueDate) {
@@ -324,7 +327,7 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
           <Button type="button" variant="outline" onClick={() => setOpen(false)}>
             Cancel
           </Button>
-          <Button type="submit" form="add-output-form">Add Output</Button>
+          <Button type="submit" form="add-output-form" onClick={() => console.log('🔥 [AddDialog] Submit button clicked!')}>Add Output</Button>
         </div>
       </DialogContent>
     </Dialog>
