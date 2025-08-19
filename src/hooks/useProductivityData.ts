@@ -19,26 +19,39 @@ export const useProductivityData = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
-  // Get current user ID from Supabase auth
-  const getCurrentUserId = async () => {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error) {
-      console.error('Error getting user:', error);
-      return null;
-    }
-    console.log('Current authenticated user:', user?.id);
-    return user?.id || null;
-  };
-
   const [userId, setUserId] = useState<string | null>(null);
 
+  // Initialize auth session and listen for changes
   useEffect(() => {
-    const initializeUser = async () => {
-      const currentUserId = await getCurrentUserId();
-      console.log('Initialized user ID in useProductivityData:', currentUserId);
-      setUserId(currentUserId);
+    let mounted = true;
+
+    // Get initial session
+    const getInitialSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (mounted) {
+        const currentUserId = session?.user?.id || null;
+        console.log('Initial session user ID:', currentUserId);
+        setUserId(currentUserId);
+      }
     };
-    initializeUser();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (mounted) {
+          const currentUserId = session?.user?.id || null;
+          console.log('Auth state changed:', event, 'User ID:', currentUserId);
+          setUserId(currentUserId);
+        }
+      }
+    );
+
+    getInitialSession();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Check if Supabase is available
