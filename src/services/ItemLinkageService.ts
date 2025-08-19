@@ -25,44 +25,84 @@ export class ItemLinkageService {
     itemId: string,
     userId: string
   ): Promise<boolean> {
-    switch (itemType) {
-      case 'goal': {
-        // Goals are globally accessible via RLS, so don't filter by user_id
-        const { data } = await supabase
-          .from('goals')
-          .select('is_deleted, archived')
-          .eq('id', itemId)
-          .maybeSingle(); // Use maybeSingle to avoid 406 errors
-        return data && !data.is_deleted && !data.archived;
+    console.log(`🔍 Validating ${itemType} with ID: ${itemId} for user: ${userId}`);
+    
+    try {
+      switch (itemType) {
+        case 'goal': {
+          // Goals are globally accessible via RLS, so don't filter by user_id
+          const { data, error } = await supabase
+            .from('goals')
+            .select('is_deleted, archived')
+            .eq('id', itemId)
+            .maybeSingle();
+          
+          if (error) {
+            console.error(`❌ Error validating goal ${itemId}:`, error);
+            return false;
+          }
+          
+          const isActive = data && !data.is_deleted && !data.archived;
+          console.log(`✅ Goal ${itemId} validation result:`, { data, isActive });
+          return isActive;
+        }
+        case 'weekly_output': {
+          const { data, error } = await supabase
+            .from('weekly_outputs')
+            .select('is_deleted')
+            .eq('id', itemId)
+            .maybeSingle();
+          
+          if (error) {
+            console.error(`❌ Error validating weekly_output ${itemId}:`, error);
+            return false;
+          }
+          
+          const isActive = data && !data.is_deleted;
+          console.log(`✅ Weekly output ${itemId} validation result:`, { data, isActive });
+          return isActive;
+        }
+        case 'task': {
+          const { data, error } = await supabase
+            .from('tasks')
+            .select('is_deleted')
+            .eq('id', itemId)
+            .eq('user_id', userId)
+            .maybeSingle();
+          
+          if (error) {
+            console.error(`❌ Error validating task ${itemId}:`, error);
+            return false;
+          }
+          
+          const isActive = data && !data.is_deleted;
+          console.log(`✅ Task ${itemId} validation result:`, { data, isActive });
+          return isActive;
+        }
+        case 'habit': {
+          const { data, error } = await supabase
+            .from('habits')
+            .select('is_deleted, archived')
+            .eq('id', itemId)
+            .eq('user_id', userId)
+            .maybeSingle();
+          
+          if (error) {
+            console.error(`❌ Error validating habit ${itemId}:`, error);
+            return false;
+          }
+          
+          const isActive = data && !data.is_deleted && !data.archived;
+          console.log(`✅ Habit ${itemId} validation result:`, { data, isActive });
+          return isActive;
+        }
+        default:
+          console.error(`❌ Unknown item type: ${itemType}`);
+          return false;
       }
-      case 'weekly_output': {
-        const { data } = await supabase
-          .from('weekly_outputs')
-          .select('is_deleted')
-          .eq('id', itemId)
-          .maybeSingle(); // Use maybeSingle to avoid 406 errors
-        return data && !data.is_deleted;
-      }
-      case 'task': {
-        const { data } = await supabase
-          .from('tasks')
-          .select('is_deleted')
-          .eq('id', itemId)
-          .eq('user_id', userId)
-          .maybeSingle(); // Use maybeSingle to avoid 406 errors
-        return data && !data.is_deleted;
-      }
-      case 'habit': {
-        const { data } = await supabase
-          .from('habits')
-          .select('is_deleted, archived')
-          .eq('id', itemId)
-          .eq('user_id', userId)
-          .maybeSingle(); // Use maybeSingle to avoid 406 errors
-        return data && !data.is_deleted && !data.archived;
-      }
-      default:
-        return false;
+    } catch (error) {
+      console.error(`❌ Exception during validation of ${itemType} ${itemId}:`, error);
+      return false;
     }
   }
 
@@ -76,31 +116,49 @@ export class ItemLinkageService {
     targetId: string,
     userId: string
   ): Promise<void> {
-    // Validate both items are active before creating link
-    const [sourceActive, targetActive] = await Promise.all([
-      this.validateItemActive(sourceType, sourceId, userId),
-      this.validateItemActive(targetType, targetId, userId)
-    ]);
+    console.log(`🔗 Creating link: ${sourceType}(${sourceId}) -> ${targetType}(${targetId}) for user ${userId}`);
+    
+    try {
+      // Validate both items are active before creating link
+      console.log(`🔍 Validating items before creating link...`);
+      const [sourceActive, targetActive] = await Promise.all([
+        this.validateItemActive(sourceType, sourceId, userId),
+        this.validateItemActive(targetType, targetId, userId)
+      ]);
 
-    if (!sourceActive) {
-      throw new Error(`Source ${sourceType} is not active or not found`);
-    }
-    if (!targetActive) {
-      throw new Error(`Target ${targetType} is not active or not found`);
-    }
+      console.log(`🔍 Validation results - Source active: ${sourceActive}, Target active: ${targetActive}`);
 
-    const { error } = await supabase
-      .from('item_linkages')
-      .insert({
-        user_id: userId,
-        source_type: sourceType,
-        source_id: sourceId,
-        target_type: targetType,
-        target_id: targetId
-      });
+      if (!sourceActive) {
+        const error = `Source ${sourceType}(${sourceId}) is not active or not found`;
+        console.error(`❌ ${error}`);
+        throw new Error(error);
+      }
+      if (!targetActive) {
+        const error = `Target ${targetType}(${targetId}) is not active or not found`;
+        console.error(`❌ ${error}`);
+        throw new Error(error);
+      }
 
-    if (error) {
-      throw new Error(`Failed to create link: ${error.message}`);
+      console.log(`💾 Inserting linkage into database...`);
+      const { error } = await supabase
+        .from('item_linkages')
+        .insert({
+          user_id: userId,
+          source_type: sourceType,
+          source_id: sourceId,
+          target_type: targetType,
+          target_id: targetId
+        });
+
+      if (error) {
+        console.error(`❌ Database error creating link:`, error);
+        throw new Error(`Failed to create link: ${error.message}`);
+      }
+
+      console.log(`✅ Successfully created link: ${sourceType}(${sourceId}) -> ${targetType}(${targetId})`);
+    } catch (error) {
+      console.error(`❌ Failed to create link:`, error);
+      throw error;
     }
   }
 
