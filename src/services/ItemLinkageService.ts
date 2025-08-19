@@ -31,8 +31,7 @@ export class ItemLinkageService {
           .from('goals')
           .select('is_deleted, archived')
           .eq('id', itemId)
-          .eq('user_id', userId)
-          .single();
+          .maybeSingle(); // Use maybeSingle to avoid 406 errors
         return data && !data.is_deleted && !data.archived;
       }
       case 'weekly_output': {
@@ -41,7 +40,7 @@ export class ItemLinkageService {
           .select('is_deleted')
           .eq('id', itemId)
           .eq('user_id', userId)
-          .single();
+          .maybeSingle(); // Use maybeSingle to avoid 406 errors
         return data && !data.is_deleted;
       }
       case 'task': {
@@ -50,7 +49,7 @@ export class ItemLinkageService {
           .select('is_deleted')
           .eq('id', itemId)
           .eq('user_id', userId)
-          .single();
+          .maybeSingle(); // Use maybeSingle to avoid 406 errors
         return data && !data.is_deleted;
       }
       case 'habit': {
@@ -59,7 +58,7 @@ export class ItemLinkageService {
           .select('is_deleted, archived')
           .eq('id', itemId)
           .eq('user_id', userId)
-          .single();
+          .maybeSingle(); // Use maybeSingle to avoid 406 errors
         return data && !data.is_deleted && !data.archived;
       }
       default:
