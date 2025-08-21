@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -11,11 +12,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Habit } from '@/types/productivity';
 import { getCategoryOptions, mapDisplayToDatabase, mapDatabaseToDisplay } from '@/utils/habitCategoryUtils';
+import { useGoals } from '@/hooks/useGoals';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 const habitSchema = z.object({
   name: z.string().min(1, 'Habit name is required'),
   description: z.string().optional(),
-  category: z.string().optional()
+  category: z.string().optional(),
+  linkedGoalId: z.string().optional(),
 });
 
 type HabitFormValues = z.infer<typeof habitSchema>;
@@ -30,12 +34,22 @@ interface EditHabitDialogProps {
 const categoryOptions = getCategoryOptions();
 
 export const EditHabitDialog = ({ habit, open, onOpenChange, onSave }: EditHabitDialogProps) => {
+  const { goals } = useGoals();
+
+  // Filter to personal goals only for habit linking  
+  const personalGoals = goals?.filter(goal => 
+    goal.category === 'personal' && 
+    !goal.archived && 
+    !goal.completed
+  ) || [];
+
   const form = useForm<HabitFormValues>({
     resolver: zodResolver(habitSchema),
     defaultValues: {
       name: habit.name,
       description: habit.description || '',
-      category: habit.category ? mapDatabaseToDisplay(habit.category) : 'none'
+      category: habit.category ? mapDatabaseToDisplay(habit.category) : 'none',
+      linkedGoalId: habit.linkedGoalId || 'none'
     }
   });
 
@@ -43,7 +57,8 @@ export const EditHabitDialog = ({ habit, open, onOpenChange, onSave }: EditHabit
     onSave(habit.id, {
       name: values.name,
       description: values.description || undefined,
-      category: values.category === 'none' ? undefined : mapDisplayToDatabase(values.category)
+      category: values.category === 'none' ? undefined : mapDisplayToDatabase(values.category),
+      linkedGoalId: values.linkedGoalId === 'none' ? undefined : values.linkedGoalId
     });
     onOpenChange(false);
   };
@@ -106,6 +121,40 @@ export const EditHabitDialog = ({ habit, open, onOpenChange, onSave }: EditHabit
                       {categoryOptions.map((category) => (
                         <SelectItem key={category} value={category}>
                           {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="linkedGoalId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Link to Personal Goal (Optional)</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || "none"}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a personal goal" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="z-50 bg-background border border-border shadow-lg">
+                      <SelectItem value="none">No goal</SelectItem>
+                      {personalGoals.map(goal => (
+                        <SelectItem key={goal.id} value={goal.id} className="py-3">
+                          <div className="flex items-center justify-between w-full gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-sm truncate">{goal.title}</div>
+                              <div className="text-xs text-muted-foreground">Progress: {goal.progress}%</div>
+                            </div>
+                            <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs shrink-0">
+                              personal
+                            </Badge>
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>

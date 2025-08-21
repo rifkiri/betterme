@@ -216,6 +216,7 @@ export type Database = {
           id: string
           is_deleted: boolean
           last_completed_date: string | null
+          linked_goal_id: string | null
           name: string
           streak: number
           updated_at: string
@@ -230,6 +231,7 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           last_completed_date?: string | null
+          linked_goal_id?: string | null
           name: string
           streak?: number
           updated_at?: string
@@ -244,12 +246,20 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           last_completed_date?: string | null
+          linked_goal_id?: string | null
           name?: string
           streak?: number
           updated_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "habits_linked_goal_id_fkey"
+            columns: ["linked_goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "habits_user_id_fkey"
             columns: ["user_id"]

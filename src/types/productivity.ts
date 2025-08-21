@@ -9,6 +9,7 @@ export interface Habit {
   archived?: boolean;
   isDeleted?: boolean;
   createdAt?: string;
+  linkedGoalId?: string;
 }
 
 export interface Task {

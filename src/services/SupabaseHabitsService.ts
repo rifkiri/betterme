@@ -41,7 +41,8 @@ export class SupabaseHabitsService {
       category: habit.category,
       archived: habit.archived,
       isDeleted: habit.is_deleted,
-      createdAt: habit.created_at
+      createdAt: habit.created_at,
+      linkedGoalId: habit.linked_goal_id
     }));
   }
 
@@ -72,6 +73,7 @@ export class SupabaseHabitsService {
       archived: habit.archived,
       isDeleted: habit.is_deleted,
       createdAt: habit.created_at,
+      linkedGoalId: habit.linked_goal_id,
       userId: userId // Ensure userId is set correctly
     }));
 
@@ -92,7 +94,8 @@ export class SupabaseHabitsService {
         streak: habit.streak,
         category: this.mapAppCategoryToDatabase(habit.category),
         archived: habit.archived,
-        is_deleted: habit.isDeleted
+        is_deleted: habit.isDeleted,
+        linked_goal_id: habit.linkedGoalId || null
       });
 
     if (error) {
@@ -113,6 +116,7 @@ export class SupabaseHabitsService {
     if (updates.category !== undefined) supabaseUpdates.category = this.mapAppCategoryToDatabase(updates.category);
     if (updates.archived !== undefined) supabaseUpdates.archived = updates.archived;
     if (updates.isDeleted !== undefined) supabaseUpdates.is_deleted = updates.isDeleted;
+    if (updates.linkedGoalId !== undefined) supabaseUpdates.linked_goal_id = updates.linkedGoalId || null;
 
     const { error } = await supabase
       .from('habits')
