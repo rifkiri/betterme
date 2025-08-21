@@ -48,17 +48,11 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
   });
 
   const onSubmit = (data: FormData) => {
-    console.log('🔥 [AddDialog] Form submitted!');
-    console.log('🔥 [AddDialog] Form data:', data);
-    
     // Ensure the due date is set to end of day in local time to avoid timezone issues
     let dueDate = data.dueDate;
     if (dueDate) {
       dueDate = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate(), 23, 59, 59, 999);
     }
-
-    console.log('🔥 [AddDialog] Submitting with selected goal IDs:', data.selectedGoalIds);
-    console.log('🔥 [AddDialog] onAddWeeklyOutput callback exists:', typeof onAddWeeklyOutput);
 
     onAddWeeklyOutput({
       title: data.title,
@@ -327,7 +321,7 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
           <Button type="button" variant="outline" onClick={() => setOpen(false)}>
             Cancel
           </Button>
-          <Button type="submit" form="add-output-form" onClick={() => console.log('🔥 [AddDialog] Submit button clicked!')}>Add Output</Button>
+          <Button type="submit" form="add-output-form">Add Output</Button>
         </div>
       </DialogContent>
     </Dialog>

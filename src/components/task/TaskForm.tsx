@@ -139,7 +139,9 @@ export const TaskForm = ({
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="none">No weekly output</SelectItem>
-                  {weeklyOutputs.map(output => (
+                  {weeklyOutputs
+                    .filter(output => output.progress < 100 && !output.isDeleted)
+                    .map(output => (
                     <SelectItem key={output.id} value={output.id}>
                       {output.title}
                     </SelectItem>
