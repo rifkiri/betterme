@@ -83,7 +83,7 @@ export const HabitsSection = ({
             onRestoreHabit={onRestoreHabit}
             onPermanentlyDeleteHabit={onPermanentlyDeleteHabit}
           />
-          <AddHabitDialog onAddHabit={onAddHabit} />
+          <AddHabitDialog onAddHabit={onAddHabit} goals={goals} />
         </div>
       </CardHeader>
       <CardContent className="space-y-3">

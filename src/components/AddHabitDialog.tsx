@@ -33,8 +33,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { getCategoryOptions, mapDisplayToDatabase } from '@/utils/habitCategoryUtils';
-import { useGoals } from '@/hooks/useGoals';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { Habit, Goal } from '@/types/productivity';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Habit name is required'),
@@ -46,15 +45,14 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface AddHabitDialogProps {
-  onAddHabit: (habit: { name: string; description?: string; category?: string; linkedGoalId?: string }) => void;
+  onAddHabit: (habit: Omit<Habit, 'id' | 'completed' | 'streak'>) => void;
+  goals?: Goal[];
 }
 
 const categoryOptions = getCategoryOptions();
 
-export const AddHabitDialog = ({ onAddHabit }: AddHabitDialogProps) => {
+export const AddHabitDialog = ({ onAddHabit, goals }: AddHabitDialogProps) => {
   const [open, setOpen] = useState(false);
-  const { currentUser } = useCurrentUser();
-  const { goals } = useGoals();
 
   // Filter to personal goals only for habit linking
   const personalGoals = goals?.filter(goal => 
@@ -79,6 +77,7 @@ export const AddHabitDialog = ({ onAddHabit }: AddHabitDialogProps) => {
       description: values.description || undefined,
       category: values.category === 'none' ? undefined : mapDisplayToDatabase(values.category),
       linkedGoalId: values.linkedGoalId === 'none' ? undefined : values.linkedGoalId,
+      archived: false,
     });
     form.reset();
     setOpen(false);
