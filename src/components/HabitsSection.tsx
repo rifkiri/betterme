@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Circle, Archive, Loader2, Eye } from 'lucide-react';
 import { Habit, Goal } from '@/types/productivity';
+// Fixed habit-goal linking functionality
 import { AddHabitDialog } from './AddHabitDialog';
 import { ArchivedHabitsDialog } from './ArchivedHabitsDialog';
 import { EditHabitDialog } from './EditHabitDialog';
@@ -82,7 +83,7 @@ export const HabitsSection = ({
             onRestoreHabit={onRestoreHabit}
             onPermanentlyDeleteHabit={onPermanentlyDeleteHabit}
           />
-          <AddHabitDialog onAddHabit={onAddHabit} goals={goals} />
+          <AddHabitDialog onAddHabit={onAddHabit} />
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -167,7 +168,6 @@ export const HabitsSection = ({
           open={true}
           onOpenChange={(open) => !open && setViewingHabit(null)}
           onEditHabit={onEditHabit}
-          goals={goals}
         />
       )}
     </Card>
