@@ -9,6 +9,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { Plus, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { useForm } from 'react-hook-form';
@@ -33,6 +34,14 @@ interface AddWeeklyOutputDialogProps {
 
 export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }: AddWeeklyOutputDialogProps) => {
   const [open, setOpen] = useState(false);
+
+  const getCategoryColor = (category: Goal['category']) => {
+    switch (category) {
+      case 'work': return 'bg-blue-100 text-blue-800';
+      case 'personal': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -184,11 +193,23 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
                         <SelectValue placeholder="Select a goal" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="z-50 bg-background border border-border shadow-lg">
                       <SelectItem value="none">No goal</SelectItem>
                       {activeGoals.map(goal => (
-                        <SelectItem key={goal.id} value={goal.id}>
-                          {goal.title}
+                        <SelectItem key={goal.id} value={goal.id} className="py-3">
+                          <div className="flex items-center justify-between w-full gap-3">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{goal.title}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Badge className={`text-xs ${getCategoryColor(goal.category)}`}>
+                                  {goal.category}
+                                </Badge>
+                                <span className="text-xs text-muted-foreground">
+                                  {goal.progress}%
+                                </span>
+                              </div>
+                            </div>
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
