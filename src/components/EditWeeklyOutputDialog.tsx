@@ -49,7 +49,7 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
       title: weeklyOutput.title,
       description: weeklyOutput.description || '',
       dueDate: weeklyOutput.dueDate || undefined,
-      linkedGoalId: weeklyOutput.linkedGoalId || '',
+      linkedGoalId: weeklyOutput.linkedGoalId || 'none',
     }
   });
 
@@ -59,7 +59,7 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
         title: weeklyOutput.title,
         description: weeklyOutput.description || '',
         dueDate: weeklyOutput.dueDate || undefined,
-        linkedGoalId: weeklyOutput.linkedGoalId || '',
+        linkedGoalId: weeklyOutput.linkedGoalId || 'none',
       });
     }
   }, [weeklyOutput, open, form]);
@@ -76,7 +76,7 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
       title: values.title,
       description: values.description,
       dueDate: dueDate,
-      linkedGoalId: values.linkedGoalId || undefined,
+      linkedGoalId: values.linkedGoalId === "none" ? undefined : values.linkedGoalId,
     });
 
     onOpenChange(false);
@@ -201,7 +201,7 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="z-50 bg-background border border-border shadow-lg">
-                        <SelectItem value="">No goal</SelectItem>
+                        <SelectItem value="none">No goal</SelectItem>
                         {activeGoals.map(goal => (
                           <SelectItem key={goal.id} value={goal.id} className="py-3">
                             <div className="flex items-center justify-between w-full gap-3">
