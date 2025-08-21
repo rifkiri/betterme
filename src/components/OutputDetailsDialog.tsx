@@ -15,11 +15,8 @@ import {
 } from 'lucide-react';
 import { WeeklyOutput, Task, Goal } from '@/types/productivity';
 import { format } from 'date-fns';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { EditWeeklyOutputDialog } from './EditWeeklyOutputDialog';
-
-import { itemLinkageService } from '@/services/ItemLinkageService';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface OutputDetailsDialogProps {
   output: WeeklyOutput;
@@ -43,33 +40,8 @@ export const OutputDetailsDialog = ({
   onUpdateLinks
 }: OutputDetailsDialogProps) => {
   const [editingOutput, setEditingOutput] = useState<WeeklyOutput | null>(null);
-  const [linkedGoalIds, setLinkedGoalIds] = useState<string[]>([]);
-  const [loadingLinks, setLoadingLinks] = useState(false);
-  const { currentUser } = useCurrentUser();
-
-  // Load linked goals when dialog opens or output changes
-  useEffect(() => {
-    if (open && output.id && currentUser?.id) {
-      refreshLinkedGoals();
-    }
-  }, [open, output.id, currentUser?.id]);
-
-  const linkedGoals = goals.filter(goal => linkedGoalIds.includes(goal.id));
-  
-  // Refresh linked goals data when dialog opens or after edits
-  const refreshLinkedGoals = async () => {
-    if (output.id && currentUser?.id) {
-      setLoadingLinks(true);
-      try {
-        const linkedIds = await itemLinkageService.getLinkedGoalIds(output.id, currentUser.id);
-        setLinkedGoalIds(linkedIds);
-      } catch (error) {
-        console.error('Error refreshing linked goals:', error);
-      } finally {
-        setLoadingLinks(false);
-      }
-    }
-  };
+  // Find the linked goal using the simple linkedGoalId field
+  const linkedGoal = output.linkedGoalId ? goals.find(g => g.id === output.linkedGoalId) : null;
 
   const linkedTasks = tasks.filter(task => 
     task.weeklyOutputId === output.id
@@ -171,17 +143,16 @@ export const OutputDetailsDialog = ({
               <div className="flex items-center justify-between">
                 <h4 className="font-medium text-gray-900 flex items-center gap-2">
                   <ArrowUp className="h-4 w-4 text-indigo-600" />
-                  Contributing to Goals ({loadingLinks ? '...' : linkedGoals.length})
+                  Contributing to Goals ({linkedGoal ? 1 : 0})
                 </h4>
               </div>
               
-              {loadingLinks ? (
-                <p className="text-sm text-gray-500 py-2">Loading linked goals...</p>
-              ) : linkedGoals.length === 0 ? (
+              {!linkedGoal ? (
                 <p className="text-sm text-gray-500 py-2">This output is not linked to any goals</p>
               ) : (
                 <div className="space-y-2">
-                  {linkedGoals.map((goal) => {
+                  {(() => {
+                    const goal = linkedGoal;
 const getCategoryColor = (category: Goal['category']) => {
                       switch (category) {
                         case 'work': return 'bg-blue-100 text-blue-800';
@@ -217,7 +188,7 @@ const getCategoryColor = (category: Goal['category']) => {
                         </div>
                       </div>
                     );
-                  })}
+                  })()}
                 </div>
               )}
             </div>
@@ -314,8 +285,6 @@ const getCategoryColor = (category: Goal['category']) => {
           onOpenChange={open => {
             if (!open) {
               setEditingOutput(null);
-              // Refresh linked goals after edit dialog closes
-              setTimeout(refreshLinkedGoals, 100);
             }
           }} 
           onSave={onEditWeeklyOutput}

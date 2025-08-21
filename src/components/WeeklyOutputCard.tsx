@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -10,8 +10,6 @@ import { isWeeklyOutputOverdue } from '@/utils/dateUtils';
 import { EditWeeklyOutputDialog } from './EditWeeklyOutputDialog';
 import { MoveWeeklyOutputDialog } from './MoveWeeklyOutputDialog';
 import { OutputDetailsDialog } from './OutputDetailsDialog';
-import { itemLinkageService } from '@/services/ItemLinkageService';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface WeeklyOutputCardProps {
   output: WeeklyOutput;
@@ -33,30 +31,8 @@ export const WeeklyOutputCard = ({
   goals = []
 }: WeeklyOutputCardProps) => {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
-  const [linkedGoalsCount, setLinkedGoalsCount] = useState(0);
-  const { currentUser } = useCurrentUser();
-  
-  // Refresh linked goals count
-  const fetchLinkedGoals = async () => {
-    if (currentUser?.id) {
-      try {
-        const linkedItems = await itemLinkageService.getLinkedItems('weekly_output', output.id, currentUser.id);
-        const goalCount = linkedItems.filter(item => item.type === 'goal').length;
-        setLinkedGoalsCount(goalCount);
-      } catch (error) {
-        console.error('Error fetching linked goals:', error);
-      }
-    }
-  };
-
-  useEffect(() => {
-    fetchLinkedGoals();
-  }, [output.id, currentUser?.id]);
-
-  // Add key prop listener for when output is updated to refresh count
-  useEffect(() => {
-    fetchLinkedGoals();
-  }, [output.title, output.description, output.progress]);
+  // Find the linked goal using the simple linkedGoalId field
+  const linkedGoal = output.linkedGoalId ? goals.find(g => g.id === output.linkedGoalId) : null;
   
   const isOverdue = () => {
     return output.dueDate && isWeeklyOutputOverdue(output.dueDate, output.progress, output.completedDate, output.createdDate);
@@ -87,10 +63,10 @@ export const WeeklyOutputCard = ({
                   {linkedTasksCount} task{linkedTasksCount !== 1 ? 's' : ''} linked
                 </Badge>
               )}
-              {linkedGoalsCount > 0 && (
+              {linkedGoal && (
                 <Badge variant="outline" className="text-xs flex items-center gap-1 bg-blue-50 text-blue-600 border-blue-200">
                   <Link className="h-2 w-2" />
-                  {linkedGoalsCount} goal{linkedGoalsCount !== 1 ? 's' : ''} linked
+                  {linkedGoal.title}
                 </Badge>
               )}
             </div>
@@ -172,13 +148,7 @@ export const WeeklyOutputCard = ({
       <OutputDetailsDialog
         output={output}
         open={showDetailsDialog}
-        onOpenChange={(open) => {
-          setShowDetailsDialog(open);
-          // Refresh linked goals count when details dialog closes
-          if (!open) {
-            setTimeout(fetchLinkedGoals, 100);
-          }
-        }}
+        onOpenChange={setShowDetailsDialog}
         onEditWeeklyOutput={onEditWeeklyOutput}
         onUpdateProgress={onUpdateProgress}
         goals={goals}
