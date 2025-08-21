@@ -19,7 +19,7 @@ interface HabitsSectionProps {
   archivedHabits: Habit[];
   selectedDate: Date;
   onDateChange: (date: Date) => void;
-  onAddHabit: (habit: { name: string; description?: string; category?: string }) => void;
+  onAddHabit: (habit: Omit<Habit, 'id' | 'completed' | 'streak'>) => void;
   onEditHabit: (id: string, updates: Partial<Habit>) => void;
   onToggleHabit: (id: string) => void;
   onArchiveHabit: (id: string) => void;
