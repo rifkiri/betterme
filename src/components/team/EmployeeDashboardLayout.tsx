@@ -51,7 +51,7 @@ export const EmployeeDashboardLayout = ({
           deletedWeeklyOutputs={[]}
           overdueWeeklyOutputs={transformedOverdueOutputs}
           tasks={transformedTasks}
-          onAddWeeklyOutput={(output, selectedGoalIds) => mockHandlers.addWeeklyOutput(output, selectedGoalIds)}
+          onAddWeeklyOutput={(output, goalId) => mockHandlers.addWeeklyOutput(output, goalId)}
           onEditWeeklyOutput={mockHandlers.editWeeklyOutput}
           onUpdateProgress={mockHandlers.updateProgress}
           onMoveWeeklyOutput={mockHandlers.moveWeeklyOutput}

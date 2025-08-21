@@ -133,9 +133,8 @@ export const SimpleEmployeeDashboard = () => {
               overdueWeeklyOutputs={overdueWeeklyOutputs}
               tasks={tasks}
               goals={goals}
-              onAddWeeklyOutput={(output, selectedGoalIds) => {
-                console.log('🔥 [SimpleEmployeeDashboard] onAddWeeklyOutput called with selectedGoalIds:', selectedGoalIds);
-                addWeeklyOutput(output, selectedGoalIds);
+              onAddWeeklyOutput={(output, goalId) => {
+                addWeeklyOutput(output, goalId);
               }}
               onEditWeeklyOutput={editWeeklyOutput}
               onUpdateProgress={updateProgress}
