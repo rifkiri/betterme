@@ -123,6 +123,7 @@ export const SimpleEmployeeDashboard = () => {
               onArchiveHabit={archiveHabit}
               onRestoreHabit={restoreHabit}
               onPermanentlyDeleteHabit={permanentlyDeleteHabit}
+              goals={goals}
             />
           </div>
 

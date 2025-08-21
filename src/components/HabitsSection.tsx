@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Circle, Archive, Loader2, Eye } from 'lucide-react';
-import { Habit } from '@/types/productivity';
+import { Habit, Goal } from '@/types/productivity';
 import { AddHabitDialog } from './AddHabitDialog';
 import { ArchivedHabitsDialog } from './ArchivedHabitsDialog';
 import { EditHabitDialog } from './EditHabitDialog';
@@ -25,6 +25,7 @@ interface HabitsSectionProps {
   onArchiveHabit: (id: string) => void;
   onRestoreHabit: (id: string) => void;
   onPermanentlyDeleteHabit: (id: string) => void;
+  goals?: Goal[];
 }
 
 export const HabitsSection = ({ 
@@ -37,7 +38,8 @@ export const HabitsSection = ({
   onToggleHabit, 
   onArchiveHabit,
   onRestoreHabit,
-  onPermanentlyDeleteHabit
+  onPermanentlyDeleteHabit,
+  goals = []
 }: HabitsSectionProps) => {
   const [togglingHabitId, setTogglingHabitId] = useState<string | null>(null);
   const [streakDialogHabit, setStreakDialogHabit] = useState<Habit | null>(null);
@@ -80,7 +82,7 @@ export const HabitsSection = ({
             onRestoreHabit={onRestoreHabit}
             onPermanentlyDeleteHabit={onPermanentlyDeleteHabit}
           />
-          <AddHabitDialog onAddHabit={onAddHabit} />
+          <AddHabitDialog onAddHabit={onAddHabit} goals={goals} />
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -165,6 +167,7 @@ export const HabitsSection = ({
           open={true}
           onOpenChange={(open) => !open && setViewingHabit(null)}
           onEditHabit={onEditHabit}
+          goals={goals}
         />
       )}
     </Card>

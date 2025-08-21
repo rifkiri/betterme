@@ -3,7 +3,7 @@ import React from 'react';
 import { HabitsSection } from '../HabitsSection';
 import { WeeklyOutputsSection } from '../WeeklyOutputsSection';
 import { TasksSection } from '../TasksSection';
-import { Habit, Task, WeeklyOutput } from '@/types/productivity';
+import { Habit, Task, WeeklyOutput, Goal } from '@/types/productivity';
 
 interface EmployeeDashboardLayoutProps {
   transformedHabits: Habit[];
@@ -15,6 +15,7 @@ interface EmployeeDashboardLayoutProps {
   mockHandlers: any;
   getTasksByDate: (date: Date) => Task[];
   isViewOnly?: boolean;
+  goals?: Goal[];
 }
 
 export const EmployeeDashboardLayout = ({
@@ -26,7 +27,8 @@ export const EmployeeDashboardLayout = ({
   selectedDate,
   mockHandlers,
   getTasksByDate,
-  isViewOnly = true
+  isViewOnly = true,
+  goals = []
 }: EmployeeDashboardLayoutProps) => {
   return (
     <div className="space-y-2 sm:space-y-4 lg:grid lg:grid-cols-3 lg:gap-3 xl:gap-6 lg:space-y-0">
@@ -42,6 +44,7 @@ export const EmployeeDashboardLayout = ({
           onArchiveHabit={mockHandlers.archiveHabit}
           onRestoreHabit={mockHandlers.restoreHabit}
           onPermanentlyDeleteHabit={mockHandlers.permanentlyDeleteHabit}
+          goals={goals}
         />
       </div>
 
