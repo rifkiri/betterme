@@ -43,10 +43,10 @@ export const useProductivity = () => {
     goals: productivityData.goals,
   });
 
-  // Wrap addWeeklyOutput to handle goalId parameter
-  const addWeeklyOutputWithGoals = (output: Omit<WeeklyOutput, 'id' | 'createdDate'>, goalId?: string) => {
-    console.log('🚀 [useProductivity] addWeeklyOutputWithGoals called with goalId:', goalId);
-    return weeklyOutputsManager.addWeeklyOutput(output, goalId);
+  // Wrap addWeeklyOutput to handle single parameter
+  const addWeeklyOutputWithGoals = (output: Omit<WeeklyOutput, 'id' | 'createdDate'>) => {
+    console.log('🚀 [useProductivity] addWeeklyOutputWithGoals called');
+    return weeklyOutputsManager.addWeeklyOutput(output);
   };
 
   const goalsManager = useGoalsManager({

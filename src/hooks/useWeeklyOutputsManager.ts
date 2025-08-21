@@ -27,7 +27,7 @@ export const useWeeklyOutputsManager = ({
   goals,
 }: UseWeeklyOutputsManagerProps) => {
 
-  const addWeeklyOutput = async (output: Omit<WeeklyOutput, 'id' | 'createdDate'>, goalId?: string) => {
+  const addWeeklyOutput = async (output: Omit<WeeklyOutput, 'id' | 'createdDate'>) => {
     if (!userId) {
       toast.error('Please sign in to add weekly outputs');
       return;
@@ -37,7 +37,6 @@ export const useWeeklyOutputsManager = ({
       ...output,
       id: crypto.randomUUID(),
       createdDate: new Date(),
-      linkedGoalIds: goalId && goalId !== 'none' ? [goalId] : [],
       dueDate: output.dueDate || new Date(),
       isMoved: false,
       isDeleted: false,

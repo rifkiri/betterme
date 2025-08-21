@@ -89,7 +89,7 @@ export const createReadOnlyHandlers = () => ({
   editHabit: () => console.log('View-only mode: Cannot edit habits'),
   addTask: () => console.log('View-only mode: Cannot add tasks'),
   editTask: () => console.log('View-only mode: Cannot edit tasks'),
-  addWeeklyOutput: (_output: any, _goalId?: string) => console.log('View-only mode: Cannot add weekly outputs'),
+  addWeeklyOutput: (_output: any) => console.log('View-only mode: Cannot add weekly outputs'),
   editWeeklyOutput: () => console.log('View-only mode: Cannot edit weekly outputs'),
   toggleHabit: () => console.log('View-only mode: Cannot toggle habits'),
   toggleTask: () => console.log('View-only mode: Cannot toggle tasks'),

@@ -27,7 +27,7 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 interface AddWeeklyOutputDialogProps {
-  onAddWeeklyOutput: (output: Omit<WeeklyOutput, 'id' | 'createdDate'>, goalId?: string) => void;
+  onAddWeeklyOutput: (output: Omit<WeeklyOutput, 'id' | 'createdDate'>) => Promise<void>;
   availableGoals?: Goal[];
 }
 
@@ -56,7 +56,8 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
       description: data.description,
       progress: 0,
       dueDate: dueDate,
-    }, data.goalId);
+      linkedGoalId: data.goalId !== "none" ? data.goalId : undefined,
+    });
     
     form.reset();
     setOpen(false);

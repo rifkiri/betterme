@@ -56,7 +56,7 @@ export interface WeeklyOutput {
   isMoved?: boolean;
   isDeleted?: boolean;
   deletedDate?: Date;
-  linkedGoalIds?: string[];
+  linkedGoalId?: string;
 }
 
 export interface Goal {

@@ -133,9 +133,9 @@ export const SimpleEmployeeDashboard = () => {
               overdueWeeklyOutputs={overdueWeeklyOutputs}
               tasks={tasks}
               goals={goals}
-              onAddWeeklyOutput={(output, goalId) => {
-                addWeeklyOutput(output, goalId);
-              }}
+              onAddWeeklyOutput={(output) => 
+                addWeeklyOutput(output)
+              }
               onEditWeeklyOutput={editWeeklyOutput}
               onUpdateProgress={updateProgress}
               onMoveWeeklyOutput={moveWeeklyOutput}
