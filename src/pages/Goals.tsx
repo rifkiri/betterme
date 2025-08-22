@@ -20,6 +20,7 @@ const Goals = () => {
     allGoals,
     deletedGoals,
     habits,
+    tasks,
     weeklyOutputs,
     loadAllData,
     addGoal,
@@ -75,6 +76,7 @@ const Goals = () => {
         allGoals={allGoals}
         deletedGoals={deletedGoals}
         habits={habits}
+        tasks={tasks}
         weeklyOutputs={weeklyOutputs}
         availableUsers={users}
         currentUserId={profile?.id}

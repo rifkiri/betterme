@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { SimpleAddGoalDialog } from './SimpleAddGoalDialog';
 import { JoinGoalDialog } from './JoinGoalDialog';
 import { GoalDetailsDialog } from './GoalDetailsDialog';
-import { Goal, WeeklyOutput, Habit, GoalAssignment } from '@/types/productivity';
+import { Goal, WeeklyOutput, Habit, GoalAssignment, Task } from '@/types/productivity';
 import { Target, Briefcase, User, Plus, CheckCircle, Minus, Edit, Trash2, Eye, Link2 } from 'lucide-react';
 import { mapSubcategoryDatabaseToDisplay } from '@/utils/goalCategoryUtils';
 
@@ -16,6 +16,7 @@ interface EnhancedGoalsSectionProps {
   allGoals: Goal[];
   deletedGoals: Goal[];
   habits: Habit[];
+  tasks: Task[];
   weeklyOutputs: WeeklyOutput[];
   availableUsers?: Array<{ id: string; name: string; role: string }>;
   currentUserId?: string;
@@ -37,6 +38,7 @@ export const EnhancedGoalsSection = ({
   allGoals,
   deletedGoals,
   habits,
+  tasks,
   weeklyOutputs,
   availableUsers = [],
   currentUserId,
@@ -464,7 +466,7 @@ export const EnhancedGoalsSection = ({
           onEditGoal={onEditGoal}
           onUpdateProgress={onUpdateGoalProgress}
           weeklyOutputs={weeklyOutputs}
-          tasks={[]}
+          tasks={tasks}
           habits={habits}
           currentUserId={currentUserId}
           onRefresh={onRefresh}
