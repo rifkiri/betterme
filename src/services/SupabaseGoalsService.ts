@@ -53,67 +53,76 @@ return data.map(goal => ({
   async getUserAccessibleGoals(userId: string): Promise<Goal[]> {
     console.log('Getting all accessible goals for user:', userId);
     
-    // Clean approach: Get goals where user is owner OR has assignments
-    const { data: allGoals, error: goalsError } = await supabase
-      .from('goals')
-      .select(`
-        *,
-        goal_assignments(
-          user_id,
-          role
-        )
-      `)
-      .eq('is_deleted', false)
-      .or(`user_id.eq.${userId},goal_assignments.user_id.eq.${userId}`)
-      .order('created_date', { ascending: false });
+    try {
+      // Get goals owned by user
+      const { data: ownedGoals, error: ownedError } = await supabase
+        .from('goals')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_deleted', false)
+        .order('created_date', { ascending: false });
 
-    if (goalsError) {
-      console.error('Error fetching accessible goals:', goalsError);
-      throw goalsError;
+      if (ownedError) {
+        console.error('Error fetching owned goals:', ownedError);
+        throw ownedError;
+      }
+
+      // Get goals where user has assignments
+      const { data: assignedGoals, error: assignedError } = await supabase
+        .from('goals')
+        .select(`
+          *,
+          goal_assignments!inner(user_id, role)
+        `)
+        .eq('goal_assignments.user_id', userId)
+        .eq('is_deleted', false)
+        .order('created_date', { ascending: false });
+
+      if (assignedError) {
+        console.error('Error fetching assigned goals:', assignedError);
+        // Don't throw, just use owned goals
+      }
+
+      // Combine and deduplicate goals
+      const allGoalsMap = new Map();
+      
+      // Add owned goals
+      (ownedGoals || []).forEach(goal => {
+        allGoalsMap.set(goal.id, goal);
+      });
+      
+      // Add assigned goals (if query succeeded)
+      if (!assignedError && assignedGoals) {
+        assignedGoals.forEach(goal => {
+          allGoalsMap.set(goal.id, goal);
+        });
+      }
+
+      const uniqueGoals = Array.from(allGoalsMap.values());
+      console.log('Accessible goals for user', userId, ':', uniqueGoals.length);
+
+      // Transform to Goal format
+      return uniqueGoals.map(goal => ({
+        id: goal.id,
+        title: goal.title,
+        description: goal.description,
+        category: goal.category as 'work' | 'personal',
+        subcategory: goal.subcategory,
+        deadline: goal.deadline ? new Date(goal.deadline) : undefined,
+        createdDate: new Date(goal.created_date),
+        completed: goal.completed,
+        archived: goal.archived,
+        progress: goal.progress || 0,
+        userId: goal.user_id,
+        createdBy: goal.created_by,
+        assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined
+      }));
+
+    } catch (error) {
+      console.error('Error in getUserAccessibleGoals:', error);
+      // Fallback: just return user's own goals
+      return this.getGoals(userId);
     }
-
-    if (!allGoals) {
-      return [];
-    }
-
-    // Filter and transform goals
-    const accessibleGoals = allGoals.filter(goal => {
-      // Include personal goals owned by user
-      if (goal.category === 'personal' && goal.user_id === userId) {
-        return true;
-      }
-      
-      // Include work goals where user is owner
-      if (goal.category === 'work' && goal.user_id === userId) {
-        return true;
-      }
-      
-      // Include work goals where user has assignments
-      if (goal.category === 'work' && goal.goal_assignments && goal.goal_assignments.length > 0) {
-        return goal.goal_assignments.some((assignment: any) => assignment.user_id === userId);
-      }
-      
-      return false;
-    });
-
-    console.log('Accessible goals for user', userId, ':', accessibleGoals.length);
-
-    // Transform to Goal format (no legacy arrays, only assignments matter)
-    return accessibleGoals.map(goal => ({
-      id: goal.id,
-      title: goal.title,
-      description: goal.description,
-      category: goal.category as 'work' | 'personal',
-      subcategory: goal.subcategory,
-      deadline: goal.deadline ? new Date(goal.deadline) : undefined,
-      createdDate: new Date(goal.created_date),
-      completed: goal.completed,
-      archived: goal.archived,
-      progress: goal.progress || 0,
-      userId: goal.user_id,
-      createdBy: goal.created_by,
-      assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined
-    }));
   }
 
   async getAllGoals(): Promise<Goal[]> {
