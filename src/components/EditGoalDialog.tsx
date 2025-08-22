@@ -151,14 +151,19 @@ export const EditGoalDialog = ({
     });
 
     // Update output linkages
-    if (currentUser?.id && data.selectedOutputIds) {
+    if (currentUser?.id) {
       try {
-        const outputsToLink = data.selectedOutputIds;
+        const outputsToLink = data.selectedOutputIds || [];
         const currentlyLinkedOutputs = weeklyOutputs.filter(output => output.linkedGoalId === goal.id).map(o => o.id);
+        
+        console.log('=== OUTPUT LINKAGE DEBUG ===');
+        console.log('Outputs to link:', outputsToLink);
+        console.log('Currently linked outputs:', currentlyLinkedOutputs);
         
         // Link new outputs
         for (const outputId of outputsToLink) {
           if (!currentlyLinkedOutputs.includes(outputId)) {
+            console.log('Linking output:', outputId, 'to goal:', goal.id);
             const outputToUpdate = weeklyOutputs.find(o => o.id === outputId);
             if (outputToUpdate) {
               await supabaseWeeklyOutputsService.updateWeeklyOutput(outputId, currentUser.id, { linkedGoalId: goal.id });
@@ -169,9 +174,12 @@ export const EditGoalDialog = ({
         // Unlink removed outputs
         for (const outputId of currentlyLinkedOutputs) {
           if (!outputsToLink.includes(outputId)) {
+            console.log('Unlinking output:', outputId, 'from goal:', goal.id);
             await supabaseWeeklyOutputsService.updateWeeklyOutput(outputId, currentUser.id, { linkedGoalId: undefined });
           }
         }
+        
+        console.log('=== OUTPUT LINKAGE COMPLETE ===');
       } catch (error) {
         console.error('Error updating output links:', error);
       }
