@@ -31,7 +31,7 @@ interface EditWeeklyOutputDialogProps {
   onOpenChange: (open: boolean) => void;
   onSave: (outputId: string, updates: Partial<WeeklyOutput>) => Promise<void>;
   goals?: Goal[];
-  onRefresh?: () => void;
+  onRefresh?: () => Promise<void>;
 }
 
 export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSave, goals = [], onRefresh }: EditWeeklyOutputDialogProps) => {
@@ -84,7 +84,12 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
     });
 
     console.log('EditWeeklyOutputDialog - onSave completed, calling onRefresh');
-    onRefresh?.();
+    
+    // Trigger data refresh to ensure bidirectional updates appear
+    if (onRefresh) {
+      await onRefresh();
+    }
+    
     onOpenChange(false);
   };
 

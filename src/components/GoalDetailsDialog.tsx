@@ -28,6 +28,7 @@ interface GoalDetailsDialogProps {
   tasks: Task[];
   habits?: Habit[];
   currentUserId?: string;
+  onRefresh?: () => Promise<void>;
 }
 
 export const GoalDetailsDialog = ({
@@ -39,7 +40,8 @@ export const GoalDetailsDialog = ({
   weeklyOutputs,
   tasks,
   habits = [],
-  currentUserId
+  currentUserId,
+  onRefresh
 }: GoalDetailsDialogProps) => {
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [linkedOutputs, setLinkedOutputs] = useState<WeeklyOutput[]>([]);
@@ -375,8 +377,9 @@ const getCategoryColor = (category: Goal['category']) => {
         <EditGoalDialog 
           goal={editingGoal} 
           open={true} 
-          onOpenChange={open => !open && setEditingGoal(null)} 
+          onOpenChange={(open) => !open && setEditingGoal(null)} 
           onSave={onEditGoal}
+          onRefresh={onRefresh}
           weeklyOutputs={weeklyOutputs}
           habits={habits}
         />

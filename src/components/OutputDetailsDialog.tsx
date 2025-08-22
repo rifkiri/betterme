@@ -27,6 +27,7 @@ interface OutputDetailsDialogProps {
   goals: Goal[];
   tasks: Task[];
   onUpdateLinks?: (outputId: string, goalIds: string[]) => void;
+  onRefresh?: () => Promise<void>;
 }
 
 export const OutputDetailsDialog = ({
@@ -37,7 +38,8 @@ export const OutputDetailsDialog = ({
   onUpdateProgress,
   goals,
   tasks,
-  onUpdateLinks
+  onUpdateLinks,
+  onRefresh
 }: OutputDetailsDialogProps) => {
   const [editingOutput, setEditingOutput] = useState<WeeklyOutput | null>(null);
 
@@ -289,6 +291,7 @@ const getCategoryColor = (category: Goal['category']) => {
             }
           }} 
           onSave={onEditWeeklyOutput}
+          onRefresh={onRefresh}
           goals={goals}
         />
       )}

@@ -38,11 +38,12 @@ interface EditGoalDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (id: string, updates: Partial<Goal>) => void;
+  onRefresh?: () => Promise<void>;
   weeklyOutputs?: WeeklyOutput[];
   habits?: Habit[];
 }
 
-export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs = [], habits = [] }: EditGoalDialogProps) => {
+export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, onRefresh, weeklyOutputs = [], habits = [] }: EditGoalDialogProps) => {
   const [selectedOutputs, setSelectedOutputs] = useState<WeeklyOutput[]>([]);
   const [linkedHabits, setLinkedHabits] = useState<Habit[]>([]);
   const [isOutputDropdownOpen, setIsOutputDropdownOpen] = useState(false);
@@ -133,6 +134,11 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
     }
     
     onOpenChange(false);
+    
+    // Trigger data refresh to ensure bidirectional updates appear
+    if (onRefresh) {
+      await onRefresh();
+    }
   };
 
   // Get today's date and set time to start of day for proper comparison

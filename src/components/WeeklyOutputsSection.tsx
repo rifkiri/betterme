@@ -24,6 +24,7 @@ interface WeeklyOutputsSectionProps {
   onDeleteWeeklyOutput: (id: string) => void;
   onRestoreWeeklyOutput: (id: string) => void;
   onPermanentlyDeleteWeeklyOutput: (id: string) => void;
+  onRefresh?: () => Promise<void>;
 }
 
 export const WeeklyOutputsSection = ({
@@ -38,7 +39,8 @@ export const WeeklyOutputsSection = ({
   onMoveWeeklyOutput,
   onDeleteWeeklyOutput,
   onRestoreWeeklyOutput,
-  onPermanentlyDeleteWeeklyOutput
+  onPermanentlyDeleteWeeklyOutput,
+  onRefresh
 }: WeeklyOutputsSectionProps) => {
   const [selectedWeek, setSelectedWeek] = useState(new Date());
   
@@ -144,13 +146,14 @@ export const WeeklyOutputsSection = ({
                 {weekOutputs.map(output => (
                   <WeeklyOutputCard 
                     key={output.id} 
-                    output={output} 
+                    output={output}
                     tasks={tasks}
                     goals={goals}
                     onEditWeeklyOutput={onEditWeeklyOutput} 
                     onUpdateProgress={onUpdateProgress} 
                     onMoveWeeklyOutput={onMoveWeeklyOutput} 
-                    onDeleteWeeklyOutput={onDeleteWeeklyOutput} 
+                    onDeleteWeeklyOutput={onDeleteWeeklyOutput}
+                    onRefresh={onRefresh}
                   />
                 ))}
               </div>

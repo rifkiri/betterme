@@ -19,6 +19,7 @@ interface WeeklyOutputCardProps {
   onDeleteWeeklyOutput: (id: string) => void;
   tasks?: Task[];
   goals?: Goal[];
+  onRefresh?: () => Promise<void>;
 }
 
 export const WeeklyOutputCard = ({
@@ -28,7 +29,8 @@ export const WeeklyOutputCard = ({
   onMoveWeeklyOutput,
   onDeleteWeeklyOutput,
   tasks = [],
-  goals = []
+  goals = [],
+  onRefresh
 }: WeeklyOutputCardProps) => {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   // Find the linked goal using the simple linkedGoalId field
@@ -151,6 +153,7 @@ export const WeeklyOutputCard = ({
         onOpenChange={setShowDetailsDialog}
         onEditWeeklyOutput={onEditWeeklyOutput}
         onUpdateProgress={onUpdateProgress}
+        onRefresh={onRefresh}
         goals={goals}
         tasks={tasks}
       />

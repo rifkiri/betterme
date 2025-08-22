@@ -47,7 +47,8 @@ export const SimpleEmployeeDashboard = () => {
     deleteWeeklyOutput,
     restoreWeeklyOutput,
     permanentlyDeleteWeeklyOutput,
-    getOverdueWeeklyOutputs
+    getOverdueWeeklyOutputs,
+    loadAllData
   } = useProductivity();
 
   console.log('Dashboard data:', {
@@ -145,6 +146,7 @@ export const SimpleEmployeeDashboard = () => {
               onDeleteWeeklyOutput={deleteWeeklyOutput}
               onRestoreWeeklyOutput={restoreWeeklyOutput}
               onPermanentlyDeleteWeeklyOutput={permanentlyDeleteWeeklyOutput}
+              onRefresh={loadAllData}
             />
           </div>
 
