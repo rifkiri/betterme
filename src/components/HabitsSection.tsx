@@ -139,7 +139,7 @@ export const HabitsSection = ({
                   {habit.category && <p className="text-xs text-gray-500">{mapDatabaseToDisplay(habit.category)}</p>}
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col items-center gap-2">
                 <Badge 
                   variant={habit.streak > 0 ? 'default' : 'secondary'} 
                   className={`text-xs ${habit.streak > 0 ? 'cursor-pointer hover:bg-primary/80' : ''}`}
