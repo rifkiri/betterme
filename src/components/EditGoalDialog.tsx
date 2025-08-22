@@ -572,8 +572,8 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, onRefresh, we
               />
             )}
 
-            {/* Habit Linking Section for Personal Goals */}
-            {form.watch('category') === 'personal' && habits.length > 0 && (
+            {/* Habit Linking Section for Personal Goals Only */}
+            {form.watch('category') === 'personal' && (
               <FormField
                 control={form.control}
                 name="selectedHabitIds"
