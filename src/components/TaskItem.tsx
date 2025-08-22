@@ -76,8 +76,14 @@ export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteT
     return 'text-gray-500';
   };
 
+  const isOverdue = () => {
+    return task.dueDate && isPast(task.dueDate) && !isToday(task.dueDate) && !task.completed;
+  };
+
   return (
-    <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+    <div className={`flex items-center justify-between p-3 border rounded-lg transition-colors ${
+      isOverdue() ? 'bg-red-50 border-red-200 hover:bg-red-100' : 'hover:bg-gray-50'
+    }`}>
       <div className="flex items-center space-x-3 flex-1">
         <button onClick={() => onToggleTask(task.id)}>
           {task.completed ? (
@@ -112,6 +118,7 @@ export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteT
               <span className={`text-xs flex items-center ${getDueDateColor(task.dueDate, task.completed)}`}>
                 <Calendar className="h-3 w-3 mr-1" />
                 {formatDueDate(task.dueDate)}
+                {isOverdue() && ' (Overdue)'}
               </span>
             )}
             {task.estimatedTime && (
