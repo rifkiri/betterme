@@ -503,6 +503,25 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      create_goal_assignment: {
+        Args: {
+          p_assigned_by: string
+          p_goal_id: string
+          p_role: string
+          p_self_assigned?: boolean
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      create_goal_notification: {
+        Args: {
+          p_goal_id: string
+          p_notification_type: string
+          p_role?: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       get_filtered_users_for_role: {
         Args: Record<PropertyKey, never>
         Returns: {

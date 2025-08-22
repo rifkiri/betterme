@@ -31,19 +31,20 @@ export class SupabaseGoalNotificationsService {
   async createNotification(notification: Omit<GoalNotification, 'id' | 'createdDate' | 'acknowledged'>): Promise<void> {
     console.log('Creating notification:', notification);
     
-    const { error } = await supabase
-      .from('goal_notifications')
-      .insert({
-        user_id: notification.userId,
-        goal_id: notification.goalId,
-        notification_type: notification.notificationType,
-        role: notification.role
-      });
+    // Use the security definer function to bypass auth context issues
+    const { error } = await supabase.rpc('create_goal_notification', {
+      p_user_id: notification.userId,
+      p_goal_id: notification.goalId,
+      p_notification_type: notification.notificationType,
+      p_role: notification.role
+    });
 
     if (error) {
       console.error('Error creating notification:', error);
       throw error;
     }
+    
+    console.log('Successfully created goal notification');
   }
 
   async acknowledgeNotification(id: string): Promise<void> {
