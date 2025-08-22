@@ -17,6 +17,8 @@ import { Goal, Task, WeeklyOutput, Habit, GoalAssignment } from '@/types/product
 import { format, isBefore } from 'date-fns';
 import { useState, useEffect } from 'react';
 import { EditGoalDialog } from './EditGoalDialog';
+import { PersonalGoalEditDialog } from './PersonalGoalEditDialog';
+import { useHabits } from '@/hooks/useHabits';
 
 interface GoalDetailsDialogProps {
   goal: Goal;
@@ -47,11 +49,14 @@ export const GoalDetailsDialog = ({
   assignments = [],
   availableUsers = []
 }: GoalDetailsDialogProps) => {
-  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
+  const [editingGoal, setEditingGoal] = useState(false);
   const [linkedOutputs, setLinkedOutputs] = useState<WeeklyOutput[]>([]);
   const [linkedHabits, setLinkedHabits] = useState<Habit[]>([]);
   const [loadingLinkedOutputs, setLoadingLinkedOutputs] = useState(false);
   const [loadingLinkedHabits, setLoadingLinkedHabits] = useState(false);
+  
+  // Get habits data for personal goals
+  const { habits: allHabits } = useHabits();
 
   useEffect(() => {
     const fetchLinkedItems = async () => {
@@ -69,7 +74,7 @@ export const GoalDetailsDialog = ({
         
         // Find habits linked to this goal for personal goals
         if (goal.category === 'personal') {
-          const goalLinkedHabits = habits.filter(habit => habit.linkedGoalId === goal.id);
+          const goalLinkedHabits = (habits.length > 0 ? habits : allHabits).filter(habit => habit.linkedGoalId === goal.id);
           setLinkedHabits(goalLinkedHabits);
           setLoadingLinkedHabits(false);
         }
@@ -77,7 +82,7 @@ export const GoalDetailsDialog = ({
     };
 
     fetchLinkedItems();
-  }, [goal.id, goal.category, currentUserId, open, weeklyOutputs, habits]);
+  }, [goal.id, goal.category, currentUserId, open, weeklyOutputs, habits, allHabits]);
 
 const getCategoryColor = (category: Goal['category']) => {
     switch (category) {
@@ -365,7 +370,7 @@ const getCategoryColor = (category: Goal['category']) => {
               Close
             </Button>
             {canEditGoal && (
-              <Button onClick={() => setEditingGoal(goal)}>
+              <Button onClick={() => setEditingGoal(true)}>
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Goal
               </Button>
@@ -374,19 +379,28 @@ const getCategoryColor = (category: Goal['category']) => {
         </DialogContent>
       </Dialog>
 
-      {editingGoal && (
-        <EditGoalDialog 
-          goal={editingGoal} 
+      {editingGoal && goal.category === 'personal' ? (
+        <PersonalGoalEditDialog 
+          goal={goal} 
           open={true} 
-          onOpenChange={(open) => !open && setEditingGoal(null)} 
+          onOpenChange={(open) => !open && setEditingGoal(false)} 
           onSave={onEditGoal}
           onRefresh={onRefresh}
           weeklyOutputs={weeklyOutputs}
-          habits={habits}
+        />
+      ) : editingGoal ? (
+        <EditGoalDialog 
+          goal={goal} 
+          open={true} 
+          onOpenChange={(open) => !open && setEditingGoal(false)} 
+          onSave={onEditGoal}
+          onRefresh={onRefresh}
+          weeklyOutputs={weeklyOutputs}
+          habits={habits.length > 0 ? habits : allHabits}
           assignments={assignments}
           availableUsers={availableUsers}
         />
-      )}
+      ) : null}
     </>
   );
 };

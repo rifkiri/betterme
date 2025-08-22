@@ -6,6 +6,7 @@ import { CalendarIcon, Trash2, Link, Eye, Minus, Plus, CheckCircle } from 'lucid
 import { Goal, Task, WeeklyOutput } from '@/types/productivity';
 import { format, isToday, isTomorrow } from 'date-fns';
 import { EditGoalDialog } from './EditGoalDialog';
+import { PersonalGoalEditDialog } from './PersonalGoalEditDialog';
 import { MoveGoalDialog } from './MoveGoalDialog';
 import { GoalDetailsDialog } from './GoalDetailsDialog';
 
