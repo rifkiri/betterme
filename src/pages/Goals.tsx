@@ -88,6 +88,7 @@ const Goals = () => {
         onUpdateGoalProgress={updateGoalProgress}
         onJoinWorkGoal={joinWorkGoal}
         onLeaveWorkGoal={leaveWorkGoal}
+        onRefresh={loadAllData}
       />
 
       {/* Goal Notifications */}

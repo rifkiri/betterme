@@ -28,6 +28,7 @@ interface EnhancedGoalsSectionProps {
   onUpdateGoalProgress: (goalId: string, progress: number) => void;
   onJoinWorkGoal: (goalId: string, role?: 'coach' | 'lead' | 'member') => void;
   onLeaveWorkGoal: (goalId: string) => void;
+  onRefresh?: (date?: Date) => Promise<void>;
 }
 
 export const EnhancedGoalsSection = ({
@@ -47,7 +48,8 @@ export const EnhancedGoalsSection = ({
   onPermanentlyDeleteGoal,
   onUpdateGoalProgress,
   onJoinWorkGoal,
-  onLeaveWorkGoal
+  onLeaveWorkGoal,
+  onRefresh
 }: EnhancedGoalsSectionProps) => {
   const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
   const [viewingGoal, setViewingGoal] = useState<Goal | null>(null);
@@ -451,6 +453,7 @@ export const EnhancedGoalsSection = ({
           tasks={[]}
           habits={habits}
           currentUserId={currentUserId}
+          onRefresh={onRefresh}
         />
       )}
     </div>
