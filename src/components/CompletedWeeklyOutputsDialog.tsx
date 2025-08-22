@@ -32,11 +32,11 @@ export const CompletedWeeklyOutputsDialog = ({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 min-w-0">
-          <Trophy className="h-3 w-3 sm:h-4 sm:w-4 text-amber-600 flex-shrink-0" />
-          <span className="hidden sm:inline">Completed</span>
-          <span className="sm:hidden">({completedOutputs.length})</span>
-          <span className="hidden sm:inline">({completedOutputs.length})</span>
+        <Button variant="outline" size="sm" className="flex items-center gap-1 sm:gap-2 lg:gap-2 text-xs sm:text-sm lg:text-sm px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-2 min-w-0 h-8 sm:h-9 lg:h-9">
+          <Trophy className="h-3 w-3 sm:h-4 sm:w-4 lg:h-4 lg:w-4 text-amber-600 flex-shrink-0" />
+          <span className="hidden sm:inline lg:inline">Completed</span>
+          <span className="sm:hidden lg:hidden">({completedOutputs.length})</span>
+          <span className="hidden sm:inline lg:inline">({completedOutputs.length})</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl">

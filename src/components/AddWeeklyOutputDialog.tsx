@@ -84,10 +84,10 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 min-w-0">
-          <Plus className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-          <span className="hidden sm:inline">Add Outputs</span>
-          <span className="sm:hidden">+</span>
+        <Button size="sm" variant="outline" className="flex items-center gap-1 sm:gap-2 lg:gap-2 text-xs sm:text-sm lg:text-sm px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-2 min-w-0 h-8 sm:h-9 lg:h-9">
+          <Plus className="h-3 w-3 sm:h-4 sm:w-4 lg:h-4 lg:w-4 flex-shrink-0" />
+          <span className="hidden sm:inline lg:inline">Add Outputs</span>
+          <span className="sm:hidden lg:hidden">+</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] flex flex-col">
