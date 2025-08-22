@@ -329,10 +329,11 @@ export const EditGoalDialog = ({
           </DialogTitle>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 pr-4 -mr-4">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pr-2">
-              {allowFullEdit && (
+        <ScrollArea className="flex-1 max-h-[50vh] overflow-auto">
+          <div className="pr-4 space-y-4">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                {allowFullEdit && (
                 <>
                   <FormField
                     control={form.control}
@@ -758,8 +759,9 @@ export const EditGoalDialog = ({
                 </Card>
               )}
 
-            </form>
-          </Form>
+              </form>
+            </Form>
+          </div>
         </ScrollArea>
         
         <div className="flex justify-end space-x-2 pt-4 border-t shrink-0">
