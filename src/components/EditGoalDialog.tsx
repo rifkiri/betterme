@@ -457,6 +457,7 @@ export const EditGoalDialog = ({
                     <Select 
                       onValueChange={(value) => {
                         if (value === "none" || !value) {
+                          // Clear selected outputs immediately
                           setSelectedOutputs([]);
                           form.setValue('selectedOutputIds', []);
                         } else {
