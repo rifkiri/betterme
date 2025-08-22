@@ -136,6 +136,12 @@ export const EditGoalDialog = ({
   };
 
   const onSubmit = async (data: FormData) => {
+    console.log('=== FORM SUBMISSION DEBUG ===');
+    console.log('Form data being submitted:', data);
+    console.log('selectedOutputIds from form:', data.selectedOutputIds);
+    console.log('selectedOutputIds array length:', (data.selectedOutputIds || []).length);
+    console.log('selectedOutputIds values:', data.selectedOutputIds);
+
     let deadline = data.deadline;
     if (deadline) {
       deadline = new Date(deadline.getFullYear(), deadline.getMonth(), deadline.getDate(), 23, 59, 59, 999);
@@ -158,7 +164,9 @@ export const EditGoalDialog = ({
         
         console.log('=== OUTPUT LINKAGE DEBUG ===');
         console.log('Outputs to link:', outputsToLink);
+        console.log('Outputs to link length:', outputsToLink.length);
         console.log('Currently linked outputs:', currentlyLinkedOutputs);
+        console.log('Currently linked outputs length:', currentlyLinkedOutputs.length);
         
         // Link new outputs
         for (const outputId of outputsToLink) {
@@ -173,7 +181,15 @@ export const EditGoalDialog = ({
         
         // Unlink removed outputs
         for (const outputId of currentlyLinkedOutputs) {
-          if (!outputsToLink.includes(outputId)) {
+          const shouldUnlink = !outputsToLink.includes(outputId);
+          console.log(`Checking output ${outputId} for unlinking:`, {
+            outputId,
+            isInOutputsToLink: outputsToLink.includes(outputId),
+            shouldUnlink,
+            outputsToLinkArray: outputsToLink
+          });
+          
+          if (shouldUnlink) {
             console.log('Unlinking output:', outputId, 'from goal:', goal.id);
             await supabaseWeeklyOutputsService.updateWeeklyOutput(outputId, currentUser.id, { linkedGoalId: undefined });
           }
