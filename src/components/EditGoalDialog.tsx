@@ -762,7 +762,7 @@ export const EditGoalDialog = ({
           </Form>
         </ScrollArea>
         
-        <div className="flex justify-end space-x-2 pt-4 border-t shrink-0 mt-4">
+        <div className="flex justify-end space-x-2 pt-4 border-t shrink-0">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
