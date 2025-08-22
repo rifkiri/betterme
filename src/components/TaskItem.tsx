@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Circle, Clock, ArrowRight, Trash2, Target, Calendar, Users, Eye } from 'lucide-react';
+import { CheckCircle, Circle, Clock, ArrowRight, Trash2, Link, Calendar, Users, Eye } from 'lucide-react';
 import { Task, WeeklyOutput } from '@/types/productivity';
 import { MoveTaskDialog } from './MoveTaskDialog';
 import { EditTaskDialog } from './EditTaskDialog';
@@ -105,8 +105,8 @@ export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteT
             )}
             {linkedOutput && (
               <Badge variant="outline" className="text-xs flex items-center gap-1 bg-blue-50 text-blue-600 border-blue-200">
-                <Target className="h-2 w-2" />
-                Linked to Output
+                <Link className="h-2 w-2" />
+                {linkedOutput.title}
               </Badge>
             )}
           </div>
