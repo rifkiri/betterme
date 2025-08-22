@@ -79,6 +79,8 @@ export class SupabaseTasksService {
   }
 
   async updateTask(id: string, userId: string, updates: Partial<Task>): Promise<void> {
+    console.log('SupabaseTasksService - Updating task:', id, 'for user:', userId, 'with updates:', updates);
+    
     const supabaseUpdates: any = {};
     
     if (updates.title) supabaseUpdates.title = updates.title;
@@ -91,8 +93,13 @@ export class SupabaseTasksService {
     if (updates.isDeleted !== undefined) supabaseUpdates.is_deleted = updates.isDeleted;
     if (updates.completedDate) supabaseUpdates.completed_date = updates.completedDate.toISOString();
     if (updates.deletedDate) supabaseUpdates.deleted_date = updates.deletedDate.toISOString();
-    if (updates.weeklyOutputId !== undefined) supabaseUpdates.weekly_output_id = updates.weeklyOutputId || null;
+    if (updates.weeklyOutputId !== undefined) {
+      supabaseUpdates.weekly_output_id = updates.weeklyOutputId || null;
+      console.log('SupabaseTasksService - weeklyOutputId update:', updates.weeklyOutputId, '→', supabaseUpdates.weekly_output_id);
+    }
     if (updates.taggedUsers !== undefined) supabaseUpdates.tagged_users = updates.taggedUsers || null;
+
+    console.log('SupabaseTasksService - Final supabase updates object:', supabaseUpdates);
 
     const { error } = await supabase
       .from('tasks')
@@ -101,9 +108,11 @@ export class SupabaseTasksService {
       .eq('user_id', userId);
 
     if (error) {
-      console.error('Error updating task:', error);
+      console.error('SupabaseTasksService - Error updating task:', error);
       throw error;
     }
+    
+    console.log('SupabaseTasksService - Task updated successfully');
   }
 
   async permanentlyDeleteTask(id: string, userId: string): Promise<void> {

@@ -56,6 +56,8 @@ export class SupabaseWeeklyOutputsService {
   }
 
   async updateWeeklyOutput(id: string, userId: string, updates: Partial<WeeklyOutput>): Promise<void> {
+    console.log('SupabaseWeeklyOutputsService - Updating output:', id, 'for user:', userId, 'with updates:', updates);
+    
     const supabaseUpdates: any = {};
     
     if (updates.title) supabaseUpdates.title = updates.title;
@@ -67,7 +69,12 @@ export class SupabaseWeeklyOutputsService {
     if (updates.isDeleted !== undefined) supabaseUpdates.is_deleted = updates.isDeleted;
     if (updates.completedDate) supabaseUpdates.completed_date = updates.completedDate.toISOString();
     if (updates.deletedDate) supabaseUpdates.deleted_date = updates.deletedDate.toISOString();
-    if (updates.linkedGoalId !== undefined) supabaseUpdates.linked_goal_id = updates.linkedGoalId;
+    if (updates.linkedGoalId !== undefined) {
+      supabaseUpdates.linked_goal_id = updates.linkedGoalId || null;
+      console.log('SupabaseWeeklyOutputsService - linkedGoalId update:', updates.linkedGoalId, '→', supabaseUpdates.linked_goal_id);
+    }
+
+    console.log('SupabaseWeeklyOutputsService - Final supabase updates object:', supabaseUpdates);
 
     const { error } = await supabase
       .from('weekly_outputs')
@@ -76,9 +83,11 @@ export class SupabaseWeeklyOutputsService {
       .eq('user_id', userId);
 
     if (error) {
-      console.error('Error updating weekly output:', error);
+      console.error('SupabaseWeeklyOutputsService - Error updating weekly output:', error);
       throw error;
     }
+    
+    console.log('SupabaseWeeklyOutputsService - Weekly output updated successfully');
   }
 
   async permanentlyDeleteWeeklyOutput(id: string, userId: string): Promise<void> {
