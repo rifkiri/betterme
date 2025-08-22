@@ -310,9 +310,8 @@ export const EnhancedGoalsSection = ({
                 variant="outline" 
                 size="sm" 
                 className="h-8 w-8 p-0"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
+                onClick={() => {
+                  alert('Delete button clicked for goal: ' + goal.title);
                   console.log('🗑️ [UI] Delete button clicked for goal:', goal.id, 'Current user:', currentUserId);
                   console.log('🗑️ [UI] onDeleteGoal function:', typeof onDeleteGoal);
                   try {
