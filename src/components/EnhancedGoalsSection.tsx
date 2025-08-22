@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -53,6 +53,19 @@ export const EnhancedGoalsSection = ({
 }: EnhancedGoalsSectionProps) => {
   const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
   const [viewingGoal, setViewingGoal] = useState<Goal | null>(null);
+
+  // Update viewingGoal when goals array changes to keep it in sync
+  useEffect(() => {
+    if (viewingGoal) {
+      const updatedGoal = goals.find(goal => goal.id === viewingGoal.id);
+      if (updatedGoal && JSON.stringify(updatedGoal) !== JSON.stringify(viewingGoal)) {
+        setViewingGoal(updatedGoal);
+      } else if (!updatedGoal) {
+        // Goal was deleted or moved, close the dialog
+        setViewingGoal(null);
+      }
+    }
+  }, [goals, viewingGoal]);
 
   // Filter goals by completion status instead of category
   const activeGoals = goals.filter(goal => goal.progress < 100 && !goal.archived);
