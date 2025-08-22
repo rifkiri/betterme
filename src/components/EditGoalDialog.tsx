@@ -88,11 +88,11 @@ export const EditGoalDialog = ({
       console.log('Available habits:', habits.length);
       console.log('Goal category:', goal.category);
       
-      // Reset form with goal data
+      // Reset form with goal data (always work category now)
       form.reset({
         title: goal.title,
         description: goal.description || '',
-        category: goal.category,
+        category: 'work',
         subcategory: goal.subcategory ? mapSubcategoryDatabaseToDisplay(goal.subcategory) : "none",
         deadline: goal.deadline,
         selectedOutputIds: [],
@@ -145,11 +145,11 @@ export const EditGoalDialog = ({
       deadline = new Date(deadline.getFullYear(), deadline.getMonth(), deadline.getDate(), 23, 59, 59, 999);
     }
 
-    // Save the goal updates
+    // Save the goal updates (always work category)
     onSave(goal.id, {
       title: data.title,
       description: data.description,
-      category: data.category,
+      category: 'work',
       subcategory: data.subcategory === "none" ? undefined : mapSubcategoryDisplayToDatabase(data.subcategory),
       deadline: deadline,
     });
@@ -334,7 +334,7 @@ export const EditGoalDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
         <DialogHeader className="shrink-0">
-          <DialogTitle>Edit Goal</DialogTitle>
+          <DialogTitle>Edit Work Goal</DialogTitle>
         </DialogHeader>
         
         <ScrollArea className="flex-1 px-1">
@@ -347,7 +347,7 @@ export const EditGoalDialog = ({
                   <FormItem>
                     <FormLabel>Goal Title *</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Complete 10 tasks this week" {...field} />
+                      <Input placeholder="e.g., Complete project milestone" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -362,33 +362,11 @@ export const EditGoalDialog = ({
                     <FormLabel>Description</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="Optional description of your goal" 
+                        placeholder="Optional description of your work goal" 
                         className="min-h-[60px]"
                         {...field} 
                       />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="work">Work</SelectItem>
-                        <SelectItem value="personal">Personal</SelectItem>
-                      </SelectContent>
-                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -408,7 +386,7 @@ export const EditGoalDialog = ({
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="none">No subcategory</SelectItem>
-                        {getSubcategoryOptions(form.watch('category')).map((subcategory) => (
+                        {getSubcategoryOptions('work').map((subcategory) => (
                           <SelectItem key={subcategory} value={subcategory}>
                             {subcategory}
                           </SelectItem>
