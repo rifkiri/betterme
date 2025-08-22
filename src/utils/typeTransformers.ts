@@ -49,7 +49,7 @@ export const transformTaskRow = (row: any): Task => ({
   title: row.title,
   description: row.description,
   dueDate: new Date(row.due_date),
-  priority: row.priority, // Keep database values as-is
+  priority: row.priority, // Database already uses lowercase
   taggedUsers: row.tagged_users || [],
   completed: row.completed,
   isMoved: row.is_moved,
@@ -65,7 +65,7 @@ export const transformTaskToRow = (task: Partial<Task>) => ({
   title: task.title,
   description: task.description,
   due_date: task.dueDate?.toISOString().split('T')[0], // Date only
-  priority: task.priority?.toLowerCase(), // Convert to lowercase for database
+  priority: task.priority, // Already lowercase
   tagged_users: task.taggedUsers,
   completed: task.completed,
   user_id: task.userId,

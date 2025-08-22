@@ -36,7 +36,7 @@ export const TaskForm = ({
     defaultValues: initialValues || {
       title: '',
       description: '',
-      priority: 'Medium',
+      priority: 'medium',
       estimatedTime: '',
       dueDate: new Date(),
       weeklyOutputId: undefined,
@@ -100,9 +100,9 @@ export const TaskForm = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="High">High</SelectItem>
-                    <SelectItem value="Medium">Medium</SelectItem>
-                    <SelectItem value="Low">Low</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
