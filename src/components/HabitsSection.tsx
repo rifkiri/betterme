@@ -26,6 +26,7 @@ interface HabitsSectionProps {
   onArchiveHabit: (id: string) => void;
   onRestoreHabit: (id: string) => void;
   onPermanentlyDeleteHabit: (id: string) => void;
+  isLoading?: boolean;
   goals?: Goal[];
 }
 
@@ -40,14 +41,13 @@ export const HabitsSection = ({
   onArchiveHabit,
   onRestoreHabit,
   onPermanentlyDeleteHabit,
+  isLoading = false,
   goals = []
 }: HabitsSectionProps) => {
   const [togglingHabitId, setTogglingHabitId] = useState<string | null>(null);
   const [streakDialogHabit, setStreakDialogHabit] = useState<Habit | null>(null);
   const [viewingHabit, setViewingHabit] = useState<Habit | null>(null);
 
-  console.log('HabitsSection rendering with habits:', habits);
-  console.log('Habit linkedGoalIds:', habits.map(h => ({ id: h.id, name: h.name, linkedGoalId: h.linkedGoalId })));
 
   const handleToggleHabit = async (id: string) => {
     console.log('Toggling habit:', id);
@@ -93,12 +93,17 @@ export const HabitsSection = ({
           onDateChange={onDateChange} 
         />
         
-        {habits.length === 0 ? (
-          <div className="text-center py-4 text-gray-500">
+        {isLoading ? (
+          <div className="text-center py-4 text-muted-foreground">
+            <p>Loading habits...</p>
+          </div>
+        ) : habits.length === 0 ? (
+          <div className="text-center py-4 text-muted-foreground">
             <p>No habits yet. Add your first habit to start building streaks!</p>
           </div>
         ) : (
-          habits.map(habit => (
+          <div key={`habits-${habits.length}-goals-${goals.length}`}>
+            {habits.map(habit => (
             <div key={habit.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center space-x-3">
                 <button 
@@ -157,7 +162,8 @@ export const HabitsSection = ({
                 </Button>
               </div>
             </div>
-          ))
+            ))}
+          </div>
         )}
       </CardContent>
 
