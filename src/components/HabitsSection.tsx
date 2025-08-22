@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 
 interface HabitsSectionProps {
   habits: Habit[];
+  archivedHabits?: Habit[];
   selectedDate: Date;
   onDateChange: (date: Date) => void;
   onToggleHabit: (id: string) => void;
@@ -24,7 +25,8 @@ interface HabitsSectionProps {
 }
 
 export const HabitsSection = ({ 
-  habits, 
+  habits,
+  archivedHabits = [],
   selectedDate, 
   onDateChange, 
   onToggleHabit, 

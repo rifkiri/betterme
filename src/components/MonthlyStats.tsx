@@ -17,7 +17,7 @@ export const MonthlyStats = ({ tasks, outputs, habits, monthDays }: MonthlyStats
   const taskCompletionRate = tasks.length > 0 ? (completedTasks.length / tasks.length) * 100 : 0;
   const outputCompletionRate = outputs.length > 0 ? (completedOutputs.length / outputs.length) * 100 : 0;
   
-  const highPriorityTasks = tasks.filter(task => task.priority === 'High');
+  const highPriorityTasks = tasks.filter(task => task.priority === 'high' || task.priority === 'urgent');
   const highPriorityCompleted = highPriorityTasks.filter(task => task.completed).length;
   const highPriorityRate = highPriorityTasks.length > 0 ? (highPriorityCompleted / highPriorityTasks.length) * 100 : 0;
 

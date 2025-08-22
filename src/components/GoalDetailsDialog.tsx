@@ -304,10 +304,10 @@ const getCategoryColor = (category: Goal['category']) => {
                             )}
                           </div>
                           <div className="flex items-center gap-2">
-                            <Badge variant={
+                             <Badge variant={
                               task.completed ? 'default' : 
-                              task.priority === 'High' ? 'destructive' :
-                              task.priority === 'Medium' ? 'secondary' : 'outline'
+                              task.priority === 'high' ? 'destructive' :
+                              task.priority === 'medium' ? 'secondary' : 'outline'
                             } className="text-xs">
                               {task.priority}
                             </Badge>

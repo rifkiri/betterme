@@ -36,7 +36,7 @@ export const useProductivity = () => {
 
   const weeklyOutputsManager = useWeeklyOutputsManager({
     userId: productivityData.userId,
-    isGoogleSheetsAvailable: () => true, // Fix: return boolean instead of function
+    isGoogleSheetsAvailable: true,
     loadAllData: productivityData.loadAllData,
     weeklyOutputs: productivityData.weeklyOutputs,
     setWeeklyOutputs: productivityData.setWeeklyOutputs,

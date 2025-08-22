@@ -122,10 +122,16 @@ export const EnhancedGoalsSection = ({
           availableUsers={availableUsers}
           currentUserId={currentUserId}
           userRole={userRole}
-          onEdit={showActions ? (goal) => setEditingGoal(goal) : undefined}
-          onDelete={showActions ? onDeleteGoal : undefined}
+          onEditGoal={showActions ? (id, updates) => {
+            const goal = goals.find(g => g.id === id);
+            if (goal) setEditingGoal({ ...goal, ...updates });
+          } : () => {}}
+          onDeleteGoal={showActions ? onDeleteGoal : () => {}}
           onUpdateProgress={onUpdateGoalProgress}
-          onLinkGoals={(goalId) => setLinkingGoalId(goalId)}
+          onMoveGoal={(id, newDeadline) => {
+            // Handle move goal logic
+            console.log('Move goal:', id, newDeadline);
+          }}
           onJoinGoal={handleJoinGoal}
           onLeaveGoal={handleLeaveGoal}
         />
