@@ -191,7 +191,7 @@ export const EditGoalDialog = ({
           
           if (shouldUnlink) {
             console.log('Unlinking output:', outputId, 'from goal:', goal.id);
-            await supabaseWeeklyOutputsService.updateWeeklyOutput(outputId, currentUser.id, { linkedGoalId: undefined });
+            await supabaseWeeklyOutputsService.updateWeeklyOutput(outputId, currentUser.id, { linkedGoalId: null });
           }
         }
         
