@@ -23,7 +23,7 @@ interface OutputDetailsDialogProps {
   output: WeeklyOutput;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onEditWeeklyOutput: (id: string, updates: Partial<WeeklyOutput>) => void;
+  onEditWeeklyOutput: (id: string, updates: Partial<WeeklyOutput>) => Promise<void>;
   onUpdateProgress: (outputId: string, newProgress: number) => void;
   goals: Goal[];
   tasks: Task[];

@@ -28,7 +28,7 @@ interface EditHabitDialogProps {
   habit: Habit;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (habitId: string, updates: Partial<Habit>) => void;
+  onSave: (habitId: string, updates: Partial<Habit>) => Promise<void>;
   onRefresh?: () => void;
 }
 
@@ -54,7 +54,7 @@ export const EditHabitDialog = ({ habit, open, onOpenChange, onSave, onRefresh }
     }
   });
 
-  const handleSubmit = (values: HabitFormValues) => {
+  const handleSubmit = async (values: HabitFormValues) => {
     console.log('EditHabitDialog - Form submitted with values:', values);
     console.log('EditHabitDialog - Original habit linkedGoalId:', habit.linkedGoalId);
     console.log('EditHabitDialog - About to call onSave with habit ID:', habit.id);
@@ -69,14 +69,10 @@ export const EditHabitDialog = ({ habit, open, onOpenChange, onSave, onRefresh }
     console.log('EditHabitDialog - Sending updates to onSave:', updates);
     console.log('EditHabitDialog - linkedGoalId will be set to:', updates.linkedGoalId);
     
-    onSave(habit.id, updates);
+    await onSave(habit.id, updates);
     
-    // Add a small delay before refreshing to ensure database update propagates
-    setTimeout(() => {
-      console.log('EditHabitDialog - Calling onRefresh after delay');
-      onRefresh?.();
-    }, 100);
-    
+    console.log('EditHabitDialog - onSave completed, calling onRefresh');
+    onRefresh?.();
     onOpenChange(false);
   };
 

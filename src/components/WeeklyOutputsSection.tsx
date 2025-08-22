@@ -18,7 +18,7 @@ interface WeeklyOutputsSectionProps {
   tasks: Task[];
   goals?: Goal[];
   onAddWeeklyOutput: (output: Omit<WeeklyOutput, 'id' | 'createdDate'>) => Promise<void>;
-  onEditWeeklyOutput: (id: string, updates: Partial<WeeklyOutput>) => void;
+  onEditWeeklyOutput: (id: string, updates: Partial<WeeklyOutput>) => Promise<void>;
   onUpdateProgress: (outputId: string, newProgress: number) => void;
   onMoveWeeklyOutput: (id: string, newDueDate: Date) => void;
   onDeleteWeeklyOutput: (id: string) => void;

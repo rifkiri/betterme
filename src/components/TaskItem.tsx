@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface TaskItemProps {
   task: Task;
   onToggleTask: (id: string) => void;
-  onEditTask: (id: string, updates: Partial<Task>) => void;
+  onEditTask: (id: string, updates: Partial<Task>) => Promise<void>;
   onMoveTask: (taskId: string, targetDate: Date) => void;
   onDeleteTask: (id: string) => void;
   onViewDetails?: () => void;

@@ -11,17 +11,17 @@ interface EditTaskDialogProps {
   task: Task;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (taskId: string, updates: Partial<Task>) => void;
+  onSave: (taskId: string, updates: Partial<Task>) => Promise<void>;
   weeklyOutputs: WeeklyOutput[];
   onRefresh?: () => void;
 }
 
 export const EditTaskDialog = ({ task, open, onOpenChange, onSave, weeklyOutputs, onRefresh }: EditTaskDialogProps) => {
-  const handleSubmit = (values: TaskFormValues) => {
+  const handleSubmit = async (values: TaskFormValues) => {
     console.log('EditTaskDialog - Form values received:', values);
     console.log('EditTaskDialog - About to call onSave with task ID:', task.id);
     
-    onSave(task.id, {
+    await onSave(task.id, {
       title: values.title,
       description: values.description || undefined,
       priority: values.priority,
@@ -31,12 +31,8 @@ export const EditTaskDialog = ({ task, open, onOpenChange, onSave, weeklyOutputs
       taggedUsers: values.taggedUsers || []
     });
     
-    // Add a small delay before refreshing to ensure database update propagates
-    setTimeout(() => {
-      console.log('EditTaskDialog - Calling onRefresh after delay');
-      onRefresh?.();
-    }, 100);
-    
+    console.log('EditTaskDialog - onSave completed, calling onRefresh');
+    onRefresh?.();
     onOpenChange(false);
   };
 

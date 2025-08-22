@@ -23,7 +23,7 @@ interface TaskDetailsDialogProps {
   task: Task | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onEditTask: (id: string, updates: Partial<Task>) => void;
+  onEditTask: (id: string, updates: Partial<Task>) => Promise<void>;
   onToggleTask: (id: string) => void;
   weeklyOutputs: WeeklyOutput[];
   goals: Goal[];

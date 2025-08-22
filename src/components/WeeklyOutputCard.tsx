@@ -13,7 +13,7 @@ import { OutputDetailsDialog } from './OutputDetailsDialog';
 
 interface WeeklyOutputCardProps {
   output: WeeklyOutput;
-  onEditWeeklyOutput: (id: string, updates: Partial<WeeklyOutput>) => void;
+  onEditWeeklyOutput: (id: string, updates: Partial<WeeklyOutput>) => Promise<void>;
   onUpdateProgress: (outputId: string, newProgress: number) => void;
   onMoveWeeklyOutput: (id: string, newDueDate: Date) => void;
   onDeleteWeeklyOutput: (id: string) => void;

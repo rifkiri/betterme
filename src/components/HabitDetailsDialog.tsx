@@ -55,10 +55,10 @@ export const HabitDetailsDialog = ({
   console.log('HabitDetailsDialog - Available goals:', goals?.length || 0, goals?.map(g => ({ id: g.id, title: g.title })));
   console.log('HabitDetailsDialog - Found linkedGoal:', linkedGoal);
 
-  const handleEditSave = (habitId: string, updates: Partial<Habit>) => {
+  const handleEditSave = async (habitId: string, updates: Partial<Habit>) => {
     console.log('HabitDetailsDialog - handleEditSave called with:', { habitId, updates });
     console.log('HabitDetailsDialog - Current habit before update:', currentHabit);
-    onEditHabit(habitId, updates);
+    await onEditHabit(habitId, updates);
     setShowEditDialog(false);
   };
 

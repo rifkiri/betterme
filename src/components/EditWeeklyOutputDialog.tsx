@@ -29,7 +29,7 @@ interface EditWeeklyOutputDialogProps {
   weeklyOutput: WeeklyOutput;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (outputId: string, updates: Partial<WeeklyOutput>) => void;
+  onSave: (outputId: string, updates: Partial<WeeklyOutput>) => Promise<void>;
   goals?: Goal[];
   onRefresh?: () => void;
 }
@@ -76,19 +76,15 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
     }
 
     // Save the weekly output updates including the linked goal
-    onSave(weeklyOutput.id, {
+    await onSave(weeklyOutput.id, {
       title: values.title,
       description: values.description,
       dueDate: dueDate,
       linkedGoalId: values.linkedGoalId === "none" ? "none" : values.linkedGoalId,
     });
 
-    // Add a small delay before refreshing to ensure database update propagates
-    setTimeout(() => {
-      console.log('EditWeeklyOutputDialog - Calling onRefresh after delay');
-      onRefresh?.();
-    }, 100);
-    
+    console.log('EditWeeklyOutputDialog - onSave completed, calling onRefresh');
+    onRefresh?.();
     onOpenChange(false);
   };
 
