@@ -6,34 +6,36 @@ import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const AppNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    getCurrentUser();
-  }, []);
-
-  const getCurrentUser = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+    const getCurrentUser = async () => {
       if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-        
-        setCurrentUser(profile);
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+          
+          setCurrentUser(profile);
+        } catch (error) {
+          console.error('Error getting current user:', error);
+        }
+      } else {
+        setCurrentUser(null);
       }
-    } catch (error) {
-      console.error('Error getting current user:', error);
-    }
-  };
+    };
+
+    getCurrentUser();
+  }, [user]);
 
   const handleSignOut = async () => {
     try {

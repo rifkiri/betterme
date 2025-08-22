@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react';
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { Habit, Task, WeeklyOutput, Goal } from '@/types/productivity';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const useProductivityData = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -19,40 +19,8 @@ export const useProductivityData = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
-  const [userId, setUserId] = useState<string | null>(null);
-
-  // Initialize auth session and listen for changes
-  useEffect(() => {
-    let mounted = true;
-
-    // Get initial session
-    const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (mounted) {
-        const currentUserId = session?.user?.id || null;
-        console.log('Initial session user ID:', currentUserId);
-        setUserId(currentUserId);
-      }
-    };
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (mounted) {
-          const currentUserId = session?.user?.id || null;
-          console.log('Auth state changed:', event, 'User ID:', currentUserId);
-          setUserId(currentUserId);
-        }
-      }
-    );
-
-    getInitialSession();
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
+  const { user } = useAuth();
+  const userId = user?.id || null;
 
   // Check if Supabase is available
   const isSupabaseAvailable = () => {
