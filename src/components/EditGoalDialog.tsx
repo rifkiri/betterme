@@ -480,8 +480,12 @@ export const EditGoalDialog = ({
                               {availableOutputs.map((output) => (
                                 <CommandItem
                                   key={output.id}
-                                  onSelect={() => toggleOutputSelection(output)}
-                                  className="flex items-center justify-between p-3 bg-background hover:bg-accent"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    toggleOutputSelection(output);
+                                  }}
+                                  className="flex items-center justify-between p-3 bg-background hover:bg-accent cursor-pointer"
                                 >
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
@@ -595,8 +599,12 @@ export const EditGoalDialog = ({
                                     {availableHabits.map((habit) => (
                                       <CommandItem
                                         key={habit.id}
-                                        onSelect={() => toggleHabitSelection(habit)}
-                                        className="flex items-center justify-between p-3 bg-background hover:bg-accent"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          toggleHabitSelection(habit);
+                                        }}
+                                        className="flex items-center justify-between p-3 bg-background hover:bg-accent cursor-pointer"
                                       >
                                         <div className="flex-1">
                                           <div className="flex items-center gap-2 mb-1">
