@@ -139,7 +139,7 @@ export const PersonalGoalEditDialog = ({
         // Unlink removed outputs
         for (const outputId of currentlyLinkedOutputs) {
           if (!outputsToLink.includes(outputId)) {
-            await supabaseWeeklyOutputsService.updateWeeklyOutput(outputId, currentUser.id, { linkedGoalId: undefined });
+            await supabaseWeeklyOutputsService.updateWeeklyOutput(outputId, currentUser.id, { linkedGoalId: null });
           }
         }
       } catch (error) {
@@ -168,7 +168,7 @@ export const PersonalGoalEditDialog = ({
         // Unlink removed habits
         for (const habitId of currentlyLinkedHabits) {
           if (!habitsToLink.includes(habitId)) {
-            await supabaseHabitsService.updateHabit(habitId, currentUser.id, { linkedGoalId: undefined });
+            await supabaseHabitsService.updateHabit(habitId, currentUser.id, { linkedGoalId: null });
           }
         }
       } catch (error) {
