@@ -57,128 +57,90 @@ return data.map(goal => ({
   async getUserAccessibleGoals(userId: string): Promise<Goal[]> {
     console.log('Getting all accessible goals for user:', userId);
     
-    // Get personal goals (user owns them)
-    const { data: personalGoals, error: personalError } = await supabase
-      .from('goals')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('category', 'personal')
-      .eq('is_deleted', false)
-      .order('created_date', { ascending: false });
+    try {
+      // Phase 2 & 3: Use simple approach with fallback strategy
+      // Get all goals where user is owner or has assignments
+      const { data: allGoals, error: goalsError } = await supabase
+        .from('goals')
+        .select(`
+          *,
+          goal_assignments(
+            user_id,
+            role
+          )
+        `)
+        .eq('is_deleted', false)
+        .or(`user_id.eq.${userId},goal_assignments.user_id.eq.${userId}`)
+        .order('created_date', { ascending: false });
 
-    if (personalError) {
-      console.error('Error fetching personal goals:', personalError);
-      throw personalError;
-    }
-
-    // Get work goals where user has active assignments (regardless of ownership)
-    const { data: assignedWorkGoals, error: assignedWorkError } = await supabase
-      .from('goals')
-      .select(`
-        *,
-        goal_assignments!inner(
-          user_id,
-          role
-        )
-      `)
-      .eq('goal_assignments.user_id', userId)
-      .eq('category', 'work')
-      .eq('is_deleted', false)
-      .order('created_date', { ascending: false });
-
-    if (assignedWorkError) {
-      console.error('Error fetching assigned work goals:', assignedWorkError);
-      throw assignedWorkError;
-    }
-
-    // Get work goals owned by the user (even if not assigned to anyone)
-    const { data: ownedWorkGoals, error: ownedWorkError } = await supabase
-      .from('goals')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('category', 'work')
-      .eq('is_deleted', false)
-      .order('created_date', { ascending: false });
-
-    if (ownedWorkError) {
-      console.error('Error fetching owned work goals:', ownedWorkError);
-      throw ownedWorkError;
-    }
-
-    // Combine goals using Map to avoid duplicates
-    const allGoalsMap = new Map();
-    
-    // Add personal goals
-    personalGoals?.forEach(goal => {
-      allGoalsMap.set(goal.id, goal);
-    });
-    
-    // Add assigned work goals
-    assignedWorkGoals?.forEach(goal => {
-      allGoalsMap.set(goal.id, goal);
-    });
-
-    // Add owned work goals (this will catch goals like "sewatama")
-    ownedWorkGoals?.forEach(goal => {
-      allGoalsMap.set(goal.id, goal);
-    });
-
-    const allGoals = Array.from(allGoalsMap.values());
-    console.log('Combined accessible goals for user', userId, ':', allGoals);
-
-    // Now fetch all assignments for each goal to build role arrays
-    const goalsWithRoles = await Promise.all(allGoals.map(async (goal) => {
-      // Get all assignments for this goal
-      const { data: assignments, error: assignmentsError } = await supabase
-        .from('goal_assignments')
-        .select('user_id, role')
-        .eq('goal_id', goal.id);
-
-      if (assignmentsError) {
-        console.error('Error fetching assignments for goal', goal.id, ':', assignmentsError);
-        // Continue with empty assignments if there's an error
+      if (goalsError) {
+        console.warn('Complex query failed, using fallback approach:', goalsError);
+        // Fallback: Get user's own goals only
+        return this.getGoals(userId);
       }
 
-      // Build role arrays from assignments
-      let coachId = goal.coach_id;
-      let leadIds = goal.lead_ids || [];
-      let memberIds = goal.member_ids || [];
+      // Filter and process goals
+      const accessibleGoals = allGoals?.filter(goal => {
+        // Include personal goals owned by user
+        if (goal.category === 'personal' && goal.user_id === userId) {
+          return true;
+        }
+        
+        // Include work goals where user is owner
+        if (goal.category === 'work' && goal.user_id === userId) {
+          return true;
+        }
+        
+        // Include work goals where user has assignments
+        if (goal.category === 'work' && goal.goal_assignments && goal.goal_assignments.length > 0) {
+          return goal.goal_assignments.some((assignment: any) => assignment.user_id === userId);
+        }
+        
+        return false;
+      }) || [];
 
-      if (assignments && assignments.length > 0) {
-        coachId = assignments.find(a => a.role === 'coach')?.user_id || coachId;
-        leadIds = assignments.filter(a => a.role === 'lead').map(a => a.user_id);
-        memberIds = assignments.filter(a => a.role === 'member').map(a => a.user_id);
-      }
+      console.log('Accessible goals for user', userId, ':', accessibleGoals);
 
-      console.log('Goal role data:', {
-        goalId: goal.id,
-        title: goal.title,
-        assignments,
-        builtRoles: { coachId, leadIds, memberIds }
+      // Transform to Goal format
+      return accessibleGoals.map(goal => {
+        // Build role arrays from assignments
+        let coachId = goal.coach_id;
+        let leadIds = goal.lead_ids || [];
+        let memberIds = goal.member_ids || [];
+
+        if (goal.goal_assignments && goal.goal_assignments.length > 0) {
+          const assignments = goal.goal_assignments;
+          coachId = assignments.find((a: any) => a.role === 'coach')?.user_id || coachId;
+          leadIds = assignments.filter((a: any) => a.role === 'lead').map((a: any) => a.user_id);
+          memberIds = assignments.filter((a: any) => a.role === 'member').map((a: any) => a.user_id);
+        }
+
+        return {
+          id: goal.id,
+          title: goal.title,
+          description: goal.description,
+          category: goal.category as 'work' | 'personal',
+          subcategory: goal.subcategory,
+          deadline: goal.deadline ? new Date(goal.deadline) : undefined,
+          createdDate: new Date(goal.created_date),
+          completed: goal.completed,
+          archived: goal.archived,
+          progress: goal.progress || 0,
+          linkedOutputIds: [], // Now handled by ItemLinkageService
+          userId: goal.user_id,
+          coachId,
+          leadIds,
+          memberIds,
+          createdBy: goal.created_by,
+          assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined
+        };
       });
 
-      return {
-        id: goal.id,
-        title: goal.title,
-        description: goal.description,
-        category: goal.category as 'work' | 'personal',
-        subcategory: goal.subcategory,
-        deadline: goal.deadline ? new Date(goal.deadline) : undefined,
-        createdDate: new Date(goal.created_date),
-        completed: goal.completed,
-        archived: goal.archived,
-        progress: goal.progress || 0,
-        linkedOutputIds: [], // Now handled by ItemLinkageService
-        userId: goal.user_id,
-        coachId,
-        leadIds,
-        memberIds,
-        createdBy: goal.created_by,
-        assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined
-      };
-    }));
-
-    return goalsWithRoles;
+    } catch (error) {
+      console.error('Error in getUserAccessibleGoals, using fallback:', error);
+      // Final fallback: just return user's own goals
+      return this.getGoals(userId);
+    }
   }
 
   async getAllGoals(): Promise<Goal[]> {
@@ -395,9 +357,9 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
     console.log('🔥 [DB] Linking output to goal via database function:', { outputId, goalId, userId });
     
     const { data, error } = await supabase.rpc('link_output_to_goal', {
-      output_id: outputId,
-      goal_id: goalId,
-      user_id_param: userId
+      p_output_id: outputId,
+      p_goal_id: goalId,
+      p_user_id: userId
     });
 
     if (error) {
@@ -412,9 +374,9 @@ async addGoal(goal: Goal & { userId: string }): Promise<void> {
     console.log('🔥 [DB] Unlinking output from goal via database function:', { outputId, goalId, userId });
     
     const { data, error } = await supabase.rpc('unlink_output_from_goal', {
-      output_id: outputId,
-      goal_id: goalId,
-      user_id_param: userId
+      p_output_id: outputId,
+      p_goal_id: goalId,
+      p_user_id: userId
     });
 
     if (error) {

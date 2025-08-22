@@ -27,7 +27,7 @@ export class SupabaseWeeklyOutputsService {
       completedDate: output.completed_date ? new Date(output.completed_date) : undefined,
       deletedDate: output.deleted_date ? new Date(output.deleted_date) : undefined,
       createdDate: new Date(output.created_date),
-      linkedGoalId: output.linked_goal_id || undefined
+      linkedGoalId: undefined // Now handled by ItemLinkageService
     }));
   }
 
@@ -124,9 +124,9 @@ export class SupabaseWeeklyOutputsService {
     for (const goalId of goalIds) {
       try {
         const { data, error } = await supabase.rpc('link_output_to_goal', {
-          output_id: outputId,
-          goal_id: goalId,
-          user_id_param: userId
+          p_output_id: outputId,
+          p_goal_id: goalId,
+          p_user_id: userId
         });
 
         if (error) {
@@ -144,9 +144,9 @@ export class SupabaseWeeklyOutputsService {
 
   async unlinkFromGoal(outputId: string, goalId: string, userId: string): Promise<void> {
     const { error } = await supabase.rpc('unlink_output_from_goal', {
-      output_id: outputId,
-      goal_id: goalId,
-      user_id_param: userId
+      p_output_id: outputId,
+      p_goal_id: goalId,
+      p_user_id: userId
     });
 
     if (error) {

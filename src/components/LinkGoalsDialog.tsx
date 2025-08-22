@@ -54,12 +54,8 @@ export const LinkGoalsDialog = ({
     try {
       setLoading(true);
       
-      // Update linkages in item_linkages table (single source of truth for UI)
+      // Update linkages in item_linkages table (single source of truth)
       await itemLinkageService.updateLinks('weekly_output', outputId, 'goal', selectedGoalIds, currentUser.id);
-      
-      // Synchronize back to weekly_outputs table for consistency
-      const { linkageSynchronizationService } = await import('@/services/LinkageSynchronizationService');
-      await linkageSynchronizationService.syncWeeklyOutputCreation(outputId, selectedGoalIds, currentUser.id);
       
       onUpdateLinks(outputId, selectedGoalIds);
       setLinkedGoalIds(selectedGoalIds);
