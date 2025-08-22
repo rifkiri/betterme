@@ -46,7 +46,7 @@ export const HabitsSection = ({
 }: HabitsSectionProps) => {
   const [togglingHabitId, setTogglingHabitId] = useState<string | null>(null);
   const [streakDialogHabit, setStreakDialogHabit] = useState<Habit | null>(null);
-  const [viewingHabit, setViewingHabit] = useState<Habit | null>(null);
+  const [viewingHabitId, setViewingHabitId] = useState<string | null>(null);
 
 
   const handleToggleHabit = async (id: string) => {
@@ -67,13 +67,7 @@ export const HabitsSection = ({
 
   const handleEditHabit = async (id: string, updates: Partial<Habit>) => {
     await onEditHabit(id, updates);
-    // Update viewingHabit with fresh data after edit
-    if (viewingHabit && viewingHabit.id === id) {
-      const updatedHabit = habits.find(h => h.id === id);
-      if (updatedHabit) {
-        setViewingHabit(updatedHabit);
-      }
-    }
+    // No need to update local state since we get fresh data from habits array
   };
 
   const today = isToday(selectedDate);
@@ -156,7 +150,7 @@ export const HabitsSection = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setViewingHabit(habit)}
+                  onClick={() => setViewingHabitId(habit.id)}
                   className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
                   title="View Details"
                 >
@@ -188,14 +182,18 @@ export const HabitsSection = ({
         />
       )}
 
-      {viewingHabit && (
-        <HabitDetailsDialog
-          habit={viewingHabit}
-          open={true}
-          onOpenChange={(open) => !open && setViewingHabit(null)}
-          onEditHabit={handleEditHabit}
-        />
-      )}
+      {viewingHabitId && (() => {
+        const currentHabit = habits.find(h => h.id === viewingHabitId);
+        return currentHabit ? (
+          <HabitDetailsDialog
+            habit={currentHabit}
+            goals={goals}
+            open={true}
+            onOpenChange={(open) => !open && setViewingHabitId(null)}
+            onEditHabit={handleEditHabit}
+          />
+        ) : null;
+      })()}
     </Card>
   );
 };

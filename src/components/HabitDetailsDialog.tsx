@@ -5,14 +5,15 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Edit2, Calendar, Award, Target, Link } from 'lucide-react';
-import { Habit } from '@/types/productivity';
+import { Habit, Goal } from '@/types/productivity';
 import { EditHabitDialog } from './EditHabitDialog';
 import { mapDatabaseToDisplay } from '@/utils/habitCategoryUtils';
-import { useGoals } from '@/hooks/useGoals';
+
 import { format } from 'date-fns';
 
 interface HabitDetailsDialogProps {
   habit: Habit;
+  goals: Goal[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onEditHabit: (id: string, updates: Partial<Habit>) => void;
@@ -20,12 +21,12 @@ interface HabitDetailsDialogProps {
 
 export const HabitDetailsDialog = ({
   habit,
+  goals,
   open,
   onOpenChange,
   onEditHabit
 }: HabitDetailsDialogProps) => {
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const { goals } = useGoals();
 
   // Find the linked goal if one exists
   const linkedGoal = habit.linkedGoalId 
