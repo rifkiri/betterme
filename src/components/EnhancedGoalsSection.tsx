@@ -105,13 +105,13 @@ export const EnhancedGoalsSection = ({
     const linkedHabits = goal.category === 'personal' ? habits.filter(habit => habit.linkedGoalId === goal.id) : [];
     
     // Determine if user owns the goal or is just assigned to it
-    const isGoalOwner = goal.userId === currentUserId;
-    const isAssignedUser = goalUserRole && !isGoalOwner;
+    const isGoalOwner = goal.userId === currentUserId || goal.createdBy === currentUserId;
+    const isAssignedUser = goalUserRole !== null; // User has any role assigned
     const canManageGoal = isGoalOwner || isManager;
     
-    // For work goals, show both Delete (if owner/manager) and Leave (if assigned) options
+    // For work goals, show both Delete (if owner/manager) and Leave (if assigned but not owner)
     const userAssignment = assignments.find(a => a.goalId === goal.id && a.userId === currentUserId);
-    const showLeaveOption = goal.category === 'work' && userAssignment && goalUserRole;
+    const showLeaveOption = goal.category === 'work' && userAssignment && goalUserRole && !isGoalOwner;
     const showDeleteOption = canManageGoal;
 
     return (
