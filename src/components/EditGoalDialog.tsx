@@ -322,16 +322,16 @@ export const EditGoalDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
-        <DialogHeader className="shrink-0">
+      <DialogContent className="sm:max-w-md max-h-[85vh] flex flex-col overflow-hidden">
+        <DialogHeader className="shrink-0 pb-4">
           <DialogTitle>
             {allowFullEdit ? 'Edit Work Goal' : 'Edit Goal Links & Roles'}
           </DialogTitle>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 px-1">
+        <ScrollArea className="flex-1 pr-4 -mr-4">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pb-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pr-2">
               {allowFullEdit && (
                 <>
                   <FormField
@@ -762,7 +762,7 @@ export const EditGoalDialog = ({
           </Form>
         </ScrollArea>
         
-        <div className="flex justify-end space-x-2 pt-4 border-t shrink-0">
+        <div className="flex justify-end space-x-2 pt-4 border-t shrink-0 mt-4">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
