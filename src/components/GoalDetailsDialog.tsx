@@ -357,15 +357,6 @@ const getCategoryColor = (category: Goal['category']) => {
                   .map((assignment) => {
                     const user = availableUsers.find(u => u.id === assignment.userId);
                     
-                    // Debug log for user matching
-                    if (!user) {
-                      console.log('🚨 [USER NOT FOUND]', {
-                        assignmentUserId: assignment.userId,
-                        availableUserIds: availableUsers.map(u => ({ id: u.id, name: u.name })),
-                        assignment: assignment
-                      });
-                    }
-                    
                     return (
                       <div key={assignment.id} className="p-3 border rounded-lg bg-white">
                         <div className="flex items-center justify-between">

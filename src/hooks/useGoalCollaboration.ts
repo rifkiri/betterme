@@ -29,11 +29,13 @@ export const useGoalCollaboration = (userId: string, loadAllData?: () => Promise
     
     try {
       setIsLoading(true);
+      console.log('🔄 [LOADING ASSIGNMENTS] Calling getAllGoalAssignments...');
       // Load ALL assignments to show team members in goal details
       const data = await supabaseGoalAssignmentsService.getAllGoalAssignments();
+      console.log('✅ [ASSIGNMENTS LOADED] Got', data.length, 'assignments:', data);
       setAssignments(data);
     } catch (error) {
-      console.error('Error loading goal assignments:', error);
+      console.error('❌ [ASSIGNMENTS FAILED] Error loading goal assignments:', error);
     } finally {
       setIsLoading(false);
     }
