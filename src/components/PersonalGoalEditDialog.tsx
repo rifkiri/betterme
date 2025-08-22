@@ -77,10 +77,6 @@ export const PersonalGoalEditDialog = ({
   // Initialize form when dialog opens
   useEffect(() => {
     if (open && goal && goal.category === 'personal') {
-      console.log('=== PERSONAL GOAL EDIT DIALOG INITIALIZING ===');
-      console.log('Goal:', goal);
-      console.log('Available habits:', habits.length);
-      
       // Reset form with goal data
       form.reset({
         title: goal.title,
@@ -107,7 +103,6 @@ export const PersonalGoalEditDialog = ({
     const goalLinkedHabits = habits.filter(habit => habit.linkedGoalId === goal.id);
     setSelectedHabits(goalLinkedHabits);
     form.setValue('selectedHabitIds', goalLinkedHabits.map(h => h.id));
-    console.log('Loaded linked habits:', goalLinkedHabits.length);
   };
 
   const onSubmit = async (data: FormData) => {

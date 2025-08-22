@@ -9,6 +9,7 @@ import { EditGoalDialog } from './EditGoalDialog';
 import { PersonalGoalEditDialog } from './PersonalGoalEditDialog';
 import { MoveGoalDialog } from './MoveGoalDialog';
 import { GoalDetailsDialog } from './GoalDetailsDialog';
+import { mapSubcategoryDatabaseToDisplay } from '@/utils/goalCategoryUtils';
 
 interface GoalCardProps {
   goal: Goal;
@@ -65,9 +66,16 @@ const getCategoryColor = (category: Goal['category']) => {
             <div className="cursor-pointer hover:bg-blue-100 rounded p-1 -m-1 transition-colors" onClick={() => setShowDetailsDialog(true)}>
               <div className="flex items-center gap-2 mb-2">
                 <p className="text-sm text-gray-700 leading-relaxed flex-1">{goal.title}</p>
-                <Badge className={`text-xs ${getCategoryColor(goal.category)}`}>
-                  {goal.category}
-                </Badge>
+                <div className="flex items-center gap-1">
+                  <Badge className={`text-xs ${getCategoryColor(goal.category)}`}>
+                    {goal.category}
+                  </Badge>
+                  {goal.subcategory && (
+                    <Badge variant="outline" className="text-xs">
+                      {mapSubcategoryDatabaseToDisplay(goal.subcategory)}
+                    </Badge>
+                  )}
+                </div>
               </div>
               {goal.description && (
                 <p className="text-xs text-gray-600 mb-2">{goal.description}</p>

@@ -83,11 +83,6 @@ export const EditGoalDialog = ({
   // Initialize form when dialog opens
   useEffect(() => {
     if (open && goal) {
-      console.log('=== INITIALIZING EDIT GOAL DIALOG ===');
-      console.log('Goal:', goal);
-      console.log('Available habits:', habits.length);
-      console.log('Goal category:', goal.category);
-      
       // Reset form with goal data (always work category now)
       form.reset({
         title: goal.title,
@@ -115,10 +110,8 @@ export const EditGoalDialog = ({
       const goalLinkedHabits = habits.filter(habit => habit.linkedGoalId === goal.id);
       setSelectedHabits(goalLinkedHabits);
       form.setValue('selectedHabitIds', goalLinkedHabits.map(h => h.id));
-      console.log('Loaded linked habits for personal goal:', goalLinkedHabits.length);
     } else {
       setSelectedHabits([]);
-      console.log('Cleared habits for work goal');
     }
 
     // Load goal assignments for work goals
@@ -324,11 +317,6 @@ export const EditGoalDialog = ({
   // Check if goal is personal (use goal prop directly for reliability)
   const isPersonalGoal = goal.category === 'personal';
   const isWorkGoal = goal.category === 'work';
-
-  console.log('=== RENDER DEBUG ===');
-  console.log('Goal category:', goal.category);
-  console.log('Is personal goal:', isPersonalGoal);
-  console.log('Available habits:', availableHabits.length);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -19,6 +19,7 @@ import { useState, useEffect } from 'react';
 import { EditGoalDialog } from './EditGoalDialog';
 import { PersonalGoalEditDialog } from './PersonalGoalEditDialog';
 import { useHabits } from '@/hooks/useHabits';
+import { mapSubcategoryDatabaseToDisplay } from '@/utils/goalCategoryUtils';
 
 interface GoalDetailsDialogProps {
   goal: Goal;
@@ -117,11 +118,21 @@ const getCategoryColor = (category: Goal['category']) => {
             {/* Goal Overview */}
             <div className="space-y-3">
               <div className="flex items-start justify-between gap-2">
-                <h3 className="text-lg font-semibold text-gray-900">{goal.title}</h3>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">{goal.title}</h3>
+                  {goal.description && (
+                    <p className="text-sm text-gray-600 mb-2">{goal.description}</p>
+                  )}
+                </div>
                 <div className="flex items-center gap-2">
                   <Badge className={`text-xs ${getCategoryColor(goal.category)}`}>
                     {goal.category}
                   </Badge>
+                  {goal.subcategory && (
+                    <Badge variant="outline" className="text-xs">
+                      {mapSubcategoryDatabaseToDisplay(goal.subcategory)}
+                    </Badge>
+                  )}
                   {isOverdue && (
                     <Badge variant="destructive" className="text-xs">
                       <Clock className="h-3 w-3 mr-1" />
@@ -136,10 +147,6 @@ const getCategoryColor = (category: Goal['category']) => {
                   )}
                 </div>
               </div>
-
-              {goal.description && (
-                <p className="text-sm text-gray-600">{goal.description}</p>
-              )}
 
               <div className="grid grid-cols-1 gap-4 p-3 bg-gray-50 rounded-lg">
                 <div>
