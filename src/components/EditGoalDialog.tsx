@@ -30,7 +30,8 @@ const formSchema = z.object({
   category: z.enum(['work', 'personal']),
   subcategory: z.string().optional(),
   deadline: z.date().optional(),
-  selectedOutputIds: z.array(z.string()).optional(),
+      selectedOutputIds: z.array(z.string()).optional(),
+      selectedHabitIds: z.array(z.string()).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -49,8 +50,10 @@ interface EditGoalDialogProps {
 
 export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, onRefresh, weeklyOutputs = [], habits = [], assignments = [], availableUsers = [] }: EditGoalDialogProps) => {
   const [selectedOutputs, setSelectedOutputs] = useState<WeeklyOutput[]>([]);
+  const [selectedHabits, setSelectedHabits] = useState<Habit[]>([]);
   const [linkedHabits, setLinkedHabits] = useState<Habit[]>([]);
   const [isOutputDropdownOpen, setIsOutputDropdownOpen] = useState(false);
+  const [isHabitDropdownOpen, setIsHabitDropdownOpen] = useState(false);
   const [goalAssignments, setGoalAssignments] = useState<GoalAssignment[]>([]);
   const [selectedCoach, setSelectedCoach] = useState<string>('');
   const [selectedLead, setSelectedLead] = useState<string>('');
@@ -66,6 +69,7 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, onRefresh, we
       subcategory: goal.subcategory ? mapSubcategoryDatabaseToDisplay(goal.subcategory) : "none",
       deadline: goal.deadline,
       selectedOutputIds: [],
+      selectedHabitIds: [],
     },
   });
 
@@ -77,9 +81,16 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, onRefresh, we
         setSelectedOutputs(goalLinkedOutputs);
         form.setValue('selectedOutputIds', goalLinkedOutputs.map(o => o.id));
         
-        // For habits on personal goals, we'll skip this for now to simplify
-        // This focuses on fixing the weekly output linking issue first
-        setLinkedHabits([]);
+        // Find habits linked to this goal for personal goals
+        if (goal.category === 'personal') {
+          const goalLinkedHabits = habits.filter(habit => habit.linkedGoalId === goal.id);
+          setSelectedHabits(goalLinkedHabits);
+          setLinkedHabits(goalLinkedHabits);
+          form.setValue('selectedHabitIds', goalLinkedHabits.map(h => h.id));
+        } else {
+          setSelectedHabits([]);
+          setLinkedHabits([]);
+        }
 
         // Load goal assignments for work goals
         if (goal.category === 'work') {
@@ -157,6 +168,38 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, onRefresh, we
         }
       } catch (error) {
         console.error('Error updating output links:', error);
+      }
+    }
+
+    // Update habit linkages for personal goals
+    if (goal.category === 'personal' && currentUser?.id && data.selectedHabitIds) {
+      try {
+        const { supabaseHabitsService } = await import('@/services/SupabaseHabitsService');
+        
+        // Find habits that should be linked to this goal
+        const habitsToLink = data.selectedHabitIds;
+        const currentlyLinkedHabits = habits.filter(habit => habit.linkedGoalId === goal.id).map(h => h.id);
+        
+        // Update habits that need to be linked
+        for (const habitId of habitsToLink) {
+          if (!currentlyLinkedHabits.includes(habitId)) {
+            // Link this habit to the goal by updating its linkedGoalId
+            const habitToUpdate = habits.find(h => h.id === habitId);
+            if (habitToUpdate) {
+              await supabaseHabitsService.updateHabit(habitId, currentUser.id, { linkedGoalId: goal.id });
+            }
+          }
+        }
+        
+        // Update habits that need to be unlinked
+        for (const habitId of currentlyLinkedHabits) {
+          if (!habitsToLink.includes(habitId)) {
+            // Unlink this habit from the goal
+            await supabaseHabitsService.updateHabit(habitId, currentUser.id, { linkedGoalId: undefined });
+          }
+        }
+      } catch (error) {
+        console.error('Error updating habit links:', error);
       }
     }
 
@@ -250,6 +293,31 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, onRefresh, we
     form.setValue('selectedOutputIds', newIds);
   };
 
+  const toggleHabitSelection = (habit: Habit) => {
+    const currentIds = form.getValues('selectedHabitIds') || [];
+    const isSelected = currentIds.includes(habit.id);
+    
+    if (isSelected) {
+      const newIds = currentIds.filter(id => id !== habit.id);
+      const newSelectedHabits = selectedHabits.filter(h => h.id !== habit.id);
+      setSelectedHabits(newSelectedHabits);
+      form.setValue('selectedHabitIds', newIds);
+    } else {
+      const newIds = [...currentIds, habit.id];
+      const newSelectedHabits = [...selectedHabits, habit];
+      setSelectedHabits(newSelectedHabits);
+      form.setValue('selectedHabitIds', newIds);
+    }
+  };
+
+  const removeHabit = (habitId: string) => {
+    const currentIds = form.getValues('selectedHabitIds') || [];
+    const newIds = currentIds.filter(id => id !== habitId);
+    const newSelectedHabits = selectedHabits.filter(h => h.id !== habitId);
+    setSelectedHabits(newSelectedHabits);
+    form.setValue('selectedHabitIds', newIds);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
@@ -292,6 +360,28 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, onRefresh, we
             )}
             />
 
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Category</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="work">Work</SelectItem>
+                      <SelectItem value="personal">Personal</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {/* Subcategory Field */}
             <FormField
               control={form.control}
@@ -312,28 +402,6 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, onRefresh, we
                           {subcategory}
                         </SelectItem>
                       ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Category</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="work">Work</SelectItem>
-                      <SelectItem value="personal">Personal</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -504,6 +572,119 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, onRefresh, we
               />
             )}
 
+            {/* Habit Linking Section for Personal Goals */}
+            {form.watch('category') === 'personal' && habits.length > 0 && (
+              <FormField
+                control={form.control}
+                name="selectedHabitIds"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Target className="h-4 w-4" />
+                      Link to Habits (Optional)
+                    </FormLabel>
+                    
+                    <Popover open={isHabitDropdownOpen} onOpenChange={setIsHabitDropdownOpen}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className="w-full justify-between"
+                          >
+                            {selectedHabits.length === 0 
+                              ? "Select habits to link..." 
+                              : `${selectedHabits.length} habit${selectedHabits.length !== 1 ? 's' : ''} selected`
+                            }
+                            <Target className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Search habits..." />
+                          <CommandList>
+                            <CommandEmpty>No habits found.</CommandEmpty>
+                            <CommandGroup>
+                              {habits.filter(habit => !habit.archived && !habit.isDeleted).map((habit) => (
+                                <CommandItem
+                                  key={habit.id}
+                                  onSelect={() => toggleHabitSelection(habit)}
+                                  className="flex items-center justify-between p-3"
+                                >
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className="font-medium text-sm">{habit.name}</span>
+                                      {habit.streak > 0 && (
+                                        <Badge variant="secondary" className="text-xs">
+                                          {habit.streak} day streak
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    {habit.description && (
+                                      <p className="text-xs text-muted-foreground">{habit.description}</p>
+                                    )}
+                                    {habit.category && (
+                                      <div className="flex items-center gap-1 mt-1">
+                                        <span className="text-xs text-muted-foreground">
+                                          Category: {habit.category}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="ml-2">
+                                    {(field.value || []).includes(habit.id) && (
+                                      <div className="h-4 w-4 bg-primary rounded-sm flex items-center justify-center">
+                                        <span className="text-xs text-primary-foreground">✓</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+
+                    {/* Selected Habits Display */}
+                    {selectedHabits.length > 0 && (
+                      <div className="mt-3 p-3 bg-muted rounded-lg">
+                        <div className="text-sm font-medium mb-2">
+                          Selected Habits ({selectedHabits.length}):
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedHabits.map((habit) => (
+                            <Badge 
+                              key={habit.id} 
+                              variant="secondary" 
+                              className="flex items-center gap-1"
+                            >
+                              {habit.name}
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-4 w-4 p-0 hover:bg-transparent"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  removeHabit(habit.id);
+                                }}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             {/* Work Goal Role Assignments - only show for work goals */}
             {form.watch('category') === 'work' && availableUsers.length > 0 && (
               <Card className="p-4 bg-blue-50 border-blue-200">
@@ -593,7 +774,7 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, onRefresh, we
             )}
 
             {/* Current Linked Items Display */}
-            {(selectedOutputs.length > 0 || linkedHabits.length > 0) && (
+            {(selectedOutputs.length > 0 || selectedHabits.length > 0) && (
               <div className="space-y-3">
                 <div className="text-sm font-medium text-gray-700 border-t pt-4">
                   Current Linked Items
@@ -616,13 +797,13 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, onRefresh, we
                 )}
 
                 {/* Current Linked Habits (Personal Goals Only) */}
-                {goal.category === 'personal' && linkedHabits.length > 0 && (
+                {goal.category === 'personal' && selectedHabits.length > 0 && (
                   <div className="space-y-2">
                     <div className="text-sm text-gray-600">
-                      Linked Habits ({linkedHabits.length}):
+                      Linked Habits ({selectedHabits.length}):
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {linkedHabits.map((habit) => (
+                      {selectedHabits.map((habit) => (
                         <Badge key={habit.id} variant="outline" className="text-xs">
                           {habit.name} 
                           {habit.streak > 0 && (
