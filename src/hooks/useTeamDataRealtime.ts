@@ -54,7 +54,7 @@ export const useTeamDataRealtime = () => {
     subscriptionsRef.current = [];
 
     // Subscribe to changes in relevant tables
-    const tables = ['profiles', 'habits', 'tasks', 'weekly_outputs', 'mood_entries'];
+    const tables = ['profiles', 'habits', 'tasks', 'weekly_outputs', 'mood_entries', 'goals', 'goal_assignments', 'goal_notifications'];
     
     tables.forEach(tableName => {
       const channel = supabase

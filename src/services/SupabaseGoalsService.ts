@@ -44,11 +44,7 @@ return data.map(goal => ({
       completed: goal.completed,
       archived: goal.archived,
       progress: goal.progress || 0,
-      linkedOutputIds: [], // Now handled by ItemLinkageService
       userId: goal.user_id,
-      coachId: goal.coach_id,
-      leadIds: goal.lead_ids || [],
-      memberIds: goal.member_ids || [],
       createdBy: goal.created_by,
       assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined
     }));
@@ -57,90 +53,67 @@ return data.map(goal => ({
   async getUserAccessibleGoals(userId: string): Promise<Goal[]> {
     console.log('Getting all accessible goals for user:', userId);
     
-    try {
-      // Phase 2 & 3: Use simple approach with fallback strategy
-      // Get all goals where user is owner or has assignments
-      const { data: allGoals, error: goalsError } = await supabase
-        .from('goals')
-        .select(`
-          *,
-          goal_assignments(
-            user_id,
-            role
-          )
-        `)
-        .eq('is_deleted', false)
-        .or(`user_id.eq.${userId},goal_assignments.user_id.eq.${userId}`)
-        .order('created_date', { ascending: false });
+    // Clean approach: Get goals where user is owner OR has assignments
+    const { data: allGoals, error: goalsError } = await supabase
+      .from('goals')
+      .select(`
+        *,
+        goal_assignments(
+          user_id,
+          role
+        )
+      `)
+      .eq('is_deleted', false)
+      .or(`user_id.eq.${userId},goal_assignments.user_id.eq.${userId}`)
+      .order('created_date', { ascending: false });
 
-      if (goalsError) {
-        console.warn('Complex query failed, using fallback approach:', goalsError);
-        // Fallback: Get user's own goals only
-        return this.getGoals(userId);
-      }
-
-      // Filter and process goals
-      const accessibleGoals = allGoals?.filter(goal => {
-        // Include personal goals owned by user
-        if (goal.category === 'personal' && goal.user_id === userId) {
-          return true;
-        }
-        
-        // Include work goals where user is owner
-        if (goal.category === 'work' && goal.user_id === userId) {
-          return true;
-        }
-        
-        // Include work goals where user has assignments
-        if (goal.category === 'work' && goal.goal_assignments && goal.goal_assignments.length > 0) {
-          return goal.goal_assignments.some((assignment: any) => assignment.user_id === userId);
-        }
-        
-        return false;
-      }) || [];
-
-      console.log('Accessible goals for user', userId, ':', accessibleGoals);
-
-      // Transform to Goal format
-      return accessibleGoals.map(goal => {
-        // Build role arrays from assignments
-        let coachId = goal.coach_id;
-        let leadIds = goal.lead_ids || [];
-        let memberIds = goal.member_ids || [];
-
-        if (goal.goal_assignments && goal.goal_assignments.length > 0) {
-          const assignments = goal.goal_assignments;
-          coachId = assignments.find((a: any) => a.role === 'coach')?.user_id || coachId;
-          leadIds = assignments.filter((a: any) => a.role === 'lead').map((a: any) => a.user_id);
-          memberIds = assignments.filter((a: any) => a.role === 'member').map((a: any) => a.user_id);
-        }
-
-        return {
-          id: goal.id,
-          title: goal.title,
-          description: goal.description,
-          category: goal.category as 'work' | 'personal',
-          subcategory: goal.subcategory,
-          deadline: goal.deadline ? new Date(goal.deadline) : undefined,
-          createdDate: new Date(goal.created_date),
-          completed: goal.completed,
-          archived: goal.archived,
-          progress: goal.progress || 0,
-          linkedOutputIds: [], // Now handled by ItemLinkageService
-          userId: goal.user_id,
-          coachId,
-          leadIds,
-          memberIds,
-          createdBy: goal.created_by,
-          assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined
-        };
-      });
-
-    } catch (error) {
-      console.error('Error in getUserAccessibleGoals, using fallback:', error);
-      // Final fallback: just return user's own goals
-      return this.getGoals(userId);
+    if (goalsError) {
+      console.error('Error fetching accessible goals:', goalsError);
+      throw goalsError;
     }
+
+    if (!allGoals) {
+      return [];
+    }
+
+    // Filter and transform goals
+    const accessibleGoals = allGoals.filter(goal => {
+      // Include personal goals owned by user
+      if (goal.category === 'personal' && goal.user_id === userId) {
+        return true;
+      }
+      
+      // Include work goals where user is owner
+      if (goal.category === 'work' && goal.user_id === userId) {
+        return true;
+      }
+      
+      // Include work goals where user has assignments
+      if (goal.category === 'work' && goal.goal_assignments && goal.goal_assignments.length > 0) {
+        return goal.goal_assignments.some((assignment: any) => assignment.user_id === userId);
+      }
+      
+      return false;
+    });
+
+    console.log('Accessible goals for user', userId, ':', accessibleGoals.length);
+
+    // Transform to Goal format (no legacy arrays, only assignments matter)
+    return accessibleGoals.map(goal => ({
+      id: goal.id,
+      title: goal.title,
+      description: goal.description,
+      category: goal.category as 'work' | 'personal',
+      subcategory: goal.subcategory,
+      deadline: goal.deadline ? new Date(goal.deadline) : undefined,
+      createdDate: new Date(goal.created_date),
+      completed: goal.completed,
+      archived: goal.archived,
+      progress: goal.progress || 0,
+      userId: goal.user_id,
+      createdBy: goal.created_by,
+      assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined
+    }));
   }
 
   async getAllGoals(): Promise<Goal[]> {
@@ -167,10 +140,7 @@ return data.map(goal => ({
           user_id: goal.user_id,
           progress: goal.progress,
           archived: goal.archived,
-          is_deleted: goal.is_deleted,
-          coach_id: goal.coach_id,
-          lead_ids: goal.lead_ids,
-          member_ids: goal.member_ids
+          is_deleted: goal.is_deleted
         })) || []
       });
 
@@ -190,9 +160,6 @@ return data.map(goal => ({
         completed: goal.completed,
         archived: goal.archived,
         progress: goal.progress || 0,
-        coachId: goal.coach_id,
-        leadIds: goal.lead_ids || [],
-        memberIds: goal.member_ids || [],
         createdBy: goal.created_by,
         assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined
       }));
@@ -232,9 +199,6 @@ return data.map(goal => ({
         is_deleted: false,
         progress: 0, // Always start with 0% progress
         // linked_output_ids removed - now handled by ItemLinkageService
-        coach_id: goal.coachId,
-        lead_ids: goal.leadIds || [],
-        member_ids: goal.memberIds || [],
         created_by: goal.createdBy,
         assignment_date: goal.assignmentDate ? goal.assignmentDate.toISOString() : null
       });
@@ -263,9 +227,6 @@ return data.map(goal => ({
       supabaseUpdates.progress = updates.progress;
     }
     // linkedOutputIds now handled by ItemLinkageService
-    if (updates.coachId !== undefined) supabaseUpdates.coach_id = updates.coachId;
-    if (updates.leadIds !== undefined) supabaseUpdates.lead_ids = updates.leadIds;
-    if (updates.memberIds !== undefined) supabaseUpdates.member_ids = updates.memberIds;
     if (updates.createdBy !== undefined) supabaseUpdates.created_by = updates.createdBy;
     if (updates.assignmentDate !== undefined) {
       supabaseUpdates.assignment_date = updates.assignmentDate ? updates.assignmentDate.toISOString() : null;

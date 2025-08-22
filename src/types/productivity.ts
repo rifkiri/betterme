@@ -73,9 +73,7 @@ export interface Goal {
   archived: boolean;
   progress: number; // 0-100, manually controlled
   // linkedOutputIds removed - now handled by ItemLinkageService
-  coachId?: string; // Manager responsible for goal oversight
-  leadIds?: string[]; // Users leading goal execution (managers or team members)
-  memberIds?: string[]; // Users executing goal tasks (managers or team members)  
+  // Role arrays removed - now handled by goal_assignments table  
   createdBy?: string; // Manager who created the work goal
   assignmentDate?: Date;
 }

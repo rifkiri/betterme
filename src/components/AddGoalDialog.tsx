@@ -95,9 +95,6 @@ export const AddGoalDialog = ({
   const availableWorkGoals = isManager ? allGoals.filter(goal => 
     goal.category === 'work' &&
     goal.userId !== currentUserId && // Not owned by current user
-    !goal.memberIds?.includes(currentUserId || '') && // Not already a member
-    !goal.leadIds?.includes(currentUserId || '') && // Not already a lead
-    goal.coachId !== currentUserId && // Not already a coach
     !goal.archived &&
     goal.progress < 100
   ) : [];

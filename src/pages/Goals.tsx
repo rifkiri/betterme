@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useGoalRealtime } from '@/hooks/useGoalRealtime';
 import { AppNavigation } from '@/components/AppNavigation';
 import { EnhancedGoalsSection } from '@/components/EnhancedGoalsSection';
 import { GoalNotificationsDialog } from '@/components/GoalNotificationsDialog';
@@ -37,6 +38,20 @@ const Goals = () => {
     joinWorkGoal,
     leaveWorkGoal
   } = useGoalCollaboration(profile?.id || '', loadAllData);
+
+  // Set up real-time updates for goals  
+  useGoalRealtime({
+    userId: profile?.id,
+    onGoalUpdate: () => {
+      loadAllData();
+    },
+    onAssignmentUpdate: () => {
+      loadAllData();
+    },
+    onNotificationUpdate: () => {
+      // Notifications are handled by the collaboration hook
+    }
+  });
 
   // Set page title and load users
   useEffect(() => {

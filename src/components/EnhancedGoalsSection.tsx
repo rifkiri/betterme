@@ -94,9 +94,6 @@ export const EnhancedGoalsSection = ({
       userId: goal.userId,
       currentUserId,
       goalUserRole,
-      coachId: goal.coachId,
-      leadIds: goal.leadIds,
-      memberIds: goal.memberIds,
       createdBy: goal.createdBy,
       linkedOutputsCount: linkedOutputs.length,
       linkedHabitsCount: linkedHabits.length
@@ -108,7 +105,8 @@ export const EnhancedGoalsSection = ({
     const canManageGoal = isGoalOwner || isManager;
     
     // For work goals, show both Delete (if owner/manager) and Leave (if assigned) options
-    const showLeaveOption = goal.category === 'work' && goalUserRole && (goal.memberIds?.includes(currentUserId!) || goal.leadIds?.includes(currentUserId!) || goal.coachId === currentUserId);
+    const userAssignment = assignments.find(a => a.goalId === goal.id && a.userId === currentUserId);
+    const showLeaveOption = goal.category === 'work' && userAssignment && goalUserRole;
     const showDeleteOption = canManageGoal;
 
     return (
@@ -222,11 +220,43 @@ export const EnhancedGoalsSection = ({
             <div className="pt-2 border-t">
               <p className="text-xs text-gray-500 mb-2">Team Assignment</p>
               <div className="flex flex-wrap gap-1 text-xs">
-                <span>Coach: {goal.coachId ? '1' : '0'}</span>
-                <span>•</span>
-                <span>Leads: {goal.leadIds?.length || 0}</span>
-                <span>•</span>
-                <span>Members: {goal.memberIds?.length || 0}</span>
+                {(() => {
+                  const goalAssignments = assignments.filter(a => a.goalId === goal.id);
+                  const totalMembers = goalAssignments.length;
+                  return `${totalMembers} team member${totalMembers !== 1 ? 's' : ''}`;
+                })()}
+              </div>
+              
+              <div className="mt-2 space-y-1">
+                {/* Coach */}
+                {(() => {
+                  const coach = assignments.find(a => a.goalId === goal.id && a.role === 'coach');
+                  return coach ? (
+                    <div className="text-xs text-muted-foreground">
+                      Coach: {availableUsers.find(u => u.id === coach.userId)?.name || 'Unknown'}
+                    </div>
+                  ) : null;
+                })()}
+                
+                {/* Lead */}
+                {(() => {
+                  const lead = assignments.find(a => a.goalId === goal.id && a.role === 'lead');
+                  return lead ? (
+                    <div className="text-xs text-muted-foreground">
+                      Lead: {availableUsers.find(u => u.id === lead.userId)?.name || 'Unknown'}
+                    </div>
+                  ) : null;
+                })()}
+                
+                {/* Members */}
+                {(() => {
+                  const members = assignments.filter(a => a.goalId === goal.id && a.role === 'member');
+                  return members.length > 0 ? (
+                    <div className="text-xs text-muted-foreground">
+                      Members: {members.map(m => availableUsers.find(u => u.id === m.userId)?.name || 'Unknown').join(', ')}
+                    </div>
+                  ) : null;
+                })()}
               </div>
             </div>
           )}

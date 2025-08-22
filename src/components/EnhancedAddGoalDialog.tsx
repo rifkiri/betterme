@@ -69,8 +69,7 @@ export const EnhancedAddGoalDialog = ({
   const availableWorkGoals = goals.filter(goal => {
     const canJoin = goal.category === 'work' &&
       goal.progress < 100 &&
-      goal.userId !== currentUserId && // Don't show own goals
-      !goal.memberIds?.includes(currentUserId || ''); // Not already a member
+      goal.userId !== currentUserId; // Don't show own goals
     
     console.log('=== DETAILED GOAL FILTERING ===', {
       goalId: goal.id,
@@ -79,13 +78,11 @@ export const EnhancedAddGoalDialog = ({
       progress: goal.progress,
       userId: goal.userId,
       currentUserId: currentUserId,
-      memberIds: goal.memberIds,
       canJoin: canJoin,
       checks: {
         isWork: goal.category === 'work',
         notComplete: goal.progress < 100,
-        notOwnGoal: goal.userId !== currentUserId,
-        notMember: !goal.memberIds?.includes(currentUserId || '')
+        notOwnGoal: goal.userId !== currentUserId
       }
     });
     
@@ -158,10 +155,6 @@ export const EnhancedAddGoalDialog = ({
       deadline: deadline,
       completed: false,
       archived: false,
-      
-      coachId: data.category === 'work' ? (selectedCoach || undefined) : undefined,
-      leadIds: data.category === 'work' ? (selectedLeads.length > 0 ? selectedLeads : undefined) : undefined,
-      memberIds: data.category === 'work' ? (finalMemberIds.length > 0 ? finalMemberIds : undefined) : undefined,
       createdBy: data.category === 'work' ? currentUserId : undefined,
     });
     form.reset();

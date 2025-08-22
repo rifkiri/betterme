@@ -103,7 +103,6 @@ export type Database = {
           archived: boolean
           assignment_date: string | null
           category: string
-          coach_id: string | null
           completed: boolean
           created_by: string | null
           created_date: string
@@ -112,8 +111,6 @@ export type Database = {
           description: string | null
           id: string
           is_deleted: boolean
-          lead_ids: string[] | null
-          member_ids: string[] | null
           progress: number
           subcategory: string | null
           title: string
@@ -125,7 +122,6 @@ export type Database = {
           archived?: boolean
           assignment_date?: string | null
           category?: string
-          coach_id?: string | null
           completed?: boolean
           created_by?: string | null
           created_date?: string
@@ -134,8 +130,6 @@ export type Database = {
           description?: string | null
           id?: string
           is_deleted?: boolean
-          lead_ids?: string[] | null
-          member_ids?: string[] | null
           progress?: number
           subcategory?: string | null
           title: string
@@ -147,7 +141,6 @@ export type Database = {
           archived?: boolean
           assignment_date?: string | null
           category?: string
-          coach_id?: string | null
           completed?: boolean
           created_by?: string | null
           created_date?: string
@@ -156,8 +149,6 @@ export type Database = {
           description?: string | null
           id?: string
           is_deleted?: boolean
-          lead_ids?: string[] | null
-          member_ids?: string[] | null
           progress?: number
           subcategory?: string | null
           title?: string
