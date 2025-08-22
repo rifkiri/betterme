@@ -207,23 +207,10 @@ const getCategoryColor = (category: Goal['category']) => {
 
             {/* Linked Outputs */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium text-gray-900 flex items-center gap-2">
-                  <Link className="h-4 w-4 text-blue-600" />
-                  Linked Outputs ({linkedOutputs.length})
-                </h4>
-                {canEditLinkagesAndRoles && (
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => setEditingGoal(true)}
-                    className="text-xs"
-                  >
-                    <Link className="h-3 w-3 mr-1" />
-                    Edit Links
-                  </Button>
-                )}
-              </div>
+              <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                <Link className="h-4 w-4 text-blue-600" />
+                Linked Outputs ({linkedOutputs.length})
+              </h4>
               
               {loadingLinkedOutputs ? (
                 <p className="text-sm text-gray-500 py-2">Loading linked outputs...</p>
@@ -356,23 +343,10 @@ const getCategoryColor = (category: Goal['category']) => {
             {/* Team Assignments (Work Goals Only) */}
             {goal.category === 'work' && (
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-medium text-gray-900 flex items-center gap-2">
-                    <Users className="h-4 w-4 text-purple-600" />
-                    Team Assignments ({assignments.filter(a => a.goalId === goal.id).length})
-                  </h4>
-                  {canEditLinkagesAndRoles && (
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => setEditingGoal(true)}
-                      className="text-xs"
-                    >
-                      <Settings className="h-3 w-3 mr-1" />
-                      Manage Roles
-                    </Button>
-                  )}
-                </div>
+                <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                  <Users className="h-4 w-4 text-purple-600" />
+                  Team Assignments ({assignments.filter(a => a.goalId === goal.id).length})
+                </h4>
                 
                 {assignments.filter(a => a.goalId === goal.id).length === 0 ? (
                   <p className="text-sm text-gray-500 py-2">No team members assigned to this goal</p>
