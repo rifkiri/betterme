@@ -357,17 +357,12 @@ export const EnhancedGoalsSection = ({
                   />
                   <JoinGoalDialog
                     availableGoals={allGoals.filter(goal => {
-                      // Only show work goals that are active and not owned by current user
-                      if (goal.category !== 'work' || goal.progress >= 100 || goal.archived || goal.userId === currentUserId) {
-                        return false;
-                      }
-                      
-                      // Check if user already has an assignment for this goal
-                      const hasAssignment = assignments.some(assignment => 
-                        assignment.goalId === goal.id && assignment.userId === currentUserId
-                      );
-                      
-                      return !hasAssignment;
+                      // Show work goals that are active and not owned by current user
+                      // Allow joining even if user already has an assignment (for role changes)
+                      return goal.category === 'work' && 
+                             goal.progress < 100 && 
+                             !goal.archived && 
+                             goal.userId !== currentUserId;
                     })}
                     availableUsers={availableUsers}
                     currentUserId={currentUserId}

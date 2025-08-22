@@ -60,15 +60,31 @@ export const JoinGoalDialog = ({
 
     // Validate role availability using assignments data
     const goalAssignments = assignments.filter(a => a.goalId === selectedGoal);
+    const currentUserAssignment = goalAssignments.find(a => a.userId === currentUserId);
     
-    if (selectedRole === 'coach' && goalAssignments.some(a => a.role === 'coach')) {
-      toast.error('Coach role is already taken');
-      return;
-    }
+    // If user is changing roles, allow it
+    if (!currentUserAssignment) {
+      // New assignment - validate role availability
+      if (selectedRole === 'coach' && goalAssignments.some(a => a.role === 'coach')) {
+        toast.error('Coach role is already taken');
+        return;
+      }
 
-    if (selectedRole === 'lead' && goalAssignments.some(a => a.role === 'lead')) {
-      toast.error('Lead role is already taken');
-      return;
+      if (selectedRole === 'lead' && goalAssignments.some(a => a.role === 'lead')) {
+        toast.error('Lead role is already taken');
+        return;
+      }
+    } else {
+      // Role change scenario - validate role isn't taken by someone else
+      if (selectedRole === 'coach' && goalAssignments.some(a => a.role === 'coach' && a.userId !== currentUserId)) {
+        toast.error('Coach role is already taken by another user');
+        return;
+      }
+
+      if (selectedRole === 'lead' && goalAssignments.some(a => a.role === 'lead' && a.userId !== currentUserId)) {
+        toast.error('Lead role is already taken by another user');
+        return;
+      }
     }
 
     try {
@@ -89,14 +105,17 @@ export const JoinGoalDialog = ({
   const getAvailableRoles = (goal: Goal) => {
     const roles = [];
     const goalAssignments = assignments.filter(a => a.goalId === goal.id);
+    const currentUserAssignment = goalAssignments.find(a => a.userId === currentUserId);
     
-    // Coach role available if no coach assigned for this goal
-    if (!goalAssignments.some(a => a.role === 'coach')) {
+    // Coach role available if no coach assigned OR if current user is the coach
+    if (!goalAssignments.some(a => a.role === 'coach') || 
+        (currentUserAssignment && currentUserAssignment.role === 'coach')) {
       roles.push('coach');
     }
     
-    // Lead role available if no leads assigned for this goal
-    if (!goalAssignments.some(a => a.role === 'lead')) {
+    // Lead role available if no lead assigned OR if current user is the lead
+    if (!goalAssignments.some(a => a.role === 'lead') || 
+        (currentUserAssignment && currentUserAssignment.role === 'lead')) {
       roles.push('lead');
     }
     
@@ -187,6 +206,22 @@ export const JoinGoalDialog = ({
                 {/* Current Team Composition */}
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium">Current Team</h4>
+                  
+                  {/* Current User Assignment */}
+                  {(() => {
+                    const currentUserAssignment = assignments.find(a => a.goalId === selectedGoalData.id && a.userId === currentUserId);
+                    return currentUserAssignment ? (
+                      <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                            Your current role: {currentUserAssignment.role.charAt(0).toUpperCase() + currentUserAssignment.role.slice(1)}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-blue-700 mt-1">You can select a different role to change your assignment</p>
+                      </div>
+                    ) : null;
+                  })()}
+                  
                   <div className="space-y-2">
                     {/* Coach */}
                     <div className="flex items-center gap-2">
