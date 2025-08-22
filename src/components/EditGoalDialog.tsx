@@ -779,52 +779,45 @@ export const EditGoalDialog = ({
                        <span className="font-medium text-sm">Members</span>
                      </div>
                      
-                     <Popover open={isMemberDropdownOpen} onOpenChange={setIsMemberDropdownOpen}>
-                       <PopoverTrigger asChild>
-                         <Button
-                           variant="outline"
-                           role="combobox"
-                           className="w-full justify-between bg-white"
-                         >
-                           {selectedMembers.length === 0 
+                     <Select 
+                       value={selectedMembers.length > 0 ? selectedMembers[0] : ''} 
+                       onValueChange={(value) => {
+                         if (value && value !== 'none') {
+                           if (!selectedMembers.includes(value)) {
+                             setSelectedMembers([...selectedMembers, value]);
+                           }
+                         }
+                       }}
+                     >
+                       <SelectTrigger className="bg-white">
+                         <SelectValue placeholder={
+                           selectedMembers.length === 0 
                              ? "Select members..." 
                              : `${selectedMembers.length} member${selectedMembers.length !== 1 ? 's' : ''} selected`
-                           }
-                           <Users className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                         </Button>
-                       </PopoverTrigger>
-                       <PopoverContent className="w-full p-0 bg-white border z-50" align="start">
-                         <div className="max-h-[200px] overflow-y-auto p-1">
-                           {availableUsers
-                             .filter(user => user.role === 'team-member' || user.role === 'manager')
-                             .map(user => (
-                               <div 
-                                 key={user.id} 
-                                 className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-                                 onClick={() => {
-                                   if (selectedMembers.includes(user.id)) {
-                                     setSelectedMembers(selectedMembers.filter(id => id !== user.id));
-                                   } else {
-                                     setSelectedMembers([...selectedMembers, user.id]);
-                                   }
-                                 }}
-                               >
-                                 <span className="flex-1">
-                                   {user.name} ({user.role})
-                                 </span>
+                         } />
+                       </SelectTrigger>
+                       <SelectContent className="bg-white z-50">
+                         {availableUsers
+                           .filter(user => user.role === 'team-member' || user.role === 'manager')
+                           .map(user => (
+                             <SelectItem 
+                               key={user.id} 
+                               value={user.id}
+                               className={selectedMembers.includes(user.id) ? "bg-accent" : ""}
+                             >
+                               <div className="flex items-center justify-between w-full">
+                                 <span>{user.name} ({user.role})</span>
                                  {selectedMembers.includes(user.id) && (
-                                   <span className="ml-auto text-green-600 font-medium">✓</span>
+                                   <span className="ml-2 text-green-600 font-medium">✓</span>
                                  )}
                                </div>
-                             ))}
-                           {availableUsers.filter(user => user.role === 'team-member' || user.role === 'manager').length === 0 && (
-                             <div className="px-2 py-1.5 text-sm text-muted-foreground text-center">
-                               No team members available
-                             </div>
-                           )}
-                         </div>
-                       </PopoverContent>
-                     </Popover>
+                             </SelectItem>
+                           ))}
+                         {availableUsers.filter(user => user.role === 'team-member' || user.role === 'manager').length === 0 && (
+                           <SelectItem value="none" disabled>No team members available</SelectItem>
+                         )}
+                       </SelectContent>
+                     </Select>
 
                      {selectedMembers.length > 0 && (
                        <div className="mt-3 p-3 bg-muted rounded-lg">
