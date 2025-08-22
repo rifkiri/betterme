@@ -22,9 +22,11 @@ export const DeletedWeeklyOutputsDialog = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="flex items-center gap-2">
-          <Trash2 className="h-4 w-4" />
-          Deleted ({deletedWeeklyOutputs.length})
+        <Button variant="outline" size="sm" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 min-w-0">
+          <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+          <span className="hidden sm:inline">Deleted</span>
+          <span className="sm:hidden">({deletedWeeklyOutputs.length})</span>
+          <span className="hidden sm:inline">({deletedWeeklyOutputs.length})</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md">
