@@ -65,12 +65,12 @@ export const HabitDetailsDialog = ({
               )}
 
               {/* Linked Goal */}
-              {linkedGoal && (
-                <div>
-                  <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                    <Link className="h-4 w-4" />
-                    Linked Goal
-                  </h4>
+              <div>
+                <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                  <Link className="h-4 w-4" />
+                  Linked Goal
+                </h4>
+                {linkedGoal ? (
                   <div className="p-3 bg-muted/50 rounded-lg">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex-1 min-w-0">
@@ -82,8 +82,12 @@ export const HabitDetailsDialog = ({
                       </Badge>
                     </div>
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <div className="text-sm text-muted-foreground">No goal linked</div>
+                  </div>
+                )}
+              </div>
 
               {/* Description */}
               {habit.description && (
