@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Circle, Archive, Loader2, Eye } from 'lucide-react';
+import { CheckCircle, Circle, Archive, Loader2, Eye, Link } from 'lucide-react';
 import { Habit, Goal } from '@/types/productivity';
 // Fixed habit-goal linking functionality
 import { AddHabitDialog } from './AddHabitDialog';
@@ -114,9 +114,17 @@ export const HabitsSection = ({
                   )}
                 </button>
                 <div>
-                  <span className={`font-medium ${habit.completed ? 'text-green-700' : 'text-gray-700'}`}>
-                    {habit.name}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`font-medium ${habit.completed ? 'text-green-700' : 'text-gray-700'}`}>
+                      {habit.name}
+                    </span>
+                    {habit.linkedGoalId && (
+                      <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200 text-xs px-2 py-0.5">
+                        <Link className="h-3 w-3 mr-1" />
+                        Linked to Goal
+                      </Badge>
+                    )}
+                  </div>
                   {habit.category && <p className="text-xs text-gray-500">{mapDatabaseToDisplay(habit.category)}</p>}
                 </div>
               </div>
