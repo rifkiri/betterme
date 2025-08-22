@@ -96,17 +96,24 @@ export const TasksSection = ({
             {isToday(selectedTaskDate) ? 'Today' : format(selectedTaskDate, 'MMM dd, yyyy')}
           </CardDescription>
         </div>
-        <div className="flex items-center gap-1 sm:gap-2">
-          <DeletedTasksDialog 
-            deletedTasks={deletedTasks}
-            onRestoreTask={onRestoreTask}
-            onPermanentlyDeleteTask={onPermanentlyDeleteTask}
-          />
-          <CompletedTasksDialog tasks={tasks} onToggleTask={onToggleTask} />
-          <AddTaskDialog 
-            onAddTask={(task) => onAddTask({ ...task, dueDate: selectedTaskDate, originalDueDate: selectedTaskDate })} 
-            weeklyOutputs={weeklyOutputs}
-          />
+        <div className="space-y-2">
+          {/* First row: Deleted and Add Task */}
+          <div className="flex items-center gap-2">
+            <DeletedTasksDialog 
+              deletedTasks={deletedTasks}
+              onRestoreTask={onRestoreTask}
+              onPermanentlyDeleteTask={onPermanentlyDeleteTask}
+            />
+            <AddTaskDialog 
+              onAddTask={(task) => onAddTask({ ...task, dueDate: selectedTaskDate, originalDueDate: selectedTaskDate })} 
+              weeklyOutputs={weeklyOutputs}
+            />
+          </div>
+          
+          {/* Second row: Completed */}
+          <div className="flex items-center">
+            <CompletedTasksDialog tasks={tasks} onToggleTask={onToggleTask} />
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-2 sm:space-y-3">
