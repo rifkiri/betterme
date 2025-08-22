@@ -2,7 +2,9 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 export const DemoCredentials = () => {
+  const { user } = useAuth();
   const checkPendingUsers = async () => {
     console.log('Checking profiles table for pending users...');
     try {
@@ -26,12 +28,7 @@ export const DemoCredentials = () => {
   const addTestPendingUser = async () => {
     console.log('Adding test pending user...');
     try {
-      // First check if user is admin by trying to sign in as admin
-      const {
-        data: {
-          user
-        }
-      } = await supabase.auth.getUser();
+      // First check if user is admin
       if (!user) {
         toast.error('You need to be signed in as an admin to add users');
         return;

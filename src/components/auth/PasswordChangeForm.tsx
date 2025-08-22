@@ -10,6 +10,7 @@ import { ProfileService } from '@/services/ProfileService';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { getRedirectPath } from '@/utils/navigationUtils';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface PasswordChangeFormProps {
   isFirstTime?: boolean;
@@ -23,6 +24,7 @@ interface PasswordStrength {
 }
 
 export const PasswordChangeForm = ({ isFirstTime = false }: PasswordChangeFormProps) => {
+  const { user } = useAuth();
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -82,7 +84,6 @@ export const PasswordChangeForm = ({ isFirstTime = false }: PasswordChangeFormPr
       }
 
       // Update the profile to mark password as changed and set status to active
-      const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         await ProfileService.updatePasswordStatus(user.id);
       }

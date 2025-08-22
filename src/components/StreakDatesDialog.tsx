@@ -1,10 +1,11 @@
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from 'lucide-react';
 import { format, subDays } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface StreakDatesDialogProps {
   habitId: string;
@@ -25,6 +26,7 @@ export const StreakDatesDialog = ({
   open, 
   onOpenChange 
 }: StreakDatesDialogProps) => {
+  const { user } = useAuth();
   const [streakDates, setStreakDates] = useState<Date[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -37,7 +39,6 @@ export const StreakDatesDialog = ({
   const fetchStreakDates = async () => {
     setIsLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       // Get completion data for a wider range to find the most recent completion and work backwards

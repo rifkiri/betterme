@@ -4,23 +4,27 @@ import { User } from '@/types/userTypes';
 import { supabase } from '@/integrations/supabase/client';
 import { isTaskOverdue, isWeeklyOutputOverdue } from '@/utils/dateUtils';
 
+interface TeamDataServiceConfig {
+  userId: string;
+}
+
 class TeamDataService {
   // Get current user's team data - now accessible to all authenticated users
-  async getCurrentManagerTeamData(): Promise<TeamData> {
+  async getCurrentManagerTeamData(config: TeamDataServiceConfig): Promise<TeamData> {
     try {
       console.log('Starting to fetch team data...');
       
-      // Get current user's ID
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('No authenticated user found');
+      // Get current user's ID from config
+      const userId = config.userId;
+      if (!userId) {
+        throw new Error('No user ID provided');
       }
       
       // Get current user's profile - no longer checking for manager/admin role
       const { data: userProfile } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', userId)
         .single();
       
       if (!userProfile) {

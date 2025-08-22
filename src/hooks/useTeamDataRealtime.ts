@@ -4,8 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { TeamData } from '@/types/teamData';
 import { teamDataService } from '@/services/TeamDataService';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const useTeamDataRealtime = () => {
+  const { user } = useAuth();
   const [teamData, setTeamData] = useState<TeamData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -14,6 +16,12 @@ export const useTeamDataRealtime = () => {
   const subscriptionsRef = useRef<any[]>([]);
 
   const loadTeamData = async (showToast = false) => {
+    if (!user?.id) {
+      setError('No user authenticated');
+      setIsLoading(false);
+      return;
+    }
+    
     if (!isInitialLoad.current && !showToast) {
       // For background updates, don't show loading state
     } else {
@@ -24,7 +32,7 @@ export const useTeamDataRealtime = () => {
     
     try {
       console.log('Loading team data...');
-      const data = await teamDataService.getCurrentManagerTeamData();
+      const data = await teamDataService.getCurrentManagerTeamData({ userId: user.id });
       setTeamData(data);
       setLastUpdated(new Date());
       
@@ -85,6 +93,8 @@ export const useTeamDataRealtime = () => {
   };
 
   useEffect(() => {
+    if (!user?.id) return;
+    
     // Initial data load
     loadTeamData();
     
@@ -97,7 +107,7 @@ export const useTeamDataRealtime = () => {
         supabase.removeChannel(channel);
       });
     };
-  }, []);
+  }, [user?.id]);
 
   return {
     teamData,
