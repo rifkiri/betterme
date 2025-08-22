@@ -90,13 +90,22 @@ export const GoalDetailsDialog = ({
   // Debug logging for assignments
   useEffect(() => {
     if (open && goal.category === 'work') {
+      const goalAssignments = assignments.filter(a => a.goalId === goal.id);
       console.log('🎯 [GOAL DETAILS] Assignment Debug:', {
         goalId: goal.id,
         totalAssignments: assignments.length,
-        goalAssignments: assignments.filter(a => a.goalId === goal.id),
+        goalAssignmentsCount: goalAssignments.length,
+        goalAssignments: goalAssignments,
         availableUsersCount: availableUsers.length,
-        assignments: assignments,
-        availableUsers: availableUsers
+        allAssignments: assignments.map(a => ({ id: a.id, goalId: a.goalId, userId: a.userId, role: a.role })),
+        availableUsers: availableUsers.map(u => ({ id: u.id, name: u.name }))
+      });
+      
+      // Check for exact goal ID match
+      console.log('🔍 [GOAL DETAILS] ID Match Check:', {
+        targetGoalId: goal.id,
+        assignmentGoalIds: assignments.map(a => a.goalId),
+        exactMatches: assignments.filter(a => a.goalId === goal.id).map(a => a.goalId)
       });
     }
   }, [open, goal.id, goal.category, assignments, availableUsers]);
