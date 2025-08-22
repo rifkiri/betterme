@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Link } from 'lucide-react';
 import { Goal } from '@/types/productivity';
 import { format } from 'date-fns';
@@ -12,7 +11,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 interface LinkGoalsDialogProps {
   outputId: string;
   availableGoals: Goal[];
-  onUpdateLinks: (outputId: string, goalIds: string[]) => void;
+  onUpdateLinks: (outputId: string, goalId: string | null) => void;
 }
 
 export const LinkGoalsDialog = ({
@@ -21,36 +20,36 @@ export const LinkGoalsDialog = ({
   onUpdateLinks
 }: LinkGoalsDialogProps) => {
   const [open, setOpen] = useState(false);
-  const [selectedGoalIds, setSelectedGoalIds] = useState<string[]>([]);
-  const [linkedGoalIds, setLinkedGoalIds] = useState<string[]>([]);
+  const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
+  const [linkedGoalId, setLinkedGoalId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { currentUser } = useCurrentUser();
 
-  // Load current linkages when dialog opens
+  // Load current linkage when dialog opens
   useEffect(() => {
     if (open && currentUser) {
-      loadLinkedGoals();
+      loadLinkedGoal();
     }
   }, [open, currentUser, outputId]);
 
-  const loadLinkedGoals = async () => {
+  const loadLinkedGoal = async () => {
     if (!currentUser) return;
     
     try {
       setLoading(true);
       const { data: output, error } = await supabase
         .from('weekly_outputs')
-        .select('linked_goal_ids')
+        .select('linked_goal_id')
         .eq('id', outputId)
         .single();
         
       if (error) throw error;
       
-      const linkedIds = output?.linked_goal_ids || [];
-      setLinkedGoalIds(linkedIds);
-      setSelectedGoalIds(linkedIds);
+      const linkedId = output?.linked_goal_id || null;
+      setLinkedGoalId(linkedId);
+      setSelectedGoalId(linkedId);
     } catch (error) {
-      console.error('Error loading linked goals:', error);
+      console.error('Error loading linked goal:', error);
     } finally {
       setLoading(false);
     }
@@ -62,19 +61,19 @@ export const LinkGoalsDialog = ({
     try {
       setLoading(true);
       
-      // Update the weekly_output's linked_goal_ids array
+      // Update the weekly_output's linked_goal_id
       const { error } = await supabase
         .from('weekly_outputs')
-        .update({ linked_goal_ids: selectedGoalIds })
+        .update({ linked_goal_id: selectedGoalId })
         .eq('id', outputId);
         
       if (error) throw error;
       
-      onUpdateLinks(outputId, selectedGoalIds);
-      setLinkedGoalIds(selectedGoalIds);
+      onUpdateLinks(outputId, selectedGoalId);
+      setLinkedGoalId(selectedGoalId);
       setOpen(false);
     } catch (error) {
-      console.error('Error updating goal links:', error);
+      console.error('Error updating goal link:', error);
     } finally {
       setLoading(false);
     }
@@ -82,9 +81,9 @@ export const LinkGoalsDialog = ({
 
   const handleGoalToggle = (goalId: string, checked: boolean) => {
     if (checked) {
-      setSelectedGoalIds(prev => [...prev, goalId]);
+      setSelectedGoalId(goalId);
     } else {
-      setSelectedGoalIds(prev => prev.filter(id => id !== goalId));
+      setSelectedGoalId(null);
     }
   };
 
@@ -101,12 +100,12 @@ const getCategoryColor = (category: Goal['category']) => {
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-1 text-xs" disabled={loading}>
           <Link className="h-3 w-3" />
-          Link Goals ({linkedGoalIds.length})
+          Link Goal ({linkedGoalId ? '1' : '0'})
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>Link Goals to Output</DialogTitle>
+          <DialogTitle>Link Goal to Output</DialogTitle>
         </DialogHeader>
         
         <div className="flex-1 overflow-y-auto space-y-3">
@@ -116,8 +115,8 @@ const getCategoryColor = (category: Goal['category']) => {
             availableGoals
               .filter(goal => !goal.completed && !goal.archived && goal.progress < 100)
               .map((goal) => {
-              const isSelected = selectedGoalIds.includes(goal.id);
-              const isLinked = linkedGoalIds.includes(goal.id);
+              const isSelected = selectedGoalId === goal.id;
+              const isLinked = linkedGoalId === goal.id;
               
               return (
                 <div 
@@ -127,9 +126,11 @@ const getCategoryColor = (category: Goal['category']) => {
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <Checkbox
+                    <input
+                      type="radio"
+                      name="selectedGoal"
                       checked={isSelected}
-                      onCheckedChange={(checked) => handleGoalToggle(goal.id, !!checked)}
+                      onChange={(e) => handleGoalToggle(goal.id, e.target.checked)}
                       className="mt-1"
                     />
                     <div className="flex-1 min-w-0">
@@ -170,14 +171,17 @@ const getCategoryColor = (category: Goal['category']) => {
         
         <div className="flex justify-between items-center pt-4 border-t">
           <span className="text-sm text-gray-600">
-            {selectedGoalIds.length} goal{selectedGoalIds.length !== 1 ? 's' : ''} selected
+            {selectedGoalId ? '1 goal selected' : 'No goal selected'}
           </span>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setSelectedGoalId(null)} disabled={loading}>
+              Clear Selection
+            </Button>
             <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={loading}>
-              {loading ? 'Updating...' : 'Update Links'}
+              {loading ? 'Updating...' : 'Update Link'}
             </Button>
           </div>
         </div>

@@ -107,8 +107,7 @@ export class SupabaseDataService {
     return await supabaseGoalsService.permanentlyDeleteGoal(id, userId);
   }
 
-  // Goal-output linkages no longer managed through separate methods
-  // Now handled directly through weekly_outputs.linked_goal_ids array
+  // Goal-output linkages handled directly through weekly_outputs.linked_goal_id column
 
   // Mood tracking
   async getMoodData(userId: string) {

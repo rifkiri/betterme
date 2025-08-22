@@ -404,7 +404,6 @@ export type Database = {
           is_deleted: boolean
           is_moved: boolean
           linked_goal_id: string | null
-          linked_goal_ids: string[] | null
           original_due_date: string | null
           progress: number
           project_id: string | null
@@ -422,7 +421,6 @@ export type Database = {
           is_deleted?: boolean
           is_moved?: boolean
           linked_goal_id?: string | null
-          linked_goal_ids?: string[] | null
           original_due_date?: string | null
           progress?: number
           project_id?: string | null
@@ -440,7 +438,6 @@ export type Database = {
           is_deleted?: boolean
           is_moved?: boolean
           linked_goal_id?: string | null
-          linked_goal_ids?: string[] | null
           original_due_date?: string | null
           progress?: number
           project_id?: string | null
