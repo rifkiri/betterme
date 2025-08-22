@@ -573,7 +573,7 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, onRefresh, we
             )}
 
             {/* Habit Linking Section for Personal Goals Only */}
-            {form.watch('category') === 'personal' && (
+            {(goal.category === 'personal' || form.watch('category') === 'personal') && (
               <FormField
                 control={form.control}
                 name="selectedHabitIds"
@@ -584,108 +584,100 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, onRefresh, we
                       Link to Habits (Optional)
                     </FormLabel>
                     
-                    {habits.length > 0 ? (
-                      <>
-                        <Popover open={isHabitDropdownOpen} onOpenChange={setIsHabitDropdownOpen}>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                role="combobox"
-                                className="w-full justify-between"
-                              >
-                                {selectedHabits.length === 0 
-                                  ? "Select habits to link..." 
-                                  : `${selectedHabits.length} habit${selectedHabits.length !== 1 ? 's' : ''} selected`
-                                }
-                                <Target className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-full p-0" align="start">
-                            <Command>
-                              <CommandInput placeholder="Search habits..." />
-                              <CommandList>
-                                <CommandEmpty>No habits found.</CommandEmpty>
-                                <CommandGroup>
-                                  {habits.filter(habit => !habit.archived && !habit.isDeleted).map((habit) => (
-                                    <CommandItem
-                                      key={habit.id}
-                                      onSelect={() => toggleHabitSelection(habit)}
-                                      className="flex items-center justify-between p-3"
-                                    >
-                                      <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                          <span className="font-medium text-sm">{habit.name}</span>
-                                          {habit.streak > 0 && (
-                                            <Badge variant="secondary" className="text-xs">
-                                              {habit.streak} day streak
-                                            </Badge>
-                                          )}
-                                        </div>
-                                        {habit.description && (
-                                          <p className="text-xs text-muted-foreground">{habit.description}</p>
-                                        )}
-                                        {habit.category && (
-                                          <div className="flex items-center gap-1 mt-1">
-                                            <span className="text-xs text-muted-foreground">
-                                              Category: {habit.category}
-                                            </span>
-                                          </div>
-                                        )}
-                                      </div>
-                                      <div className="ml-2">
-                                        {(field.value || []).includes(habit.id) && (
-                                          <div className="h-4 w-4 bg-primary rounded-sm flex items-center justify-center">
-                                            <span className="text-xs text-primary-foreground">✓</span>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
-                        
-                        {/* Selected Habits Display */}
-                        {selectedHabits.length > 0 && (
-                          <div className="mt-3 p-3 bg-muted rounded-lg">
-                            <div className="text-sm font-medium mb-2">
-                              Selected Habits ({selectedHabits.length}):
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {selectedHabits.map((habit) => (
-                                <Badge 
-                                  key={habit.id} 
-                                  variant="secondary" 
-                                  className="flex items-center gap-1"
+                    <Popover open={isHabitDropdownOpen} onOpenChange={setIsHabitDropdownOpen}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className="w-full justify-between"
+                          >
+                            {selectedHabits.length === 0 
+                              ? "Select habits to link..." 
+                              : `${selectedHabits.length} habit${selectedHabits.length !== 1 ? 's' : ''} selected`
+                            }
+                            <Target className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Search habits..." />
+                          <CommandList>
+                            <CommandEmpty>No habits found.</CommandEmpty>
+                            <CommandGroup>
+                              {habits.filter(habit => !habit.archived && !habit.isDeleted).map((habit) => (
+                                <CommandItem
+                                  key={habit.id}
+                                  onSelect={() => toggleHabitSelection(habit)}
+                                  className="flex items-center justify-between p-3"
                                 >
-                                  {habit.name}
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-4 w-4 p-0 hover:bg-transparent"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      removeHabit(habit.id);
-                                    }}
-                                  >
-                                    <X className="h-3 w-3" />
-                                  </Button>
-                                </Badge>
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className="font-medium text-sm">{habit.name}</span>
+                                      {habit.streak > 0 && (
+                                        <Badge variant="secondary" className="text-xs">
+                                          {habit.streak} day streak
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    {habit.description && (
+                                      <p className="text-xs text-muted-foreground">{habit.description}</p>
+                                    )}
+                                    {habit.category && (
+                                      <div className="flex items-center gap-1 mt-1">
+                                        <span className="text-xs text-muted-foreground">
+                                          Category: {habit.category}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="ml-2">
+                                    {(field.value || []).includes(habit.id) && (
+                                      <div className="h-4 w-4 bg-primary rounded-sm flex items-center justify-center">
+                                        <span className="text-xs text-primary-foreground">✓</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </CommandItem>
                               ))}
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <div className="p-3 text-sm text-muted-foreground bg-muted rounded-lg">
-                        No habits available to link.
-                      </div>
-                    )}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    
+                    {/* Selected Habits Display */}
+                    {selectedHabits.length > 0 && (
+                      <div className="mt-3 p-3 bg-muted rounded-lg">
+                        <div className="text-sm font-medium mb-2">
+                          Selected Habits ({selectedHabits.length}):
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedHabits.map((habit) => (
+                            <Badge 
+                              key={habit.id} 
+                              variant="secondary" 
+                              className="flex items-center gap-1"
+                            >
+                              {habit.name}
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-4 w-4 p-0 hover:bg-transparent"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  removeHabit(habit.id);
+                                }}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </Badge>
+                          ))}
+                         </div>
+                       </div>
+                     )}
 
                     <FormMessage />
                   </FormItem>
