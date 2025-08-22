@@ -76,7 +76,7 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
       title: values.title,
       description: values.description,
       dueDate: dueDate,
-      linkedGoalId: values.linkedGoalId === "none" ? undefined : values.linkedGoalId,
+      linkedGoalId: values.linkedGoalId === "none" ? "none" : values.linkedGoalId,
     });
 
     onOpenChange(false);

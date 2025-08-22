@@ -61,7 +61,7 @@ export const EditHabitDialog = ({ habit, open, onOpenChange, onSave }: EditHabit
       name: values.name,
       description: values.description || undefined,
       category: values.category === 'none' ? undefined : mapDisplayToDatabase(values.category),
-      linkedGoalId: values.linkedGoalId === 'none' ? undefined : values.linkedGoalId
+      linkedGoalId: values.linkedGoalId === 'none' ? 'none' : values.linkedGoalId
     };
     
     console.log('EditHabitDialog - Sending updates to onSave:', updates);
