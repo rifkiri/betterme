@@ -352,39 +352,49 @@ const getCategoryColor = (category: Goal['category']) => {
                   <p className="text-sm text-gray-500 py-2">No team members assigned to this goal</p>
                 ) : (
                   <div className="space-y-2">
-                    {assignments
-                      .filter(a => a.goalId === goal.id)
-                      .map((assignment) => {
-                        const user = availableUsers.find(u => u.id === assignment.userId);
-                        return (
-                          <div key={assignment.id} className="p-3 border rounded-lg bg-white">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div>
-                                  <p className="font-medium text-sm">{user?.name || 'Unknown User'}</p>
-                                  <p className="text-xs text-gray-500">{user?.email}</p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Badge 
-                                  variant={
-                                    assignment.role === 'coach' ? 'default' :
-                                    assignment.role === 'lead' ? 'secondary' : 'outline'
-                                  } 
-                                  className="text-xs"
-                                >
-                                  {assignment.role.charAt(0).toUpperCase() + assignment.role.slice(1)}
-                                </Badge>
-                                {assignment.selfAssigned && (
-                                  <Badge variant="outline" className="text-xs">
-                                    Self-assigned
-                                  </Badge>
-                                )}
-                              </div>
+                {assignments
+                  .filter(a => a.goalId === goal.id)
+                  .map((assignment) => {
+                    const user = availableUsers.find(u => u.id === assignment.userId);
+                    
+                    // Debug log for user matching
+                    if (!user) {
+                      console.log('🚨 [USER NOT FOUND]', {
+                        assignmentUserId: assignment.userId,
+                        availableUserIds: availableUsers.map(u => ({ id: u.id, name: u.name })),
+                        assignment: assignment
+                      });
+                    }
+                    
+                    return (
+                      <div key={assignment.id} className="p-3 border rounded-lg bg-white">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div>
+                              <p className="font-medium text-sm">{user?.name || 'Unknown User'}</p>
+                              <p className="text-xs text-gray-500">{user?.email}</p>
                             </div>
                           </div>
-                        );
-                      })}
+                          <div className="flex items-center gap-2">
+                            <Badge 
+                              variant={
+                                assignment.role === 'coach' ? 'default' :
+                                assignment.role === 'lead' ? 'secondary' : 'outline'
+                              } 
+                              className="text-xs"
+                            >
+                              {assignment.role.charAt(0).toUpperCase() + assignment.role.slice(1)}
+                            </Badge>
+                            {assignment.selfAssigned && (
+                              <Badge variant="outline" className="text-xs">
+                                Self-assigned
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                   </div>
                 )}
               </div>
