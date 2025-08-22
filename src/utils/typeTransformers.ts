@@ -49,7 +49,7 @@ export const transformTaskRow = (row: any): Task => ({
   title: row.title,
   description: row.description,
   dueDate: new Date(row.due_date),
-  priority: row.priority, // Database already uses lowercase
+  priority: row.priority as Task['priority'], // Ensure proper typing
   taggedUsers: row.tagged_users || [],
   completed: row.completed,
   isMoved: row.is_moved,
@@ -65,7 +65,7 @@ export const transformTaskToRow = (task: Partial<Task>) => ({
   title: task.title,
   description: task.description,
   due_date: task.dueDate?.toISOString().split('T')[0], // Date only
-  priority: task.priority, // Already lowercase
+  priority: task.priority, // Keep as-is since it should match the database enum
   tagged_users: task.taggedUsers,
   completed: task.completed,
   user_id: task.userId,
@@ -112,7 +112,7 @@ export const transformHabitRow = (row: any): Habit => ({
   userId: row.user_id,
   name: row.name,
   description: row.description,
-  category: row.category,
+  category: row.category as Habit['category'], // Ensure proper typing
   streak: row.streak,
   archived: row.archived,
   isDeleted: row.is_deleted,
@@ -121,14 +121,26 @@ export const transformHabitRow = (row: any): Habit => ({
   createdAt: row.created_at,
 });
 
-// Transform Habit type to database row
-export const transformHabitToRow = (habit: Partial<Habit>) => ({
-  name: habit.name,
-  description: habit.description,
-  category: habit.category,
-  streak: habit.streak,
-  archived: habit.archived,
-  user_id: habit.userId,
-  completed: habit.completed,
-  last_completed_date: habit.lastCompletedDate?.toISOString().split('T')[0], // Date only
-});
+// Transform Habit type to database row with category validation
+export const transformHabitToRow = (habit: Partial<Habit>) => {
+  // Validate category or default to 'other'
+  const validCategories = [
+    'health', 'productivity', 'personal', 'fitness', 'learning', 'other',
+    'mental', 'relationship', 'social', 'spiritual', 'wealth'
+  ];
+  
+  const category = habit.category && validCategories.includes(habit.category) 
+    ? habit.category 
+    : 'other';
+
+  return {
+    name: habit.name,
+    description: habit.description,
+    category: category,
+    streak: habit.streak,
+    archived: habit.archived,
+    user_id: habit.userId,
+    completed: habit.completed,
+    last_completed_date: habit.lastCompletedDate?.toISOString().split('T')[0], // Date only
+  };
+};
