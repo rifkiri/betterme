@@ -80,6 +80,31 @@ export class SupabaseGoalAssignmentsService {
     }
   }
 
+  async getAllGoalAssignments(): Promise<GoalAssignment[]> {
+    console.log('Getting all goal assignments');
+    
+    const { data, error } = await supabase
+      .from('goal_assignments')
+      .select('*')
+      .order('assigned_date', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching all goal assignments:', error);
+      throw error;
+    }
+
+    return data.map(assignment => ({
+      id: assignment.id,
+      goalId: assignment.goal_id,
+      userId: assignment.user_id,
+      role: assignment.role as 'coach' | 'lead' | 'member',
+      assignedBy: assignment.assigned_by,
+      assignedDate: new Date(assignment.assigned_date),
+      acknowledged: assignment.acknowledged,
+      selfAssigned: assignment.self_assigned
+    }));
+  }
+
   async getAssignmentsForGoal(goalId: string): Promise<GoalAssignment[]> {
     console.log('Getting assignments for goal:', goalId);
     

@@ -87,29 +87,6 @@ export const GoalDetailsDialog = ({
     fetchLinkedItems();
   }, [goal.id, goal.category, currentUserId, open, weeklyOutputs, habits, allHabits]);
 
-  // Debug logging for assignments
-  useEffect(() => {
-    if (open && goal.category === 'work') {
-      const goalAssignments = assignments.filter(a => a.goalId === goal.id);
-      console.log('🎯 [GOAL DETAILS] Assignment Debug:', {
-        goalId: goal.id,
-        totalAssignments: assignments.length,
-        goalAssignmentsCount: goalAssignments.length,
-        goalAssignments: goalAssignments,
-        availableUsersCount: availableUsers.length,
-        allAssignments: assignments.map(a => ({ id: a.id, goalId: a.goalId, userId: a.userId, role: a.role })),
-        availableUsers: availableUsers.map(u => ({ id: u.id, name: u.name }))
-      });
-      
-      // Check for exact goal ID match
-      console.log('🔍 [GOAL DETAILS] ID Match Check:', {
-        targetGoalId: goal.id,
-        assignmentGoalIds: assignments.map(a => a.goalId),
-        exactMatches: assignments.filter(a => a.goalId === goal.id).map(a => a.goalId)
-      });
-    }
-  }, [open, goal.id, goal.category, assignments, availableUsers]);
-
 const getCategoryColor = (category: Goal['category']) => {
     switch (category) {
       case 'work': return 'bg-blue-100 text-blue-800';
@@ -369,9 +346,6 @@ const getCategoryColor = (category: Goal['category']) => {
                 <h4 className="font-medium text-gray-900 flex items-center gap-2">
                   <Users className="h-4 w-4 text-purple-600" />
                   Team Assignments ({assignments.filter(a => a.goalId === goal.id).length})
-                  <span className="text-xs text-gray-500">
-                    (Total: {assignments.length}, Users: {availableUsers.length})
-                  </span>
                 </h4>
                 
                 {assignments.filter(a => a.goalId === goal.id).length === 0 ? (

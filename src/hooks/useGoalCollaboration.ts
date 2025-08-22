@@ -29,7 +29,8 @@ export const useGoalCollaboration = (userId: string, loadAllData?: () => Promise
     
     try {
       setIsLoading(true);
-      const data = await supabaseGoalAssignmentsService.getGoalAssignments(userId);
+      // Load ALL assignments to show team members in goal details
+      const data = await supabaseGoalAssignmentsService.getAllGoalAssignments();
       setAssignments(data);
     } catch (error) {
       console.error('Error loading goal assignments:', error);
