@@ -415,6 +415,7 @@ export const EnhancedGoalsSection = ({
           onUpdateProgress={onUpdateGoalProgress}
           weeklyOutputs={weeklyOutputs}
           tasks={[]}
+          habits={habits}
           currentUserId={currentUserId}
         />
       )}

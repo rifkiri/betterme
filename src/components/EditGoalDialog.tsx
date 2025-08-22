@@ -14,7 +14,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '@/lib/utils';
-import { Goal, WeeklyOutput } from '@/types/productivity';
+import { Goal, WeeklyOutput, Habit } from '@/types/productivity';
 import { getSubcategoryOptions, mapSubcategoryDisplayToDatabase, mapSubcategoryDatabaseToDisplay } from '@/utils/goalCategoryUtils';
 import { itemLinkageService } from '@/services/ItemLinkageService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -39,10 +39,12 @@ interface EditGoalDialogProps {
   onOpenChange: (open: boolean) => void;
   onSave: (id: string, updates: Partial<Goal>) => void;
   weeklyOutputs?: WeeklyOutput[];
+  habits?: Habit[];
 }
 
-export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs = [] }: EditGoalDialogProps) => {
+export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs = [], habits = [] }: EditGoalDialogProps) => {
   const [selectedOutputs, setSelectedOutputs] = useState<WeeklyOutput[]>([]);
+  const [linkedHabits, setLinkedHabits] = useState<Habit[]>([]);
   const [isOutputDropdownOpen, setIsOutputDropdownOpen] = useState(false);
   const { currentUser } = useCurrentUser();
   
@@ -59,22 +61,33 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
   });
 
   useEffect(() => {
-    const fetchLinkedOutputs = async () => {
+    const fetchLinkedItems = async () => {
       if (currentUser?.id && open) {
         try {
           const linkedItems = await itemLinkageService.getLinkedItems('goal', goal.id, currentUser.id);
+          
+          // Get linked outputs
           const outputIds = linkedItems.filter(item => item.type === 'weekly_output').map(item => item.id);
           const linkedOutputs = weeklyOutputs.filter(output => outputIds.includes(output.id));
           setSelectedOutputs(linkedOutputs);
           form.setValue('selectedOutputIds', outputIds);
+          
+          // Get linked habits for personal goals
+          if (goal.category === 'personal') {
+            const habitIds = linkedItems.filter(item => item.type === 'habit').map(item => item.id);
+            const linkedHabitsData = habits.filter(habit => habitIds.includes(habit.id));
+            setLinkedHabits(linkedHabitsData);
+          } else {
+            setLinkedHabits([]);
+          }
         } catch (error) {
-          console.error('Error fetching linked outputs:', error);
+          console.error('Error fetching linked items:', error);
         }
       }
     };
 
     if (open && goal) {
-      fetchLinkedOutputs();
+      fetchLinkedItems();
       form.reset({
         title: goal.title,
         description: goal.description || '',
@@ -83,7 +96,7 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
         deadline: goal.deadline,
       });
     }
-  }, [goal, open, currentUser?.id, weeklyOutputs, form]);
+  }, [goal, open, currentUser?.id, weeklyOutputs, habits, form]);
 
   const onSubmit = async (data: FormData) => {
     // Ensure the due date is set to end of day in local time to avoid timezone issues
@@ -397,6 +410,52 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
                   </FormItem>
                 )}
               />
+            )}
+
+            {/* Current Linked Items Display */}
+            {(selectedOutputs.length > 0 || linkedHabits.length > 0) && (
+              <div className="space-y-3">
+                <div className="text-sm font-medium text-gray-700 border-t pt-4">
+                  Current Linked Items
+                </div>
+                
+                {/* Current Linked Outputs */}
+                {selectedOutputs.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-sm text-gray-600">
+                      Linked Outputs ({selectedOutputs.length}):
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedOutputs.map((output) => (
+                        <Badge key={output.id} variant="secondary" className="text-xs">
+                          {output.title} ({output.progress}%)
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Current Linked Habits (Personal Goals Only) */}
+                {goal.category === 'personal' && linkedHabits.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-sm text-gray-600">
+                      Linked Habits ({linkedHabits.length}):
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {linkedHabits.map((habit) => (
+                        <Badge key={habit.id} variant="outline" className="text-xs">
+                          {habit.name} 
+                          {habit.streak > 0 && (
+                            <span className="ml-1 text-green-600">
+                              ({habit.streak} streak)
+                            </span>
+                          )}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
 
             </form>

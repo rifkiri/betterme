@@ -13,7 +13,7 @@ import {
   Clock,
   ArrowRight
 } from 'lucide-react';
-import { Goal, Task, WeeklyOutput } from '@/types/productivity';
+import { Goal, Task, WeeklyOutput, Habit } from '@/types/productivity';
 import { format, isBefore } from 'date-fns';
 import { useState, useEffect } from 'react';
 import { EditGoalDialog } from './EditGoalDialog';
@@ -27,6 +27,7 @@ interface GoalDetailsDialogProps {
   onUpdateProgress: (goalId: string, newProgress: number) => void;
   weeklyOutputs: WeeklyOutput[];
   tasks: Task[];
+  habits?: Habit[];
   currentUserId?: string;
 }
 
@@ -38,32 +39,52 @@ export const GoalDetailsDialog = ({
   onUpdateProgress,
   weeklyOutputs,
   tasks,
+  habits = [],
   currentUserId
 }: GoalDetailsDialogProps) => {
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [linkedOutputs, setLinkedOutputs] = useState<WeeklyOutput[]>([]);
+  const [linkedHabits, setLinkedHabits] = useState<Habit[]>([]);
   const [loadingLinkedOutputs, setLoadingLinkedOutputs] = useState(false);
+  const [loadingLinkedHabits, setLoadingLinkedHabits] = useState(false);
 
   useEffect(() => {
-    const fetchLinkedOutputs = async () => {
+    const fetchLinkedItems = async () => {
       if (currentUserId && open) {
         setLoadingLinkedOutputs(true);
+        if (goal.category === 'personal') {
+          setLoadingLinkedHabits(true);
+        }
+        
         try {
           const linkedItems = await itemLinkageService.getLinkedItems('goal', goal.id, currentUserId);
+          
+          // Get linked outputs
           const outputIds = linkedItems.filter(item => item.type === 'weekly_output').map(item => item.id);
           const outputs = weeklyOutputs.filter(output => outputIds.includes(output.id));
           setLinkedOutputs(outputs);
+          
+          // Get linked habits for personal goals
+          if (goal.category === 'personal') {
+            const habitIds = linkedItems.filter(item => item.type === 'habit').map(item => item.id);
+            const linkedHabitsData = habits.filter(habit => habitIds.includes(habit.id));
+            setLinkedHabits(linkedHabitsData);
+          } else {
+            setLinkedHabits([]);
+          }
         } catch (error) {
-          console.error('Error fetching linked outputs:', error);
+          console.error('Error fetching linked items:', error);
           setLinkedOutputs([]);
+          setLinkedHabits([]);
         } finally {
           setLoadingLinkedOutputs(false);
+          setLoadingLinkedHabits(false);
         }
       }
     };
 
-    fetchLinkedOutputs();
-  }, [goal.id, currentUserId, open, weeklyOutputs]);
+    fetchLinkedItems();
+  }, [goal.id, goal.category, currentUserId, open, weeklyOutputs, habits]);
 
 const getCategoryColor = (category: Goal['category']) => {
     switch (category) {
@@ -212,6 +233,52 @@ const getCategoryColor = (category: Goal['category']) => {
               )}
             </div>
 
+            {/* Linked Habits (Personal Goals Only) */}
+            {goal.category === 'personal' && (
+              <div className="space-y-3">
+                <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                  <Target className="h-4 w-4 text-green-600" />
+                  Linked Habits ({linkedHabits.length})
+                </h4>
+                
+                {loadingLinkedHabits ? (
+                  <p className="text-sm text-gray-500 py-2">Loading linked habits...</p>
+                ) : linkedHabits.length === 0 ? (
+                  <p className="text-sm text-gray-500 py-2">No habits linked to this goal</p>
+                ) : (
+                  <div className="space-y-2">
+                    {linkedHabits.map((habit) => (
+                      <div key={habit.id} className="p-3 border rounded-lg bg-white">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div className="flex-1">
+                            <h5 className="font-medium text-sm">{habit.name}</h5>
+                            {habit.description && (
+                              <p className="text-xs text-gray-600 mt-1">{habit.description}</p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={habit.completed ? 'default' : 'secondary'} className="text-xs">
+                              {habit.completed ? 'Done Today' : 'Pending'}
+                            </Badge>
+                            {habit.streak > 0 && (
+                              <Badge variant="outline" className="text-xs">
+                                {habit.streak} day streak
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        {habit.category && (
+                          <div className="flex items-center gap-1 text-xs text-gray-500">
+                            <span>Category: {habit.category}</span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Related Tasks */}
             <div className="space-y-3">
               <h4 className="font-medium text-gray-900 flex items-center gap-2">
@@ -274,10 +341,27 @@ const getCategoryColor = (category: Goal['category']) => {
                   <p className="text-blue-700">Related Tasks</p>
                   <p className="font-medium text-blue-900">{relatedTasks.length}</p>
                 </div>
+                {goal.category === 'personal' && (
+                  <>
+                    <div>
+                      <p className="text-blue-700">Linked Habits</p>
+                      <p className="font-medium text-blue-900">{linkedHabits.length}</p>
+                    </div>
+                    <div>
+                      <p className="text-blue-700">Active Streaks</p>
+                      <p className="font-medium text-blue-900">
+                        {linkedHabits.filter(h => h.streak > 0).length}
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
               <div className="mt-2">
                 <p className="text-blue-700 text-xs">
-                  Completing linked outputs will contribute to this goal's progress
+                  {goal.category === 'personal' 
+                    ? 'Completing linked outputs and maintaining habits will contribute to this goal\'s progress'
+                    : 'Completing linked outputs will contribute to this goal\'s progress'
+                  }
                 </p>
               </div>
             </div>
@@ -304,6 +388,7 @@ const getCategoryColor = (category: Goal['category']) => {
           onOpenChange={open => !open && setEditingGoal(null)} 
           onSave={onEditGoal}
           weeklyOutputs={weeklyOutputs}
+          habits={habits}
         />
       )}
     </>
