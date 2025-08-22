@@ -3,44 +3,21 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Home, Calendar, Settings, Users, LogOut, Menu, X, Target } from 'lucide-react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState } from 'react';
 import { toast } from 'sonner';
-import { useAuth } from '@/contexts/AuthContext';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 export const AppNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const { currentUser } = useCurrentUser();
+  const { signOut } = useUserProfile();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const getCurrentUser = async () => {
-      if (user) {
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-          
-          setCurrentUser(profile);
-        } catch (error) {
-          console.error('Error getting current user:', error);
-        }
-      } else {
-        setCurrentUser(null);
-      }
-    };
-
-    getCurrentUser();
-  }, [user]);
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
-      toast.success('Signed out successfully');
+      await signOut();
       navigate('/signin');
     } catch (error) {
       console.error('Error signing out:', error);
