@@ -42,7 +42,7 @@ export class SupabaseHabitsService {
       archived: habit.archived,
       isDeleted: habit.is_deleted,
       createdAt: habit.created_at,
-      linkedGoalId: habit.linked_goal_id
+      linkedGoalId: (habit as any).linked_goal_id || undefined
     }));
   }
 

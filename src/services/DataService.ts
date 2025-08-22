@@ -164,9 +164,18 @@ export class DataService {
   }
 
   static async createHabit(habit: Omit<Habit, 'id'>): Promise<Habit> {
+    const validCategories: Array<"health" | "productivity" | "personal" | "fitness" | "learning" | "other" | "mental" | "relationship" | "social" | "spiritual" | "wealth"> = [
+      'health', 'productivity', 'personal', 'fitness', 'learning', 'other',
+      'mental', 'relationship', 'social', 'spiritual', 'wealth'
+    ];
+    
+    const validatedHabitRow = transformHabitToRow({
+      ...habit,
+      category: validCategories.includes(habit.category as any) ? habit.category : 'other'
+    }) as any;
     const { data, error } = await supabase
       .from('habits')
-      .insert(transformHabitToRow(habit))
+      .insert(validatedHabitRow)
       .select()
       .single();
     
@@ -175,9 +184,19 @@ export class DataService {
   }
 
   static async updateHabit(id: string, updates: Partial<Habit>): Promise<Habit> {
+    const validCategories: Array<"health" | "productivity" | "personal" | "fitness" | "learning" | "other" | "mental" | "relationship" | "social" | "spiritual" | "wealth"> = [
+      'health', 'productivity', 'personal', 'fitness', 'learning', 'other',
+      'mental', 'relationship', 'social', 'spiritual', 'wealth'
+    ];
+    
+    const validatedHabitRow = transformHabitToRow({
+      ...updates,
+      category: validCategories.includes(updates.category as any) ? updates.category : 'other'
+    }) as any;
+    
     const { data, error } = await supabase
       .from('habits')
-      .update(transformHabitToRow(updates))
+      .update(validatedHabitRow)
       .eq('id', id)
       .select()
       .single();
@@ -200,9 +219,22 @@ export class DataService {
     table: string,
     updates: Array<{ id: string; data: Partial<T> }>
   ): Promise<void> {
-    const promises = updates.map(({ id, data }) =>
-      supabase.from(table).update(data).eq('id', id)
-    );
+    const promises = updates.map(({ id, data }) => {
+      // Type-safe table update
+      if (table === 'habits') {
+        const validCategories: Array<"health" | "productivity" | "personal" | "fitness" | "learning" | "other" | "mental" | "relationship" | "social" | "spiritual" | "wealth"> = [
+          'health', 'productivity', 'personal', 'fitness', 'learning', 'other',
+          'mental', 'relationship', 'social', 'spiritual', 'wealth'
+        ];
+        
+        const validatedData = {
+          ...data,
+          category: validCategories.includes((data as any).category) ? (data as any).category : 'other'
+        };
+        return supabase.from('habits' as any).update(validatedData).eq('id', id);
+      }
+      return supabase.from(table as any).update(data).eq('id', id);
+    });
     
     const results = await Promise.allSettled(promises);
     const errors = results.filter(r => r.status === 'rejected');
