@@ -454,103 +454,35 @@ export const EditGoalDialog = ({
                       <Target className="h-4 w-4" />
                       Link to Weekly Outputs (Optional)
                     </FormLabel>
-                    
-                    <Popover open={isOutputDropdownOpen} onOpenChange={setIsOutputDropdownOpen}>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className="w-full justify-between"
-                          >
-                            {selectedOutputs.length === 0 
-                              ? "Select outputs to link..." 
-                              : `${selectedOutputs.length} output${selectedOutputs.length !== 1 ? 's' : ''} selected`
-                            }
-                            <Target className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0 bg-background border z-50" align="start">
-                        <Command className="bg-background">
-                          <CommandInput placeholder="Search outputs..." className="bg-background" />
-                          <CommandList className="bg-background">
-                            <CommandEmpty>No outputs found.</CommandEmpty>
-                            <CommandGroup className="bg-background">
-                              {availableOutputs.map((output) => (
-                                <CommandItem
-                                  key={output.id}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    toggleOutputSelection(output);
-                                  }}
-                                  className="flex items-center justify-between p-3 bg-background hover:bg-accent cursor-pointer"
-                                >
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <span className="font-medium text-sm">{output.title}</span>
-                                      <Badge variant="secondary" className="text-xs">
-                                        {output.progress}%
-                                      </Badge>
-                                    </div>
-                                    {output.description && (
-                                      <p className="text-xs text-muted-foreground">{output.description}</p>
-                                    )}
-                                    {output.dueDate && (
-                                      <div className="flex items-center gap-1 mt-1">
-                                        <span className="text-xs text-muted-foreground">
-                                          Due: {format(output.dueDate, 'MMM dd')}
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="ml-2">
-                                    {(field.value || []).includes(output.id) && (
-                                      <div className="h-4 w-4 bg-primary rounded-sm flex items-center justify-center">
-                                        <span className="text-xs text-primary-foreground">✓</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-
-                    {selectedOutputs.length > 0 && (
-                      <div className="mt-3 p-3 bg-muted rounded-lg">
-                        <div className="text-sm font-medium mb-2">
-                          Selected Outputs ({selectedOutputs.length}):
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {selectedOutputs.map((output) => (
-                            <Badge 
-                              key={output.id} 
-                              variant="secondary" 
-                              className="flex items-center gap-1"
-                            >
-                              {output.title}
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="h-4 w-4 p-0 hover:bg-transparent"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  removeOutput(output.id);
-                                }}
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
+                    <Select 
+                      onValueChange={(value) => {
+                        if (value === "none" || !value) {
+                          setSelectedOutputs([]);
+                          form.setValue('selectedOutputIds', []);
+                        } else {
+                          const output = availableOutputs.find(o => o.id === value);
+                          if (output) {
+                            setSelectedOutputs([output]);
+                            form.setValue('selectedOutputIds', [output.id]);
+                          }
+                        }
+                      }} 
+                      value={selectedOutputs.length > 0 ? selectedOutputs[0].id : "none"}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a weekly output" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">No weekly output</SelectItem>
+                        {availableOutputs.map(output => (
+                          <SelectItem key={output.id} value={output.id}>
+                            {output.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
