@@ -29,35 +29,8 @@ const Goals = () => {
     permanentlyDeleteGoal
   } = useProductivity();
 
-  // Enhanced debug logging for data flow
-  console.log('Goals page - Raw data check:', {
-    profileExists: !!profile,
-    profile: profile ? { id: profile.id, name: profile.name, role: profile.role } : 'NO PROFILE',
-    allGoalsCount: allGoals.length,
-    allGoalsCategories: allGoals.map(g => ({ id: g.id, title: g.title, category: g.category, userId: g.userId })),
-    currentUserId: profile?.id
-  });
-
-  // Debug the filtering logic step by step
-  const workGoals = allGoals.filter(goal => goal.category === 'work');
-  const activeWorkGoals = workGoals.filter(goal => goal.progress < 100 && !goal.archived);
-  const otherUsersGoals = activeWorkGoals.filter(goal => goal.userId !== profile?.id);
-  const notMemberGoals = otherUsersGoals.filter(goal => !goal.memberIds?.includes(profile?.id || ''));
-  const notLeadGoals = notMemberGoals.filter(goal => !goal.leadIds?.includes(profile?.id || ''));
-  const finalFilteredGoals = notLeadGoals.filter(goal => goal.coachId !== profile?.id);
-
-  console.log('Goals page - Filtering breakdown:', {
-    totalGoals: allGoals.length,
-    workGoals: workGoals.length,
-    activeWorkGoals: activeWorkGoals.length,
-    otherUsersGoals: otherUsersGoals.length,
-    notMemberGoals: notMemberGoals.length,
-    notLeadGoals: notLeadGoals.length,
-    finalAvailableGoals: finalFilteredGoals.length,
-    finalGoals: finalFilteredGoals.map(g => ({ id: g.id, title: g.title, userId: g.userId }))
-  });
-
   const {
+    assignments,
     notifications,
     acknowledgeNotification,
     acknowledgeAllNotifications,
@@ -91,6 +64,7 @@ const Goals = () => {
         availableUsers={users}
         currentUserId={profile?.id}
         userRole={profile?.role}
+        assignments={assignments}
         onAddGoal={addGoal}
         onEditGoal={editGoal}
         onDeleteGoal={deleteGoal}

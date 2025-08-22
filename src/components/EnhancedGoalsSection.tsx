@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { SimpleAddGoalDialog } from './SimpleAddGoalDialog';
 import { JoinGoalDialog } from './JoinGoalDialog';
 import { GoalDetailsDialog } from './GoalDetailsDialog';
-import { Goal, WeeklyOutput, Habit } from '@/types/productivity';
+import { Goal, WeeklyOutput, Habit, GoalAssignment } from '@/types/productivity';
 import { Target, Briefcase, User, Plus, CheckCircle, Minus, Edit, Trash2, Eye, Link2 } from 'lucide-react';
 
 interface EnhancedGoalsSectionProps {
@@ -19,6 +19,7 @@ interface EnhancedGoalsSectionProps {
   availableUsers?: Array<{ id: string; name: string; role: string }>;
   currentUserId?: string;
   userRole?: string;
+  assignments: GoalAssignment[];
   onAddGoal: (goal: Omit<Goal, 'id' | 'progress' | 'createdDate'>) => void;
   onEditGoal: (id: string, updates: Partial<Goal>) => void;
   onDeleteGoal: (id: string) => void;
@@ -38,6 +39,7 @@ export const EnhancedGoalsSection = ({
   availableUsers = [],
   currentUserId,
   userRole,
+  assignments,
   onAddGoal,
   onEditGoal,
   onDeleteGoal,
@@ -67,9 +69,11 @@ export const EnhancedGoalsSection = ({
   const getUserRole = (goal: Goal) => {
     if (!currentUserId) return null;
     
-    if (goal.coachId === currentUserId) return 'Coach';
-    if (goal.leadIds?.includes(currentUserId)) return 'Lead';
-    if (goal.memberIds?.includes(currentUserId)) return 'Member';
+    // Use assignments data instead of legacy arrays
+    const assignment = assignments.find(a => a.goalId === goal.id && a.userId === currentUserId);
+    if (assignment) {
+      return assignment.role.charAt(0).toUpperCase() + assignment.role.slice(1); // Capitalize first letter
+    }
     return null;
   };
 
@@ -352,17 +356,22 @@ export const EnhancedGoalsSection = ({
                     currentUserId={currentUserId}
                   />
                   <JoinGoalDialog
-                    availableGoals={allGoals.filter(goal => 
-                      goal.category === 'work' && 
-                      goal.progress < 100 && 
-                      !goal.archived && 
-                      goal.userId !== currentUserId &&
-                      !goal.memberIds?.includes(currentUserId || '') &&
-                      !goal.leadIds?.includes(currentUserId || '') &&
-                      goal.coachId !== currentUserId
-                    )}
+                    availableGoals={allGoals.filter(goal => {
+                      // Only show work goals that are active and not owned by current user
+                      if (goal.category !== 'work' || goal.progress >= 100 || goal.archived || goal.userId === currentUserId) {
+                        return false;
+                      }
+                      
+                      // Check if user already has an assignment for this goal
+                      const hasAssignment = assignments.some(assignment => 
+                        assignment.goalId === goal.id && assignment.userId === currentUserId
+                      );
+                      
+                      return !hasAssignment;
+                    })}
                     availableUsers={availableUsers}
                     currentUserId={currentUserId}
+                    assignments={assignments}
                     onJoinGoal={(goalId, role) => onJoinWorkGoal(goalId, role)}
                   />
                 </div>

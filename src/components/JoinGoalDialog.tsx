@@ -7,12 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Users, UserCog, UserCheck, User, Target, Calendar, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { Goal } from '@/types/productivity';
+import { GoalAssignment } from '@/types/productivity';
 import { toast } from 'sonner';
 
 interface JoinGoalDialogProps {
   availableGoals: Goal[];
   availableUsers?: Array<{ id: string; name: string; role: string }>;
   currentUserId?: string;
+  assignments: GoalAssignment[];
   onJoinGoal: (goalId: string, role: 'coach' | 'lead' | 'member') => void;
 }
 
@@ -20,6 +22,7 @@ export const JoinGoalDialog = ({
   availableGoals, 
   availableUsers = [],
   currentUserId,
+  assignments,
   onJoinGoal 
 }: JoinGoalDialogProps) => {
   const [open, setOpen] = useState(false);
@@ -29,17 +32,7 @@ export const JoinGoalDialog = ({
   // Debug logging for JoinGoalDialog props
   console.log('JoinGoalDialog received props:', {
     availableGoalsCount: availableGoals.length,
-    availableGoals: availableGoals.map(g => ({
-      id: g.id,
-      title: g.title,
-      category: g.category,
-      userId: g.userId,
-      progress: g.progress,
-      archived: g.archived,
-      coachId: g.coachId,
-      leadIds: g.leadIds,
-      memberIds: g.memberIds
-    })),
+    assignmentsCount: assignments.length,
     currentUserId,
     availableUsersCount: availableUsers.length
   });
@@ -65,13 +58,15 @@ export const JoinGoalDialog = ({
 
     console.log('Goal found for joining:', { id: goal.id, title: goal.title, category: goal.category });
 
-    // Validate role availability
-    if (selectedRole === 'coach' && goal.coachId) {
+    // Validate role availability using assignments data
+    const goalAssignments = assignments.filter(a => a.goalId === selectedGoal);
+    
+    if (selectedRole === 'coach' && goalAssignments.some(a => a.role === 'coach')) {
       toast.error('Coach role is already taken');
       return;
     }
 
-    if (selectedRole === 'lead' && goal.leadIds && goal.leadIds.length > 0) {
+    if (selectedRole === 'lead' && goalAssignments.some(a => a.role === 'lead')) {
       toast.error('Lead role is already taken');
       return;
     }
@@ -93,14 +88,15 @@ export const JoinGoalDialog = ({
 
   const getAvailableRoles = (goal: Goal) => {
     const roles = [];
+    const goalAssignments = assignments.filter(a => a.goalId === goal.id);
     
-    // Coach role available if no coach assigned
-    if (!goal.coachId) {
+    // Coach role available if no coach assigned for this goal
+    if (!goalAssignments.some(a => a.role === 'coach')) {
       roles.push('coach');
     }
     
-    // Lead role available if no leads assigned
-    if (!goal.leadIds || goal.leadIds.length === 0) {
+    // Lead role available if no leads assigned for this goal
+    if (!goalAssignments.some(a => a.role === 'lead')) {
       roles.push('lead');
     }
     
@@ -196,43 +192,52 @@ export const JoinGoalDialog = ({
                     <div className="flex items-center gap-2">
                       <UserCog className="h-4 w-4 text-blue-600" />
                       <span className="text-sm">Coach:</span>
-                      {selectedGoalData.coachId ? (
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                          {getUserName(selectedGoalData.coachId)}
-                        </Badge>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">Vacant</span>
-                      )}
+                      {(() => {
+                        const coachAssignment = assignments.find(a => a.goalId === selectedGoalData.id && a.role === 'coach');
+                        return coachAssignment ? (
+                          <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                            {getUserName(coachAssignment.userId)}
+                          </Badge>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">Vacant</span>
+                        );
+                      })()}
                     </div>
 
                     {/* Lead */}
                     <div className="flex items-center gap-2">
                       <UserCheck className="h-4 w-4 text-green-600" />
                       <span className="text-sm">Lead:</span>
-                      {selectedGoalData.leadIds && selectedGoalData.leadIds.length > 0 ? (
-                        <Badge variant="secondary" className="bg-green-100 text-green-800">
-                          {getUserName(selectedGoalData.leadIds[0])}
-                        </Badge>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">Vacant</span>
-                      )}
+                      {(() => {
+                        const leadAssignment = assignments.find(a => a.goalId === selectedGoalData.id && a.role === 'lead');
+                        return leadAssignment ? (
+                          <Badge variant="secondary" className="bg-green-100 text-green-800">
+                            {getUserName(leadAssignment.userId)}
+                          </Badge>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">Vacant</span>
+                        );
+                      })()}
                     </div>
 
                     {/* Members */}
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4 text-purple-600" />
                       <span className="text-sm">Members:</span>
-                      {selectedGoalData.memberIds && selectedGoalData.memberIds.length > 0 ? (
-                        <div className="flex flex-wrap gap-1">
-                          {selectedGoalData.memberIds.map(memberId => (
-                            <Badge key={memberId} variant="secondary" className="bg-purple-100 text-purple-800">
-                              {getUserName(memberId)}
-                            </Badge>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">None</span>
-                      )}
+                      {(() => {
+                        const memberAssignments = assignments.filter(a => a.goalId === selectedGoalData.id && a.role === 'member');
+                        return memberAssignments.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {memberAssignments.map(assignment => (
+                              <Badge key={assignment.id} variant="secondary" className="bg-purple-100 text-purple-800">
+                                {getUserName(assignment.userId)}
+                              </Badge>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">None</span>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
