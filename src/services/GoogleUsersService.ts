@@ -1,0 +1,133 @@
+import { BaseGoogleSheetsService } from './BaseGoogleSheetsService';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'manager' | 'team-member';
+  position?: string;
+  temporaryPassword: string;
+  hasChangedPassword: boolean;
+  createdAt: string;
+  lastLogin?: string;
+}
+
+class GoogleUsersService extends BaseGoogleSheetsService {
+  async getUsers(): Promise<User[]> {
+    if (!this.isAuthenticated()) {
+      return [];
+    }
+
+    try {
+      const spreadsheetId = this.getSpreadsheetId();
+      const data = await this.makeRequest(
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Users`
+      );
+
+      const rows = data.values || [];
+      return rows.slice(1).map((row: string[]) => ({
+        id: row[0] || '',
+        name: row[1] || '',
+        email: row[2] || '',
+        role: row[3] as 'admin' | 'manager' | 'team-member',
+        position: row[4] || undefined,
+        temporaryPassword: row[5] || '',
+        hasChangedPassword: row[6] === 'TRUE',
+        createdAt: row[7] || '',
+        lastLogin: row[8] || undefined,
+      }));
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      return [];
+    }
+  }
+
+  async addUser(user: User) {
+    const spreadsheetId = this.getSpreadsheetId();
+    const values = [[
+      user.id,
+      user.name,
+      user.email,
+      user.role,
+      user.position || '',
+      user.temporaryPassword,
+      user.hasChangedPassword ? 'TRUE' : 'FALSE',
+      user.createdAt,
+      user.lastLogin || ''
+    ]];
+
+    return await this.makeRequest(
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Users:append?valueInputOption=RAW`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ values }),
+      }
+    );
+  }
+
+  async updateUser(userId: string, updates: Partial<User>) {
+    const users = await this.getUsers();
+    const userIndex = users.findIndex(user => user.id === userId);
+    
+    if (userIndex === -1) {
+      throw new Error('User not found');
+    }
+
+    const existingUser = users[userIndex];
+    const updatedUser = { ...existingUser, ...updates };
+    const spreadsheetId = this.getSpreadsheetId();
+
+    const values = [[
+      updatedUser.id,
+      updatedUser.name,
+      updatedUser.email,
+      updatedUser.role,
+      updatedUser.position || '',
+      updatedUser.temporaryPassword,
+      updatedUser.hasChangedPassword ? 'TRUE' : 'FALSE',
+      updatedUser.createdAt,
+      updatedUser.lastLogin || ''
+    ]];
+
+    const rowNumber = userIndex + 2;
+    return await this.makeRequest(
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Users!A${rowNumber}:I${rowNumber}?valueInputOption=RAW`,
+      {
+        method: 'PUT',
+        body: JSON.stringify({ values }),
+      }
+    );
+  }
+
+  async deleteUser(userId: string) {
+    const users = await this.getUsers();
+    const userIndex = users.findIndex(user => user.id === userId);
+    
+    if (userIndex === -1) {
+      throw new Error('User not found');
+    }
+
+    const spreadsheetId = this.getSpreadsheetId();
+    const rowNumber = userIndex + 2;
+    return await this.makeRequest(
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          requests: [{
+            deleteDimension: {
+              range: {
+                sheetId: 0,
+                dimension: 'ROWS',
+                startIndex: rowNumber - 1,
+                endIndex: rowNumber
+              }
+            }
+          }]
+        }),
+      }
+    );
+  }
+}
+
+export const googleUsersService = new GoogleUsersService();

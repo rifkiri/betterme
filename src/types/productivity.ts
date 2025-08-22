@@ -1,4 +1,3 @@
-
 export interface Habit {
   id: string;
   userId?: string;
@@ -10,7 +9,6 @@ export interface Habit {
   archived?: boolean;
   isDeleted?: boolean;
   createdAt?: string;
-  lastCompletedDate?: Date;
   linkedGoalId?: string;
 }
 
@@ -19,7 +17,7 @@ export interface Task {
   userId?: string;
   title: string;
   description?: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+  priority: 'Low' | 'Medium' | 'High';
   completed: boolean;
   estimatedTime?: string;
   createdDate: Date;
@@ -30,8 +28,7 @@ export interface Task {
   isDeleted?: boolean;
   deletedDate?: Date;
   weeklyOutputId?: string;
-  taggedUsers?: string[];
-  projectId?: string;
+  taggedUsers?: string[]; // Array of user IDs who are tagged for support
 }
 
 export interface WeeklyPlan {
@@ -61,26 +58,25 @@ export interface WeeklyOutput {
   isDeleted?: boolean;
   deletedDate?: Date;
   linkedGoalId?: string;
-  projectId?: string;
 }
 
 export interface Goal {
   id: string;
-  userId?: string;
+  userId?: string; // Owner of the goal
   title: string;
   description?: string;
   category: 'work' | 'personal';
-  subcategory?: string;
+  subcategory?: string; // Subcategory for more specific classification
   deadline?: Date;
   createdDate: Date;
   completed: boolean;
   archived: boolean;
-  isDeleted?: boolean;
-  progress: number;
-  coachId?: string;
-  leadIds?: string[];
-  memberIds?: string[];
-  createdBy?: string;
+  progress: number; // 0-100, manually controlled
+  // linkedOutputIds removed - now handled by ItemLinkageService
+  coachId?: string; // Manager responsible for goal oversight
+  leadIds?: string[]; // Users leading goal execution (managers or team members)
+  memberIds?: string[]; // Users executing goal tasks (managers or team members)  
+  createdBy?: string; // Manager who created the work goal
   assignmentDate?: Date;
 }
 

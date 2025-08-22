@@ -1,26 +1,34 @@
 
-import { useState } from 'react';
-import { WeeklyOutput } from '@/types/productivity';
 import { supabaseDataService } from '@/services/SupabaseDataService';
+import { WeeklyOutput, Goal } from '@/types/productivity';
 import { toast } from 'sonner';
+import { supabaseWeeklyOutputsService } from '@/services/SupabaseWeeklyOutputsService';
+import { linkageSynchronizationService } from '@/services/LinkageSynchronizationService';
 
 interface UseWeeklyOutputsManagerProps {
-  userId: string;
+  userId: string | null;
   isGoogleSheetsAvailable: () => boolean;
-  loadAllData: () => void;
+  loadAllData: () => Promise<void>;
   weeklyOutputs: WeeklyOutput[];
-  setWeeklyOutputs: (outputs: WeeklyOutput[]) => void;
+  setWeeklyOutputs: (outputs: WeeklyOutput[] | ((prev: WeeklyOutput[]) => WeeklyOutput[])) => void;
   deletedWeeklyOutputs: WeeklyOutput[];
-  setDeletedWeeklyOutputs: (outputs: WeeklyOutput[]) => void;
-  goals: any[];
+  setDeletedWeeklyOutputs: (outputs: WeeklyOutput[] | ((prev: WeeklyOutput[]) => WeeklyOutput[])) => void;
+  goals: Goal[];
 }
 
-export const useWeeklyOutputsManager = (props: UseWeeklyOutputsManagerProps) => {
-  const [loading, setLoading] = useState(false);
+export const useWeeklyOutputsManager = ({
+  userId,
+  isGoogleSheetsAvailable: isSupabaseAvailable,
+  loadAllData,
+  weeklyOutputs,
+  setWeeklyOutputs,
+  deletedWeeklyOutputs,
+  setDeletedWeeklyOutputs,
+  goals,
+}: UseWeeklyOutputsManagerProps) => {
 
   const addWeeklyOutput = async (output: Omit<WeeklyOutput, 'id' | 'createdDate'>) => {
-    if (!props.userId) {
-      console.log('No user ID for adding weekly output');
+    if (!userId) {
       toast.error('Please sign in to add weekly outputs');
       return;
     }
@@ -29,183 +37,143 @@ export const useWeeklyOutputsManager = (props: UseWeeklyOutputsManagerProps) => 
       ...output,
       id: crypto.randomUUID(),
       createdDate: new Date(),
+      dueDate: output.dueDate || new Date(),
+      isMoved: false,
+      isDeleted: false,
+      progress: 0,
     };
 
-    console.log('Adding weekly output for user:', props.userId, newOutput);
-
-    setLoading(true);
     try {
-      if (props.isGoogleSheetsAvailable()) {
-        await supabaseDataService.addWeeklyOutput({ ...newOutput, userId: props.userId });
-        await props.loadAllData();
+      if (isSupabaseAvailable()) {
+        await supabaseWeeklyOutputsService.addWeeklyOutput({ ...newOutput, userId });
+        await loadAllData();
         toast.success('Weekly output added successfully');
       } else {
         toast.error('Please sign in to add weekly outputs');
       }
     } catch (error) {
-      console.error('Failed to add weekly output for user', props.userId, ':', error);
-      toast.error('Failed to add weekly output');
-    } finally {
-      setLoading(false);
+      console.error('Failed to add weekly output:', error);
+      toast.error('Failed to add weekly output: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
   const editWeeklyOutput = async (id: string, updates: Partial<WeeklyOutput>) => {
-    if (!props.userId) {
-      console.log('No user ID for editing weekly output');
-      toast.error('Please sign in to edit weekly outputs');
+    if (!userId) {
+      console.error('No user ID found');
       return;
     }
 
-    console.log('Editing weekly output for user:', props.userId, 'output:', id, 'updates:', updates);
+    console.log('Editing weekly output:', { id, updates });
 
-    setLoading(true);
     try {
-      if (props.isGoogleSheetsAvailable()) {
-        await supabaseDataService.updateWeeklyOutput(id, props.userId, updates);
-        await props.loadAllData();
+      if (isSupabaseAvailable()) {
+        console.log('Attempting to update in Supabase...');
+        await supabaseDataService.updateWeeklyOutput(id, userId, updates);
+        
+        // Goal linking is now handled separately through ItemLinkageService
+        
+        console.log('Successfully updated in Supabase, reloading data...');
+        await loadAllData();
         toast.success('Weekly output updated successfully');
       } else {
         toast.error('Please sign in to edit weekly outputs');
       }
     } catch (error) {
-      console.error('Failed to update weekly output for user', props.userId, ':', error);
-      toast.error('Failed to update weekly output');
-    } finally {
-      setLoading(false);
+      console.error('Failed to update weekly output:', error);
+      toast.error('Failed to update weekly output: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
-  const updateProgress = async (id: string, progress: number) => {
-    if (!props.userId) {
-      console.log('No user ID for updating weekly output progress');
-      toast.error('Please sign in to update weekly outputs');
-      return;
+  const updateProgress = async (outputId: string, newProgress: number) => {
+    if (!userId) return;
+
+    const output = weeklyOutputs.find(o => o.id === outputId);
+    if (!output) return;
+
+    const newProgressValue = Math.max(0, Math.min(100, newProgress));
+    const updates: Partial<WeeklyOutput> = { progress: newProgressValue };
+
+    console.log('Updating progress:', { outputId, newProgress: newProgressValue, currentProgress: output.progress });
+
+    if (newProgressValue === 100 && output.progress < 100) {
+      updates.completedDate = new Date();
+      console.log('Setting completedDate to:', updates.completedDate);
+    } else if (newProgressValue < 100 && output.progress === 100) {
+      updates.completedDate = undefined;
+      console.log('Removing completedDate');
     }
 
-    console.log('Updating weekly output progress for user:', props.userId, 'output:', id, 'progress:', progress);
-
-    setLoading(true);
-    try {
-      if (props.isGoogleSheetsAvailable()) {
-        await supabaseDataService.updateWeeklyOutput(id, props.userId, { progress });
-        await props.loadAllData();
-        toast.success('Progress updated successfully');
-      } else {
-        toast.error('Please sign in to update weekly outputs');
-      }
-    } catch (error) {
-      console.error('Failed to update progress for user', props.userId, ':', error);
-      toast.error('Failed to update progress');
-    } finally {
-      setLoading(false);
-    }
+    await editWeeklyOutput(outputId, updates);
   };
 
-  const moveWeeklyOutput = async (id: string, newDate: Date) => {
-    if (!props.userId) return;
+  const moveWeeklyOutput = async (id: string, newDueDate: Date) => {
+    if (!userId) return;
 
-    console.log('Moving weekly output for user:', props.userId, 'output:', id, 'to:', newDate);
+    const output = weeklyOutputs.find(o => o.id === id);
+    if (!output) return;
 
-    setLoading(true);
-    try {
-      if (props.isGoogleSheetsAvailable()) {
-        await supabaseDataService.updateWeeklyOutput(id, props.userId, { 
-          dueDate: newDate, 
-          isMoved: true 
-        });
-        await props.loadAllData();
-        toast.success('Weekly output moved successfully');
-      } else {
-        toast.error('Please sign in to move weekly outputs');
-      }
-    } catch (error) {
-      console.error('Failed to move weekly output for user', props.userId, ':', error);
-      toast.error('Failed to move weekly output');
-    } finally {
-      setLoading(false);
-    }
+    const updates = {
+      dueDate: newDueDate,
+      originalDueDate: output.originalDueDate || output.dueDate,
+      isMoved: true
+    };
+
+    await editWeeklyOutput(id, updates);
   };
 
   const deleteWeeklyOutput = async (id: string) => {
-    if (!props.userId) return;
+    if (!userId) return;
 
-    console.log('Soft deleting weekly output for user:', props.userId, 'output:', id);
-
-    setLoading(true);
     try {
-      if (props.isGoogleSheetsAvailable()) {
-        await supabaseDataService.updateWeeklyOutput(id, props.userId, { 
-          isDeleted: true, 
-          deletedDate: new Date() 
-        });
-        await props.loadAllData();
+      if (isSupabaseAvailable()) {
+        await supabaseDataService.updateWeeklyOutput(id, userId, { isDeleted: true, deletedDate: new Date() });
+        await loadAllData();
         toast.success('Weekly output deleted');
       } else {
         toast.error('Please sign in to delete weekly outputs');
       }
     } catch (error) {
-      console.error('Failed to delete weekly output for user', props.userId, ':', error);
       toast.error('Failed to delete weekly output');
-    } finally {
-      setLoading(false);
+      console.error('Failed to delete weekly output:', error);
     }
   };
 
   const restoreWeeklyOutput = async (id: string) => {
-    if (!props.userId) return;
+    if (!userId) return;
 
-    console.log('Restoring weekly output for user:', props.userId, 'output:', id);
-
-    setLoading(true);
     try {
-      if (props.isGoogleSheetsAvailable()) {
-        await supabaseDataService.updateWeeklyOutput(id, props.userId, { 
-          isDeleted: false, 
-          deletedDate: undefined 
-        });
-        await props.loadAllData();
+      if (isSupabaseAvailable()) {
+        await supabaseDataService.updateWeeklyOutput(id, userId, { isDeleted: false, deletedDate: undefined });
+        await loadAllData();
         toast.success('Weekly output restored');
       } else {
         toast.error('Please sign in to restore weekly outputs');
       }
     } catch (error) {
-      console.error('Failed to restore weekly output for user', props.userId, ':', error);
       toast.error('Failed to restore weekly output');
-    } finally {
-      setLoading(false);
+      console.error('Failed to restore weekly output:', error);
     }
   };
 
   const permanentlyDeleteWeeklyOutput = async (id: string) => {
-    if (!props.userId) return;
+    if (!userId) return;
 
-    console.log('Permanently deleting weekly output for user:', props.userId, 'output:', id);
-
-    setLoading(true);
     try {
-      if (props.isGoogleSheetsAvailable()) {
-        await supabaseDataService.permanentlyDeleteWeeklyOutput(id, props.userId);
-        await props.loadAllData();
+      if (isSupabaseAvailable()) {
+        // Actually delete the weekly output permanently from the database
+        await supabaseDataService.permanentlyDeleteWeeklyOutput(id, userId);
+        await loadAllData();
         toast.success('Weekly output permanently deleted');
       } else {
         toast.error('Please sign in to delete weekly outputs');
       }
     } catch (error) {
-      console.error('Failed to permanently delete weekly output for user', props.userId, ':', error);
       toast.error('Failed to delete weekly output');
-    } finally {
-      setLoading(false);
+      console.error('Failed to delete weekly output:', error);
     }
   };
 
-  const syncLinkages = () => {
-    console.log('Linkage synchronization simplified');
-  };
-
   return {
-    weeklyOutputs: props.weeklyOutputs,
-    loading,
     addWeeklyOutput,
     editWeeklyOutput,
     updateProgress,
@@ -213,6 +181,5 @@ export const useWeeklyOutputsManager = (props: UseWeeklyOutputsManagerProps) => 
     deleteWeeklyOutput,
     restoreWeeklyOutput,
     permanentlyDeleteWeeklyOutput,
-    syncLinkages,
   };
 };

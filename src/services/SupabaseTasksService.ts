@@ -33,18 +33,23 @@ export class SupabaseTasksService {
     }));
   }
 
-  private mapDatabasePriorityToApp(dbPriority: string | null): 'low' | 'medium' | 'high' | 'urgent' {
+  private mapDatabasePriorityToApp(dbPriority: string | null): 'Low' | 'Medium' | 'High' {
     switch (dbPriority) {
-      case 'low': return 'low';
-      case 'medium': return 'medium';
-      case 'high': return 'high';
-      case 'urgent': return 'urgent';
-      default: return 'medium';
+      case 'low': return 'Low';
+      case 'medium': return 'Medium';
+      case 'high': 
+      case 'urgent': return 'High';
+      default: return 'Medium';
     }
   }
 
-  private mapAppPriorityToDatabase(appPriority: 'low' | 'medium' | 'high' | 'urgent'): 'low' | 'medium' | 'high' | 'urgent' {
-    return appPriority; // Direct mapping since they match
+  private mapAppPriorityToDatabase(appPriority: 'Low' | 'Medium' | 'High'): 'low' | 'medium' | 'high' {
+    switch (appPriority) {
+      case 'Low': return 'low';
+      case 'Medium': return 'medium';
+      case 'High': return 'high';
+      default: return 'medium';
+    }
   }
 
   async addTask(task: Task & { userId: string }): Promise<void> {

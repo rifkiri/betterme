@@ -1,8 +1,9 @@
-
 import React, { useEffect } from 'react';
 import { AppNavigation } from '@/components/AppNavigation';
 import { EnhancedGoalsSection } from '@/components/EnhancedGoalsSection';
+import { GoalNotificationsDialog } from '@/components/GoalNotificationsDialog';
 import { useProductivity } from '@/hooks/useProductivity';
+import { useGoalCollaboration } from '@/hooks/useGoalCollaboration';
 import { useUsersData } from '@/hooks/useUsersData';
 import { useUserProfile } from '@/hooks/useUserProfile';
 
@@ -25,6 +26,14 @@ const Goals = () => {
     permanentlyDeleteGoal
   } = useProductivity();
 
+  const {
+    notifications,
+    acknowledgeNotification,
+    acknowledgeAllNotifications,
+    joinWorkGoal,
+    leaveWorkGoal
+  } = useGoalCollaboration(profile?.id || '', loadAllData);
+
   // Set page title and load users
   useEffect(() => {
     document.title = "My Goals - BetterMe";
@@ -37,15 +46,6 @@ const Goals = () => {
       document.title = "BetterMe";
     };
   }, [profile?.role]);
-
-  // Simple join/leave functions for work goals (simplified from previous collaboration system)
-  const joinWorkGoal = async (goalId: string) => {
-    console.log('Join goal functionality simplified - goal:', goalId);
-  };
-
-  const leaveWorkGoal = async (goalId: string) => {
-    console.log('Leave goal functionality simplified - goal:', goalId);
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -68,6 +68,14 @@ const Goals = () => {
         onUpdateGoalProgress={updateGoalProgress}
         onJoinWorkGoal={joinWorkGoal}
         onLeaveWorkGoal={leaveWorkGoal}
+      />
+
+      {/* Goal Notifications */}
+      <GoalNotificationsDialog
+        notifications={notifications}
+        goals={goals}
+        onAcknowledge={acknowledgeNotification}
+        onAcknowledgeAll={acknowledgeAllNotifications}
       />
     </div>
   );

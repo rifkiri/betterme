@@ -1,14 +1,14 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { GoalForm } from './GoalForm';
-import { GoalCard } from './GoalCard';
-import { LinkGoalsDialog } from './LinkGoalsDialog';
-import { Plus, Target, Archive, Trash2, Users, Calendar, TrendingUp } from 'lucide-react';
-import { toast } from 'sonner';
-import type { Goal, Habit, WeeklyOutput } from '@/types/productivity';
+import { Separator } from '@/components/ui/separator';
+import { SimpleAddGoalDialog } from './SimpleAddGoalDialog';
+import { JoinGoalDialog } from './JoinGoalDialog';
+import { GoalDetailsDialog } from './GoalDetailsDialog';
+import { Goal, WeeklyOutput, Habit } from '@/types/productivity';
+import { Target, Briefcase, User, Plus, CheckCircle, Minus, Edit, Trash2, Eye, Link2 } from 'lucide-react';
 
 interface EnhancedGoalsSectionProps {
   goals: Goal[];
@@ -16,17 +16,17 @@ interface EnhancedGoalsSectionProps {
   deletedGoals: Goal[];
   habits: Habit[];
   weeklyOutputs: WeeklyOutput[];
-  availableUsers: any[];
+  availableUsers?: Array<{ id: string; name: string; role: string }>;
   currentUserId?: string;
   userRole?: string;
-  onAddGoal: (goal: any) => Promise<void>;
-  onEditGoal: (id: string, updates: any) => Promise<void>;
-  onDeleteGoal: (id: string) => Promise<void>;
-  onRestoreGoal: (id: string) => Promise<void>;
-  onPermanentlyDeleteGoal: (id: string) => Promise<void>;
-  onUpdateGoalProgress: (id: string, progress: number) => Promise<void>;
-  onJoinWorkGoal?: (goalId: string) => Promise<void>;
-  onLeaveWorkGoal?: (goalId: string) => Promise<void>;
+  onAddGoal: (goal: Omit<Goal, 'id' | 'progress' | 'createdDate'>) => void;
+  onEditGoal: (id: string, updates: Partial<Goal>) => void;
+  onDeleteGoal: (id: string) => void;
+  onRestoreGoal: (id: string) => void;
+  onPermanentlyDeleteGoal: (id: string) => void;
+  onUpdateGoalProgress: (goalId: string, progress: number) => void;
+  onJoinWorkGoal: (goalId: string, role?: 'coach' | 'lead' | 'member') => void;
+  onLeaveWorkGoal: (goalId: string) => void;
 }
 
 export const EnhancedGoalsSection = ({
@@ -35,7 +35,7 @@ export const EnhancedGoalsSection = ({
   deletedGoals,
   habits,
   weeklyOutputs,
-  availableUsers,
+  availableUsers = [],
   currentUserId,
   userRole,
   onAddGoal,
@@ -45,299 +45,378 @@ export const EnhancedGoalsSection = ({
   onPermanentlyDeleteGoal,
   onUpdateGoalProgress,
   onJoinWorkGoal,
-  onLeaveWorkGoal,
+  onLeaveWorkGoal
 }: EnhancedGoalsSectionProps) => {
-  const [showGoalForm, setShowGoalForm] = useState(false);
-  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
-  const [linkingGoalId, setLinkingGoalId] = useState<string | null>(null);
-  const [selectedTab, setSelectedTab] = useState('active');
+  const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
+  const [viewingGoal, setViewingGoal] = useState<Goal | null>(null);
 
-  // Filter goals based on user role and permissions
-  const filteredGoals = useMemo(() => {
-    if (userRole === 'admin') {
-      return allGoals.filter(goal => !goal.isDeleted);
-    }
+  // Filter goals by completion status instead of category
+  const activeGoals = goals.filter(goal => goal.progress < 100 && !goal.archived);
+  const completedGoals = goals.filter(goal => goal.progress >= 100);
+
+  const isManager = userRole === 'manager' || userRole === 'admin';
+
+  const getCategoryIcon = (category: 'work' | 'personal') => {
+    return category === 'work' ? <Briefcase className="h-4 w-4" /> : <User className="h-4 w-4" />;
+  };
+
+  const getCategoryColor = (category: 'work' | 'personal') => {
+    return category === 'work' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800';
+  };
+
+  const getUserRole = (goal: Goal) => {
+    if (!currentUserId) return null;
     
-    if (userRole === 'manager') {
-      return allGoals.filter(goal => 
-        !goal.isDeleted && (
-          goal.userId === currentUserId ||
-          goal.coachId === currentUserId ||
-          goal.leadIds?.includes(currentUserId!) ||
-          goal.memberIds?.includes(currentUserId!)
-        )
-      );
-    }
+    if (goal.coachId === currentUserId) return 'Coach';
+    if (goal.leadIds?.includes(currentUserId)) return 'Lead';
+    if (goal.memberIds?.includes(currentUserId)) return 'Member';
+    return null;
+  };
+
+  const renderGoalCard = (goal: Goal) => {
+    const goalUserRole = getUserRole(goal);
+    const progressColor = goal.progress >= 80 ? 'bg-green-500' : 
+                         goal.progress >= 50 ? 'bg-yellow-500' : 'bg-blue-500';
     
-    // Team members see their own goals and goals they're assigned to
-    return goals.filter(goal => !goal.isDeleted);
-  }, [goals, allGoals, userRole, currentUserId]);
-
-  const activeGoals = filteredGoals.filter(goal => !goal.completed && !goal.archived);
-  const completedGoals = filteredGoals.filter(goal => goal.completed);
-  const archivedGoals = filteredGoals.filter(goal => goal.archived);
-
-  const handleAddGoal = async (goalData: any) => {
-    try {
-      await onAddGoal(goalData);
-      setShowGoalForm(false);
-      toast.success('Goal created successfully');
-    } catch (error) {
-      console.error('Error creating goal:', error);
-      toast.error('Failed to create goal');
-    }
-  };
-
-  const handleEditGoal = async (goalData: any) => {
-    if (!editingGoal) return;
+    // Find linked items
+    const linkedOutputs = weeklyOutputs.filter(output => output.linkedGoalId === goal.id);
+    const linkedHabits = goal.category === 'personal' ? habits.filter(habit => habit.linkedGoalId === goal.id) : [];
     
-    try {
-      await onEditGoal(editingGoal.id, goalData);
-      setEditingGoal(null);
-      toast.success('Goal updated successfully');
-    } catch (error) {
-      console.error('Error updating goal:', error);
-      toast.error('Failed to update goal');
-    }
-  };
+    // Debug logging
+    console.log('Goal debug:', {
+      goalId: goal.id,
+      title: goal.title,
+      category: goal.category,
+      userId: goal.userId,
+      currentUserId,
+      goalUserRole,
+      coachId: goal.coachId,
+      leadIds: goal.leadIds,
+      memberIds: goal.memberIds,
+      createdBy: goal.createdBy,
+      linkedOutputsCount: linkedOutputs.length,
+      linkedHabitsCount: linkedHabits.length
+    });
+    
+    // Determine if user owns the goal or is just assigned to it
+    const isGoalOwner = goal.userId === currentUserId;
+    const isAssignedUser = goalUserRole && !isGoalOwner;
+    const canManageGoal = isGoalOwner || isManager;
+    
+    // For work goals, show both Delete (if owner/manager) and Leave (if assigned) options
+    const showLeaveOption = goal.category === 'work' && goalUserRole && (goal.memberIds?.includes(currentUserId!) || goal.leadIds?.includes(currentUserId!) || goal.coachId === currentUserId);
+    const showDeleteOption = canManageGoal;
 
-  const handleJoinGoal = (goalId: string) => {
-    onJoinWorkGoal?.(goalId);
-  };
-
-  const handleLeaveGoal = (goalId: string) => {
-    onLeaveWorkGoal?.(goalId);
-  };
-
-  const canCreateGoals = userRole === 'admin' || userRole === 'manager';
-  const canManageAllGoals = userRole === 'admin';
-
-  const renderGoalsList = (goalsList: Goal[], showActions = true) => (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {goalsList.map((goal) => (
-        <GoalCard
-          key={goal.id}
-          goal={goal}
-          weeklyOutputs={weeklyOutputs}
-          availableUsers={availableUsers}
-          currentUserId={currentUserId}
-          userRole={userRole}
-          onEditGoal={showActions ? (id, updates) => {
-            const goal = goals.find(g => g.id === id);
-            if (goal) setEditingGoal({ ...goal, ...updates });
-          } : () => {}}
-          onDeleteGoal={showActions ? onDeleteGoal : () => {}}
-          onUpdateProgress={onUpdateGoalProgress}
-          onMoveGoal={(id, newDeadline) => {
-            // Handle move goal logic
-            console.log('Move goal:', id, newDeadline);
-          }}
-          onJoinGoal={handleJoinGoal}
-          onLeaveGoal={handleLeaveGoal}
-        />
-      ))}
-    </div>
-  );
-
-  return (
-    <div className="max-w-7xl mx-auto py-8 px-4">
-      
-      
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Goals</h1>
-          <p className="text-gray-600">Track and manage your personal and professional objectives</p>
-        </div>
-        
-        {canCreateGoals && (
-          <Button onClick={() => setShowGoalForm(true)} className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Add Goal
-          </Button>
-        )}
-      </div>
-
-      {/* Goals Overview Cards */}
-      <div className="grid gap-4 md:grid-cols-4 mb-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Goals</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{activeGoals.length}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{completedGoals.length}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Archived</CardTitle>
-            <Archive className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{archivedGoals.length}</div>
-          </CardContent>
-        </Card>
-        
-        {canManageAllGoals && (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Deleted</CardTitle>
-              <Trash2 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{deletedGoals.length}</div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {/* Goals Tabs */}
-      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="active">Active Goals</TabsTrigger>
-          <TabsTrigger value="completed">Completed</TabsTrigger>
-          <TabsTrigger value="archived">Archived</TabsTrigger>
-          {canManageAllGoals && (
-            <TabsTrigger value="deleted">Deleted</TabsTrigger>
+    return (
+      <Card key={goal.id} className="hover:shadow-md transition-shadow">
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2 mb-2">
+              {getCategoryIcon(goal.category)}
+              <CardTitle className="text-lg">{goal.title}</CardTitle>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className={getCategoryColor(goal.category)}>
+                {goal.category === 'work' ? 'Work' : 'Personal'}
+              </Badge>
+              {goalUserRole && (
+                <Badge variant="secondary" className="text-xs">
+                  {goalUserRole}
+                </Badge>
+              )}
+              {isGoalOwner && (
+                <Badge variant="default" className="text-xs">
+                  Owner
+                </Badge>
+              )}
+            </div>
+          </div>
+          {goal.description && (
+            <CardDescription>{goal.description}</CardDescription>
           )}
-        </TabsList>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Progress Bar */}
+          <div>
+            <div className="flex justify-between text-sm mb-1">
+              <span>Progress</span>
+              <span className="font-medium">{goal.progress}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full transition-all ${progressColor}`}
+                style={{ width: `${Math.min(goal.progress, 100)}%` }}
+              />
+            </div>
+          </div>
 
-        <TabsContent value="active" className="space-y-6">
-          {activeGoals.length > 0 ? (
-            renderGoalsList(activeGoals)
-          ) : (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Target className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No active goals</h3>
-                <p className="text-muted-foreground text-center mb-4">
-                  Start by creating your first goal to track your progress
-                </p>
-                {canCreateGoals && (
-                  <Button onClick={() => setShowGoalForm(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Goal
+          {/* Goal Details */}
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-gray-500">Progress:</span>
+              <span className="font-medium ml-1">
+                {goal.progress}%
+              </span>
+            </div>
+          </div>
+
+          {goal.deadline && (
+            <div className="text-sm">
+              <span className="text-gray-500">Deadline:</span>
+              <span className="font-medium ml-1">
+                {goal.deadline.toLocaleDateString()}
+              </span>
+            </div>
+          )}
+
+          {/* Linked Items */}
+          {(linkedOutputs.length > 0 || linkedHabits.length > 0) && (
+            <div className="pt-2 border-t">
+              <div className="flex items-center gap-1 mb-2">
+                <Link2 className="h-3 w-3 text-gray-400" />
+                <span className="text-xs text-gray-500">Linked Items</span>
+              </div>
+              <div className="space-y-1">
+                {linkedOutputs.length > 0 && (
+                  <div className="text-xs">
+                    <span className="text-gray-500">Outputs ({linkedOutputs.length}):</span>
+                    <div className="text-gray-700 mt-1 line-clamp-2">
+                      {linkedOutputs.slice(0, 2).map((output, idx) => (
+                        <span key={output.id}>
+                          {output.title}
+                          {idx < Math.min(linkedOutputs.length - 1, 1) && ', '}
+                        </span>
+                      ))}
+                      {linkedOutputs.length > 2 && (
+                        <span className="text-gray-400"> +{linkedOutputs.length - 2} more</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {linkedHabits.length > 0 && (
+                  <div className="text-xs">
+                    <span className="text-gray-500">Habits ({linkedHabits.length}):</span>
+                    <div className="text-gray-700 mt-1 line-clamp-2">
+                      {linkedHabits.slice(0, 2).map((habit, idx) => (
+                        <span key={habit.id}>
+                          {habit.name}
+                          {idx < Math.min(linkedHabits.length - 1, 1) && ', '}
+                        </span>
+                      ))}
+                      {linkedHabits.length > 2 && (
+                        <span className="text-gray-400"> +{linkedHabits.length - 2} more</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Work Goal Team Info */}
+          {goal.category === 'work' && (
+            <div className="pt-2 border-t">
+              <p className="text-xs text-gray-500 mb-2">Team Assignment</p>
+              <div className="flex flex-wrap gap-1 text-xs">
+                <span>Coach: {goal.coachId ? '1' : '0'}</span>
+                <span>•</span>
+                <span>Leads: {goal.leadIds?.length || 0}</span>
+                <span>•</span>
+                <span>Members: {goal.memberIds?.length || 0}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 pt-2 border-t">
+            {/* View Details button */}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 w-8 p-0"
+              onClick={() => setViewingGoal(goal)}
+              title="View Details"
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+            
+            {/* Delete button - for goal owners and managers */}
+            {showDeleteOption && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-8 w-8 p-0"
+                onClick={() => onDeleteGoal(goal.id)}
+                title="Delete Goal"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+            
+            {/* Leave Goal button - for work goals where user has a role */}
+            {showLeaveOption && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => onLeaveWorkGoal(goal.id)}
+                className="text-orange-600 hover:bg-orange-50"
+              >
+                Leave Goal
+              </Button>
+            )}
+            
+            {/* Progress Controls - for all assigned users and owners */}
+            {(goalUserRole || isGoalOwner) && (
+              <div className="flex items-center space-x-2">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => onUpdateGoalProgress(goal.id, goal.progress - 10)} 
+                  disabled={goal.progress <= 0} 
+                  className="h-8 w-8 p-0"
+                  title="Decrease Progress"
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => onUpdateGoalProgress(goal.id, goal.progress + 10)} 
+                  disabled={goal.progress >= 100} 
+                  className="h-8 w-8 p-0"
+                  title="Increase Progress"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+                {goal.progress !== 100 && (
+                  <Button 
+                    size="sm" 
+                    variant="default" 
+                    onClick={() => onUpdateGoalProgress(goal.id, 100)} 
+                    className="h-8 w-8 p-0"
+                    title="Mark as Achieved"
+                  >
+                    <CheckCircle className="h-4 w-4" />
                   </Button>
                 )}
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="completed" className="space-y-6">
-          {completedGoals.length > 0 ? (
-            renderGoalsList(completedGoals)
-          ) : (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <TrendingUp className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No completed goals</h3>
-                <p className="text-muted-foreground">Complete your active goals to see them here</p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="archived" className="space-y-6">
-          {archivedGoals.length > 0 ? (
-            renderGoalsList(archivedGoals)
-          ) : (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Archive className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No archived goals</h3>
-                <p className="text-muted-foreground">Archive goals you want to keep but aren't actively working on</p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        {canManageAllGoals && (
-          <TabsContent value="deleted" className="space-y-6">
-            {deletedGoals.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {deletedGoals.map((goal) => (
-                  <Card key={goal.id} className="border-red-200">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">{goal.title}</CardTitle>
-                        <Badge variant="destructive">Deleted</Badge>
-                      </div>
-                      {goal.description && (
-                        <CardDescription>{goal.description}</CardDescription>
-                      )}
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onRestoreGoal(goal.id)}
-                        >
-                          Restore
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => onPermanentlyDeleteGoal(goal.id)}
-                        >
-                          Delete Permanently
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
               </div>
-            ) : (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Trash2 className="h-12 w-12 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No deleted goals</h3>
-                  <p className="text-muted-foreground">Deleted goals will appear here</p>
-                </CardContent>
-              </Card>
             )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  return (
+    <div className="bg-gradient-to-br from-blue-50 via-white to-green-50 min-h-screen">
+      <div className="max-w-full mx-auto p-1 sm:p-2 lg:p-4">
+        <div className="text-center mb-2 sm:mb-4 px-2">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
+            My Goals
+          </h1>
+          <p className="text-gray-600 text-xs sm:text-sm lg:text-base">
+            Track your personal and work goals, collaborate with your team
+          </p>
+        </div>
+
+        {/* Tabs positioned below header subtitle like TeamDashboard */}
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'completed')}>
+          <TabsList className="flex w-full h-auto p-1 bg-gray-100 rounded-lg overflow-x-auto mb-6">
+            <TabsTrigger 
+              value="active" 
+              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 py-2 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <Target className="h-3 w-3 sm:h-4 sm:w-4" />
+              Active ({activeGoals.length})
+            </TabsTrigger>
+            <TabsTrigger 
+              value="completed" 
+              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 py-2 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+              Completed ({completedGoals.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="active" className="space-y-4">
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-medium">Active Goals</h3>
+                  <p className="text-sm text-gray-600">Goals currently in progress</p>
+                </div>
+                <div className="flex gap-3">
+                  <SimpleAddGoalDialog 
+                    onAddGoal={onAddGoal} 
+                    availableUsers={availableUsers}
+                    currentUserId={currentUserId}
+                  />
+                  <JoinGoalDialog
+                    availableGoals={allGoals.filter(goal => 
+                      goal.category === 'work' && 
+                      goal.progress < 100 && 
+                      !goal.archived && 
+                      goal.userId !== currentUserId &&
+                      !goal.memberIds?.includes(currentUserId || '') &&
+                      !goal.leadIds?.includes(currentUserId || '') &&
+                      goal.coachId !== currentUserId
+                    )}
+                    availableUsers={availableUsers}
+                    currentUserId={currentUserId}
+                    onJoinGoal={(goalId, role) => onJoinWorkGoal(goalId, role)}
+                  />
+                </div>
+              </div>
+              
+              {activeGoals.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Target className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p>No active goals yet</p>
+                  <p className="text-sm mt-1">Create your first goal to get started.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {activeGoals.map(renderGoalCard)}
+                </div>
+              )}
+            </Card>
           </TabsContent>
-        )}
-      </Tabs>
 
-      {/* Goal Form Dialog */}
-      {(showGoalForm || editingGoal) && (
-        <GoalForm
-          goal={editingGoal}
-          availableUsers={availableUsers}
-          currentUserId={currentUserId}
-          userRole={userRole}
-          onSubmit={editingGoal ? handleEditGoal : handleAddGoal}
-          onCancel={() => {
-            setShowGoalForm(false);
-            setEditingGoal(null);
-          }}
-        />
-      )}
+          <TabsContent value="completed" className="space-y-4">
+            <Card className="p-6">
+              <div className="mb-4">
+                <h3 className="text-lg font-medium">Completed Goals</h3>
+                <p className="text-sm text-gray-600">Goals that have been accomplished</p>
+              </div>
+              
+              {completedGoals.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <CheckCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p>No completed goals yet</p>
+                  <p className="text-sm mt-1">Complete some goals to see them here.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {completedGoals.map(renderGoalCard)}
+                </div>
+              )}
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
 
-      {/* Link Goals Dialog */}
-      {linkingGoalId && (
-        <LinkGoalsDialog
-          goalId={linkingGoalId}
-          availableGoals={filteredGoals.filter(g => g.id !== linkingGoalId)}
+      {/* Goal Details Dialog */}
+      {viewingGoal && (
+        <GoalDetailsDialog
+          goal={viewingGoal}
+          open={!!viewingGoal}
+          onOpenChange={() => setViewingGoal(null)}
+          onEditGoal={onEditGoal}
+          onUpdateProgress={onUpdateGoalProgress}
+          weeklyOutputs={weeklyOutputs}
+          tasks={[]}
+          habits={habits}
           currentUserId={currentUserId}
-          onClose={() => setLinkingGoalId(null)}
-          onLinkageChange={() => {
-            // Refresh data or handle linkage change
-            console.log('Goal linkage changed');
-          }}
         />
       )}
     </div>

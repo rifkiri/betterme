@@ -124,6 +124,7 @@ export const SimpleEmployeeDashboard = () => {
               onArchiveHabit={archiveHabit}
               onRestoreHabit={restoreHabit}
               onPermanentlyDeleteHabit={permanentlyDeleteHabit}
+              isLoading={isLoading}
               goals={goals}
             />
           </div>

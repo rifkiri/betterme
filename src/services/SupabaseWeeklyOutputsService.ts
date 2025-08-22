@@ -27,7 +27,7 @@ export class SupabaseWeeklyOutputsService {
       completedDate: output.completed_date ? new Date(output.completed_date) : undefined,
       deletedDate: output.deleted_date ? new Date(output.deleted_date) : undefined,
       createdDate: new Date(output.created_date),
-      linkedGoalId: (output as any).linked_goal_id || undefined || undefined
+      linkedGoalId: output.linked_goal_id || undefined
     }));
   }
 
@@ -123,11 +123,11 @@ export class SupabaseWeeklyOutputsService {
     
     for (const goalId of goalIds) {
       try {
-        const { error } = await supabase.rpc('link_output_to_goal', {
-          p_goal_id: goalId,
-          p_output_id: outputId,
-          p_user_id: userId
-        } as any);
+        const { data, error } = await supabase.rpc('link_output_to_goal', {
+          output_id: outputId,
+          goal_id: goalId,
+          user_id_param: userId
+        });
 
         if (error) {
           console.error('🔗 [Service] Error linking to goal', goalId, ':', error);
@@ -144,10 +144,10 @@ export class SupabaseWeeklyOutputsService {
 
   async unlinkFromGoal(outputId: string, goalId: string, userId: string): Promise<void> {
     const { error } = await supabase.rpc('unlink_output_from_goal', {
-      p_goal_id: goalId,
-      p_output_id: outputId,
-      p_user_id: userId
-    } as any);
+      output_id: outputId,
+      goal_id: goalId,
+      user_id_param: userId
+    });
 
     if (error) {
       console.error('Error unlinking output from goal:', error);

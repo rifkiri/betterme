@@ -3,7 +3,7 @@ import { supabaseHabitsService } from './SupabaseHabitsService';
 import { supabaseTasksService } from './SupabaseTasksService';
 import { supabaseWeeklyOutputsService } from './SupabaseWeeklyOutputsService';
 import { supabaseMoodService } from './SupabaseMoodService';
-import { SupabaseGoalsService } from './SupabaseGoalsService';
+import { supabaseGoalsService } from './SupabaseGoalsService';
 
 export class SupabaseDataService {
   // User management
@@ -84,35 +84,35 @@ export class SupabaseDataService {
 
   // Goals management
   async getGoals(userId: string) {
-    return await SupabaseGoalsService.getGoalsWithRoles(userId);
+    return await supabaseGoalsService.getUserAccessibleGoals(userId);
   }
 
-  async getAllGoals(userId: string) {
-    return await SupabaseGoalsService.getAllGoals(userId);
+  async getAllGoals() {
+    return await supabaseGoalsService.getAllGoals();
   }
 
   async addGoal(goal: any) {
-    return await SupabaseGoalsService.createGoal(goal);
+    return await supabaseGoalsService.addGoal(goal);
   }
 
   async updateGoal(id: string, userId: string, updates: any) {
-    return await SupabaseGoalsService.updateGoal(id, updates);
+    return await supabaseGoalsService.updateGoal(id, userId, updates);
   }
 
-  async updateGoalProgress(id: string, userId: string, newProgress: number) {
-    return await SupabaseGoalsService.updateGoal(id, { progress: newProgress });
+  async updateGoalProgress(id: string, userId: string, currentValue: number) {
+    return await supabaseGoalsService.updateGoalProgress(id, userId, currentValue);
   }
 
   async permanentlyDeleteGoal(id: string, userId: string) {
-    return await SupabaseGoalsService.deleteGoal(id, userId);
+    return await supabaseGoalsService.permanentlyDeleteGoal(id, userId);
   }
 
-  async linkOutputToGoal(goalId: string, outputId: string, userId: string) {
-    return await SupabaseGoalsService.linkGoalToOutput(goalId, outputId, userId);
+  async linkOutputToGoal(outputId: string, goalId: string, userId: string) {
+    return await supabaseGoalsService.linkOutputToGoal(outputId, goalId, userId);
   }
 
-  async unlinkOutputFromGoal(goalId: string, outputId: string, userId: string) {
-    return await SupabaseGoalsService.unlinkGoalFromOutput(goalId, outputId, userId);
+  async unlinkOutputFromGoal(outputId: string, goalId: string, userId: string) {
+    return await supabaseGoalsService.unlinkOutputFromGoal(outputId, goalId, userId);
   }
 
   // Mood tracking

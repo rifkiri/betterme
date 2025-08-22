@@ -45,8 +45,8 @@ export const DeletedTasksDialog = ({
                   <p className="text-sm font-medium text-gray-700">{task.title}</p>
                   <div className="flex items-center space-x-2 mt-1">
                     <Badge variant={
-                      task.priority === 'high' ? 'destructive' : 
-                      task.priority === 'medium' ? 'default' : 'secondary'
+                      task.priority === 'High' ? 'destructive' : 
+                      task.priority === 'Medium' ? 'default' : 'secondary'
                     } className="text-xs">
                       {task.priority}
                     </Badge>

@@ -59,25 +59,6 @@ export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteT
     }
   };
 
-  const getPriorityColor = (priority: Task['priority']) => {
-    switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getPriorityLabel = (priority: Task['priority']) => {
-    switch (priority) {
-      case 'high': return 'High';
-      case 'medium': return 'Medium';
-      case 'low': return 'Low';
-      case 'urgent': return 'Urgent';
-      default: return 'Medium';
-    }
-  };
-
   const formatDueDate = (dueDate: Date) => {
     if (isToday(dueDate)) {
       return 'Today';
@@ -124,8 +105,8 @@ export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteT
             )}
           </div>
           <div className="flex items-center space-x-2 mt-1">
-            <Badge variant={task.priority === 'high' ? 'destructive' : task.priority === 'medium' ? 'default' : 'secondary'} className="text-xs">
-              {getPriorityLabel(task.priority)}
+            <Badge variant={task.priority === 'High' ? 'destructive' : task.priority === 'Medium' ? 'default' : 'secondary'} className="text-xs">
+              {task.priority}
             </Badge>
             {task.dueDate && (
               <span className={`text-xs flex items-center ${getDueDateColor(task.dueDate, task.completed)}`}>

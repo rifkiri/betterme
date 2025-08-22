@@ -13,16 +13,10 @@ interface GoalCardProps {
   goal: Goal;
   tasks?: Task[];
   weeklyOutputs?: WeeklyOutput[];
-  availableUsers?: any[];
-  currentUserId?: string;
-  userRole?: string;
   onEditGoal: (id: string, updates: Partial<Goal>) => void;
   onUpdateProgress: (goalId: string, newProgress: number) => void;
   onMoveGoal: (id: string, newDeadline: Date) => void;
   onDeleteGoal: (id: string) => void;
-  onLinkGoals?: (goalId: string) => void;
-  onJoinGoal?: (goalId: string) => void;
-  onLeaveGoal?: (goalId: string) => void;
   isOverdue?: boolean;
   isCompleted?: boolean;
 }

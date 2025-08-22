@@ -42,7 +42,7 @@ export class SupabaseHabitsService {
       archived: habit.archived,
       isDeleted: habit.is_deleted,
       createdAt: habit.created_at,
-      linkedGoalId: (habit as any).linked_goal_id || undefined
+      linkedGoalId: habit.linked_goal_id
     }));
   }
 
@@ -157,17 +157,19 @@ export class SupabaseHabitsService {
     console.log('Toggling habit completion - habit:', habitId, 'user:', userId, 'date:', dateStr, 'completed:', completed);
 
     // Use the database function to properly handle daily completions and streak calculation
-    const { error } = await supabase.rpc('toggle_habit_completion', {
-      p_habit_id: habitId,
-      p_user_id: userId,
-      p_date: dateStr,
-      p_completed: completed
-    } as any);
+    const { data, error } = await supabase.rpc('toggle_habit_completion', {
+      habit_id_param: habitId,
+      user_id_param: userId,
+      target_date: dateStr,
+      is_completed: completed
+    });
 
     if (error) {
       console.error('Error toggling habit completion:', error);
       throw error;
     }
+
+    console.log('Habit toggle result for user', userId, ':', data);
   }
 
   async permanentlyDeleteHabit(id: string, userId: string): Promise<void> {
