@@ -3,7 +3,6 @@ import { supabaseDataService } from '@/services/SupabaseDataService';
 import { WeeklyOutput, Goal } from '@/types/productivity';
 import { toast } from 'sonner';
 import { supabaseWeeklyOutputsService } from '@/services/SupabaseWeeklyOutputsService';
-import { linkageSynchronizationService } from '@/services/LinkageSynchronizationService';
 
 interface UseWeeklyOutputsManagerProps {
   userId: string | null;

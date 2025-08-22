@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Link } from 'lucide-react';
 import { Goal } from '@/types/productivity';
 import { format } from 'date-fns';
-import { itemLinkageService } from '@/services/ItemLinkageService';
+import { supabase } from '@/integrations/supabase/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface LinkGoalsDialogProps {
@@ -38,7 +38,15 @@ export const LinkGoalsDialog = ({
     
     try {
       setLoading(true);
-      const linkedIds = await itemLinkageService.getLinkedGoalIds(outputId, currentUser.id);
+      const { data: output, error } = await supabase
+        .from('weekly_outputs')
+        .select('linked_goal_ids')
+        .eq('id', outputId)
+        .single();
+        
+      if (error) throw error;
+      
+      const linkedIds = output?.linked_goal_ids || [];
       setLinkedGoalIds(linkedIds);
       setSelectedGoalIds(linkedIds);
     } catch (error) {
@@ -54,8 +62,13 @@ export const LinkGoalsDialog = ({
     try {
       setLoading(true);
       
-      // Update linkages in item_linkages table (single source of truth)
-      await itemLinkageService.updateLinks('weekly_output', outputId, 'goal', selectedGoalIds, currentUser.id);
+      // Update the weekly_output's linked_goal_ids array
+      const { error } = await supabase
+        .from('weekly_outputs')
+        .update({ linked_goal_ids: selectedGoalIds })
+        .eq('id', outputId);
+        
+      if (error) throw error;
       
       onUpdateLinks(outputId, selectedGoalIds);
       setLinkedGoalIds(selectedGoalIds);

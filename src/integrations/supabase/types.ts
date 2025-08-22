@@ -238,39 +238,6 @@ export type Database = {
           },
         ]
       }
-      item_linkages: {
-        Row: {
-          created_at: string
-          id: string
-          source_id: string
-          source_type: string
-          target_id: string
-          target_type: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          source_id: string
-          source_type: string
-          target_id: string
-          target_type: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          source_id?: string
-          source_type?: string
-          target_id?: string
-          target_type?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       mood_entries: {
         Row: {
           created_at: string
@@ -437,6 +404,7 @@ export type Database = {
           is_deleted: boolean
           is_moved: boolean
           linked_goal_id: string | null
+          linked_goal_ids: string[] | null
           original_due_date: string | null
           progress: number
           project_id: string | null
@@ -454,6 +422,7 @@ export type Database = {
           is_deleted?: boolean
           is_moved?: boolean
           linked_goal_id?: string | null
+          linked_goal_ids?: string[] | null
           original_due_date?: string | null
           progress?: number
           project_id?: string | null
@@ -471,6 +440,7 @@ export type Database = {
           is_deleted?: boolean
           is_moved?: boolean
           linked_goal_id?: string | null
+          linked_goal_ids?: string[] | null
           original_due_date?: string | null
           progress?: number
           project_id?: string | null
@@ -500,10 +470,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      cleanup_stale_linkages: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
       create_goal_assignment: {
         Args: {
           p_assigned_by: string
@@ -550,14 +516,6 @@ export type Database = {
           streak: number
         }[]
       }
-      get_item_linkages: {
-        Args: { p_item_id: string; p_item_type: string; p_user_id: string }
-        Returns: {
-          created_at: string
-          target_id: string
-          target_type: string
-        }[]
-      }
       get_user_role: {
         Args: { user_id: string }
         Returns: string
@@ -566,10 +524,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
-      link_output_to_goal: {
-        Args: { p_goal_id: string; p_output_id: string; p_user_id: string }
-        Returns: undefined
-      }
       toggle_habit_completion: {
         Args: {
           habit_id_param: string
@@ -577,10 +531,6 @@ export type Database = {
           target_date: string
           user_id_param: string
         }
-        Returns: undefined
-      }
-      unlink_output_from_goal: {
-        Args: { p_goal_id: string; p_output_id: string; p_user_id: string }
         Returns: undefined
       }
       validate_password_strength: {

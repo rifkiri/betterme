@@ -120,19 +120,9 @@ export class SupabaseHabitsService {
       supabaseUpdates.linked_goal_id = (updates.linkedGoalId === "none" || !updates.linkedGoalId) ? null : updates.linkedGoalId;
       console.log('SupabaseHabitsService - linkedGoalId update:', updates.linkedGoalId, '→', supabaseUpdates.linked_goal_id);
       
-      // If unlinking (setting to null), delete the linkage record
+      // If unlinking (setting to null), no need to manage linkages anymore
       if (updates.linkedGoalId === "none" || !updates.linkedGoalId) {
-        console.log('🗑️ Deleting habit->goal linkage records for habit:', id);
-        const { error: linkageError } = await supabase
-          .from('item_linkages')
-          .delete()
-          .eq('user_id', userId)
-          .eq('source_type', 'habit')
-          .eq('source_id', id);
-        
-        if (linkageError) {
-          console.error('Error deleting habit->goal linkage:', linkageError);
-        }
+        console.log('🗑️ Unlinking habit from goal:', id);
       }
     }
 

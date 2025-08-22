@@ -97,19 +97,9 @@ export class SupabaseTasksService {
       supabaseUpdates.weekly_output_id = (updates.weeklyOutputId === "none" || !updates.weeklyOutputId) ? null : updates.weeklyOutputId;
       console.log('SupabaseTasksService - weeklyOutputId update:', updates.weeklyOutputId, '→', supabaseUpdates.weekly_output_id);
       
-      // If unlinking (setting to null), delete the linkage record
+      // If unlinking (setting to null), no need to manage linkages anymore
       if (updates.weeklyOutputId === "none" || !updates.weeklyOutputId) {
-        console.log('🗑️ Deleting task->output linkage records for task:', id);
-        const { error: linkageError } = await supabase
-          .from('item_linkages')
-          .delete()
-          .eq('user_id', userId)
-          .eq('source_type', 'task')
-          .eq('source_id', id);
-        
-        if (linkageError) {
-          console.error('Error deleting task->output linkage:', linkageError);
-        }
+        console.log('🗑️ Unlinking task from output:', id);
       }
     }
     if (updates.taggedUsers !== undefined) supabaseUpdates.tagged_users = updates.taggedUsers || null;

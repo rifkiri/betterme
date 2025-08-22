@@ -376,39 +376,8 @@ export class SupabaseGoalsService {
     }
   }
 
-  async linkOutputToGoal(outputId: string, goalId: string, userId: string): Promise<void> {
-    console.log('🔥 [DB] Linking output to goal via database function:', { outputId, goalId, userId });
-    
-    const { data, error } = await supabase.rpc('link_output_to_goal', {
-      p_output_id: outputId,
-      p_goal_id: goalId,
-      p_user_id: userId
-    });
-
-    if (error) {
-      console.error('Error linking output to goal:', error);
-      throw error;
-    }
-
-    console.log('🔥 [DB] Successfully linked output to goal');
-  }
-
-  async unlinkOutputFromGoal(outputId: string, goalId: string, userId: string): Promise<void> {
-    console.log('🔥 [DB] Unlinking output from goal via database function:', { outputId, goalId, userId });
-    
-    const { data, error } = await supabase.rpc('unlink_output_from_goal', {
-      p_output_id: outputId,
-      p_goal_id: goalId,
-      p_user_id: userId
-    });
-
-    if (error) {
-      console.error('Error unlinking output from goal:', error);
-      throw error;
-    }
-
-    console.log('🔥 [DB] Successfully unlinked output from goal');
-  }
+  // Remove deprecated database function methods
+  // These were removed when dropping the item_linkages table
 }
 
 export const supabaseGoalsService = new SupabaseGoalsService();
