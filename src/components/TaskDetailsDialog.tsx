@@ -15,9 +15,8 @@ import {
 } from 'lucide-react';
 import { Task, WeeklyOutput, Goal } from '@/types/productivity';
 import { format, isBefore } from 'date-fns';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { EditTaskDialog } from './EditTaskDialog';
-import { useTasks } from '@/hooks/useTasks';
 
 interface TaskDetailsDialogProps {
   task: Task | null;
@@ -39,42 +38,15 @@ export const TaskDetailsDialog = ({
   goals
 }: TaskDetailsDialogProps) => {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [currentTask, setCurrentTask] = useState<Task | null>(task);
-  const { tasks } = useTasks();
 
-  // Refresh task data when dialog opens or task changes
-  useEffect(() => {
-    if (task && open) {
-      const updatedTask = tasks.find(t => t.id === task.id) || task;
-      setCurrentTask(updatedTask);
-    }
-  }, [task, open, tasks]);
+  if (!task) return null;
 
-  // Force refresh callback for edit dialog
-  const refreshData = () => {
-    console.log('TaskDetailsDialog - refreshData called, looking for task:', task?.id);
-    if (task) {
-      const updatedTask = tasks.find(t => t.id === task.id);
-      console.log('TaskDetailsDialog - Found updated task:', updatedTask);
-      console.log('TaskDetailsDialog - Current task before update:', currentTask);
-      if (updatedTask) {
-        setCurrentTask(updatedTask);
-        console.log('TaskDetailsDialog - Updated currentTask to:', updatedTask);
-      } else {
-        console.log('TaskDetailsDialog - No updated task found, using original');
-        setCurrentTask(task);
-      }
-    }
-  };
-
-  if (!currentTask) return null;
-
-  const linkedOutput = weeklyOutputs.find(output => output.id === currentTask.weeklyOutputId);
+  const linkedOutput = weeklyOutputs.find(output => output.id === task.weeklyOutputId);
   
   // Note: This will need to be updated to use ItemLinkageService to fetch related goals
   const relatedGoals: Goal[] = [];
 
-  const isOverdue = currentTask.dueDate && isBefore(currentTask.dueDate, new Date()) && !currentTask.completed;
+  const isOverdue = task.dueDate && isBefore(task.dueDate, new Date()) && !task.completed;
 
   const getPriorityColor = (priority: Task['priority']) => {
     switch (priority) {
@@ -100,12 +72,12 @@ export const TaskDetailsDialog = ({
             {/* Task Overview */}
             <div className="space-y-3">
               <div className="flex items-start justify-between gap-2">
-                <h3 className={`text-lg font-semibold ${currentTask.completed ? 'line-through text-gray-500' : 'text-gray-900'}`}>
-                  {currentTask.title}
+                <h3 className={`text-lg font-semibold ${task.completed ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+                  {task.title}
                 </h3>
                 <div className="flex items-center gap-2">
-                  <Badge className={`text-xs ${getPriorityColor(currentTask.priority)}`}>
-                    {currentTask.priority}
+                  <Badge className={`text-xs ${getPriorityColor(task.priority)}`}>
+                    {task.priority}
                   </Badge>
                   {isOverdue && (
                     <Badge variant="destructive" className="text-xs">
@@ -113,7 +85,7 @@ export const TaskDetailsDialog = ({
                       Overdue
                     </Badge>
                   )}
-                  {currentTask.completed && (
+                  {task.completed && (
                     <Badge className="text-xs bg-green-100 text-green-800">
                       <CheckCircle2 className="h-3 w-3 mr-1" />
                       Completed
@@ -122,46 +94,46 @@ export const TaskDetailsDialog = ({
                 </div>
               </div>
 
-              {currentTask.description && (
-                <p className="text-sm text-gray-600">{currentTask.description}</p>
+              {task.description && (
+                <p className="text-sm text-gray-600">{task.description}</p>
               )}
 
               <div className="grid grid-cols-2 gap-4 p-3 bg-gray-50 rounded-lg">
                 <div>
                   <p className="text-xs text-gray-500">Created</p>
-                  <p className="font-medium">{format(currentTask.createdDate, 'MMM dd, yyyy')}</p>
+                  <p className="font-medium">{format(task.createdDate, 'MMM dd, yyyy')}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Due Date</p>
-                  <p className="font-medium">{format(currentTask.dueDate, 'MMM dd, yyyy')}</p>
+                  <p className="font-medium">{format(task.dueDate, 'MMM dd, yyyy')}</p>
                 </div>
-                {currentTask.estimatedTime && (
+                {task.estimatedTime && (
                   <div>
                     <p className="text-xs text-gray-500">Estimated Time</p>
-                    <p className="font-medium">{currentTask.estimatedTime}</p>
+                    <p className="font-medium">{task.estimatedTime}</p>
                   </div>
                 )}
-                {currentTask.completedDate && (
+                {task.completedDate && (
                   <div>
                     <p className="text-xs text-gray-500">Completed</p>
-                    <p className="font-medium">{format(currentTask.completedDate, 'MMM dd, yyyy')}</p>
+                    <p className="font-medium">{format(task.completedDate, 'MMM dd, yyyy')}</p>
                   </div>
                 )}
               </div>
 
-              {currentTask.isMoved && currentTask.originalDueDate && (
+              {task.isMoved && task.originalDueDate && (
                 <div className="p-2 bg-orange-50 border border-orange-200 rounded text-sm">
                   <p className="text-orange-800">
-                    Moved from: {format(currentTask.originalDueDate, 'MMM dd, yyyy')}
+                    Moved from: {format(task.originalDueDate, 'MMM dd, yyyy')}
                   </p>
                 </div>
               )}
 
-              {currentTask.taggedUsers && currentTask.taggedUsers.length > 0 && (
+              {task.taggedUsers && task.taggedUsers.length > 0 && (
                 <div className="p-2 bg-blue-50 border border-blue-200 rounded">
                   <div className="flex items-center gap-2 text-sm">
                     <User className="h-4 w-4 text-blue-600" />
-                    <span className="text-blue-800">Tagged for support: {currentTask.taggedUsers.length} user(s)</span>
+                    <span className="text-blue-800">Tagged for support: {task.taggedUsers.length} user(s)</span>
                   </div>
                 </div>
               )}
@@ -169,12 +141,12 @@ export const TaskDetailsDialog = ({
               <div className="flex items-center gap-2">
                 <Button
                   size="sm"
-                  variant={currentTask.completed ? "outline" : "default"}
-                  onClick={() => onToggleTask(currentTask.id)}
+                  variant={task.completed ? "outline" : "default"}
+                  onClick={() => onToggleTask(task.id)}
                   className="text-xs px-3"
                 >
                   <CheckCircle2 className="h-3 w-3 mr-1" />
-                  {currentTask.completed ? 'Mark Incomplete' : 'Mark Complete'}
+                  {task.completed ? 'Mark Incomplete' : 'Mark Complete'}
                 </Button>
               </div>
             </div>
@@ -285,7 +257,7 @@ const getCategoryColor = (category: Goal['category']) => {
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Close
             </Button>
-            <Button onClick={() => setEditingTask(currentTask)}>
+            <Button onClick={() => setEditingTask(task)}>
               <Edit className="h-4 w-4 mr-2" />
               Edit Task
             </Button>
@@ -300,7 +272,6 @@ const getCategoryColor = (category: Goal['category']) => {
           onOpenChange={open => !open && setEditingTask(null)} 
           onSave={onEditTask}
           weeklyOutputs={weeklyOutputs}
-          onRefresh={refreshData}
         />
       )}
     </>
