@@ -65,6 +65,17 @@ export const HabitsSection = ({
     }
   };
 
+  const handleEditHabit = async (id: string, updates: Partial<Habit>) => {
+    await onEditHabit(id, updates);
+    // Update viewingHabit with fresh data after edit
+    if (viewingHabit && viewingHabit.id === id) {
+      const updatedHabit = habits.find(h => h.id === id);
+      if (updatedHabit) {
+        setViewingHabit(updatedHabit);
+      }
+    }
+  };
+
   const today = isToday(selectedDate);
 
   return (
@@ -182,7 +193,7 @@ export const HabitsSection = ({
           habit={viewingHabit}
           open={true}
           onOpenChange={(open) => !open && setViewingHabit(null)}
-          onEditHabit={onEditHabit}
+          onEditHabit={handleEditHabit}
         />
       )}
     </Card>
