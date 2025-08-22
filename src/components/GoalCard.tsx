@@ -75,6 +75,12 @@ const getCategoryColor = (category: Goal['category']) => {
                       {mapSubcategoryDatabaseToDisplay(goal.subcategory)}
                     </Badge>
                   )}
+                  {/* Debug: Show all goal data */}
+                  {process.env.NODE_ENV === 'development' && (
+                    <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800">
+                      Debug: {goal.subcategory || 'no subcategory'}
+                    </Badge>
+                  )}
                 </div>
               </div>
               {goal.description && (
