@@ -42,6 +42,14 @@ export const GoalCard = ({
 }: GoalCardProps) => {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   
+  // Debug: Log the goal object to console
+  console.log('GoalCard rendering goal:', {
+    id: goal.id,
+    title: goal.title,
+    subcategory: goal.subcategory,
+    hasSubcategory: !!goal.subcategory
+  });
+  
 const getCategoryColor = (category: Goal['category']) => {
     switch (category) {
       case 'work': return 'bg-blue-100 text-blue-800';

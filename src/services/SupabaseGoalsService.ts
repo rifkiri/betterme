@@ -33,7 +33,12 @@ export class SupabaseGoalsService {
 
     console.log('Raw goals data for user', userId, ':', data);
 
-return data.map(goal => ({
+    // Debug: Check subcategory data specifically
+    data.forEach(goal => {
+      console.log(`Goal "${goal.title}" subcategory:`, goal.subcategory, '(type:', typeof goal.subcategory, ')');
+    });
+
+    return data.map(goal => ({
       id: goal.id,
       title: goal.title,
       description: goal.description,
