@@ -142,7 +142,7 @@ export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteT
           )}
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col items-center gap-2">
         <Button
           variant="ghost"
           size="sm"
