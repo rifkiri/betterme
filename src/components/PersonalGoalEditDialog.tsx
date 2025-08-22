@@ -9,7 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
-import { CalendarIcon, X } from 'lucide-react';
+import { CalendarIcon, X, Target } from 'lucide-react';
 import { format } from 'date-fns';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -354,44 +354,72 @@ export const PersonalGoalEditDialog = ({
                   )}
                 />
 
-                {/* Link Weekly Outputs */}
-                <div>
-                  <FormLabel className="text-sm font-medium">Link Weekly Outputs (Optional)</FormLabel>
-                  <div className="mt-2">
+              {/* Link Weekly Outputs */}
+              <FormField
+                control={form.control}
+                name="selectedOutputIds"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Target className="h-4 w-4" />
+                      Link to Weekly Outputs (Optional)
+                    </FormLabel>
+                    
                     <Popover open={isOutputDropdownOpen} onOpenChange={setIsOutputDropdownOpen}>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" role="combobox" className="w-full justify-between">
-                          Link weekly outputs to this goal
-                        </Button>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className="w-full justify-between"
+                          >
+                            {selectedOutputs.length === 0 
+                              ? "Select outputs to link..." 
+                              : `${selectedOutputs.length} output${selectedOutputs.length !== 1 ? 's' : ''} selected`
+                            }
+                            <Target className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-full p-0 bg-background border shadow-md z-50">
-                        <Command>
-                          <CommandInput placeholder="Search outputs..." />
-                          <CommandList>
+                      <PopoverContent className="w-full p-0 bg-background border z-50" align="start">
+                        <Command className="bg-background">
+                          <CommandInput placeholder="Search outputs..." className="bg-background" />
+                          <CommandList className="bg-background">
                             <CommandEmpty>No outputs found.</CommandEmpty>
-                            <CommandGroup>
+                            <CommandGroup className="bg-background">
                               {availableOutputs.length === 0 ? (
-                                <CommandItem disabled>No weekly outputs available</CommandItem>
+                                <CommandItem disabled className="p-3">No weekly outputs available</CommandItem>
                               ) : (
                                 availableOutputs.map((output) => (
                                   <CommandItem
                                     key={output.id}
                                     onSelect={() => toggleOutputSelection(output)}
-                                    className="cursor-pointer"
+                                    className="flex items-center justify-between p-3 bg-background hover:bg-accent cursor-pointer"
                                   >
-                                    <div className="flex items-center space-x-2 w-full">
-                                      <input
-                                        type="checkbox"
-                                        checked={(form.getValues('selectedOutputIds') || []).includes(output.id)}
-                                        onChange={() => toggleOutputSelection(output)}
-                                        className="rounded"
-                                      />
-                                      <div className="flex-1">
-                                        <div className="font-medium">{output.title}</div>
-                                        {output.description && (
-                                          <div className="text-sm text-muted-foreground">{output.description}</div>
-                                        )}
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <span className="font-medium text-sm">{output.title}</span>
+                                        <Badge variant="secondary" className="text-xs">
+                                          {output.progress}%
+                                        </Badge>
                                       </div>
+                                      {output.description && (
+                                        <p className="text-xs text-muted-foreground">{output.description}</p>
+                                      )}
+                                      {output.dueDate && (
+                                        <div className="flex items-center gap-1 mt-1">
+                                          <span className="text-xs text-muted-foreground">
+                                            Due: {format(output.dueDate, 'MMM dd')}
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="ml-2">
+                                      {(form.getValues('selectedOutputIds') || []).includes(output.id) && (
+                                        <div className="h-4 w-4 bg-primary rounded-sm flex items-center justify-center">
+                                          <span className="text-xs text-primary-foreground">✓</span>
+                                        </div>
+                                      )}
                                     </div>
                                   </CommandItem>
                                 ))
@@ -401,88 +429,160 @@ export const PersonalGoalEditDialog = ({
                         </Command>
                       </PopoverContent>
                     </Popover>
-                    
-                    {/* Selected Outputs */}
+
                     {selectedOutputs.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {selectedOutputs.map((output) => (
-                          <Badge key={output.id} variant="secondary" className="flex items-center gap-1">
-                            {output.title}
-                            <X 
-                              className="h-3 w-3 cursor-pointer" 
-                              onClick={() => removeOutput(output.id)}
-                            />
-                          </Badge>
-                        ))}
+                      <div className="mt-3 p-3 bg-muted rounded-lg">
+                        <div className="text-sm font-medium mb-2">
+                          Selected Outputs ({selectedOutputs.length}):
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedOutputs.map((output) => (
+                            <Badge 
+                              key={output.id} 
+                              variant="secondary" 
+                              className="flex items-center gap-1"
+                            >
+                              {output.title}
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-4 w-4 p-0 hover:bg-transparent"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  removeOutput(output.id);
+                                }}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
                     )}
-                  </div>
-                </div>
 
-                {/* Link Habits - Always shown for personal goals */}
-                <div>
-                  <FormLabel className="text-sm font-medium">Link Habits (Optional)</FormLabel>
-                  <div className="mt-2">
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Link Habits */}
+              <FormField
+                control={form.control}
+                name="selectedHabitIds"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Target className="h-4 w-4" />
+                      Link to Habits (Optional)
+                    </FormLabel>
+                    
                     <Popover open={isHabitDropdownOpen} onOpenChange={setIsHabitDropdownOpen}>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" role="combobox" className="w-full justify-between">
-                          Link habits to this personal goal
-                        </Button>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className="w-full justify-between"
+                          >
+                            {availableHabits.length === 0 
+                              ? "No habits available to link" 
+                              : selectedHabits.length === 0 
+                                ? "Select habits to link..." 
+                                : `${selectedHabits.length} habit${selectedHabits.length !== 1 ? 's' : ''} selected`
+                            }
+                            <Target className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-full p-0 bg-background border shadow-md z-50">
-                        <Command>
-                          <CommandInput placeholder="Search habits..." />
-                          <CommandList>
-                            <CommandEmpty>No habits found.</CommandEmpty>
-                            <CommandGroup>
-                              {availableHabits.length === 0 ? (
-                                <CommandItem disabled>No habits available to link</CommandItem>
-                              ) : (
-                                availableHabits.map((habit) => (
-                                  <CommandItem
-                                    key={habit.id}
-                                    onSelect={() => toggleHabitSelection(habit)}
-                                    className="cursor-pointer"
-                                  >
-                                    <div className="flex items-center space-x-2 w-full">
-                                      <input
-                                        type="checkbox"
-                                        checked={(form.getValues('selectedHabitIds') || []).includes(habit.id)}
-                                        onChange={() => toggleHabitSelection(habit)}
-                                        className="rounded"
-                                      />
+                      <PopoverContent className="w-full p-0 bg-background border z-50" align="start">
+                        <Command className="bg-background">
+                          <CommandInput placeholder="Search habits..." className="bg-background" />
+                          <CommandList className="bg-background">
+                            {availableHabits.length === 0 ? (
+                              <CommandEmpty>No habits available. Create some habits first!</CommandEmpty>
+                            ) : (
+                              <>
+                                <CommandEmpty>No habits found.</CommandEmpty>
+                                <CommandGroup className="bg-background">
+                                  {availableHabits.map((habit) => (
+                                    <CommandItem
+                                      key={habit.id}
+                                      onSelect={() => toggleHabitSelection(habit)}
+                                      className="flex items-center justify-between p-3 bg-background hover:bg-accent cursor-pointer"
+                                    >
                                       <div className="flex-1">
-                                        <div className="font-medium">{habit.name}</div>
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <span className="font-medium text-sm">{habit.name}</span>
+                                          {habit.streak > 0 && (
+                                            <Badge variant="secondary" className="text-xs">
+                                              {habit.streak} day streak
+                                            </Badge>
+                                          )}
+                                        </div>
                                         {habit.description && (
-                                          <div className="text-sm text-muted-foreground">{habit.description}</div>
+                                          <p className="text-xs text-muted-foreground">{habit.description}</p>
+                                        )}
+                                        {habit.category && (
+                                          <div className="flex items-center gap-1 mt-1">
+                                            <span className="text-xs text-muted-foreground">
+                                              Category: {habit.category}
+                                            </span>
+                                          </div>
                                         )}
                                       </div>
-                                    </div>
-                                  </CommandItem>
-                                ))
-                              )}
-                            </CommandGroup>
+                                      <div className="ml-2">
+                                        {(form.getValues('selectedHabitIds') || []).includes(habit.id) && (
+                                          <div className="h-4 w-4 bg-primary rounded-sm flex items-center justify-center">
+                                            <span className="text-xs text-primary-foreground">✓</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </>
+                            )}
                           </CommandList>
                         </Command>
                       </PopoverContent>
                     </Popover>
                     
-                    {/* Selected Habits */}
                     {selectedHabits.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {selectedHabits.map((habit) => (
-                          <Badge key={habit.id} variant="secondary" className="flex items-center gap-1">
-                            {habit.name}
-                            <X 
-                              className="h-3 w-3 cursor-pointer" 
-                              onClick={() => removeHabit(habit.id)}
-                            />
-                          </Badge>
-                        ))}
+                      <div className="mt-3 p-3 bg-muted rounded-lg">
+                        <div className="text-sm font-medium mb-2">
+                          Selected Habits ({selectedHabits.length}):
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedHabits.map((habit) => (
+                            <Badge 
+                              key={habit.id} 
+                              variant="secondary" 
+                              className="flex items-center gap-1"
+                            >
+                              {habit.name}
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-4 w-4 p-0 hover:bg-transparent"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  removeHabit(habit.id);
+                                }}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
                     )}
-                  </div>
-                </div>
+
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               </form>
             </Form>
           </div>
