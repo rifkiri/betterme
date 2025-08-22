@@ -72,6 +72,21 @@ export class SupabaseWeeklyOutputsService {
     if (updates.linkedGoalId !== undefined) {
       supabaseUpdates.linked_goal_id = updates.linkedGoalId || null;
       console.log('SupabaseWeeklyOutputsService - linkedGoalId update:', updates.linkedGoalId, '→', supabaseUpdates.linked_goal_id);
+      
+      // If unlinking (setting to null), delete the linkage record
+      if (!updates.linkedGoalId) {
+        console.log('🗑️ Deleting output->goal linkage records for output:', id);
+        const { error: linkageError } = await supabase
+          .from('item_linkages')
+          .delete()
+          .eq('user_id', userId)
+          .eq('source_type', 'weekly_output')
+          .eq('source_id', id);
+        
+        if (linkageError) {
+          console.error('Error deleting output->goal linkage:', linkageError);
+        }
+      }
     }
 
     console.log('SupabaseWeeklyOutputsService - Final supabase updates object:', supabaseUpdates);

@@ -119,6 +119,21 @@ export class SupabaseHabitsService {
     if (updates.linkedGoalId !== undefined) {
       supabaseUpdates.linked_goal_id = updates.linkedGoalId || null;
       console.log('SupabaseHabitsService - linkedGoalId update:', updates.linkedGoalId, '→', supabaseUpdates.linked_goal_id);
+      
+      // If unlinking (setting to null), delete the linkage record
+      if (!updates.linkedGoalId) {
+        console.log('🗑️ Deleting habit->goal linkage records for habit:', id);
+        const { error: linkageError } = await supabase
+          .from('item_linkages')
+          .delete()
+          .eq('user_id', userId)
+          .eq('source_type', 'habit')
+          .eq('source_id', id);
+        
+        if (linkageError) {
+          console.error('Error deleting habit->goal linkage:', linkageError);
+        }
+      }
     }
 
     console.log('SupabaseHabitsService - Final supabase updates object:', supabaseUpdates);
