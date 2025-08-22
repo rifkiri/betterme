@@ -11,7 +11,9 @@ import {
   CheckCircle2,
   Link,
   Clock,
-  ArrowRight
+  ArrowRight,
+  Users,
+  Settings
 } from 'lucide-react';
 import { Goal, Task, WeeklyOutput, Habit, GoalAssignment } from '@/types/productivity';
 import { format, isBefore } from 'date-fns';
@@ -100,8 +102,12 @@ const getCategoryColor = (category: Goal['category']) => {
 
   const isOverdue = goal.deadline && isBefore(goal.deadline, new Date()) && goal.progress < 100;
   
-  // Only show edit button to goal creator
-  const canEditGoal = currentUserId && (goal.createdBy === currentUserId || goal.userId === currentUserId);
+  // Check user permissions for different types of editing
+  const isGoalCreator = currentUserId && (goal.createdBy === currentUserId || goal.userId === currentUserId);
+  const userAssignment = assignments.find(a => a.goalId === goal.id && a.userId === currentUserId);
+  const hasAssignmentRole = userAssignment?.role;
+  const canFullEdit = isGoalCreator;
+  const canEditLinkagesAndRoles = hasAssignmentRole || isGoalCreator;
 
   return (
     <>
@@ -201,10 +207,23 @@ const getCategoryColor = (category: Goal['category']) => {
 
             {/* Linked Outputs */}
             <div className="space-y-3">
-              <h4 className="font-medium text-gray-900 flex items-center gap-2">
-                <Link className="h-4 w-4 text-blue-600" />
-                Linked Outputs ({linkedOutputs.length})
-              </h4>
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                  <Link className="h-4 w-4 text-blue-600" />
+                  Linked Outputs ({linkedOutputs.length})
+                </h4>
+                {canEditLinkagesAndRoles && (
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => setEditingGoal(true)}
+                    className="text-xs"
+                  >
+                    <Link className="h-3 w-3 mr-1" />
+                    Edit Links
+                  </Button>
+                )}
+              </div>
               
               {loadingLinkedOutputs ? (
                 <p className="text-sm text-gray-500 py-2">Loading linked outputs...</p>
@@ -334,6 +353,69 @@ const getCategoryColor = (category: Goal['category']) => {
               )}
             </div>
 
+            {/* Team Assignments (Work Goals Only) */}
+            {goal.category === 'work' && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                    <Users className="h-4 w-4 text-purple-600" />
+                    Team Assignments ({assignments.filter(a => a.goalId === goal.id).length})
+                  </h4>
+                  {canEditLinkagesAndRoles && (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => setEditingGoal(true)}
+                      className="text-xs"
+                    >
+                      <Settings className="h-3 w-3 mr-1" />
+                      Manage Roles
+                    </Button>
+                  )}
+                </div>
+                
+                {assignments.filter(a => a.goalId === goal.id).length === 0 ? (
+                  <p className="text-sm text-gray-500 py-2">No team members assigned to this goal</p>
+                ) : (
+                  <div className="space-y-2">
+                    {assignments
+                      .filter(a => a.goalId === goal.id)
+                      .map((assignment) => {
+                        const user = availableUsers.find(u => u.id === assignment.userId);
+                        return (
+                          <div key={assignment.id} className="p-3 border rounded-lg bg-white">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div>
+                                  <p className="font-medium text-sm">{user?.name || 'Unknown User'}</p>
+                                  <p className="text-xs text-gray-500">{user?.email}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Badge 
+                                  variant={
+                                    assignment.role === 'coach' ? 'default' :
+                                    assignment.role === 'lead' ? 'secondary' : 'outline'
+                                  } 
+                                  className="text-xs"
+                                >
+                                  {assignment.role.charAt(0).toUpperCase() + assignment.role.slice(1)}
+                                </Badge>
+                                {assignment.selfAssigned && (
+                                  <Badge variant="outline" className="text-xs">
+                                    Self-assigned
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Impact Summary */}
             <div className="p-3 bg-blue-50 rounded-lg">
               <h4 className="font-medium text-sm text-blue-900 mb-2">Impact Summary</h4>
@@ -376,12 +458,20 @@ const getCategoryColor = (category: Goal['category']) => {
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Close
             </Button>
-            {canEditGoal && (
-              <Button onClick={() => setEditingGoal(true)}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Goal
-              </Button>
-            )}
+            <div className="flex gap-2">
+              {canEditLinkagesAndRoles && !canFullEdit && (
+                <Button variant="outline" onClick={() => setEditingGoal(true)}>
+                  <Settings className="h-4 w-4 mr-2" />
+                  Edit Links & Roles
+                </Button>
+              )}
+              {canFullEdit && (
+                <Button onClick={() => setEditingGoal(true)}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Goal
+                </Button>
+              )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -406,6 +496,7 @@ const getCategoryColor = (category: Goal['category']) => {
           habits={habits.length > 0 ? habits : allHabits}
           assignments={assignments}
           availableUsers={availableUsers}
+          allowFullEdit={canFullEdit}
         />
       ) : null}
     </>

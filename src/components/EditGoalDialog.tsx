@@ -45,6 +45,7 @@ interface EditGoalDialogProps {
   habits?: Habit[];
   assignments?: GoalAssignment[];
   availableUsers?: any[];
+  allowFullEdit?: boolean; // New prop to control editing permissions
 }
 
 export const EditGoalDialog = ({ 
@@ -56,7 +57,8 @@ export const EditGoalDialog = ({
   weeklyOutputs = [], 
   habits = [], 
   assignments = [], 
-  availableUsers = [] 
+  availableUsers = [],
+  allowFullEdit = true
 }: EditGoalDialogProps) => {
   const [selectedOutputs, setSelectedOutputs] = useState<WeeklyOutput[]>([]);
   const [selectedHabits, setSelectedHabits] = useState<Habit[]>([]);
@@ -322,111 +324,125 @@ export const EditGoalDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
         <DialogHeader className="shrink-0">
-          <DialogTitle>Edit Work Goal</DialogTitle>
+          <DialogTitle>
+            {allowFullEdit ? 'Edit Work Goal' : 'Edit Goal Links & Roles'}
+          </DialogTitle>
         </DialogHeader>
         
         <ScrollArea className="flex-1 px-1">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pb-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Goal Title *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Complete project milestone" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Optional description of your work goal" 
-                        className="min-h-[60px]"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="subcategory"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Subcategory (Optional)</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select subcategory" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="none">No subcategory</SelectItem>
-                        {getSubcategoryOptions('work').map((subcategory) => (
-                          <SelectItem key={subcategory} value={subcategory}>
-                            {subcategory}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="deadline"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Deadline (Optional)</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
+              {allowFullEdit && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Goal Title *</FormLabel>
                         <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a deadline</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
+                          <Input placeholder="e.g., Complete project milestone" {...field} />
                         </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) => date < today}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              {/* Weekly Outputs Linking Section */}
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Optional description of your work goal" 
+                            className="min-h-[60px]"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="subcategory"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Subcategory (Optional)</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select subcategory" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="none">No subcategory</SelectItem>
+                            {getSubcategoryOptions('work').map((subcategory) => (
+                              <SelectItem key={subcategory} value={subcategory}>
+                                {subcategory}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="deadline"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Deadline (Optional)</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "PPP")
+                                ) : (
+                                  <span>Pick a deadline</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              disabled={(date) => date < today}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
+
+              {!allowFullEdit && (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <h3 className="font-medium text-amber-900 mb-2">Editing Permissions</h3>
+                  <p className="text-sm text-amber-800">
+                    You can edit linked outputs and role assignments for this goal. 
+                    Only the goal creator can edit the basic goal details.
+                  </p>
+                </div>
+              )}
               <FormField
                 control={form.control}
                 name="selectedOutputIds"
@@ -750,8 +766,8 @@ export const EditGoalDialog = ({
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button type="submit" onClick={form.handleSubmit(onSubmit)}>
-            Save Changes
+          <Button type="submit" onClick={form.handleSubmit(onSubmit)} disabled={!allowFullEdit && selectedOutputs.length === 0 && selectedCoach === '' && selectedLead === '' && selectedMembers.length === 0}>
+            {allowFullEdit ? 'Save Changes' : 'Update Links & Roles'}
           </Button>
         </div>
       </DialogContent>
