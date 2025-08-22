@@ -15,8 +15,9 @@ import {
 } from 'lucide-react';
 import { WeeklyOutput, Task, Goal } from '@/types/productivity';
 import { format } from 'date-fns';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { EditWeeklyOutputDialog } from './EditWeeklyOutputDialog';
+import { useWeeklyOutputs } from '@/hooks/useWeeklyOutputs';
 
 interface OutputDetailsDialogProps {
   output: WeeklyOutput;
@@ -40,11 +41,22 @@ export const OutputDetailsDialog = ({
   onUpdateLinks
 }: OutputDetailsDialogProps) => {
   const [editingOutput, setEditingOutput] = useState<WeeklyOutput | null>(null);
+  const [currentOutput, setCurrentOutput] = useState<WeeklyOutput>(output);
+  const { weeklyOutputs } = useWeeklyOutputs();
+
+  // Refresh output data when dialog opens or output changes
+  useEffect(() => {
+    if (output && open) {
+      const updatedOutput = weeklyOutputs.find(o => o.id === output.id) || output;
+      setCurrentOutput(updatedOutput);
+    }
+  }, [output, open, weeklyOutputs]);
+
   // Find the linked goal using the simple linkedGoalId field
-  const linkedGoal = output.linkedGoalId ? goals.find(g => g.id === output.linkedGoalId) : null;
+  const linkedGoal = currentOutput.linkedGoalId ? goals.find(g => g.id === currentOutput.linkedGoalId) : null;
 
   const linkedTasks = tasks.filter(task => 
-    task.weeklyOutputId === output.id
+    task.weeklyOutputId === currentOutput.id
   );
 
   const completedTasks = linkedTasks.filter(task => task.completed).length;
@@ -64,12 +76,12 @@ export const OutputDetailsDialog = ({
             {/* Output Overview */}
             <div className="space-y-3">
               <div className="flex items-start justify-between gap-2">
-                <h3 className="text-lg font-semibold text-gray-900">{output.title}</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{currentOutput.title}</h3>
                 <div className="flex items-center gap-2">
-                  <Badge variant={output.progress === 100 ? 'default' : 'secondary'} className="text-xs">
-                    {output.progress}%
+                  <Badge variant={currentOutput.progress === 100 ? 'default' : 'secondary'} className="text-xs">
+                    {currentOutput.progress}%
                   </Badge>
-                  {output.progress === 100 && (
+                  {currentOutput.progress === 100 && (
                     <Badge className="text-xs bg-green-100 text-green-800">
                       <CheckCircle2 className="h-3 w-3 mr-1" />
                       Completed
@@ -78,37 +90,37 @@ export const OutputDetailsDialog = ({
                 </div>
               </div>
 
-              {output.description && (
-                <p className="text-sm text-gray-600">{output.description}</p>
+              {currentOutput.description && (
+                <p className="text-sm text-gray-600">{currentOutput.description}</p>
               )}
 
               <div className="grid grid-cols-2 gap-4 p-3 bg-gray-50 rounded-lg">
                 <div>
                   <p className="text-xs text-gray-500">Created</p>
-                  <p className="font-medium">{format(output.createdDate, 'MMM dd, yyyy')}</p>
+                  <p className="font-medium">{format(currentOutput.createdDate, 'MMM dd, yyyy')}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Due Date</p>
-                  <p className="font-medium">{format(output.dueDate, 'MMM dd, yyyy')}</p>
+                  <p className="font-medium">{format(currentOutput.dueDate, 'MMM dd, yyyy')}</p>
                 </div>
               </div>
 
-              {output.isMoved && output.originalDueDate && (
+              {currentOutput.isMoved && currentOutput.originalDueDate && (
                 <div className="p-2 bg-orange-50 border border-orange-200 rounded text-sm">
                   <p className="text-orange-800">
-                    Moved from: {format(output.originalDueDate, 'MMM dd, yyyy')}
+                    Moved from: {format(currentOutput.originalDueDate, 'MMM dd, yyyy')}
                   </p>
                 </div>
               )}
 
               <div className="space-y-2">
-                <Progress value={output.progress} className="h-3" />
+                <Progress value={currentOutput.progress} className="h-3" />
                 <div className="flex items-center gap-2">
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => onUpdateProgress(output.id, Math.max(0, output.progress - 10))}
-                    disabled={output.progress <= 0}
+                    onClick={() => onUpdateProgress(currentOutput.id, Math.max(0, currentOutput.progress - 10))}
+                    disabled={currentOutput.progress <= 0}
                     className="text-xs px-3"
                   >
                     <Minus className="h-3 w-3 mr-1" />
@@ -117,17 +129,17 @@ export const OutputDetailsDialog = ({
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => onUpdateProgress(output.id, Math.min(100, output.progress + 10))}
-                    disabled={output.progress >= 100}
+                    onClick={() => onUpdateProgress(currentOutput.id, Math.min(100, currentOutput.progress + 10))}
+                    disabled={currentOutput.progress >= 100}
                     className="text-xs px-3"
                   >
                     <Plus className="h-3 w-3 mr-1" />
                     +10%
                   </Button>
-                  {output.progress !== 100 && (
+                  {currentOutput.progress !== 100 && (
                     <Button
                       size="sm"
-                      onClick={() => onUpdateProgress(output.id, 100)}
+                      onClick={() => onUpdateProgress(currentOutput.id, 100)}
                       className="text-xs px-3"
                     >
                       <CheckCircle2 className="h-3 w-3 mr-1" />
@@ -270,7 +282,7 @@ const getCategoryColor = (category: Goal['category']) => {
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Close
             </Button>
-            <Button onClick={() => setEditingOutput(output)}>
+            <Button onClick={() => setEditingOutput(currentOutput)}>
               <Edit className="h-4 w-4 mr-2" />
               Edit Output
             </Button>
