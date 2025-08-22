@@ -117,11 +117,11 @@ export class SupabaseHabitsService {
     if (updates.archived !== undefined) supabaseUpdates.archived = updates.archived;
     if (updates.isDeleted !== undefined) supabaseUpdates.is_deleted = updates.isDeleted;
     if (updates.linkedGoalId !== undefined) {
-      supabaseUpdates.linked_goal_id = updates.linkedGoalId || null;
+      supabaseUpdates.linked_goal_id = (updates.linkedGoalId === "none" || !updates.linkedGoalId) ? null : updates.linkedGoalId;
       console.log('SupabaseHabitsService - linkedGoalId update:', updates.linkedGoalId, '→', supabaseUpdates.linked_goal_id);
       
       // If unlinking (setting to null), delete the linkage record
-      if (!updates.linkedGoalId) {
+      if (updates.linkedGoalId === "none" || !updates.linkedGoalId) {
         console.log('🗑️ Deleting habit->goal linkage records for habit:', id);
         const { error: linkageError } = await supabase
           .from('item_linkages')

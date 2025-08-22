@@ -70,11 +70,11 @@ export class SupabaseWeeklyOutputsService {
     if (updates.completedDate) supabaseUpdates.completed_date = updates.completedDate.toISOString();
     if (updates.deletedDate) supabaseUpdates.deleted_date = updates.deletedDate.toISOString();
     if (updates.linkedGoalId !== undefined) {
-      supabaseUpdates.linked_goal_id = updates.linkedGoalId || null;
+      supabaseUpdates.linked_goal_id = (updates.linkedGoalId === "none" || !updates.linkedGoalId) ? null : updates.linkedGoalId;
       console.log('SupabaseWeeklyOutputsService - linkedGoalId update:', updates.linkedGoalId, '→', supabaseUpdates.linked_goal_id);
       
       // If unlinking (setting to null), delete the linkage record
-      if (!updates.linkedGoalId) {
+      if (updates.linkedGoalId === "none" || !updates.linkedGoalId) {
         console.log('🗑️ Deleting output->goal linkage records for output:', id);
         const { error: linkageError } = await supabase
           .from('item_linkages')
