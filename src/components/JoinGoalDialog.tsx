@@ -26,6 +26,24 @@ export const JoinGoalDialog = ({
   const [selectedGoal, setSelectedGoal] = useState<string>('');
   const [selectedRole, setSelectedRole] = useState<'coach' | 'lead' | 'member'>('member');
 
+  // Debug logging for JoinGoalDialog props
+  console.log('JoinGoalDialog received props:', {
+    availableGoalsCount: availableGoals.length,
+    availableGoals: availableGoals.map(g => ({
+      id: g.id,
+      title: g.title,
+      category: g.category,
+      userId: g.userId,
+      progress: g.progress,
+      archived: g.archived,
+      coachId: g.coachId,
+      leadIds: g.leadIds,
+      memberIds: g.memberIds
+    })),
+    currentUserId,
+    availableUsersCount: availableUsers.length
+  });
+
   const handleJoin = async () => {
     console.log('JoinGoalDialog handleJoin called:', { selectedGoal, selectedRole, currentUserId });
     

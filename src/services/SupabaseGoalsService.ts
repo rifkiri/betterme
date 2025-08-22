@@ -146,40 +146,76 @@ return data.map(goal => ({
   async getAllGoals(): Promise<Goal[]> {
     console.log('Getting all goals for work goal joining');
     
-    const { data, error } = await supabase
-      .from('goals')
-      .select('*')
-      .order('created_date', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('goals')
+        .select('*')
+        .eq('is_deleted', false)
+        .order('created_date', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching all goals:', error);
+      if (error) {
+        console.error('Error fetching all goals:', error);
+        throw error;
+      }
+
+      console.log('Raw goals from database:', {
+        count: data?.length || 0,
+        data: data?.map(goal => ({
+          id: goal.id,
+          title: goal.title,
+          category: goal.category,
+          user_id: goal.user_id,
+          progress: goal.progress,
+          archived: goal.archived,
+          is_deleted: goal.is_deleted,
+          coach_id: goal.coach_id,
+          lead_ids: goal.lead_ids,
+          member_ids: goal.member_ids
+        })) || []
+      });
+
+      if (!data) {
+        return [];
+      }
+
+      const transformedGoals = data.map(goal => ({
+        id: goal.id,
+        userId: goal.user_id,
+        title: goal.title,
+        description: goal.description,
+        category: goal.category as 'work' | 'personal',
+        subcategory: goal.subcategory,
+        deadline: goal.deadline ? new Date(goal.deadline) : undefined,
+        createdDate: new Date(goal.created_date),
+        completed: goal.completed,
+        archived: goal.archived,
+        progress: goal.progress || 0,
+        coachId: goal.coach_id,
+        leadIds: goal.lead_ids || [],
+        memberIds: goal.member_ids || [],
+        createdBy: goal.created_by,
+        assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined
+      }));
+
+      console.log('Transformed goals for frontend:', {
+        count: transformedGoals.length,
+        workGoals: transformedGoals.filter(g => g.category === 'work').map(g => ({
+          id: g.id,
+          title: g.title,
+          userId: g.userId,
+          progress: g.progress,
+          archived: g.archived
+        }))
+      });
+
+      return transformedGoals;
+    } catch (error) {
+      console.error('Error in getAllGoals:', error);
       throw error;
     }
-
-    console.log('Raw all goals data:', data);
-
-    return data.map(goal => ({
-      id: goal.id,
-      title: goal.title,
-      description: goal.description,
-      category: goal.category as 'work' | 'personal',
-      subcategory: goal.subcategory,
-      deadline: goal.deadline ? new Date(goal.deadline) : undefined,
-      createdDate: new Date(goal.created_date),
-      completed: goal.completed,
-      archived: goal.archived,
-        progress: goal.progress || 0,
-      linkedOutputIds: [], // Now handled by ItemLinkageService
-      userId: goal.user_id,
-      coachId: goal.coach_id,
-      leadIds: goal.lead_ids || [],
-      memberIds: goal.member_ids || [],
-      createdBy: goal.created_by,
-      assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined
-    }));
   }
 
-async addGoal(goal: Goal & { userId: string }): Promise<void> {
+  async addGoal(goal: Goal & { userId: string }): Promise<void> {
     console.log('Adding goal for user:', goal.userId, goal);
     
     const { error } = await supabase
