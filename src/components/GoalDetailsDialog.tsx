@@ -360,6 +360,9 @@ const getCategoryColor = (category: Goal['category']) => {
                 <h4 className="font-medium text-gray-900 flex items-center gap-2">
                   <Users className="h-4 w-4 text-purple-600" />
                   Team Assignments ({assignments.filter(a => a.goalId === goal.id).length})
+                  <span className="text-xs text-gray-500">
+                    (Total: {assignments.length}, Users: {availableUsers.length})
+                  </span>
                 </h4>
                 
                 {assignments.filter(a => a.goalId === goal.id).length === 0 ? (
