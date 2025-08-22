@@ -47,6 +47,7 @@ export const HabitsSection = ({
   const [viewingHabit, setViewingHabit] = useState<Habit | null>(null);
 
   console.log('HabitsSection rendering with habits:', habits);
+  console.log('Habit linkedGoalIds:', habits.map(h => ({ id: h.id, name: h.name, linkedGoalId: h.linkedGoalId })));
 
   const handleToggleHabit = async (id: string) => {
     console.log('Toggling habit:', id);
