@@ -794,13 +794,13 @@ export const EditGoalDialog = ({
                          </Button>
                        </PopoverTrigger>
                        <PopoverContent className="w-full p-0 bg-white border z-50" align="start">
-                         <div className="bg-white max-h-60 overflow-y-auto">
+                         <div className="max-h-[200px] overflow-y-auto p-1">
                            {availableUsers
                              .filter(user => user.role === 'team-member' || user.role === 'manager')
                              .map(user => (
                                <div 
                                  key={user.id} 
-                                 className="flex items-center justify-between px-3 py-2 hover:bg-gray-50 cursor-pointer text-sm"
+                                 className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
                                  onClick={() => {
                                    if (selectedMembers.includes(user.id)) {
                                      setSelectedMembers(selectedMembers.filter(id => id !== user.id));
@@ -809,16 +809,16 @@ export const EditGoalDialog = ({
                                    }
                                  }}
                                >
-                                 <span className="text-gray-900">
+                                 <span className="flex-1">
                                    {user.name} ({user.role})
                                  </span>
                                  {selectedMembers.includes(user.id) && (
-                                   <span className="text-green-600 font-medium">✓</span>
+                                   <span className="ml-auto text-green-600 font-medium">✓</span>
                                  )}
                                </div>
                              ))}
                            {availableUsers.filter(user => user.role === 'team-member' || user.role === 'manager').length === 0 && (
-                             <div className="px-3 py-2 text-sm text-gray-500 text-center">
+                             <div className="px-2 py-1.5 text-sm text-muted-foreground text-center">
                                No team members available
                              </div>
                            )}
