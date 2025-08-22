@@ -94,7 +94,7 @@ export class SupabaseTasksService {
     if (updates.completedDate) supabaseUpdates.completed_date = updates.completedDate.toISOString();
     if (updates.deletedDate) supabaseUpdates.deleted_date = updates.deletedDate.toISOString();
     if (updates.weeklyOutputId !== undefined) {
-      supabaseUpdates.weekly_output_id = updates.weeklyOutputId || null;
+      supabaseUpdates.weekly_output_id = (updates.weeklyOutputId === "none" || !updates.weeklyOutputId) ? null : updates.weeklyOutputId;
       console.log('SupabaseTasksService - weeklyOutputId update:', updates.weeklyOutputId, '→', supabaseUpdates.weekly_output_id);
     }
     if (updates.taggedUsers !== undefined) supabaseUpdates.tagged_users = updates.taggedUsers || null;
