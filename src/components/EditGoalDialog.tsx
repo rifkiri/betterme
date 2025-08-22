@@ -573,79 +573,107 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, onRefresh, we
             )}
 
             {/* Habit Linking Section for Personal Goals Only */}
-            {(goal.category === 'personal' || form.watch('category') === 'personal') && (
-              <FormField
-                control={form.control}
-                name="selectedHabitIds"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <Target className="h-4 w-4" />
-                      Link to Habits (Optional)
-                    </FormLabel>
-                    
-                    <Popover open={isHabitDropdownOpen} onOpenChange={setIsHabitDropdownOpen}>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className="w-full justify-between"
-                          >
-                            {selectedHabits.length === 0 
-                              ? "Select habits to link..." 
-                              : `${selectedHabits.length} habit${selectedHabits.length !== 1 ? 's' : ''} selected`
-                            }
-                            <Target className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0" align="start">
-                        <Command>
-                          <CommandInput placeholder="Search habits..." />
-                          <CommandList>
-                            <CommandEmpty>No habits found.</CommandEmpty>
-                            <CommandGroup>
-                              {habits.filter(habit => !habit.archived && !habit.isDeleted).map((habit) => (
-                                <CommandItem
-                                  key={habit.id}
-                                  onSelect={() => toggleHabitSelection(habit)}
-                                  className="flex items-center justify-between p-3"
-                                >
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <span className="font-medium text-sm">{habit.name}</span>
-                                      {habit.streak > 0 && (
-                                        <Badge variant="secondary" className="text-xs">
-                                          {habit.streak} day streak
-                                        </Badge>
-                                      )}
-                                    </div>
-                                    {habit.description && (
-                                      <p className="text-xs text-muted-foreground">{habit.description}</p>
-                                    )}
-                                    {habit.category && (
-                                      <div className="flex items-center gap-1 mt-1">
-                                        <span className="text-xs text-muted-foreground">
-                                          Category: {habit.category}
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="ml-2">
-                                    {(field.value || []).includes(habit.id) && (
-                                      <div className="h-4 w-4 bg-primary rounded-sm flex items-center justify-center">
-                                        <span className="text-xs text-primary-foreground">✓</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+            {(() => {
+              const goalCategory = goal.category;
+              const formCategory = form.watch('category');
+              const isPersonal = goalCategory === 'personal' || formCategory === 'personal';
+              const availableHabits = habits.filter(habit => !habit.archived && !habit.isDeleted);
+              
+              console.log('=== HABIT SECTION DEBUG ===');
+              console.log('Goal category:', goalCategory);
+              console.log('Form category:', formCategory);
+              console.log('Is personal:', isPersonal);
+              console.log('Available habits count:', availableHabits.length);
+              console.log('Total habits:', habits.length);
+              
+              if (!isPersonal) {
+                console.log('Hiding habits section - not personal goal');
+                return null;
+              }
+              
+              console.log('Showing habits section for personal goal');
+              
+              return (
+                <FormField
+                  control={form.control}
+                  name="selectedHabitIds"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Target className="h-4 w-4" />
+                        Link to Habits (Optional)
+                      </FormLabel>
+                      
+                      <Popover open={isHabitDropdownOpen} onOpenChange={setIsHabitDropdownOpen}>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className="w-full justify-between"
+                            >
+                              {availableHabits.length === 0 
+                                ? "No habits available to link" 
+                                : selectedHabits.length === 0 
+                                  ? "Select habits to link..." 
+                                  : `${selectedHabits.length} habit${selectedHabits.length !== 1 ? 's' : ''} selected`
+                              }
+                              <Target className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0 bg-background border z-50" align="start">
+                          <Command className="bg-background">
+                            <CommandInput placeholder="Search habits..." className="bg-background" />
+                            <CommandList className="bg-background">
+                              {availableHabits.length === 0 ? (
+                                <CommandEmpty>No habits available. Create some habits first!</CommandEmpty>
+                              ) : (
+                                <>
+                                  <CommandEmpty>No habits found.</CommandEmpty>
+                                  <CommandGroup className="bg-background">
+                                    {availableHabits.map((habit) => (
+                                      <CommandItem
+                                        key={habit.id}
+                                        onSelect={() => toggleHabitSelection(habit)}
+                                        className="flex items-center justify-between p-3 bg-background hover:bg-accent"
+                                      >
+                                        <div className="flex-1">
+                                          <div className="flex items-center gap-2 mb-1">
+                                            <span className="font-medium text-sm">{habit.name}</span>
+                                            {habit.streak > 0 && (
+                                              <Badge variant="secondary" className="text-xs">
+                                                {habit.streak} day streak
+                                              </Badge>
+                                            )}
+                                          </div>
+                                          {habit.description && (
+                                            <p className="text-xs text-muted-foreground">{habit.description}</p>
+                                          )}
+                                          {habit.category && (
+                                            <div className="flex items-center gap-1 mt-1">
+                                              <span className="text-xs text-muted-foreground">
+                                                Category: {habit.category}
+                                              </span>
+                                            </div>
+                                          )}
+                                        </div>
+                                        <div className="ml-2">
+                                          {(field.value || []).includes(habit.id) && (
+                                            <div className="h-4 w-4 bg-primary rounded-sm flex items-center justify-center">
+                                              <span className="text-xs text-primary-foreground">✓</span>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </>
+                              )}
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                     
                     {/* Selected Habits Display */}
                     {selectedHabits.length > 0 && (
@@ -677,13 +705,14 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, onRefresh, we
                           ))}
                          </div>
                        </div>
-                     )}
+                      )}
 
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              );
+            })()}
 
             {/* Work Goal Role Assignments - only show for work goals */}
             {form.watch('category') === 'work' && availableUsers.length > 0 && (
