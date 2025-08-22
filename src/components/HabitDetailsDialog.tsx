@@ -32,6 +32,10 @@ export const HabitDetailsDialog = ({
     ? goals?.find(goal => goal.id === habit.linkedGoalId)
     : null;
 
+  console.log('HabitDetailsDialog - Habit:', habit.name, 'linkedGoalId:', habit.linkedGoalId);
+  console.log('HabitDetailsDialog - Available goals:', goals?.length || 0, goals?.map(g => ({ id: g.id, title: g.title })));
+  console.log('HabitDetailsDialog - Found linkedGoal:', linkedGoal);
+
   const handleEditSave = (habitId: string, updates: Partial<Habit>) => {
     onEditHabit(habitId, updates);
     setShowEditDialog(false);
