@@ -141,8 +141,11 @@ export const useProductivityData = () => {
     if (userId) {
       console.log('User ID or date changed, reloading data for user:', userId, format(selectedDate, 'yyyy-MM-dd'));
       loadAllData(selectedDate);
+    } else {
+      // Clear loading state when no user
+      setIsLoading(false);
     }
-  }, [userId, selectedDate]);
+  }, [userId, selectedDate.getTime()]); // Use timestamp to prevent unnecessary re-renders
 
   const handleDateChange = (date: Date) => {
     console.log('Date changed to:', format(date, 'yyyy-MM-dd'), 'for user:', userId);
@@ -170,8 +173,11 @@ export const useProductivityData = () => {
     // Methods
     loadAllData,
     handleDateChange: (date: Date) => {
+      console.log('📅 Date changed to:', format(date, 'yyyy-MM-dd'));
       setSelectedDate(date);
-      loadAllData(date);
+      if (userId) {
+        loadAllData(date);
+      }
     },
     
     // Setters for managers
