@@ -111,7 +111,7 @@ export const TeamWorkloadMonitoring = ({
         const tasks = await supabaseDataService.getTasks(userProfile.id);
         const outputs = await supabaseDataService.getWeeklyOutputs(userProfile.id);
         const activeTasks = tasks.filter(t => !t.completed && !t.isDeleted).length;
-        const activeOutputs = outputs.filter(o => !o.isDeleted).length;
+        const activeOutputs = outputs.filter(o => !o.isDeleted && o.progress < 100).length;
 
         memberWorkloads.push({
           id: userProfile.id,
