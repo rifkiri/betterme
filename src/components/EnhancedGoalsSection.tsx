@@ -454,6 +454,8 @@ export const EnhancedGoalsSection = ({
           habits={habits}
           currentUserId={currentUserId}
           onRefresh={onRefresh}
+          assignments={assignments}
+          availableUsers={availableUsers}
         />
       )}
     </div>

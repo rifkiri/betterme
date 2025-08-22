@@ -20,6 +20,8 @@ interface GoalCardProps {
   isOverdue?: boolean;
   isCompleted?: boolean;
   onRefresh?: () => Promise<void>;
+  assignments?: any[];
+  availableUsers?: any[];
 }
 
 export const GoalCard = ({
@@ -32,7 +34,9 @@ export const GoalCard = ({
   onDeleteGoal,
   isOverdue = false,
   isCompleted = false,
-  onRefresh
+  onRefresh,
+  assignments = [],
+  availableUsers = []
 }: GoalCardProps) => {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   
@@ -145,6 +149,8 @@ const getCategoryColor = (category: Goal['category']) => {
         weeklyOutputs={weeklyOutputs}
         tasks={tasks}
         onRefresh={onRefresh}
+        assignments={assignments}
+        availableUsers={availableUsers}
       />
     </>
   );

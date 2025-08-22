@@ -13,7 +13,7 @@ import {
   Clock,
   ArrowRight
 } from 'lucide-react';
-import { Goal, Task, WeeklyOutput, Habit } from '@/types/productivity';
+import { Goal, Task, WeeklyOutput, Habit, GoalAssignment } from '@/types/productivity';
 import { format, isBefore } from 'date-fns';
 import { useState, useEffect } from 'react';
 import { EditGoalDialog } from './EditGoalDialog';
@@ -29,6 +29,8 @@ interface GoalDetailsDialogProps {
   habits?: Habit[];
   currentUserId?: string;
   onRefresh?: () => Promise<void>;
+  assignments?: GoalAssignment[];
+  availableUsers?: any[];
 }
 
 export const GoalDetailsDialog = ({
@@ -41,7 +43,9 @@ export const GoalDetailsDialog = ({
   tasks,
   habits = [],
   currentUserId,
-  onRefresh
+  onRefresh,
+  assignments = [],
+  availableUsers = []
 }: GoalDetailsDialogProps) => {
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [linkedOutputs, setLinkedOutputs] = useState<WeeklyOutput[]>([]);
@@ -382,6 +386,8 @@ const getCategoryColor = (category: Goal['category']) => {
           onRefresh={onRefresh}
           weeklyOutputs={weeklyOutputs}
           habits={habits}
+          assignments={assignments}
+          availableUsers={availableUsers}
         />
       )}
     </>

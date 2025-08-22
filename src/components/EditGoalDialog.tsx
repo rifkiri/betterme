@@ -8,15 +8,17 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CalendarIcon } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { CalendarIcon, Users, UserCog, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '@/lib/utils';
-import { Goal, WeeklyOutput, Habit } from '@/types/productivity';
+import { Goal, WeeklyOutput, Habit, GoalAssignment } from '@/types/productivity';
 import { getSubcategoryOptions, mapSubcategoryDisplayToDatabase, mapSubcategoryDatabaseToDisplay } from '@/utils/goalCategoryUtils';
 import { supabaseWeeklyOutputsService } from '@/services/SupabaseWeeklyOutputsService';
+import { supabaseGoalAssignmentsService } from '@/services/SupabaseGoalAssignmentsService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Badge } from '@/components/ui/badge';
@@ -41,12 +43,18 @@ interface EditGoalDialogProps {
   onRefresh?: () => Promise<void>;
   weeklyOutputs?: WeeklyOutput[];
   habits?: Habit[];
+  assignments?: GoalAssignment[];
+  availableUsers?: any[];
 }
 
-export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, onRefresh, weeklyOutputs = [], habits = [] }: EditGoalDialogProps) => {
+export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, onRefresh, weeklyOutputs = [], habits = [], assignments = [], availableUsers = [] }: EditGoalDialogProps) => {
   const [selectedOutputs, setSelectedOutputs] = useState<WeeklyOutput[]>([]);
   const [linkedHabits, setLinkedHabits] = useState<Habit[]>([]);
   const [isOutputDropdownOpen, setIsOutputDropdownOpen] = useState(false);
+  const [goalAssignments, setGoalAssignments] = useState<GoalAssignment[]>([]);
+  const [selectedCoach, setSelectedCoach] = useState<string>('');
+  const [selectedLead, setSelectedLead] = useState<string>('');
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const { currentUser } = useCurrentUser();
   
   const form = useForm<FormData>({
@@ -72,6 +80,25 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, onRefresh, we
         // For habits on personal goals, we'll skip this for now to simplify
         // This focuses on fixing the weekly output linking issue first
         setLinkedHabits([]);
+
+        // Load goal assignments for work goals
+        if (goal.category === 'work') {
+          try {
+            const workGoalAssignments = await supabaseGoalAssignmentsService.getAssignmentsForGoal(goal.id);
+            setGoalAssignments(workGoalAssignments);
+            
+            // Set selected roles based on current assignments
+            const coach = workGoalAssignments.find(a => a.role === 'coach');
+            const lead = workGoalAssignments.find(a => a.role === 'lead');
+            const members = workGoalAssignments.filter(a => a.role === 'member');
+            
+            setSelectedCoach(coach?.userId || '');
+            setSelectedLead(lead?.userId || '');
+            setSelectedMembers(members.map(m => m.userId));
+          } catch (error) {
+            console.error('Error loading goal assignments:', error);
+          }
+        }
       }
     };
 
@@ -130,6 +157,56 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, onRefresh, we
         }
       } catch (error) {
         console.error('Error updating output links:', error);
+      }
+    }
+
+    // Update role assignments for work goals
+    if (goal.category === 'work' && currentUser?.id) {
+      try {
+        // Get current assignments
+        const currentAssignments = await supabaseGoalAssignmentsService.getAssignmentsForGoal(goal.id);
+        
+        // Create new assignments structure
+        const newAssignments: { userId: string; role: 'coach' | 'lead' | 'member' }[] = [];
+        
+        if (selectedCoach) {
+          newAssignments.push({ userId: selectedCoach, role: 'coach' });
+        }
+        if (selectedLead) {
+          newAssignments.push({ userId: selectedLead, role: 'lead' });
+        }
+        selectedMembers.forEach(memberId => {
+          newAssignments.push({ userId: memberId, role: 'member' });
+        });
+
+        // Delete assignments that no longer exist
+        for (const currentAssignment of currentAssignments) {
+          const stillExists = newAssignments.some(
+            na => na.userId === currentAssignment.userId && na.role === currentAssignment.role
+          );
+          if (!stillExists) {
+            await supabaseGoalAssignmentsService.deleteGoalAssignment(currentAssignment.id);
+          }
+        }
+
+        // Add new assignments
+        for (const newAssignment of newAssignments) {
+          const alreadyExists = currentAssignments.some(
+            ca => ca.userId === newAssignment.userId && ca.role === newAssignment.role
+          );
+          if (!alreadyExists) {
+            await supabaseGoalAssignmentsService.createGoalAssignment({
+              goalId: goal.id,
+              userId: newAssignment.userId,
+              role: newAssignment.role,
+              assignedBy: currentUser.id,
+              acknowledged: false,
+              selfAssigned: false
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error updating role assignments:', error);
       }
     }
     
@@ -425,6 +502,94 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, onRefresh, we
                   </FormItem>
                 )}
               />
+            )}
+
+            {/* Work Goal Role Assignments - only show for work goals */}
+            {form.watch('category') === 'work' && availableUsers.length > 0 && (
+              <Card className="p-4 bg-blue-50 border-blue-200">
+                <h3 className="font-medium text-blue-900 mb-4 flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Role Assignments
+                </h3>
+                
+                {/* Coach Selection */}
+                <div className="space-y-3 mb-4">
+                  <div className="flex items-center gap-2">
+                    <UserCog className="h-4 w-4 text-blue-600" />
+                    <span className="font-medium text-sm">Coach (Optional)</span>
+                  </div>
+                  <Select value={selectedCoach} onValueChange={(value) => setSelectedCoach(value === 'none' ? '' : value)}>
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Select a coach (optional)" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white z-50">
+                      <SelectItem value="none">No coach assigned</SelectItem>
+                      {availableUsers
+                        .filter(user => user.role === 'manager' || user.role === 'admin' || user.role === 'team-member')
+                        .map(user => (
+                          <SelectItem key={user.id} value={user.id}>
+                            {user.name} ({user.role})
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Lead Selection */}
+                <div className="space-y-3 mb-4">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-green-600" />
+                    <span className="font-medium text-sm">Lead (Optional)</span>
+                  </div>
+                  <Select value={selectedLead} onValueChange={(value) => setSelectedLead(value === 'none' ? '' : value)}>
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Select a lead (optional)" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white z-50">
+                      <SelectItem value="none">No lead assigned</SelectItem>
+                      {availableUsers
+                        .filter(user => user.role === 'manager' || user.role === 'admin' || user.role === 'team-member')
+                        .map(user => (
+                          <SelectItem key={user.id} value={user.id}>
+                            {user.name} ({user.role})
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Members Selection */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-purple-600" />
+                    <span className="font-medium text-sm">Members</span>
+                  </div>
+                  <div className="space-y-2">
+                    {availableUsers
+                      .filter(user => user.role === 'team-member' || user.role === 'manager')
+                      .map(user => (
+                        <div key={user.id} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id={`member-${user.id}`}
+                            checked={selectedMembers.includes(user.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedMembers([...selectedMembers, user.id]);
+                              } else {
+                                setSelectedMembers(selectedMembers.filter(id => id !== user.id));
+                              }
+                            }}
+                            className="rounded border-gray-300"
+                          />
+                          <label htmlFor={`member-${user.id}`} className="text-sm">
+                            {user.name} ({user.role})
+                          </label>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              </Card>
             )}
 
             {/* Current Linked Items Display */}
