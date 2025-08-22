@@ -113,20 +113,27 @@ export const WeeklyOutputsSection = ({
             {isCurrentWeek ? 'This Week' : format(weekStart, 'MMM dd')} - {format(weekEnd, 'MMM dd, yyyy')}
           </CardDescription>
         </div>
-        <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 flex-wrap sm:flex-nowrap">
-          <DeletedWeeklyOutputsDialog 
-            deletedWeeklyOutputs={deletedWeeklyOutputs} 
-            onRestore={onRestoreWeeklyOutput} 
-            onPermanentlyDelete={onPermanentlyDeleteWeeklyOutput} 
-          />
-          <CompletedWeeklyOutputsDialog 
-            weeklyOutputs={weeklyOutputs} 
-            onUpdateProgress={onUpdateProgress} 
-          />
-          <AddWeeklyOutputDialog 
-            onAddWeeklyOutput={onAddWeeklyOutput}
-            availableGoals={goals}
-          />
+        <div className="space-y-2">
+          {/* First row: Deleted and Add Outputs */}
+          <div className="flex items-center gap-1 sm:gap-2 lg:gap-3">
+            <DeletedWeeklyOutputsDialog 
+              deletedWeeklyOutputs={deletedWeeklyOutputs} 
+              onRestore={onRestoreWeeklyOutput} 
+              onPermanentlyDelete={onPermanentlyDeleteWeeklyOutput} 
+            />
+            <AddWeeklyOutputDialog 
+              onAddWeeklyOutput={onAddWeeklyOutput}
+              availableGoals={goals}
+            />
+          </div>
+          
+          {/* Second row: Completed */}
+          <div className="flex items-center">
+            <CompletedWeeklyOutputsDialog 
+              weeklyOutputs={weeklyOutputs} 
+              onUpdateProgress={onUpdateProgress} 
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContent>
