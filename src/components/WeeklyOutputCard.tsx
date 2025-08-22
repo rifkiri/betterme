@@ -112,7 +112,7 @@ export const WeeklyOutputCard = ({
           <Progress value={output.progress} className={`h-2 ${isOverdue() ? 'bg-red-100' : ''}`} />
         </div>
         
-        <div className="flex flex-col items-center space-y-2">
+        <div className="flex items-center space-x-2">
           <Button 
             size="sm" 
             variant="outline" 
