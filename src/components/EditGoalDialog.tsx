@@ -793,50 +793,36 @@ export const EditGoalDialog = ({
                            <Users className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                          </Button>
                        </PopoverTrigger>
-                       <PopoverContent className="w-full p-0 bg-background border z-50" align="start">
-                         <Command className="bg-background">
-                           <CommandInput placeholder="Search members..." className="bg-background" />
-                           <CommandList className="bg-background">
-                             {availableUsers.filter(user => user.role === 'team-member' || user.role === 'manager').length === 0 ? (
-                               <CommandEmpty>No team members available</CommandEmpty>
-                             ) : (
-                               <>
-                                 <CommandEmpty>No members found.</CommandEmpty>
-                                 <CommandGroup className="bg-background">
-                                   {availableUsers
-                                     .filter(user => user.role === 'team-member' || user.role === 'manager')
-                                     .map(user => (
-                                       <CommandItem
-                                         key={user.id}
-                                         onClick={(e) => {
-                                           e.preventDefault();
-                                           e.stopPropagation();
-                                           if (selectedMembers.includes(user.id)) {
-                                             setSelectedMembers(selectedMembers.filter(id => id !== user.id));
-                                           } else {
-                                             setSelectedMembers([...selectedMembers, user.id]);
-                                           }
-                                         }}
-                                         className="flex items-center justify-between p-3 bg-background hover:bg-accent cursor-pointer"
-                                       >
-                                         <div className="flex-1">
-                                           <div className="font-medium text-sm">{user.name}</div>
-                                           <div className="text-xs text-muted-foreground">({user.role})</div>
-                                         </div>
-                                         <div className="ml-2">
-                                           {selectedMembers.includes(user.id) && (
-                                             <div className="h-4 w-4 bg-primary rounded-sm flex items-center justify-center">
-                                               <span className="text-xs text-primary-foreground">✓</span>
-                                             </div>
-                                           )}
-                                         </div>
-                                       </CommandItem>
-                                     ))}
-                                 </CommandGroup>
-                               </>
-                             )}
-                           </CommandList>
-                         </Command>
+                       <PopoverContent className="w-full p-0 bg-white border z-50" align="start">
+                         <div className="bg-white max-h-60 overflow-y-auto">
+                           {availableUsers
+                             .filter(user => user.role === 'team-member' || user.role === 'manager')
+                             .map(user => (
+                               <div 
+                                 key={user.id} 
+                                 className="flex items-center justify-between px-3 py-2 hover:bg-gray-50 cursor-pointer text-sm"
+                                 onClick={() => {
+                                   if (selectedMembers.includes(user.id)) {
+                                     setSelectedMembers(selectedMembers.filter(id => id !== user.id));
+                                   } else {
+                                     setSelectedMembers([...selectedMembers, user.id]);
+                                   }
+                                 }}
+                               >
+                                 <span className="text-gray-900">
+                                   {user.name} ({user.role})
+                                 </span>
+                                 {selectedMembers.includes(user.id) && (
+                                   <span className="text-green-600 font-medium">✓</span>
+                                 )}
+                               </div>
+                             ))}
+                           {availableUsers.filter(user => user.role === 'team-member' || user.role === 'manager').length === 0 && (
+                             <div className="px-3 py-2 text-sm text-gray-500 text-center">
+                               No team members available
+                             </div>
+                           )}
+                         </div>
                        </PopoverContent>
                      </Popover>
 
