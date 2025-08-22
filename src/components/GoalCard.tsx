@@ -42,14 +42,6 @@ export const GoalCard = ({
 }: GoalCardProps) => {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   
-  // Debug: Log the goal object to console
-  console.log('GoalCard rendering goal:', {
-    id: goal.id,
-    title: goal.title,
-    subcategory: goal.subcategory,
-    hasSubcategory: !!goal.subcategory
-  });
-  
 const getCategoryColor = (category: Goal['category']) => {
     switch (category) {
       case 'work': return 'bg-blue-100 text-blue-800';
@@ -83,10 +75,6 @@ const getCategoryColor = (category: Goal['category']) => {
                       {mapSubcategoryDatabaseToDisplay(goal.subcategory)}
                     </Badge>
                   )}
-                  {/* Debug subcategory display */}
-                  <Badge variant="secondary" className="text-xs bg-red-100 text-red-800">
-                    {goal.subcategory ? `Sub: ${goal.subcategory}` : 'No sub'}
-                  </Badge>
                 </div>
               </div>
               {goal.description && (

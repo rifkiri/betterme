@@ -106,8 +106,13 @@ export class SupabaseGoalsService {
       const uniqueGoals = Array.from(allGoalsMap.values());
       console.log('Accessible goals for user', userId, ':', uniqueGoals.length);
 
+      // Debug: Check subcategory data in accessible goals
+      uniqueGoals.forEach(goal => {
+        console.log(`[getUserAccessibleGoals] Goal "${goal.title}" subcategory:`, goal.subcategory, '(type:', typeof goal.subcategory, ')');
+      });
+
       // Transform to Goal format
-      return uniqueGoals.map(goal => ({
+      const transformedGoals = uniqueGoals.map(goal => ({
         id: goal.id,
         title: goal.title,
         description: goal.description,
@@ -122,6 +127,13 @@ export class SupabaseGoalsService {
         createdBy: goal.created_by,
         assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined
       }));
+
+      // Debug: Check subcategory data after transformation
+      transformedGoals.forEach(goal => {
+        console.log(`[getUserAccessibleGoals] Transformed goal "${goal.title}" subcategory:`, goal.subcategory, '(type:', typeof goal.subcategory, ')');
+      });
+
+      return transformedGoals;
 
     } catch (error) {
       console.error('Error in getUserAccessibleGoals:', error);
