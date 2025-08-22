@@ -140,11 +140,6 @@ export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteT
               </div>
             </div>
           )}
-          {linkedOutput && (
-            <div className="text-xs text-blue-600 mt-1 truncate">
-              → {linkedOutput.title}
-            </div>
-          )}
         </div>
       </div>
       <div className="flex items-center gap-2">
