@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -48,6 +48,16 @@ export const TasksSection = ({
   const [selectedTaskDate, setSelectedTaskDate] = useState(new Date());
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  
+  // Keep selectedTask synchronized with the latest task data
+  useEffect(() => {
+    if (selectedTask) {
+      const updatedTask = tasks.find(task => task.id === selectedTask.id);
+      if (updatedTask) {
+        setSelectedTask(updatedTask);
+      }
+    }
+  }, [tasks, selectedTask?.id]);
   
   // Enhanced task filtering for selected date
   const getTasksForSelectedDate = (date: Date) => {
