@@ -465,10 +465,10 @@ export type Database = {
       }
       toggle_habit_completion: {
         Args: {
-          p_completed: boolean
-          p_date: string
-          p_habit_id: string
-          p_user_id: string
+          habit_id_param: string
+          is_completed: boolean
+          target_date: string
+          user_id_param: string
         }
         Returns: undefined
       }
