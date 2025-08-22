@@ -9,6 +9,7 @@ import { JoinGoalDialog } from './JoinGoalDialog';
 import { GoalDetailsDialog } from './GoalDetailsDialog';
 import { Goal, WeeklyOutput, Habit, GoalAssignment } from '@/types/productivity';
 import { Target, Briefcase, User, Plus, CheckCircle, Minus, Edit, Trash2, Eye, Link2 } from 'lucide-react';
+import { mapSubcategoryDatabaseToDisplay } from '@/utils/goalCategoryUtils';
 
 interface EnhancedGoalsSectionProps {
   goals: Goal[];
@@ -128,22 +129,22 @@ export const EnhancedGoalsSection = ({
       <Card key={goal.id} className="hover:shadow-md transition-shadow">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
-            <div className="flex items-center gap-2 mb-2">
-              {getCategoryIcon(goal.category)}
-              <CardTitle className="text-lg">{goal.title}</CardTitle>
+            <div className="mb-2">
+              <div className="flex items-center gap-2">
+                {getCategoryIcon(goal.category)}
+                <CardTitle className="text-lg">{goal.title}</CardTitle>
+              </div>
+              {goalUserRole && (
+                <div className="text-xs text-gray-500 mt-1">{goalUserRole}</div>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="outline" className={getCategoryColor(goal.category)}>
                 {goal.category === 'work' ? 'Work' : 'Personal'}
               </Badge>
-              {goalUserRole && (
-                <Badge variant="secondary" className="text-xs">
-                  {goalUserRole}
-                </Badge>
-              )}
-              {isGoalOwner && (
-                <Badge variant="default" className="text-xs">
-                  Owner
+              {goal.subcategory && (
+                <Badge variant="outline" className="text-xs bg-white border-gray-300">
+                  {mapSubcategoryDatabaseToDisplay(goal.subcategory)}
                 </Badge>
               )}
             </div>
