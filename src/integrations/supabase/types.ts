@@ -14,94 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      goal_assignments: {
-        Row: {
-          acknowledged: boolean
-          assigned_by: string
-          assigned_date: string
-          created_at: string
-          goal_id: string
-          id: string
-          role: string
-          self_assigned: boolean
-          user_id: string
-        }
-        Insert: {
-          acknowledged?: boolean
-          assigned_by: string
-          assigned_date?: string
-          created_at?: string
-          goal_id: string
-          id?: string
-          role: string
-          self_assigned?: boolean
-          user_id: string
-        }
-        Update: {
-          acknowledged?: boolean
-          assigned_by?: string
-          assigned_date?: string
-          created_at?: string
-          goal_id?: string
-          id?: string
-          role?: string
-          self_assigned?: boolean
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_goal_assignments_assigned_by"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_goal_assignments_goal_id"
-            columns: ["goal_id"]
-            isOneToOne: false
-            referencedRelation: "goals"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_goal_assignments_user_id"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      goal_notifications: {
-        Row: {
-          acknowledged: boolean
-          created_date: string
-          goal_id: string
-          id: string
-          notification_type: string
-          role: string
-          user_id: string
-        }
-        Insert: {
-          acknowledged?: boolean
-          created_date?: string
-          goal_id: string
-          id?: string
-          notification_type: string
-          role: string
-          user_id: string
-        }
-        Update: {
-          acknowledged?: boolean
-          created_date?: string
-          goal_id?: string
-          id?: string
-          notification_type?: string
-          role?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       goals: {
         Row: {
           archived: boolean
@@ -117,7 +29,6 @@ export type Database = {
           id: string
           is_deleted: boolean
           lead_ids: string[] | null
-          linked_output_ids: string[] | null
           member_ids: string[] | null
           progress: number
           subcategory: string | null
@@ -140,7 +51,6 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           lead_ids?: string[] | null
-          linked_output_ids?: string[] | null
           member_ids?: string[] | null
           progress?: number
           subcategory?: string | null
@@ -163,7 +73,6 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           lead_ids?: string[] | null
-          linked_output_ids?: string[] | null
           member_ids?: string[] | null
           progress?: number
           subcategory?: string | null
@@ -173,38 +82,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
-      }
-      habit_completions: {
-        Row: {
-          completed_date: string
-          created_at: string
-          habit_id: string
-          id: string
-          user_id: string
-        }
-        Insert: {
-          completed_date: string
-          created_at?: string
-          habit_id: string
-          id?: string
-          user_id: string
-        }
-        Update: {
-          completed_date?: string
-          created_at?: string
-          habit_id?: string
-          id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "habit_completions_habit_id_fkey"
-            columns: ["habit_id"]
-            isOneToOne: false
-            referencedRelation: "habits"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       habits: {
         Row: {
@@ -216,7 +93,6 @@ export type Database = {
           id: string
           is_deleted: boolean
           last_completed_date: string | null
-          linked_goal_id: string | null
           name: string
           streak: number
           updated_at: string
@@ -231,7 +107,6 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           last_completed_date?: string | null
-          linked_goal_id?: string | null
           name: string
           streak?: number
           updated_at?: string
@@ -246,20 +121,12 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           last_completed_date?: string | null
-          linked_goal_id?: string | null
           name?: string
           streak?: number
           updated_at?: string
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "habits_linked_goal_id_fkey"
-            columns: ["linked_goal_id"]
-            isOneToOne: false
-            referencedRelation: "goals"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "habits_user_id_fkey"
             columns: ["user_id"]
@@ -382,62 +249,6 @@ export type Database = {
         }
         Relationships: []
       }
-      projects: {
-        Row: {
-          completed_date: string | null
-          created_date: string
-          deleted_date: string | null
-          description: string | null
-          due_date: string
-          id: string
-          is_deleted: boolean
-          is_moved: boolean
-          original_due_date: string | null
-          progress: number
-          title: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          completed_date?: string | null
-          created_date?: string
-          deleted_date?: string | null
-          description?: string | null
-          due_date: string
-          id?: string
-          is_deleted?: boolean
-          is_moved?: boolean
-          original_due_date?: string | null
-          progress?: number
-          title: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          completed_date?: string | null
-          created_date?: string
-          deleted_date?: string | null
-          description?: string | null
-          due_date?: string
-          id?: string
-          is_deleted?: boolean
-          is_moved?: boolean
-          original_due_date?: string | null
-          progress?: number
-          title?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "projects_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       tasks: {
         Row: {
           completed: boolean
@@ -498,13 +309,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "tasks_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "tasks_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -530,8 +334,6 @@ export type Database = {
           id: string
           is_deleted: boolean
           is_moved: boolean
-          linked_goal_id: string | null
-          linked_goal_ids: string[] | null
           original_due_date: string | null
           progress: number
           project_id: string | null
@@ -548,8 +350,6 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           is_moved?: boolean
-          linked_goal_id?: string | null
-          linked_goal_ids?: string[] | null
           original_due_date?: string | null
           progress?: number
           project_id?: string | null
@@ -566,8 +366,6 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           is_moved?: boolean
-          linked_goal_id?: string | null
-          linked_goal_ids?: string[] | null
           original_due_date?: string | null
           progress?: number
           project_id?: string | null
@@ -576,13 +374,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "weekly_outputs_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "weekly_outputs_user_id_fkey"
             columns: ["user_id"]
@@ -597,10 +388,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      calculate_habit_streak: {
-        Args: { habit_id_param: string; user_id_param: string }
-        Returns: number
-      }
       cleanup_stale_linkages: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -646,23 +433,6 @@ export type Database = {
       }
       is_admin: {
         Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      link_output_to_goal: {
-        Args: { goal_id: string; output_id: string; user_id_param: string }
-        Returns: boolean
-      }
-      toggle_habit_completion: {
-        Args: {
-          habit_id_param: string
-          is_completed: boolean
-          target_date: string
-          user_id_param: string
-        }
-        Returns: boolean
-      }
-      unlink_output_from_goal: {
-        Args: { goal_id: string; output_id: string; user_id_param: string }
         Returns: boolean
       }
       validate_password_strength: {

@@ -35,7 +35,7 @@ export const AdminDashboard = () => {
         </TabsContent>
 
         <TabsContent value="integration">
-          <GoogleSheetsConfig />
+          {/* GoogleSheetsConfig removed - using simplified architecture */}
         </TabsContent>
 
         <TabsContent value="settings">
