@@ -296,14 +296,6 @@ export const EditGoalDialog = ({
 
   const availableOutputs = weeklyOutputs.filter(output => output.progress < 100);
   const availableHabits = habits.filter(habit => !habit.archived && !habit.isDeleted);
-  
-  // Debug logging
-  console.log('EditGoalDialog debug:', {
-    weeklyOutputsCount: weeklyOutputs.length,
-    weeklyOutputs: weeklyOutputs.map(o => ({ id: o.id, title: o.title, progress: o.progress })),
-    availableOutputsCount: availableOutputs.length,
-    availableOutputs: availableOutputs.map(o => ({ id: o.id, title: o.title, progress: o.progress }))
-  });
 
   const toggleOutputSelection = (output: WeeklyOutput) => {
     const currentIds = form.getValues('selectedOutputIds') || [];
@@ -520,16 +512,14 @@ export const EditGoalDialog = ({
                                 <>
                                   <CommandEmpty>No outputs found.</CommandEmpty>
                                   <CommandGroup className="bg-background">
-                                    {availableOutputs.map((output) => (
-                                      <CommandItem
-                                        key={output.id}
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          toggleOutputSelection(output);
-                                        }}
-                                        className="flex items-center justify-between p-3 bg-background hover:bg-accent cursor-pointer"
-                                      >
+                                     {availableOutputs.map((output) => (
+                                       <CommandItem
+                                         key={output.id}
+                                         onSelect={() => {
+                                           toggleOutputSelection(output);
+                                         }}
+                                         className="flex items-center justify-between p-3 bg-background hover:bg-accent cursor-pointer"
+                                       >
                                         <div className="flex-1">
                                           <div className="flex items-center gap-2 mb-1">
                                             <span className="font-medium text-sm">{output.title}</span>
