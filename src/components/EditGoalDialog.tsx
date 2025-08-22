@@ -543,15 +543,11 @@ export const EditGoalDialog = ({
                                           )}
                                         </div>
                                          <div className="ml-2">
-                                           {(() => {
-                                             const currentIds = form.getValues('selectedOutputIds') || [];
-                                             const isSelected = currentIds.includes(output.id);
-                                             return isSelected && (
-                                               <div className="h-4 w-4 bg-primary rounded-sm flex items-center justify-center">
-                                                 <span className="text-xs text-primary-foreground">✓</span>
-                                               </div>
-                                             );
-                                           })()}
+                                           {selectedOutputs.some(selected => selected.id === output.id) && (
+                                             <div className="h-4 w-4 bg-primary rounded-sm flex items-center justify-center">
+                                               <span className="text-xs text-primary-foreground">✓</span>
+                                             </div>
+                                           )}
                                          </div>
                                       </CommandItem>
                                     ))}
