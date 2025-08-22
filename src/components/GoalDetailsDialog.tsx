@@ -129,7 +129,7 @@ const getCategoryColor = (category: Goal['category']) => {
                     {goal.category}
                   </Badge>
                   {goal.subcategory && (
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="outline" className="text-xs bg-white border-gray-300">
                       {mapSubcategoryDatabaseToDisplay(goal.subcategory)}
                     </Badge>
                   )}
