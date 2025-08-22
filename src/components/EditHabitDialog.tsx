@@ -54,12 +54,20 @@ export const EditHabitDialog = ({ habit, open, onOpenChange, onSave }: EditHabit
   });
 
   const handleSubmit = (values: HabitFormValues) => {
-    onSave(habit.id, {
+    console.log('EditHabitDialog - Form submitted with values:', values);
+    console.log('EditHabitDialog - Original habit linkedGoalId:', habit.linkedGoalId);
+    
+    const updates = {
       name: values.name,
       description: values.description || undefined,
       category: values.category === 'none' ? undefined : mapDisplayToDatabase(values.category),
       linkedGoalId: values.linkedGoalId === 'none' ? undefined : values.linkedGoalId
-    });
+    };
+    
+    console.log('EditHabitDialog - Sending updates to onSave:', updates);
+    console.log('EditHabitDialog - linkedGoalId will be set to:', updates.linkedGoalId);
+    
+    onSave(habit.id, updates);
     onOpenChange(false);
   };
 

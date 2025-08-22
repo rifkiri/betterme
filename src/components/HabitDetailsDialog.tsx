@@ -37,6 +37,8 @@ export const HabitDetailsDialog = ({
   console.log('HabitDetailsDialog - Found linkedGoal:', linkedGoal);
 
   const handleEditSave = (habitId: string, updates: Partial<Habit>) => {
+    console.log('HabitDetailsDialog - handleEditSave called with:', { habitId, updates });
+    console.log('HabitDetailsDialog - Current habit before update:', habit);
     onEditHabit(habitId, updates);
     setShowEditDialog(false);
   };

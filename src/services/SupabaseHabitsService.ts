@@ -105,7 +105,7 @@ export class SupabaseHabitsService {
   }
 
   async updateHabit(id: string, userId: string, updates: Partial<Habit>): Promise<void> {
-    console.log('Updating habit:', id, 'for user:', userId, 'with updates:', updates);
+    console.log('SupabaseHabitsService - Updating habit:', id, 'for user:', userId, 'with updates:', updates);
     
     const supabaseUpdates: any = {};
     
@@ -116,7 +116,12 @@ export class SupabaseHabitsService {
     if (updates.category !== undefined) supabaseUpdates.category = this.mapAppCategoryToDatabase(updates.category);
     if (updates.archived !== undefined) supabaseUpdates.archived = updates.archived;
     if (updates.isDeleted !== undefined) supabaseUpdates.is_deleted = updates.isDeleted;
-    if (updates.linkedGoalId !== undefined) supabaseUpdates.linked_goal_id = updates.linkedGoalId || null;
+    if (updates.linkedGoalId !== undefined) {
+      supabaseUpdates.linked_goal_id = updates.linkedGoalId || null;
+      console.log('SupabaseHabitsService - linkedGoalId update:', updates.linkedGoalId, '→', supabaseUpdates.linked_goal_id);
+    }
+
+    console.log('SupabaseHabitsService - Final supabase updates object:', supabaseUpdates);
 
     const { error } = await supabase
       .from('habits')
@@ -125,9 +130,11 @@ export class SupabaseHabitsService {
       .eq('user_id', userId); // Ensure we only update for the correct user
 
     if (error) {
-      console.error('Error updating habit:', error);
+      console.error('SupabaseHabitsService - Error updating habit:', error);
       throw error;
     }
+    
+    console.log('SupabaseHabitsService - Habit updated successfully');
   }
 
   async toggleHabitForDate(habitId: string, userId: string, date: Date, completed: boolean): Promise<void> {

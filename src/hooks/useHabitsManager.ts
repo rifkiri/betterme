@@ -61,18 +61,22 @@ export const useHabitsManager = ({
       return;
     }
 
-    console.log('Editing habit for user:', userId, 'habit:', id, 'updates:', updates);
+    console.log('useHabitsManager - Editing habit for user:', userId, 'habit:', id, 'updates:', updates);
+    console.log('useHabitsManager - linkedGoalId in updates:', updates.linkedGoalId);
 
     try {
       if (isSupabaseAvailable()) {
+        console.log('useHabitsManager - Calling supabaseDataService.updateHabit');
         await supabaseDataService.updateHabit(id, userId, updates);
+        console.log('useHabitsManager - Database update completed, reloading data');
         await loadAllData(selectedDate);
+        console.log('useHabitsManager - Data reload completed');
         toast.success('Habit updated successfully');
       } else {
         toast.error('Please sign in to edit habits');
       }
     } catch (error) {
-      console.error('Failed to update habit for user', userId, ':', error);
+      console.error('useHabitsManager - Failed to update habit for user', userId, ':', error);
       toast.error('Failed to update habit');
     }
   };
