@@ -17,13 +17,14 @@ interface EditTaskDialogProps {
 
 export const EditTaskDialog = ({ task, open, onOpenChange, onSave, weeklyOutputs }: EditTaskDialogProps) => {
   const handleSubmit = (values: TaskFormValues) => {
+    console.log('EditTaskDialog - Form values received:', values);
     onSave(task.id, {
       title: values.title,
       description: values.description || undefined,
       priority: values.priority,
       estimatedTime: values.estimatedTime || undefined,
       dueDate: values.dueDate,
-      weeklyOutputId: values.weeklyOutputId || undefined,
+      weeklyOutputId: values.weeklyOutputId === "" ? undefined : values.weeklyOutputId,
       taggedUsers: values.taggedUsers || []
     });
     onOpenChange(false);
