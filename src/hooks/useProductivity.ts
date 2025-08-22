@@ -20,6 +20,7 @@ export const useProductivity = () => {
     archivedHabits: productivityData.archivedHabits,
     setArchivedHabits: productivityData.setArchivedHabits,
     selectedDate: productivityData.selectedDate,
+    goals: productivityData.goals,
   });
 
   const tasksManager = useTasksManager({

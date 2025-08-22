@@ -1,6 +1,6 @@
 
 import { supabaseDataService } from '@/services/SupabaseDataService';
-import { Habit } from '@/types/productivity';
+import { Habit, Goal } from '@/types/productivity';
 import { toast } from 'sonner';
 
 interface UseHabitsManagerProps {
@@ -12,6 +12,7 @@ interface UseHabitsManagerProps {
   archivedHabits: Habit[];
   setArchivedHabits: (habits: Habit[] | ((prev: Habit[]) => Habit[])) => void;
   selectedDate: Date;
+  goals: Goal[];
 }
 
 export const useHabitsManager = ({
@@ -23,6 +24,7 @@ export const useHabitsManager = ({
   archivedHabits,
   setArchivedHabits,
   selectedDate,
+  goals,
 }: UseHabitsManagerProps) => {
   const addHabit = async (habit: Omit<Habit, 'id' | 'completed' | 'streak'>) => {
     if (!userId) {
@@ -100,7 +102,35 @@ export const useHabitsManager = ({
 
     try {
       if (isSupabaseAvailable()) {
+        // Toggle the habit completion
         await supabaseDataService.toggleHabitForDate(id, userId, selectedDate, newCompleted);
+        
+        // If habit has linked goal, update goal progress
+        if (habit.linkedGoalId) {
+          console.log('Habit has linked goal:', habit.linkedGoalId, 'updating goal progress...');
+          
+          // Find the linked goal from the goals array
+          const linkedGoal = goals.find(g => g.id === habit.linkedGoalId);
+          if (linkedGoal) {
+            // Calculate new progress based on habit completion
+            // Each habit completion adds/removes 10% progress (you can adjust this)
+            const progressChange = newCompleted ? 10 : -10;
+            const newProgress = Math.max(0, Math.min(100, linkedGoal.progress + progressChange));
+            
+            console.log('Updating goal progress from', linkedGoal.progress, 'to', newProgress);
+            
+            // Update goal progress
+            await supabaseDataService.updateGoalProgress(habit.linkedGoalId, userId, newProgress);
+            
+            toast.success(newCompleted ? 
+              `Habit completed! Goal "${linkedGoal.title}" progress updated to ${newProgress}%` : 
+              `Habit uncompleted. Goal "${linkedGoal.title}" progress updated to ${newProgress}%`
+            );
+          } else {
+            console.log('Linked goal not found in current goals list');
+          }
+        }
+        
         await loadAllData(selectedDate);
         console.log('Habit toggled successfully for user:', userId);
       } else {
