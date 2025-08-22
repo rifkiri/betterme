@@ -104,19 +104,6 @@ export const EnhancedGoalsSection = ({
     const linkedOutputs = weeklyOutputs.filter(output => output.linkedGoalId === goal.id);
     const linkedHabits = goal.category === 'personal' ? habits.filter(habit => habit.linkedGoalId === goal.id) : [];
     
-    // Debug logging
-    console.log('Goal debug:', {
-      goalId: goal.id,
-      title: goal.title,
-      category: goal.category,
-      userId: goal.userId,
-      currentUserId,
-      goalUserRole,
-      createdBy: goal.createdBy,
-      linkedOutputsCount: linkedOutputs.length,
-      linkedHabitsCount: linkedHabits.length
-    });
-    
     // Determine if user owns the goal or is just assigned to it
     const isGoalOwner = goal.userId === currentUserId;
     const isAssignedUser = goalUserRole && !isGoalOwner;
@@ -126,18 +113,6 @@ export const EnhancedGoalsSection = ({
     const userAssignment = assignments.find(a => a.goalId === goal.id && a.userId === currentUserId);
     const showLeaveOption = goal.category === 'work' && userAssignment && goalUserRole;
     const showDeleteOption = canManageGoal;
-
-    // Debug logging for button visibility
-    console.log('🔍 [BUTTON VISIBILITY] Goal:', goal.id, {
-      isGoalOwner,
-      isManager,
-      canManageGoal,
-      showDeleteOption,
-      showLeaveOption,
-      userRole: userRole,
-      goalUserId: goal.userId,
-      currentUserId
-    });
 
     return (
       <Card key={goal.id} className="hover:shadow-md transition-shadow">
@@ -310,17 +285,7 @@ export const EnhancedGoalsSection = ({
                 variant="outline" 
                 size="sm" 
                 className="h-8 w-8 p-0"
-                onClick={() => {
-                  console.log('🗑️ [UI] Delete clicked, onDeleteGoal type:', typeof onDeleteGoal);
-                  console.log('🗑️ [UI] Goal ID:', goal.id);
-                  if (typeof onDeleteGoal === 'function') {
-                    console.log('🗑️ [UI] Calling onDeleteGoal...');
-                    onDeleteGoal(goal.id);
-                    console.log('🗑️ [UI] onDeleteGoal call completed');
-                  } else {
-                    console.error('🗑️ [UI] onDeleteGoal is not a function!');
-                  }
-                }}
+                onClick={() => onDeleteGoal(goal.id)}
                 title="Delete Goal"
               >
                 <Trash2 className="h-4 w-4" />

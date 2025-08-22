@@ -258,11 +258,12 @@ export class SupabaseGoalsService {
       supabaseUpdates.assignment_date = updates.assignmentDate ? updates.assignmentDate.toISOString() : null;
     }
 
-    // Handle soft delete (archiving)
-    if (updates.archived !== undefined && updates.archived) {
-      supabaseUpdates.is_deleted = true;
-      supabaseUpdates.deleted_date = new Date().toISOString();
-    }
+    // Handle soft delete (archiving) - only set archived, not is_deleted
+    // is_deleted should only be set for permanent deletion
+    // if (updates.archived !== undefined && updates.archived) {
+    //   supabaseUpdates.is_deleted = true;
+    //   supabaseUpdates.deleted_date = new Date().toISOString();
+    // }
 
     // No permission checks for general updates - allow all users to edit goals they have access to
     // The RLS policies will handle the actual access control at the database level
