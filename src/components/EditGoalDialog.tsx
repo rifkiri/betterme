@@ -296,6 +296,14 @@ export const EditGoalDialog = ({
 
   const availableOutputs = weeklyOutputs.filter(output => output.progress < 100);
   const availableHabits = habits.filter(habit => !habit.archived && !habit.isDeleted);
+  
+  // Debug logging
+  console.log('EditGoalDialog debug:', {
+    weeklyOutputsCount: weeklyOutputs.length,
+    weeklyOutputs: weeklyOutputs.map(o => ({ id: o.id, title: o.title, progress: o.progress })),
+    availableOutputsCount: availableOutputs.length,
+    availableOutputs: availableOutputs.map(o => ({ id: o.id, title: o.title, progress: o.progress }))
+  });
 
   const toggleOutputSelection = (output: WeeklyOutput) => {
     const currentIds = form.getValues('selectedOutputIds') || [];
