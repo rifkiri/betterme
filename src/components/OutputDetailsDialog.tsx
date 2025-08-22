@@ -52,6 +52,14 @@ export const OutputDetailsDialog = ({
     }
   }, [output, open, weeklyOutputs]);
 
+  // Force refresh callback for edit dialog
+  const refreshData = () => {
+    if (output) {
+      const updatedOutput = weeklyOutputs.find(o => o.id === output.id) || output;
+      setCurrentOutput(updatedOutput);
+    }
+  };
+
   // Find the linked goal using the simple linkedGoalId field
   const linkedGoal = currentOutput.linkedGoalId ? goals.find(g => g.id === currentOutput.linkedGoalId) : null;
 
@@ -301,6 +309,7 @@ const getCategoryColor = (category: Goal['category']) => {
           }} 
           onSave={onEditWeeklyOutput}
           goals={goals}
+          onRefresh={refreshData}
         />
       )}
     </>

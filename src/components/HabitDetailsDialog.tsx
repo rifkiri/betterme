@@ -38,6 +38,14 @@ export const HabitDetailsDialog = ({
     }
   }, [habit, open, habits]);
 
+  // Force refresh callback for edit dialog
+  const refreshData = () => {
+    if (habit) {
+      const updatedHabit = habits.find(h => h.id === habit.id) || habit;
+      setCurrentHabit(updatedHabit);
+    }
+  };
+
   // Find the linked goal if one exists
   const linkedGoal = currentHabit.linkedGoalId 
     ? goals?.find(goal => goal.id === currentHabit.linkedGoalId)
@@ -169,6 +177,7 @@ export const HabitDetailsDialog = ({
           open={showEditDialog}
           onOpenChange={setShowEditDialog}
           onSave={handleEditSave}
+          onRefresh={refreshData}
         />
       )}
     </>

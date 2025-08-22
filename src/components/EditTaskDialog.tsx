@@ -13,9 +13,10 @@ interface EditTaskDialogProps {
   onOpenChange: (open: boolean) => void;
   onSave: (taskId: string, updates: Partial<Task>) => void;
   weeklyOutputs: WeeklyOutput[];
+  onRefresh?: () => void;
 }
 
-export const EditTaskDialog = ({ task, open, onOpenChange, onSave, weeklyOutputs }: EditTaskDialogProps) => {
+export const EditTaskDialog = ({ task, open, onOpenChange, onSave, weeklyOutputs, onRefresh }: EditTaskDialogProps) => {
   const handleSubmit = (values: TaskFormValues) => {
     console.log('EditTaskDialog - Form values received:', values);
     onSave(task.id, {
@@ -27,6 +28,7 @@ export const EditTaskDialog = ({ task, open, onOpenChange, onSave, weeklyOutputs
       weeklyOutputId: values.weeklyOutputId === "" ? undefined : values.weeklyOutputId,
       taggedUsers: values.taggedUsers || []
     });
+    onRefresh?.();
     onOpenChange(false);
   };
 

@@ -29,11 +29,12 @@ interface EditHabitDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (habitId: string, updates: Partial<Habit>) => void;
+  onRefresh?: () => void;
 }
 
 const categoryOptions = getCategoryOptions();
 
-export const EditHabitDialog = ({ habit, open, onOpenChange, onSave }: EditHabitDialogProps) => {
+export const EditHabitDialog = ({ habit, open, onOpenChange, onSave, onRefresh }: EditHabitDialogProps) => {
   const { goals } = useGoals();
 
   // Filter to personal goals only for habit linking  
@@ -68,6 +69,7 @@ export const EditHabitDialog = ({ habit, open, onOpenChange, onSave }: EditHabit
     console.log('EditHabitDialog - linkedGoalId will be set to:', updates.linkedGoalId);
     
     onSave(habit.id, updates);
+    onRefresh?.();
     onOpenChange(false);
   };
 

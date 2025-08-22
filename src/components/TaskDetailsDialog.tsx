@@ -50,6 +50,14 @@ export const TaskDetailsDialog = ({
     }
   }, [task, open, tasks]);
 
+  // Force refresh callback for edit dialog
+  const refreshData = () => {
+    if (task) {
+      const updatedTask = tasks.find(t => t.id === task.id) || task;
+      setCurrentTask(updatedTask);
+    }
+  };
+
   if (!currentTask) return null;
 
   const linkedOutput = weeklyOutputs.find(output => output.id === currentTask.weeklyOutputId);
@@ -283,6 +291,7 @@ const getCategoryColor = (category: Goal['category']) => {
           onOpenChange={open => !open && setEditingTask(null)} 
           onSave={onEditTask}
           weeklyOutputs={weeklyOutputs}
+          onRefresh={refreshData}
         />
       )}
     </>

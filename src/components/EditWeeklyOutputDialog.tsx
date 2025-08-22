@@ -31,9 +31,10 @@ interface EditWeeklyOutputDialogProps {
   onOpenChange: (open: boolean) => void;
   onSave: (outputId: string, updates: Partial<WeeklyOutput>) => void;
   goals?: Goal[];
+  onRefresh?: () => void;
 }
 
-export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSave, goals = [] }: EditWeeklyOutputDialogProps) => {
+export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSave, goals = [], onRefresh }: EditWeeklyOutputDialogProps) => {
   
   const getCategoryColor = (category: Goal['category']) => {
     switch (category) {
@@ -79,6 +80,7 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
       linkedGoalId: values.linkedGoalId === "none" ? "none" : values.linkedGoalId,
     });
 
+    onRefresh?.();
     onOpenChange(false);
   };
 
