@@ -48,37 +48,54 @@ export class SupabaseHabitsService {
 
   async getHabitsForDate(userId: string, date: Date): Promise<Habit[]> {
     const dateStr = format(date, 'yyyy-MM-dd');
-    console.log('Getting habits for user:', userId, 'and date:', dateStr);
+    console.log('🔄 Getting habits for user:', userId, 'and date:', dateStr);
     
-    // Use the database function to get habits with completion status for the specific date
-    const { data, error } = await supabase.rpc('get_habits_for_date', {
-      user_id_param: userId,
-      target_date: dateStr
-    });
+    try {
+      // Use the database function to get habits with completion status for the specific date
+      console.log('🚀 Making RPC call to get_habits_for_date with params:', {
+        user_id_param: userId,
+        target_date: dateStr
+      });
+      
+      const { data, error } = await supabase.rpc('get_habits_for_date', {
+        user_id_param: userId,
+        target_date: dateStr
+      });
 
-    if (error) {
-      console.error('Error fetching habits for date:', error);
-      throw error;
+      if (error) {
+        console.error('❌ Error fetching habits for date:', error);
+        console.error('❌ Error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        throw error;
+      }
+      
+      console.log('✅ RPC call successful, received data:', data);
+      console.log('Habits data for user', userId, 'date', dateStr, ':', data);
+
+      const mappedData = data.map((habit: any) => ({
+        id: habit.id,
+        name: habit.name,
+        description: habit.description,
+        completed: habit.completed,
+        streak: habit.streak,
+        category: habit.category,
+        archived: habit.archived,
+        isDeleted: habit.is_deleted,
+        createdAt: habit.created_at,
+        linkedGoalId: habit.linked_goal_id,
+        userId: userId // Ensure userId is set correctly
+      }));
+
+      console.log('Mapped habits data for user', userId, ':', mappedData);
+      return mappedData;
+    } catch (networkError) {
+      console.error('❌ Network error calling get_habits_for_date:', networkError);
+      throw networkError;
     }
-
-    console.log('Habits data for user', userId, 'date', dateStr, ':', data);
-
-    const mappedData = data.map((habit: any) => ({
-      id: habit.id,
-      name: habit.name,
-      description: habit.description,
-      completed: habit.completed,
-      streak: habit.streak,
-      category: habit.category,
-      archived: habit.archived,
-      isDeleted: habit.is_deleted,
-      createdAt: habit.created_at,
-      linkedGoalId: habit.linked_goal_id,
-      userId: userId // Ensure userId is set correctly
-    }));
-
-    console.log('Mapped habits data for user', userId, ':', mappedData);
-    return mappedData;
   }
 
   async addHabit(habit: Habit & { userId: string }): Promise<void> {
