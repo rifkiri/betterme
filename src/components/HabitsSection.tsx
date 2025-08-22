@@ -44,6 +44,12 @@ export const HabitsSection = ({
   isLoading = false,
   goals = []
 }: HabitsSectionProps) => {
+  console.log('🏃 HabitsSection render:', { 
+    habitsCount: habits.length, 
+    isLoading,
+    selectedDate: selectedDate.toDateString(),
+    habits: habits.map(h => ({ id: h.id, name: h.name, completed: h.completed }))
+  });
   const [togglingHabitId, setTogglingHabitId] = useState<string | null>(null);
   const [streakDialogHabit, setStreakDialogHabit] = useState<Habit | null>(null);
   const [viewingHabitId, setViewingHabitId] = useState<string | null>(null);

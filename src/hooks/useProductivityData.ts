@@ -108,8 +108,18 @@ export const useProductivityData = () => {
         console.log('Loaded all goals:', allGoalsData);
 
         // Filter and set data ensuring user isolation
-        setHabits(habitsData.filter(h => !h.archived && !h.isDeleted));
-        setArchivedHabits(habitsData.filter(h => h.archived));
+        const activeHabits = habitsData.filter(h => !h.archived && !h.isDeleted);
+        const archivedHabitsData = habitsData.filter(h => h.archived);
+        
+        console.log('🎯 Setting habits data:', {
+          totalHabits: habitsData.length,
+          activeHabits: activeHabits.length,
+          archivedHabits: archivedHabitsData.length,
+          activeHabitsData: activeHabits.map(h => ({ id: h.id, name: h.name, completed: h.completed }))
+        });
+        
+        setHabits(activeHabits);
+        setArchivedHabits(archivedHabitsData);
         setTasks(tasksData.filter(t => !t.isDeleted));
         setDeletedTasks(tasksData.filter(t => t.isDeleted));
         setWeeklyOutputs(weeklyOutputsData.filter(w => !w.isDeleted));
