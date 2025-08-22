@@ -115,7 +115,7 @@ export const WeeklyOutputsSection = ({
         </div>
         <div className="space-y-2">
           {/* First row: Deleted and Add Outputs */}
-          <div className="flex items-center gap-1 sm:gap-2 lg:gap-3">
+          <div className="flex items-center gap-2">
             <DeletedWeeklyOutputsDialog 
               deletedWeeklyOutputs={deletedWeeklyOutputs} 
               onRestore={onRestoreWeeklyOutput} 
