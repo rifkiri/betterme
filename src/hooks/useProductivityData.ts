@@ -81,7 +81,7 @@ export const useProductivityData = () => {
           supabaseDataService.getTasks(userId),
           supabaseDataService.getWeeklyOutputs(userId),
           supabaseDataService.getGoals(userId),
-          supabaseDataService.getAllGoals()
+          supabaseDataService.getAllGoals(userId)
         ]);
 
         console.log('Loaded habits for user', userId, 'date:', format(targetDate, 'yyyy-MM-dd'), habitsData);

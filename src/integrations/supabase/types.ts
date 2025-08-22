@@ -83,6 +83,30 @@ export type Database = {
         }
         Relationships: []
       }
+      habit_completions: {
+        Row: {
+          completed_date: string
+          created_at: string
+          habit_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          completed_date: string
+          created_at?: string
+          habit_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          completed_date?: string
+          created_at?: string
+          habit_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       habits: {
         Row: {
           archived: boolean
@@ -434,6 +458,23 @@ export type Database = {
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      link_output_to_goal: {
+        Args: { p_goal_id: string; p_output_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      toggle_habit_completion: {
+        Args: {
+          p_completed: boolean
+          p_date: string
+          p_habit_id: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      unlink_output_from_goal: {
+        Args: { p_goal_id: string; p_output_id: string; p_user_id: string }
+        Returns: undefined
       }
       validate_password_strength: {
         Args: { password: string }

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
 import type { Goal, Task, WeeklyOutput, Habit } from '@/types/productivity';
+import { transformGoalRow, transformTaskRow, transformWeeklyOutputRow, transformHabitRow } from '@/utils/typeTransformers';
 
 interface DataState {
   goals: Goal[];
@@ -60,10 +61,10 @@ export const useDataStore = create<DataState & DataActions>((set, get) => ({
         supabase.from('habits').select('*').eq('user_id', userId).eq('is_deleted', false).eq('archived', false),
       ]);
 
-      if (goalsRes.data) set({ goals: goalsRes.data as Goal[] });
-      if (tasksRes.data) set({ tasks: tasksRes.data as Task[] });
-      if (outputsRes.data) set({ weeklyOutputs: outputsRes.data as WeeklyOutput[] });
-      if (habitsRes.data) set({ habits: habitsRes.data as Habit[] });
+      if (goalsRes.data) set({ goals: goalsRes.data.map(transformGoalRow) });
+      if (tasksRes.data) set({ tasks: tasksRes.data.map(transformTaskRow) });
+      if (outputsRes.data) set({ weeklyOutputs: outputsRes.data.map(transformWeeklyOutputRow) });
+      if (habitsRes.data) set({ habits: habitsRes.data.map(transformHabitRow) });
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {

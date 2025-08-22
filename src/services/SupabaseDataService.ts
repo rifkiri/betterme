@@ -95,7 +95,11 @@ export class SupabaseDataService {
     return await SupabaseGoalsService.createGoal(goal);
   }
 
-  async updateGoalProgress(id: string, newProgress: number) {
+  async updateGoal(id: string, userId: string, updates: any) {
+    return await SupabaseGoalsService.updateGoal(id, updates);
+  }
+
+  async updateGoalProgress(id: string, userId: string, newProgress: number) {
     return await SupabaseGoalsService.updateGoal(id, { progress: newProgress });
   }
 
