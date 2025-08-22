@@ -301,16 +301,20 @@ export const EditGoalDialog = ({
     const currentIds = form.getValues('selectedOutputIds') || [];
     const isSelected = currentIds.includes(output.id);
     
+    console.log('Toggling output:', output.title, 'Currently selected:', isSelected, 'Current IDs:', currentIds);
+    
     if (isSelected) {
       const newIds = currentIds.filter(id => id !== output.id);
       const newSelectedOutputs = selectedOutputs.filter(o => o.id !== output.id);
       setSelectedOutputs(newSelectedOutputs);
       form.setValue('selectedOutputIds', newIds);
+      console.log('Unlinked output:', output.title, 'New IDs:', newIds);
     } else {
       const newIds = [...currentIds, output.id];
       const newSelectedOutputs = [...selectedOutputs, output];
       setSelectedOutputs(newSelectedOutputs);
       form.setValue('selectedOutputIds', newIds);
+      console.log('Linked output:', output.title, 'New IDs:', newIds);
     }
   };
 
@@ -538,13 +542,17 @@ export const EditGoalDialog = ({
                                             </div>
                                           )}
                                         </div>
-                                        <div className="ml-2">
-                                          {(field.value || []).includes(output.id) && (
-                                            <div className="h-4 w-4 bg-primary rounded-sm flex items-center justify-center">
-                                              <span className="text-xs text-primary-foreground">✓</span>
-                                            </div>
-                                          )}
-                                        </div>
+                                         <div className="ml-2">
+                                           {(() => {
+                                             const currentIds = form.getValues('selectedOutputIds') || [];
+                                             const isSelected = currentIds.includes(output.id);
+                                             return isSelected && (
+                                               <div className="h-4 w-4 bg-primary rounded-sm flex items-center justify-center">
+                                                 <span className="text-xs text-primary-foreground">✓</span>
+                                               </div>
+                                             );
+                                           })()}
+                                         </div>
                                       </CommandItem>
                                     ))}
                                   </CommandGroup>
