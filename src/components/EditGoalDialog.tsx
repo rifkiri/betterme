@@ -731,11 +731,11 @@ export const EditGoalDialog = ({
                       <Users className="h-4 w-4 text-purple-600" />
                       <span className="font-medium text-sm">Members</span>
                     </div>
-                    <div className="space-y-2">
+                    <div className="bg-white border rounded-lg shadow-sm divide-y divide-gray-100 max-h-40 overflow-y-auto">
                       {availableUsers
                         .filter(user => user.role === 'team-member' || user.role === 'manager')
                         .map(user => (
-                          <div key={user.id} className="flex items-center space-x-2">
+                          <div key={user.id} className="flex items-center px-4 py-3 hover:bg-gray-50 transition-colors">
                             <input
                               type="checkbox"
                               id={`member-${user.id}`}
@@ -747,13 +747,19 @@ export const EditGoalDialog = ({
                                   setSelectedMembers(selectedMembers.filter(id => id !== user.id));
                                 }
                               }}
-                              className="rounded border-gray-300"
+                              className="h-4 w-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
                             />
-                            <label htmlFor={`member-${user.id}`} className="text-sm">
-                              {user.name} ({user.role})
+                            <label htmlFor={`member-${user.id}`} className="ml-3 text-sm text-gray-700 cursor-pointer flex-1">
+                              <div className="font-medium">{user.name}</div>
+                              <div className="text-xs text-gray-500">({user.role})</div>
                             </label>
                           </div>
                         ))}
+                      {availableUsers.filter(user => user.role === 'team-member' || user.role === 'manager').length === 0 && (
+                        <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                          No team members available
+                        </div>
+                      )}
                     </div>
                   </div>
                 </Card>
