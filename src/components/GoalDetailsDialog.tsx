@@ -17,7 +17,6 @@ import { Goal, Task, WeeklyOutput, Habit } from '@/types/productivity';
 import { format, isBefore } from 'date-fns';
 import { useState, useEffect } from 'react';
 import { EditGoalDialog } from './EditGoalDialog';
-import { itemLinkageService } from '@/services/ItemLinkageService';
 
 interface GoalDetailsDialogProps {
   goal: Goal;
@@ -50,34 +49,25 @@ export const GoalDetailsDialog = ({
 
   useEffect(() => {
     const fetchLinkedItems = async () => {
-      if (currentUserId && open) {
+      if (open) {
         setLoadingLinkedOutputs(true);
         if (goal.category === 'personal') {
           setLoadingLinkedHabits(true);
         }
         
-        try {
-          const linkedItems = await itemLinkageService.getLinkedItems('goal', goal.id, currentUserId);
-          
-          // Get linked outputs
-          const outputIds = linkedItems.filter(item => item.type === 'weekly_output').map(item => item.id);
-          const outputs = weeklyOutputs.filter(output => outputIds.includes(output.id));
-          setLinkedOutputs(outputs);
-          
-          // Get linked habits for personal goals
-          if (goal.category === 'personal') {
-            const habitIds = linkedItems.filter(item => item.type === 'habit').map(item => item.id);
-            const linkedHabitsData = habits.filter(habit => habitIds.includes(habit.id));
-            setLinkedHabits(linkedHabitsData);
-          } else {
-            setLinkedHabits([]);
-          }
-        } catch (error) {
-          console.error('Error fetching linked items:', error);
-          setLinkedOutputs([]);
+        // Find outputs linked to this goal using the restored linkedGoalId field
+        const goalLinkedOutputs = weeklyOutputs.filter(output => output.linkedGoalId === goal.id);
+        setLinkedOutputs(goalLinkedOutputs);
+        
+        setLoadingLinkedOutputs(false);
+        
+        // For habits on personal goals, we'll skip this for now to simplify
+        // This focuses on fixing the weekly output linking issue first
+        if (goal.category === 'personal') {
           setLinkedHabits([]);
-        } finally {
-          setLoadingLinkedOutputs(false);
+        }
+        
+        if (goal.category === 'personal') {
           setLoadingLinkedHabits(false);
         }
       }

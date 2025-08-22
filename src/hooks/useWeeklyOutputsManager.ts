@@ -68,9 +68,7 @@ export const useWeeklyOutputsManager = ({
     try {
       if (isSupabaseAvailable()) {
         console.log('Attempting to update in Supabase...');
-        await supabaseDataService.updateWeeklyOutput(id, userId, updates);
-        
-        // Goal linking is now handled separately through ItemLinkageService
+        await supabaseWeeklyOutputsService.updateWeeklyOutput(id, userId, updates);
         
         console.log('Successfully updated in Supabase, reloading data...');
         await loadAllData();
@@ -126,7 +124,7 @@ export const useWeeklyOutputsManager = ({
 
     try {
       if (isSupabaseAvailable()) {
-        await supabaseDataService.updateWeeklyOutput(id, userId, { isDeleted: true, deletedDate: new Date() });
+        await supabaseWeeklyOutputsService.updateWeeklyOutput(id, userId, { isDeleted: true, deletedDate: new Date() });
         await loadAllData();
         toast.success('Weekly output deleted');
       } else {
@@ -143,7 +141,7 @@ export const useWeeklyOutputsManager = ({
 
     try {
       if (isSupabaseAvailable()) {
-        await supabaseDataService.updateWeeklyOutput(id, userId, { isDeleted: false, deletedDate: undefined });
+        await supabaseWeeklyOutputsService.updateWeeklyOutput(id, userId, { isDeleted: false, deletedDate: undefined });
         await loadAllData();
         toast.success('Weekly output restored');
       } else {
@@ -161,7 +159,7 @@ export const useWeeklyOutputsManager = ({
     try {
       if (isSupabaseAvailable()) {
         // Actually delete the weekly output permanently from the database
-        await supabaseDataService.permanentlyDeleteWeeklyOutput(id, userId);
+        await supabaseWeeklyOutputsService.permanentlyDeleteWeeklyOutput(id, userId);
         await loadAllData();
         toast.success('Weekly output permanently deleted');
       } else {

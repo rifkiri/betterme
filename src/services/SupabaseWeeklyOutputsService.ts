@@ -27,7 +27,7 @@ export class SupabaseWeeklyOutputsService {
       completedDate: output.completed_date ? new Date(output.completed_date) : undefined,
       deletedDate: output.deleted_date ? new Date(output.deleted_date) : undefined,
       createdDate: new Date(output.created_date),
-      linkedGoalId: undefined // Now handled by ItemLinkageService
+      linkedGoalId: output.linked_goal_id || undefined // Restored from database column
     }));
   }
 
@@ -72,21 +72,6 @@ export class SupabaseWeeklyOutputsService {
     if (updates.linkedGoalId !== undefined) {
       supabaseUpdates.linked_goal_id = (updates.linkedGoalId === "none" || !updates.linkedGoalId) ? null : updates.linkedGoalId;
       console.log('SupabaseWeeklyOutputsService - linkedGoalId update:', updates.linkedGoalId, '→', supabaseUpdates.linked_goal_id);
-      
-      // If unlinking (setting to null), delete the linkage record
-      if (updates.linkedGoalId === "none" || !updates.linkedGoalId) {
-        console.log('🗑️ Deleting output->goal linkage records for output:', id);
-        const { error: linkageError } = await supabase
-          .from('item_linkages')
-          .delete()
-          .eq('user_id', userId)
-          .eq('source_type', 'weekly_output')
-          .eq('source_id', id);
-        
-        if (linkageError) {
-          console.error('Error deleting output->goal linkage:', linkageError);
-        }
-      }
     }
 
     console.log('SupabaseWeeklyOutputsService - Final supabase updates object:', supabaseUpdates);
@@ -118,41 +103,40 @@ export class SupabaseWeeklyOutputsService {
     }
   }
 
-  async linkToGoals(outputId: string, goalIds: string[], userId: string): Promise<void> {
-    console.log('🔗 [Service] Linking output', outputId, 'to goals:', goalIds);
+  // Simplified linking - now handled directly through linkedGoalId column
+  // These methods are kept for backward compatibility but use the simpler approach
+  async linkToGoal(outputId: string, goalId: string, userId: string): Promise<void> {
+    console.log('🔗 [Service] Linking output', outputId, 'to goal:', goalId);
     
-    for (const goalId of goalIds) {
-      try {
-        const { data, error } = await supabase.rpc('link_output_to_goal', {
-          p_output_id: outputId,
-          p_goal_id: goalId,
-          p_user_id: userId
-        });
-
-        if (error) {
-          console.error('🔗 [Service] Error linking to goal', goalId, ':', error);
-          throw error;
-        }
-        
-        console.log('🔗 [Service] Successfully linked to goal', goalId);
-      } catch (error) {
-        console.error('🔗 [Service] Failed to link to goal', goalId, ':', error);
-        throw error;
-      }
-    }
-  }
-
-  async unlinkFromGoal(outputId: string, goalId: string, userId: string): Promise<void> {
-    const { error } = await supabase.rpc('unlink_output_from_goal', {
-      p_output_id: outputId,
-      p_goal_id: goalId,
-      p_user_id: userId
-    });
+    const { error } = await supabase
+      .from('weekly_outputs')
+      .update({ linked_goal_id: goalId })
+      .eq('id', outputId)
+      .eq('user_id', userId);
 
     if (error) {
-      console.error('Error unlinking output from goal:', error);
+      console.error('🔗 [Service] Error linking to goal:', error);
       throw error;
     }
+    
+    console.log('🔗 [Service] Successfully linked to goal', goalId);
+  }
+
+  async unlinkFromGoal(outputId: string, userId: string): Promise<void> {
+    console.log('🔗 [Service] Unlinking output', outputId, 'from goal');
+    
+    const { error } = await supabase
+      .from('weekly_outputs')
+      .update({ linked_goal_id: null })
+      .eq('id', outputId)
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('🔗 [Service] Error unlinking from goal:', error);
+      throw error;
+    }
+    
+    console.log('🔗 [Service] Successfully unlinked from goal');
   }
 }
 

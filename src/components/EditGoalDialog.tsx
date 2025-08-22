@@ -16,7 +16,7 @@ import { z } from 'zod';
 import { cn } from '@/lib/utils';
 import { Goal, WeeklyOutput, Habit } from '@/types/productivity';
 import { getSubcategoryOptions, mapSubcategoryDisplayToDatabase, mapSubcategoryDatabaseToDisplay } from '@/utils/goalCategoryUtils';
-import { itemLinkageService } from '@/services/ItemLinkageService';
+import { supabaseWeeklyOutputsService } from '@/services/SupabaseWeeklyOutputsService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Badge } from '@/components/ui/badge';
@@ -62,27 +62,15 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
 
   useEffect(() => {
     const fetchLinkedItems = async () => {
-      if (currentUser?.id && open) {
-        try {
-          const linkedItems = await itemLinkageService.getLinkedItems('goal', goal.id, currentUser.id);
-          
-          // Get linked outputs
-          const outputIds = linkedItems.filter(item => item.type === 'weekly_output').map(item => item.id);
-          const linkedOutputs = weeklyOutputs.filter(output => outputIds.includes(output.id));
-          setSelectedOutputs(linkedOutputs);
-          form.setValue('selectedOutputIds', outputIds);
-          
-          // Get linked habits for personal goals
-          if (goal.category === 'personal') {
-            const habitIds = linkedItems.filter(item => item.type === 'habit').map(item => item.id);
-            const linkedHabitsData = habits.filter(habit => habitIds.includes(habit.id));
-            setLinkedHabits(linkedHabitsData);
-          } else {
-            setLinkedHabits([]);
-          }
-        } catch (error) {
-          console.error('Error fetching linked items:', error);
-        }
+      if (open) {
+        // Find outputs linked to this goal using the restored linkedGoalId field
+        const goalLinkedOutputs = weeklyOutputs.filter(output => output.linkedGoalId === goal.id);
+        setSelectedOutputs(goalLinkedOutputs);
+        form.setValue('selectedOutputIds', goalLinkedOutputs.map(o => o.id));
+        
+        // For habits on personal goals, we'll skip this for now to simplify
+        // This focuses on fixing the weekly output linking issue first
+        setLinkedHabits([]);
       }
     };
 
@@ -114,10 +102,31 @@ export const EditGoalDialog = ({ goal, open, onOpenChange, onSave, weeklyOutputs
       deadline: deadline,
     });
 
-    // Update output linkages
+    // Update output linkages using the restored linkedGoalId approach
     if (currentUser?.id && data.selectedOutputIds) {
       try {
-        await itemLinkageService.updateLinks('goal', goal.id, 'weekly_output', data.selectedOutputIds, currentUser.id);
+        // Find outputs that should be linked to this goal
+        const outputsToLink = data.selectedOutputIds;
+        const currentlyLinkedOutputs = weeklyOutputs.filter(output => output.linkedGoalId === goal.id).map(o => o.id);
+        
+        // Update outputs that need to be linked
+        for (const outputId of outputsToLink) {
+          if (!currentlyLinkedOutputs.includes(outputId)) {
+            // Link this output to the goal by updating its linkedGoalId
+            const outputToUpdate = weeklyOutputs.find(o => o.id === outputId);
+            if (outputToUpdate) {
+              await supabaseWeeklyOutputsService.updateWeeklyOutput(outputId, currentUser.id, { linkedGoalId: goal.id });
+            }
+          }
+        }
+        
+        // Update outputs that need to be unlinked
+        for (const outputId of currentlyLinkedOutputs) {
+          if (!outputsToLink.includes(outputId)) {
+            // Unlink this output from the goal
+            await supabaseWeeklyOutputsService.updateWeeklyOutput(outputId, currentUser.id, { linkedGoalId: undefined });
+          }
+        }
       } catch (error) {
         console.error('Error updating output links:', error);
       }

@@ -436,6 +436,7 @@ export type Database = {
           id: string
           is_deleted: boolean
           is_moved: boolean
+          linked_goal_id: string | null
           original_due_date: string | null
           progress: number
           project_id: string | null
@@ -452,6 +453,7 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           is_moved?: boolean
+          linked_goal_id?: string | null
           original_due_date?: string | null
           progress?: number
           project_id?: string | null
@@ -468,6 +470,7 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           is_moved?: boolean
+          linked_goal_id?: string | null
           original_due_date?: string | null
           progress?: number
           project_id?: string | null
@@ -476,6 +479,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "weekly_outputs_linked_goal_id_fkey"
+            columns: ["linked_goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "weekly_outputs_user_id_fkey"
             columns: ["user_id"]
