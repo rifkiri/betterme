@@ -78,9 +78,6 @@ export const useProductivity = () => {
     deletedGoals: productivityData.deletedGoals,
     isLoading: productivityData.isLoading,
     selectedDate: productivityData.selectedDate,
-    userId: productivityData.userId,
-    session: productivityData.session,
-    user: productivityData.user,
     
     // Methods
     loadAllData: productivityData.loadAllData,

@@ -44,12 +44,6 @@ export const HabitsSection = ({
   isLoading = false,
   goals = []
 }: HabitsSectionProps) => {
-  console.log('🏃 HabitsSection render:', { 
-    habitsCount: habits.length, 
-    isLoading,
-    selectedDate: selectedDate.toDateString(),
-    habits: habits.map(h => ({ id: h.id, name: h.name, completed: h.completed }))
-  });
   const [togglingHabitId, setTogglingHabitId] = useState<string | null>(null);
   const [streakDialogHabit, setStreakDialogHabit] = useState<Habit | null>(null);
   const [viewingHabitId, setViewingHabitId] = useState<string | null>(null);
@@ -113,7 +107,7 @@ export const HabitsSection = ({
             <p>No habits yet. Add your first habit to start building streaks!</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div key={`habits-${habits.length}-goals-${goals.length}`}>
             {habits.map(habit => (
             <div key={habit.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center space-x-3">

@@ -14,63 +14,26 @@ export const AppNavigation = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    let mounted = true;
+    getCurrentUser();
+  }, []);
 
-    const loadUserProfile = async (userId: string) => {
-      try {
+  const getCurrentUser = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', userId)
+          .eq('id', user.id)
           .single();
         
-        if (mounted) {
-          setCurrentUser(profile);
-        }
-      } catch (error) {
-        console.error('Error loading user profile:', error);
-        if (mounted) {
-          setCurrentUser(null);
-        }
+        setCurrentUser(profile);
       }
-    };
-
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('🧭 AppNavigation auth state changed:', event);
-        if (mounted) {
-          if (session?.user) {
-            // Defer profile loading to avoid callback issues
-            setTimeout(() => {
-              loadUserProfile(session.user.id);
-            }, 0);
-          } else {
-            setCurrentUser(null);
-          }
-        }
-      }
-    );
-
-    // Check initial session
-    const checkInitialAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (mounted && session?.user) {
-          loadUserProfile(session.user.id);
-        }
-      } catch (error) {
-        console.error('Error checking initial auth:', error);
-      }
-    };
-
-    checkInitialAuth();
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
+    } catch (error) {
+      console.error('Error getting current user:', error);
+    }
+  };
 
   const handleSignOut = async () => {
     try {

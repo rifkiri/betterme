@@ -20,44 +20,31 @@ export const useProductivityData = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   const [userId, setUserId] = useState<string | null>(null);
-  const [session, setSession] = useState<any>(null);
-  const [user, setUser] = useState<any>(null);
 
   // Initialize auth session and listen for changes
   useEffect(() => {
     let mounted = true;
 
-    // Set up auth state listener FIRST
+    // Get initial session
+    const getInitialSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (mounted) {
+        const currentUserId = session?.user?.id || null;
+        console.log('Initial session user ID:', currentUserId);
+        setUserId(currentUserId);
+      }
+    };
+
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('🔐 Auth state changed:', event, 'Session:', !!session);
         if (mounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
-          setUserId(session?.user?.id ?? null);
+          const currentUserId = session?.user?.id || null;
+          console.log('Auth state changed:', event, 'User ID:', currentUserId);
+          setUserId(currentUserId);
         }
       }
     );
-
-    // THEN check for existing session
-    const getInitialSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('🔐 Initial session check:', !!session);
-        if (mounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
-          setUserId(session?.user?.id ?? null);
-        }
-      } catch (error) {
-        console.error('❌ Error getting initial session:', error);
-        if (mounted) {
-          setSession(null);
-          setUser(null);
-          setUserId(null);
-        }
-      }
-    };
 
     getInitialSession();
 
@@ -104,18 +91,8 @@ export const useProductivityData = () => {
         console.log('Loaded all goals:', allGoalsData);
 
         // Filter and set data ensuring user isolation
-        const activeHabits = habitsData.filter(h => !h.archived && !h.isDeleted);
-        const archivedHabitsData = habitsData.filter(h => h.archived);
-        
-        console.log('🎯 Setting habits data:', {
-          totalHabits: habitsData.length,
-          activeHabits: activeHabits.length,
-          archivedHabits: archivedHabitsData.length,
-          activeHabitsData: activeHabits.map(h => ({ id: h.id, name: h.name, completed: h.completed }))
-        });
-        
-        setHabits(activeHabits);
-        setArchivedHabits(archivedHabitsData);
+        setHabits(habitsData.filter(h => !h.archived && !h.isDeleted));
+        setArchivedHabits(habitsData.filter(h => h.archived));
         setTasks(tasksData.filter(t => !t.isDeleted));
         setDeletedTasks(tasksData.filter(t => t.isDeleted));
         setWeeklyOutputs(weeklyOutputsData.filter(w => !w.isDeleted));
@@ -141,11 +118,8 @@ export const useProductivityData = () => {
     if (userId) {
       console.log('User ID or date changed, reloading data for user:', userId, format(selectedDate, 'yyyy-MM-dd'));
       loadAllData(selectedDate);
-    } else {
-      // Clear loading state when no user
-      setIsLoading(false);
     }
-  }, [userId, selectedDate.getTime()]); // Use timestamp to prevent unnecessary re-renders
+  }, [userId, selectedDate]);
 
   const handleDateChange = (date: Date) => {
     console.log('Date changed to:', format(date, 'yyyy-MM-dd'), 'for user:', userId);
@@ -155,39 +129,30 @@ export const useProductivityData = () => {
   return {
     // State
     habits,
-    archivedHabits,
+    setHabits,
     tasks,
-    deletedTasks,
+    setTasks,
     weeklyOutputs,
-    deletedWeeklyOutputs,
+    setWeeklyOutputs,
     goals,
+    setGoals,
     allGoals,
+    setAllGoals,
+    archivedHabits,
+    setArchivedHabits,
+    deletedTasks,
+    setDeletedTasks,
+    deletedWeeklyOutputs,
+    setDeletedWeeklyOutputs,
     deletedGoals,
+    setDeletedGoals,
     isLoading,
     selectedDate,
+    
+    // Utils
     userId,
-    session,
-    user,
-    isGoogleSheetsAvailable: () => false, // Deprecated - keeping for compatibility
-    
-    // Methods
+    isGoogleSheetsAvailable: isSupabaseAvailable, // Keep same interface
     loadAllData,
-    handleDateChange: (date: Date) => {
-      console.log('📅 Date changed to:', format(date, 'yyyy-MM-dd'));
-      setSelectedDate(date);
-      if (userId) {
-        loadAllData(date);
-      }
-    },
-    
-    // Setters for managers
-    setHabits,
-    setArchivedHabits,
-    setTasks,
-    setDeletedTasks,
-    setWeeklyOutputs,
-    setDeletedWeeklyOutputs,
-    setGoals,
-    setDeletedGoals,
+    handleDateChange,
   };
 };

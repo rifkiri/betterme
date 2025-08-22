@@ -9,7 +9,7 @@ import { WeeklyOutputsSection } from './WeeklyOutputsSection';
 import { TasksSection } from './TasksSection';
 
 export const SimpleEmployeeDashboard = () => {
-  console.log('🔄 SimpleEmployeeDashboard rendering...');
+  console.log('SimpleEmployeeDashboard rendering...');
   
   const { profile } = useUserProfile();
   
@@ -51,12 +51,10 @@ export const SimpleEmployeeDashboard = () => {
     loadAllData
   } = useProductivity();
 
-  console.log('📊 Dashboard data:', {
+  console.log('Dashboard data:', {
     habitsCount: habits.length,
     tasksCount: tasks.length,
-    weeklyOutputsCount: weeklyOutputs.length,
-    isLoading,
-    habitsArray: habits.map(h => ({ id: h.id, name: h.name, completed: h.completed }))
+    weeklyOutputsCount: weeklyOutputs.length
   });
 
   const completedHabits = habits.filter(habit => habit.completed).length;
