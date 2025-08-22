@@ -83,11 +83,7 @@ export const useProductivityData = () => {
 
     const targetDate = date || selectedDate;
     console.log('Loading productivity data for user:', userId, 'date:', format(targetDate, 'yyyy-MM-dd'));
-    
-    // Only show loading for initial load, not subsequent updates
-    if (habits.length === 0 && tasks.length === 0 && weeklyOutputs.length === 0) {
-      setIsLoading(true);
-    }
+    setIsLoading(true);
     try {
       if (isSupabaseAvailable()) {
         console.log('Loading data from Supabase for authenticated user...');
