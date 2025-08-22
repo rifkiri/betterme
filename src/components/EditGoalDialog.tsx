@@ -278,10 +278,16 @@ export const EditGoalDialog = ({
       }
     }
     
+    // Add delay before refresh to ensure database consistency
+    console.log('All database operations completed, waiting before refresh...');
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
     onOpenChange(false);
     
     if (onRefresh) {
+      console.log('Refreshing data to reflect changes...');
       await onRefresh();
+      console.log('Data refresh completed');
     }
   };
 
