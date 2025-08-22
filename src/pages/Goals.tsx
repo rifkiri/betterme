@@ -11,6 +11,9 @@ const Goals = () => {
   const { profile } = useUserProfile();
   const { users, loadUsers } = useUsersData();
   
+  // Debug logging for authentication context
+  console.log('Goals page - Profile:', profile ? { id: profile.id, name: profile.name, role: profile.role } : 'NO PROFILE');
+  
   const {
     goals,
     allGoals,
@@ -25,6 +28,16 @@ const Goals = () => {
     restoreGoal,
     permanentlyDeleteGoal
   } = useProductivity();
+
+  console.log('Goals page - Available goals for joining:', allGoals?.filter(goal => 
+    goal.category === 'work' && 
+    goal.progress < 100 && 
+    !goal.archived && 
+    goal.userId !== profile?.id &&
+    !goal.memberIds?.includes(profile?.id || '') &&
+    !goal.leadIds?.includes(profile?.id || '') &&
+    goal.coachId !== profile?.id
+  ).map(g => ({ id: g.id, title: g.title, userId: g.userId })));
 
   const {
     notifications,

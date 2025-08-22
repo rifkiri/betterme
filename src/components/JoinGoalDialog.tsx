@@ -26,7 +26,14 @@ export const JoinGoalDialog = ({
   const [selectedGoal, setSelectedGoal] = useState<string>('');
   const [selectedRole, setSelectedRole] = useState<'coach' | 'lead' | 'member'>('member');
 
-  const handleJoin = () => {
+  const handleJoin = async () => {
+    console.log('JoinGoalDialog handleJoin called:', { selectedGoal, selectedRole, currentUserId });
+    
+    if (!currentUserId) {
+      toast.error('Authentication required to join goal');
+      return;
+    }
+
     if (!selectedGoal) {
       toast.error('Please select a goal to join');
       return;
@@ -37,6 +44,8 @@ export const JoinGoalDialog = ({
       toast.error('Goal not found');
       return;
     }
+
+    console.log('Goal found for joining:', { id: goal.id, title: goal.title, category: goal.category });
 
     // Validate role availability
     if (selectedRole === 'coach' && goal.coachId) {
@@ -49,11 +58,19 @@ export const JoinGoalDialog = ({
       return;
     }
 
-    onJoinGoal(selectedGoal, selectedRole);
-    setOpen(false);
-    setSelectedGoal('');
-    setSelectedRole('member');
-    toast.success(`Successfully joined goal as ${selectedRole}`);
+    try {
+      console.log('Calling onJoinGoal with:', { goalId: selectedGoal, role: selectedRole });
+      await onJoinGoal(selectedGoal, selectedRole);
+      
+      console.log('onJoinGoal completed successfully');
+      setOpen(false);
+      setSelectedGoal('');
+      setSelectedRole('member');
+      // Note: Success toast is already shown in useGoalCollaboration
+    } catch (error) {
+      console.error('Error in handleJoin:', error);
+      // Error toast is already shown in useGoalCollaboration
+    }
   };
 
   const getAvailableRoles = (goal: Goal) => {
