@@ -124,10 +124,10 @@ export const HabitsSection = ({
                     <span className={`font-medium ${habit.completed ? 'text-green-700' : 'text-gray-700'}`}>
                       {habit.name}
                     </span>
-                    {habit.linkedGoalId && (
-                      <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200 text-xs px-2 py-0.5">
-                        <Link className="h-3 w-3 mr-1" />
-                        Linked to Goal
+                    {habit.linkedGoalId && goals.find(g => g.id === habit.linkedGoalId) && (
+                      <Badge variant="outline" className="text-xs flex items-center gap-1 bg-blue-50 text-blue-600 border-blue-200">
+                        <Link className="h-2 w-2" />
+                        {goals.find(g => g.id === habit.linkedGoalId)?.title}
                       </Badge>
                     )}
                   </div>
