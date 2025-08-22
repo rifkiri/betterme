@@ -127,6 +127,18 @@ export const EnhancedGoalsSection = ({
     const showLeaveOption = goal.category === 'work' && userAssignment && goalUserRole;
     const showDeleteOption = canManageGoal;
 
+    // Debug logging for button visibility
+    console.log('🔍 [BUTTON VISIBILITY] Goal:', goal.id, {
+      isGoalOwner,
+      isManager,
+      canManageGoal,
+      showDeleteOption,
+      showLeaveOption,
+      userRole: userRole,
+      goalUserId: goal.userId,
+      currentUserId
+    });
+
     return (
       <Card key={goal.id} className="hover:shadow-md transition-shadow">
         <CardHeader className="pb-3">
