@@ -627,6 +627,7 @@ export type Database = {
           description: string
           id: string
           is_deleted: boolean
+          linked_goal_id: string
           name: string
           streak: number
         }[]
