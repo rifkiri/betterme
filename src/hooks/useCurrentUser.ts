@@ -1,36 +1,40 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const useCurrentUser = () => {
+  const { user } = useAuth();
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    checkCurrentUser();
-  }, []);
-
-  const checkCurrentUser = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
+    const checkCurrentUser = async () => {
       if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-        
-        setCurrentUser(profile);
-        setIsAdmin(profile?.role === 'admin');
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+          
+          setCurrentUser(profile);
+          setIsAdmin(profile?.role === 'admin');
+        } catch (error) {
+          console.error('Error checking current user');
+        }
+      } else {
+        setCurrentUser(null);
+        setIsAdmin(false);
       }
-    } catch (error) {
-      console.error('Error checking current user');
-    }
-  };
+    };
+
+    checkCurrentUser();
+  }, [user]);
 
   return {
     currentUser,
     isAdmin,
-    checkCurrentUser
+    checkCurrentUser: () => {} // No longer needed with AuthContext
   };
 };

@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { filterUsersForTagging } from '@/utils/userSelectorUtils';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface User {
   id: string;
@@ -15,6 +16,7 @@ interface UseUserSelectorProps {
 }
 
 export const useUserSelector = ({ currentUserId }: UseUserSelectorProps) => {
+  const { user } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,11 +26,8 @@ export const useUserSelector = ({ currentUserId }: UseUserSelectorProps) => {
     setError(null);
     
     try {
-      // Get current authenticated user to ensure we have the right current user ID
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      
       // Use the authenticated user ID as the definitive current user ID
-      const actualCurrentUserId = currentUser?.id || currentUserId;
+      const actualCurrentUserId = user?.id || currentUserId;
       
       // Use the secure role-based filtering function
       const { data, error } = await supabase
@@ -62,8 +61,12 @@ export const useUserSelector = ({ currentUserId }: UseUserSelectorProps) => {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, [currentUserId]);
+    if (user?.id) {
+      fetchUsers();
+    } else {
+      setUsers([]);
+    }
+  }, [user?.id]);
 
   return {
     users,

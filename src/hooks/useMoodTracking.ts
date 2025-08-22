@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface MoodEntry {
   id: string;
@@ -13,32 +13,18 @@ interface MoodEntry {
 }
 
 export const useMoodTracking = () => {
+  const { user } = useAuth();
   const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
-
-  // Get current user ID from Supabase auth
-  const getCurrentUserId = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    return user?.id || null;
-  };
-
-  useEffect(() => {
-    const initializeUser = async () => {
-      const currentUserId = await getCurrentUserId();
-      setUserId(currentUserId);
-    };
-    initializeUser();
-  }, []);
 
   // Check if Supabase is available
   const isSupabaseAvailable = () => {
-    return supabaseDataService.isConfigured() && userId !== null;
+    return supabaseDataService.isConfigured() && user?.id !== null;
   };
 
   // Load mood data from Supabase
   const loadMoodData = async () => {
-    if (!userId) {
+    if (!user?.id) {
       return;
     }
 
@@ -46,7 +32,7 @@ export const useMoodTracking = () => {
     try {
       if (isSupabaseAvailable()) {
         console.log('Loading mood data from Supabase...');
-        const moodData = await supabaseDataService.getMoodData(userId);
+        const moodData = await supabaseDataService.getMoodData(user.id);
         setMoodEntries(moodData);
         console.log('Mood data loaded from Supabase successfully');
       } else {
@@ -62,21 +48,23 @@ export const useMoodTracking = () => {
   };
 
   useEffect(() => {
-    if (userId) {
+    if (user?.id) {
       loadMoodData();
+    } else {
+      setMoodEntries([]);
     }
-  }, [userId]);
+  }, [user?.id]);
 
   // Add or update mood entry
   const addMoodEntry = async (date: string, mood: number, notes?: string) => {
-    if (!userId) {
+    if (!user?.id) {
       toast.error('Please sign in to save mood entries');
       return;
     }
 
     const newEntry: MoodEntry = {
       id: crypto.randomUUID(),
-      userId,
+      userId: user.id,
       date,
       mood,
       notes
@@ -105,11 +93,11 @@ export const useMoodTracking = () => {
 
   // Update existing mood entry
   const updateMoodEntry = async (id: string, mood: number, notes?: string) => {
-    if (!userId) return;
+    if (!user?.id) return;
 
     try {
       if (isSupabaseAvailable()) {
-        await supabaseDataService.updateMoodEntry(id, userId, { mood, notes });
+        await supabaseDataService.updateMoodEntry(id, user.id, { mood, notes });
         await loadMoodData();
         toast.success('Mood entry updated successfully');
       } else {

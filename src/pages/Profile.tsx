@@ -8,11 +8,12 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { AppNavigation } from '@/components/AppNavigation';
 import { PasswordChangeForm } from '@/components/auth/PasswordChangeForm';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Profile = () => {
   const { profile, isLoading, updateProfile, signOut } = useUserProfile();
+  const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState('');
   const [position, setPosition] = useState('');
@@ -21,14 +22,10 @@ const Profile = () => {
 
   useEffect(() => {
     // Check if user is authenticated
-    const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        navigate('/signin');
-      }
-    };
-    checkAuth();
-  }, [navigate]);
+    if (!user) {
+      navigate('/signin');
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     if (profile) {
