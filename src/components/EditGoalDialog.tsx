@@ -19,6 +19,7 @@ import { Goal, WeeklyOutput, Habit, GoalAssignment } from '@/types/productivity'
 import { getSubcategoryOptions, mapSubcategoryDisplayToDatabase, mapSubcategoryDatabaseToDisplay } from '@/utils/goalCategoryUtils';
 import { supabaseWeeklyOutputsService } from '@/services/SupabaseWeeklyOutputsService';
 import { supabaseGoalAssignmentsService } from '@/services/SupabaseGoalAssignmentsService';
+import { supabaseGoalsService } from '@/services/SupabaseGoalsService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Badge } from '@/components/ui/badge';
@@ -168,18 +169,15 @@ export const EditGoalDialog = ({
         console.log('Currently linked outputs:', currentlyLinkedOutputs);
         console.log('Currently linked outputs length:', currentlyLinkedOutputs.length);
         
-        // Link new outputs
+        // Link new outputs using the proper linkage service
         for (const outputId of outputsToLink) {
           if (!currentlyLinkedOutputs.includes(outputId)) {
-            console.log('Linking output:', outputId, 'to goal:', goal.id);
-            const outputToUpdate = weeklyOutputs.find(o => o.id === outputId);
-            if (outputToUpdate) {
-              await supabaseWeeklyOutputsService.updateWeeklyOutput(outputId, currentUser.id, { linkedGoalId: goal.id });
-            }
+            console.log('Linking output:', outputId, 'to goal:', goal.id, 'using linkage service');
+            await supabaseGoalsService.linkOutputToGoal(outputId, goal.id, currentUser.id);
           }
         }
         
-        // Unlink removed outputs
+        // Unlink removed outputs using the proper linkage service
         for (const outputId of currentlyLinkedOutputs) {
           const shouldUnlink = !outputsToLink.includes(outputId);
           console.log(`Checking output ${outputId} for unlinking:`, {
@@ -190,8 +188,8 @@ export const EditGoalDialog = ({
           });
           
           if (shouldUnlink) {
-            console.log('Unlinking output:', outputId, 'from goal:', goal.id);
-            await supabaseWeeklyOutputsService.updateWeeklyOutput(outputId, currentUser.id, { linkedGoalId: undefined });
+            console.log('Unlinking output:', outputId, 'from goal:', goal.id, 'using linkage service');
+            await supabaseGoalsService.unlinkOutputFromGoal(outputId, goal.id, currentUser.id);
           }
         }
         
