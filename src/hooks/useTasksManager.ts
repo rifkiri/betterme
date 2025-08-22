@@ -1,11 +1,9 @@
-
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { Task } from '@/types/productivity';
 import { toast } from 'sonner';
 
 interface UseTasksManagerProps {
   userId: string | null;
-  isGoogleSheetsAvailable: () => boolean;
   loadAllData: () => Promise<void>;
   tasks: Task[];
   setTasks: (tasks: Task[] | ((prev: Task[]) => Task[])) => void;
@@ -15,7 +13,6 @@ interface UseTasksManagerProps {
 
 export const useTasksManager = ({
   userId,
-  isGoogleSheetsAvailable: isSupabaseAvailable,
   loadAllData,
   tasks,
   setTasks,
@@ -36,13 +33,9 @@ export const useTasksManager = ({
     };
 
     try {
-      if (isSupabaseAvailable()) {
-        await supabaseDataService.addTask({ ...newTask, userId });
-        await loadAllData();
-        toast.success('Task added successfully');
-      } else {
-        toast.error('Please sign in to add tasks');
-      }
+      await supabaseDataService.addTask({ ...newTask, userId });
+      await loadAllData();
+      toast.success('Task added successfully');
     } catch (error) {
       toast.error('Failed to add task');
       console.error('Failed to add task:', error);
@@ -53,13 +46,9 @@ export const useTasksManager = ({
     if (!userId) return;
 
     try {
-      if (isSupabaseAvailable()) {
-        await supabaseDataService.updateTask(id, userId, updates);
-        await loadAllData();
-        toast.success('Task updated successfully');
-      } else {
-        toast.error('Please sign in to edit tasks');
-      }
+      await supabaseDataService.updateTask(id, userId, updates);
+      await loadAllData();
+      toast.success('Task updated successfully');
     } catch (error) {
       toast.error('Failed to update task');
       console.error('Failed to update task:', error);
@@ -78,12 +67,8 @@ export const useTasksManager = ({
     };
 
     try {
-      if (isSupabaseAvailable()) {
-        await supabaseDataService.updateTask(id, userId, updates);
-        await loadAllData();
-      } else {
-        toast.error('Please sign in to update tasks');
-      }
+      await supabaseDataService.updateTask(id, userId, updates);
+      await loadAllData();
     } catch (error) {
       toast.error('Failed to update task');
       console.error('Failed to update task:', error);
@@ -94,13 +79,9 @@ export const useTasksManager = ({
     if (!userId) return;
 
     try {
-      if (isSupabaseAvailable()) {
-        await supabaseDataService.updateTask(id, userId, { isDeleted: true, deletedDate: new Date() });
-        await loadAllData();
-        toast.success('Task deleted');
-      } else {
-        toast.error('Please sign in to delete tasks');
-      }
+      await supabaseDataService.updateTask(id, userId, { isDeleted: true, deletedDate: new Date() });
+      await loadAllData();
+      toast.success('Task deleted');
     } catch (error) {
       toast.error('Failed to delete task');
       console.error('Failed to delete task:', error);
@@ -111,13 +92,9 @@ export const useTasksManager = ({
     if (!userId) return;
 
     try {
-      if (isSupabaseAvailable()) {
-        await supabaseDataService.updateTask(id, userId, { isDeleted: false, deletedDate: undefined });
-        await loadAllData();
-        toast.success('Task restored');
-      } else {
-        toast.error('Please sign in to restore tasks');
-      }
+      await supabaseDataService.updateTask(id, userId, { isDeleted: false, deletedDate: undefined });
+      await loadAllData();
+      toast.success('Task restored');
     } catch (error) {
       toast.error('Failed to restore task');
       console.error('Failed to restore task:', error);
@@ -128,14 +105,10 @@ export const useTasksManager = ({
     if (!userId) return;
 
     try {
-      if (isSupabaseAvailable()) {
-        // Actually delete the task permanently from the database
-        await supabaseDataService.permanentlyDeleteTask(id, userId);
-        await loadAllData();
-        toast.success('Task permanently deleted');
-      } else {
-        toast.error('Please sign in to delete tasks');
-      }
+      // Actually delete the task permanently from the database
+      await supabaseDataService.permanentlyDeleteTask(id, userId);
+      await loadAllData();
+      toast.success('Task permanently deleted');
     } catch (error) {
       toast.error('Failed to delete task');
       console.error('Failed to delete task:', error);
@@ -177,13 +150,9 @@ export const useTasksManager = ({
     };
 
     try {
-      if (isSupabaseAvailable()) {
-        await supabaseDataService.updateTask(taskId, userId, updates);
-        await loadAllData();
-        toast.success('Task moved successfully');
-      } else {
-        toast.error('Please sign in to move tasks');
-      }
+      await supabaseDataService.updateTask(taskId, userId, updates);
+      await loadAllData();
+      toast.success('Task moved successfully');
     } catch (error) {
       console.error('Failed to move task:', error);
       toast.error('Failed to move task');

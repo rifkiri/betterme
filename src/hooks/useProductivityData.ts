@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { Habit, Task, WeeklyOutput, Goal } from '@/types/productivity';
@@ -119,7 +118,6 @@ export const useProductivityData = () => {
     
     // Utils
     userId,
-    isGoogleSheetsAvailable: isSupabaseAvailable, // Keep same interface
     loadAllData,
     handleDateChange,
   };

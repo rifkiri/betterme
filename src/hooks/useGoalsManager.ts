@@ -4,7 +4,6 @@ import { toast } from 'sonner';
 
 interface UseGoalsManagerProps {
   userId: string | null;
-  isGoogleSheetsAvailable: () => boolean;
   loadAllData: () => Promise<void>;
   goals: Goal[];
   setGoals: (goals: Goal[] | ((prev: Goal[]) => Goal[])) => void;
@@ -14,7 +13,6 @@ interface UseGoalsManagerProps {
 
 export const useGoalsManager = ({
   userId,
-  isGoogleSheetsAvailable: isSupabaseAvailable,
   loadAllData,
   goals,
   setGoals,
@@ -38,13 +36,9 @@ export const useGoalsManager = ({
     console.log('Adding goal for user:', userId, newGoal);
 
     try {
-      if (isSupabaseAvailable()) {
-        await supabaseDataService.addGoal({ ...newGoal, userId });
-        await loadAllData();
-        toast.success('Goal added successfully');
-      } else {
-        toast.error('Please sign in to add goals');
-      }
+      await supabaseDataService.addGoal({ ...newGoal, userId });
+      await loadAllData();
+      toast.success('Goal added successfully');
     } catch (error) {
       console.error('Failed to add goal for user', userId, ':', error);
       toast.error('Failed to add goal');
@@ -61,13 +55,9 @@ export const useGoalsManager = ({
     console.log('Editing goal for user:', userId, 'goal:', id, 'updates:', updates);
 
     try {
-      if (isSupabaseAvailable()) {
-        await supabaseDataService.updateGoal(id, userId, updates);
-        await loadAllData();
-        toast.success('Goal updated successfully');
-      } else {
-        toast.error('Please sign in to edit goals');
-      }
+      await supabaseDataService.updateGoal(id, userId, updates);
+      await loadAllData();
+      toast.success('Goal updated successfully');
     } catch (error) {
       console.error('Failed to update goal for user', userId, ':', error);
       toast.error('Failed to update goal');
@@ -103,27 +93,15 @@ export const useGoalsManager = ({
     console.log('🎯 [PROGRESS UPDATE] Optimistic UI update applied');
 
     try {
-      if (isSupabaseAvailable()) {
-        console.log('🎯 [PROGRESS UPDATE] Calling database update...');
-        await supabaseDataService.updateGoalProgress(goalId, userId, clampedProgress);
-        console.log('🎯 [PROGRESS UPDATE] Database update completed');
-        
-        console.log('🎯 [PROGRESS UPDATE] Refreshing data...');
-        await loadAllData();
-        console.log('🎯 [PROGRESS UPDATE] Data refresh completed');
-        
-        toast.success('Goal progress updated');
-      } else {
-        // Revert optimistic update on error
-        setGoals(prevGoals => 
-          prevGoals.map(goal => 
-            goal.id === goalId 
-              ? { ...goal, progress: goal.progress, completed: goal.completed }
-              : goal
-          )
-        );
-        toast.error('Please sign in to update goals');
-      }
+      console.log('🎯 [PROGRESS UPDATE] Calling database update...');
+      await supabaseDataService.updateGoalProgress(goalId, userId, clampedProgress);
+      console.log('🎯 [PROGRESS UPDATE] Database update completed');
+      
+      console.log('🎯 [PROGRESS UPDATE] Refreshing data...');
+      await loadAllData();
+      console.log('🎯 [PROGRESS UPDATE] Data refresh completed');
+      
+      toast.success('Goal progress updated');
     } catch (error) {
       console.error('🎯 [PROGRESS UPDATE] Failed to update goal progress:', error);
       
@@ -141,13 +119,9 @@ export const useGoalsManager = ({
     console.log('Moving goal deadline for user:', userId, 'goal:', id, 'to:', newDeadline);
 
     try {
-      if (isSupabaseAvailable()) {
-        await supabaseDataService.updateGoal(id, userId, { deadline: newDeadline });
-        await loadAllData();
-        toast.success('Goal deadline updated');
-      } else {
-        toast.error('Please sign in to move goals');
-      }
+      await supabaseDataService.updateGoal(id, userId, { deadline: newDeadline });
+      await loadAllData();
+      toast.success('Goal deadline updated');
     } catch (error) {
       console.error('Failed to move goal for user', userId, ':', error);
       toast.error('Failed to update goal deadline');
@@ -188,13 +162,9 @@ export const useGoalsManager = ({
     console.log('🗑️ [DELETE GOAL] Proceeding with soft delete for user:', userId, 'goal:', id);
 
     try {
-      if (isSupabaseAvailable()) {
-        await supabaseDataService.updateGoal(id, userId, { archived: true });
-        await loadAllData();
-        toast.success('Goal deleted');
-      } else {
-        toast.error('Please sign in to delete goals');
-      }
+      await supabaseDataService.updateGoal(id, userId, { archived: true });
+      await loadAllData();
+      toast.success('Goal deleted');
     } catch (error) {
       console.error('Failed to delete goal for user', userId, ':', error);
       toast.error('Failed to delete goal');
@@ -207,13 +177,9 @@ export const useGoalsManager = ({
     console.log('Restoring goal for user:', userId, 'goal:', id);
 
     try {
-      if (isSupabaseAvailable()) {
-        await supabaseDataService.updateGoal(id, userId, { archived: false });
-        await loadAllData();
-        toast.success('Goal restored');
-      } else {
-        toast.error('Please sign in to restore goals');
-      }
+      await supabaseDataService.updateGoal(id, userId, { archived: false });
+      await loadAllData();
+      toast.success('Goal restored');
     } catch (error) {
       console.error('Failed to restore goal for user', userId, ':', error);
       toast.error('Failed to restore goal');
@@ -226,13 +192,9 @@ export const useGoalsManager = ({
     console.log('Permanently deleting goal for user:', userId, 'goal:', id);
 
     try {
-      if (isSupabaseAvailable()) {
-        await supabaseDataService.permanentlyDeleteGoal(id, userId);
-        await loadAllData();
-        toast.success('Goal permanently deleted');
-      } else {
-        toast.error('Please sign in to delete goals');
-      }
+      await supabaseDataService.permanentlyDeleteGoal(id, userId);
+      await loadAllData();
+      toast.success('Goal permanently deleted');
     } catch (error) {
       console.error('Failed to permanently delete goal for user', userId, ':', error);
       toast.error('Failed to delete goal');

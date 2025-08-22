@@ -1,4 +1,3 @@
-
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { WeeklyOutput, Goal } from '@/types/productivity';
 import { toast } from 'sonner';
@@ -6,7 +5,6 @@ import { supabaseWeeklyOutputsService } from '@/services/SupabaseWeeklyOutputsSe
 
 interface UseWeeklyOutputsManagerProps {
   userId: string | null;
-  isGoogleSheetsAvailable: () => boolean;
   loadAllData: () => Promise<void>;
   weeklyOutputs: WeeklyOutput[];
   setWeeklyOutputs: (outputs: WeeklyOutput[] | ((prev: WeeklyOutput[]) => WeeklyOutput[])) => void;
@@ -17,7 +15,6 @@ interface UseWeeklyOutputsManagerProps {
 
 export const useWeeklyOutputsManager = ({
   userId,
-  isGoogleSheetsAvailable: isSupabaseAvailable,
   loadAllData,
   weeklyOutputs,
   setWeeklyOutputs,
@@ -43,13 +40,9 @@ export const useWeeklyOutputsManager = ({
     };
 
     try {
-      if (isSupabaseAvailable()) {
-        await supabaseWeeklyOutputsService.addWeeklyOutput({ ...newOutput, userId });
-        await loadAllData();
-        toast.success('Weekly output added successfully');
-      } else {
-        toast.error('Please sign in to add weekly outputs');
-      }
+      await supabaseWeeklyOutputsService.addWeeklyOutput({ ...newOutput, userId });
+      await loadAllData();
+      toast.success('Weekly output added successfully');
     } catch (error) {
       console.error('Failed to add weekly output:', error);
       toast.error('Failed to add weekly output: ' + (error instanceof Error ? error.message : 'Unknown error'));
@@ -65,16 +58,12 @@ export const useWeeklyOutputsManager = ({
     console.log('Editing weekly output:', { id, updates });
 
     try {
-      if (isSupabaseAvailable()) {
-        console.log('Attempting to update in Supabase...');
-        await supabaseWeeklyOutputsService.updateWeeklyOutput(id, userId, updates);
-        
-        console.log('Successfully updated in Supabase, reloading data...');
-        await loadAllData();
-        toast.success('Weekly output updated successfully');
-      } else {
-        toast.error('Please sign in to edit weekly outputs');
-      }
+      console.log('Attempting to update in Supabase...');
+      await supabaseWeeklyOutputsService.updateWeeklyOutput(id, userId, updates);
+      
+      console.log('Successfully updated in Supabase, reloading data...');
+      await loadAllData();
+      toast.success('Weekly output updated successfully');
     } catch (error) {
       console.error('Failed to update weekly output:', error);
       toast.error('Failed to update weekly output: ' + (error instanceof Error ? error.message : 'Unknown error'));
@@ -122,13 +111,9 @@ export const useWeeklyOutputsManager = ({
     if (!userId) return;
 
     try {
-      if (isSupabaseAvailable()) {
-        await supabaseWeeklyOutputsService.updateWeeklyOutput(id, userId, { isDeleted: true, deletedDate: new Date() });
-        await loadAllData();
-        toast.success('Weekly output deleted');
-      } else {
-        toast.error('Please sign in to delete weekly outputs');
-      }
+      await supabaseWeeklyOutputsService.updateWeeklyOutput(id, userId, { isDeleted: true, deletedDate: new Date() });
+      await loadAllData();
+      toast.success('Weekly output deleted');
     } catch (error) {
       toast.error('Failed to delete weekly output');
       console.error('Failed to delete weekly output:', error);
@@ -139,13 +124,9 @@ export const useWeeklyOutputsManager = ({
     if (!userId) return;
 
     try {
-      if (isSupabaseAvailable()) {
-        await supabaseWeeklyOutputsService.updateWeeklyOutput(id, userId, { isDeleted: false, deletedDate: undefined });
-        await loadAllData();
-        toast.success('Weekly output restored');
-      } else {
-        toast.error('Please sign in to restore weekly outputs');
-      }
+      await supabaseWeeklyOutputsService.updateWeeklyOutput(id, userId, { isDeleted: false, deletedDate: undefined });
+      await loadAllData();
+      toast.success('Weekly output restored');
     } catch (error) {
       toast.error('Failed to restore weekly output');
       console.error('Failed to restore weekly output:', error);
@@ -156,14 +137,10 @@ export const useWeeklyOutputsManager = ({
     if (!userId) return;
 
     try {
-      if (isSupabaseAvailable()) {
-        // Actually delete the weekly output permanently from the database
-        await supabaseWeeklyOutputsService.permanentlyDeleteWeeklyOutput(id, userId);
-        await loadAllData();
-        toast.success('Weekly output permanently deleted');
-      } else {
-        toast.error('Please sign in to delete weekly outputs');
-      }
+      // Actually delete the weekly output permanently from the database
+      await supabaseWeeklyOutputsService.permanentlyDeleteWeeklyOutput(id, userId);
+      await loadAllData();
+      toast.success('Weekly output permanently deleted');
     } catch (error) {
       toast.error('Failed to delete weekly output');
       console.error('Failed to delete weekly output:', error);

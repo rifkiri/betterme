@@ -13,7 +13,6 @@ export const useProductivity = () => {
   
   const habitsManager = useHabitsManager({
     userId: productivityData.userId,
-    isGoogleSheetsAvailable: productivityData.isGoogleSheetsAvailable,
     loadAllData: productivityData.loadAllData,
     habits: productivityData.habits,
     setHabits: productivityData.setHabits,
@@ -25,7 +24,6 @@ export const useProductivity = () => {
 
   const tasksManager = useTasksManager({
     userId: productivityData.userId,
-    isGoogleSheetsAvailable: productivityData.isGoogleSheetsAvailable,
     loadAllData: productivityData.loadAllData,
     tasks: productivityData.tasks,
     setTasks: productivityData.setTasks,
@@ -35,7 +33,6 @@ export const useProductivity = () => {
 
   const weeklyOutputsManager = useWeeklyOutputsManager({
     userId: productivityData.userId,
-    isGoogleSheetsAvailable: productivityData.isGoogleSheetsAvailable,
     loadAllData: productivityData.loadAllData,
     weeklyOutputs: productivityData.weeklyOutputs,
     setWeeklyOutputs: productivityData.setWeeklyOutputs,
@@ -52,7 +49,6 @@ export const useProductivity = () => {
 
   const goalsManager = useGoalsManager({
     userId: productivityData.userId,
-    isGoogleSheetsAvailable: productivityData.isGoogleSheetsAvailable,
     loadAllData: productivityData.loadAllData,
     goals: productivityData.goals,
     setGoals: productivityData.setGoals,
