@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface UserProfile {
   id: string;
@@ -16,27 +17,13 @@ interface UserProfile {
 }
 
 export const useUserProfile = () => {
+  const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
-
-  // Get current user ID from Supabase auth
-  const getCurrentUserId = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    return user?.id || null;
-  };
-
-  useEffect(() => {
-    const initializeUser = async () => {
-      const currentUserId = await getCurrentUserId();
-      setUserId(currentUserId);
-    };
-    initializeUser();
-  }, []);
 
   // Load user profile from Supabase
   const loadProfile = async () => {
-    if (!userId) {
+    if (!user?.id) {
       return;
     }
 
@@ -45,7 +32,7 @@ export const useUserProfile = () => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('id', user.id)
         .single();
 
       if (error) {
@@ -76,14 +63,16 @@ export const useUserProfile = () => {
   };
 
   useEffect(() => {
-    if (userId) {
+    if (user?.id) {
       loadProfile();
+    } else {
+      setProfile(null);
     }
-  }, [userId]);
+  }, [user?.id]);
 
   // Update user profile
   const updateProfile = async (updates: Partial<UserProfile>) => {
-    if (!userId) {
+    if (!user?.id) {
       toast.error('Please sign in to update profile');
       return;
     }
@@ -99,7 +88,7 @@ export const useUserProfile = () => {
       const { error } = await supabase
         .from('profiles')
         .update(supabaseUpdates)
-        .eq('id', userId);
+        .eq('id', user.id);
 
       if (error) {
         console.error('Error updating profile:', error);
@@ -126,7 +115,6 @@ export const useUserProfile = () => {
       }
       
       setProfile(null);
-      setUserId(null);
       toast.success('Signed out successfully');
     } catch (error) {
       console.error('Failed to sign out:', error);

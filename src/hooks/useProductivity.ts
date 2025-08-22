@@ -60,7 +60,7 @@ export const useProductivity = () => {
     setDeletedGoals: productivityData.setDeletedGoals,
   });
 
-  const goalCollaboration = useGoalCollaboration(productivityData.userId || '', productivityData.loadAllData);
+  const goalCollaboration = useGoalCollaboration(productivityData.loadAllData);
 
   const taskHelpers = useTaskHelpers(productivityData.tasks);
   const weeklyOutputHelpers = useWeeklyOutputHelpers(productivityData.weeklyOutputs);

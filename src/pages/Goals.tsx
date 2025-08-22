@@ -38,7 +38,7 @@ const Goals = () => {
     acknowledgeAllNotifications,
     joinWorkGoal,
     leaveWorkGoal
-  } = useGoalCollaboration(profile?.id || '', loadAllData);
+  } = useGoalCollaboration(loadAllData);
 
   // Set up real-time updates for goals  
   useGoalRealtime({

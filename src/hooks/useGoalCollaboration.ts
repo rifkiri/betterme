@@ -4,25 +4,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { useState, useEffect } from 'react';
 import { GoalAssignment, GoalNotification } from '@/types/productivity';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
-export const useGoalCollaboration = (userId: string, loadAllData?: () => Promise<void>) => {
+export const useGoalCollaboration = (loadAllData?: () => Promise<void>) => {
+  const { user } = useAuth();
+  const userId = user?.id;
   const [assignments, setAssignments] = useState<GoalAssignment[]>([]);
   const [notifications, setNotifications] = useState<GoalNotification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Debug authentication context
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      console.log('useGoalCollaboration auth check:', { 
-        userId, 
-        authUser: user?.id, 
-        authError: error,
-        match: userId === user?.id 
-      });
-    };
-    checkAuth();
-  }, [userId]);
 
   const loadAssignments = async () => {
     if (!userId) return;
@@ -51,16 +40,13 @@ export const useGoalCollaboration = (userId: string, loadAllData?: () => Promise
   };
 
   const createAssignment = async (assignment: Omit<GoalAssignment, 'id' | 'assignedDate'>, goalCreatorId?: string) => {
+    if (!userId) {
+      throw new Error('Authentication required to create assignment');
+    }
+
     try {
       console.log('createAssignment called with:', assignment);
-      
-      // Ensure user is authenticated before creating assignment
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) {
-        throw new Error('Authentication required to create assignment');
-      }
-      
-      console.log('Authentication verified:', user.id);
+      console.log('Authentication verified:', userId);
       
       await supabaseGoalAssignmentsService.createGoalAssignment(assignment);
       
