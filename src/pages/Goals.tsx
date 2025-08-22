@@ -7,8 +7,11 @@ import { useProductivity } from '@/hooks/useProductivity';
 import { useGoalCollaboration } from '@/hooks/useGoalCollaboration';
 import { useUsersData } from '@/hooks/useUsersData';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useAuthGuard } from '@/hooks/useAuthGuard';
 
 const Goals = () => {
+  useAuthGuard();
+  
   const { profile } = useUserProfile();
   const { users, loadUsers } = useUsersData();
   

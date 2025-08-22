@@ -6,9 +6,12 @@ import { IndividualDetailsSection } from "@/components/team/IndividualDetailsSec
 import { TeamWorkloadMonitoring } from "@/components/manager/TeamWorkloadMonitoring";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useTeamDataRealtime } from "@/hooks/useTeamDataRealtime";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { Target, Users } from "lucide-react";
 
 const Manager = () => {
+  useAuthGuard();
+  
   const [selectedEmployee, setSelectedEmployee] = useState<string>('');
   const [viewMode, setViewMode] = useState<'summary' | 'dashboard'>('summary');
   const [activeTab, setActiveTab] = useState<'workload' | 'individual'>('workload');

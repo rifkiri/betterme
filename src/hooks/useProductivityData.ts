@@ -20,31 +20,44 @@ export const useProductivityData = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   const [userId, setUserId] = useState<string | null>(null);
+  const [session, setSession] = useState<any>(null);
+  const [user, setUser] = useState<any>(null);
 
   // Initialize auth session and listen for changes
   useEffect(() => {
     let mounted = true;
 
-    // Get initial session
-    const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (mounted) {
-        const currentUserId = session?.user?.id || null;
-        console.log('Initial session user ID:', currentUserId);
-        setUserId(currentUserId);
-      }
-    };
-
-    // Listen for auth changes
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('🔐 Auth state changed:', event, 'Session:', !!session);
         if (mounted) {
-          const currentUserId = session?.user?.id || null;
-          console.log('Auth state changed:', event, 'User ID:', currentUserId);
-          setUserId(currentUserId);
+          setSession(session);
+          setUser(session?.user ?? null);
+          setUserId(session?.user?.id ?? null);
         }
       }
     );
+
+    // THEN check for existing session
+    const getInitialSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('🔐 Initial session check:', !!session);
+        if (mounted) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          setUserId(session?.user?.id ?? null);
+        }
+      } catch (error) {
+        console.error('❌ Error getting initial session:', error);
+        if (mounted) {
+          setSession(null);
+          setUser(null);
+          setUserId(null);
+        }
+      }
+    };
 
     getInitialSession();
 
@@ -129,30 +142,36 @@ export const useProductivityData = () => {
   return {
     // State
     habits,
-    setHabits,
-    tasks,
-    setTasks,
-    weeklyOutputs,
-    setWeeklyOutputs,
-    goals,
-    setGoals,
-    allGoals,
-    setAllGoals,
     archivedHabits,
-    setArchivedHabits,
+    tasks,
     deletedTasks,
-    setDeletedTasks,
+    weeklyOutputs,
     deletedWeeklyOutputs,
-    setDeletedWeeklyOutputs,
+    goals,
+    allGoals,
     deletedGoals,
-    setDeletedGoals,
     isLoading,
     selectedDate,
-    
-    // Utils
     userId,
-    isGoogleSheetsAvailable: isSupabaseAvailable, // Keep same interface
+    session,
+    user,
+    isGoogleSheetsAvailable: () => false, // Deprecated - keeping for compatibility
+    
+    // Methods
     loadAllData,
-    handleDateChange,
+    handleDateChange: (date: Date) => {
+      setSelectedDate(date);
+      loadAllData(date);
+    },
+    
+    // Setters for managers
+    setHabits,
+    setArchivedHabits,
+    setTasks,
+    setDeletedTasks,
+    setWeeklyOutputs,
+    setDeletedWeeklyOutputs,
+    setGoals,
+    setDeletedGoals,
   };
 };
