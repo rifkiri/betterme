@@ -107,7 +107,7 @@ export const HabitsSection = ({
             <p>No habits yet. Add your first habit to start building streaks!</p>
           </div>
         ) : (
-          <div key={`habits-${habits.length}-goals-${goals.length}`}>
+          <div className="space-y-3">
             {habits.map(habit => (
             <div key={habit.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center space-x-3">
