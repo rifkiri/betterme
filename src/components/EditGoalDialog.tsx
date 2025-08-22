@@ -64,6 +64,7 @@ export const EditGoalDialog = ({
   const [selectedHabits, setSelectedHabits] = useState<Habit[]>([]);
   const [isOutputDropdownOpen, setIsOutputDropdownOpen] = useState(false);
   const [isHabitDropdownOpen, setIsHabitDropdownOpen] = useState(false);
+  const [isMemberDropdownOpen, setIsMemberDropdownOpen] = useState(false);
   const [selectedCoach, setSelectedCoach] = useState<string>('');
   const [selectedLead, setSelectedLead] = useState<string>('');
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
@@ -725,43 +726,61 @@ export const EditGoalDialog = ({
                     </Select>
                   </div>
 
-                  {/* Members Selection */}
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-purple-600" />
-                      <span className="font-medium text-sm">Members</span>
-                    </div>
-                    <div className="bg-white border rounded-lg shadow-sm divide-y divide-gray-100 max-h-40 overflow-y-auto">
-                      {availableUsers
-                        .filter(user => user.role === 'team-member' || user.role === 'manager')
-                        .map(user => (
-                          <div key={user.id} className="flex items-center px-4 py-3 hover:bg-gray-50 transition-colors">
-                            <input
-                              type="checkbox"
-                              id={`member-${user.id}`}
-                              checked={selectedMembers.includes(user.id)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSelectedMembers([...selectedMembers, user.id]);
-                                } else {
-                                  setSelectedMembers(selectedMembers.filter(id => id !== user.id));
-                                }
-                              }}
-                              className="h-4 w-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
-                            />
-                            <label htmlFor={`member-${user.id}`} className="ml-3 text-sm text-gray-700 cursor-pointer flex-1">
-                              <div className="font-medium">{user.name}</div>
-                              <div className="text-xs text-gray-500">({user.role})</div>
-                            </label>
-                          </div>
-                        ))}
-                      {availableUsers.filter(user => user.role === 'team-member' || user.role === 'manager').length === 0 && (
-                        <div className="px-4 py-3 text-sm text-gray-500 text-center">
-                          No team members available
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                   {/* Members Selection */}
+                   <div className="space-y-3">
+                     <div className="flex items-center gap-2">
+                       <Users className="h-4 w-4 text-purple-600" />
+                       <span className="font-medium text-sm">Members</span>
+                     </div>
+                     
+                     <Popover open={isMemberDropdownOpen} onOpenChange={setIsMemberDropdownOpen}>
+                       <PopoverTrigger asChild>
+                         <Button
+                           variant="outline"
+                           role="combobox"
+                           className="w-full justify-between bg-white"
+                         >
+                           {selectedMembers.length === 0 
+                             ? "Select members..." 
+                             : `${selectedMembers.length} member${selectedMembers.length !== 1 ? 's' : ''} selected`
+                           }
+                           <Users className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                         </Button>
+                       </PopoverTrigger>
+                       <PopoverContent className="w-full p-0 bg-white border z-50" align="start">
+                         <div className="bg-white divide-y divide-gray-100 max-h-60 overflow-y-auto">
+                           {availableUsers
+                             .filter(user => user.role === 'team-member' || user.role === 'manager')
+                             .map(user => (
+                               <div key={user.id} className="flex items-center px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer">
+                                 <input
+                                   type="checkbox"
+                                   id={`member-${user.id}`}
+                                   checked={selectedMembers.includes(user.id)}
+                                   onChange={(e) => {
+                                     if (e.target.checked) {
+                                       setSelectedMembers([...selectedMembers, user.id]);
+                                     } else {
+                                       setSelectedMembers(selectedMembers.filter(id => id !== user.id));
+                                     }
+                                   }}
+                                   className="h-4 w-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+                                 />
+                                 <label htmlFor={`member-${user.id}`} className="ml-3 text-sm text-gray-700 cursor-pointer flex-1">
+                                   <div className="font-medium">{user.name}</div>
+                                   <div className="text-xs text-gray-500">({user.role})</div>
+                                 </label>
+                               </div>
+                             ))}
+                           {availableUsers.filter(user => user.role === 'team-member' || user.role === 'manager').length === 0 && (
+                             <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                               No team members available
+                             </div>
+                           )}
+                         </div>
+                       </PopoverContent>
+                     </Popover>
+                   </div>
                 </Card>
               )}
 
