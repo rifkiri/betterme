@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +9,6 @@ import { Habit } from '@/types/productivity';
 import { EditHabitDialog } from './EditHabitDialog';
 import { mapDatabaseToDisplay } from '@/utils/habitCategoryUtils';
 import { useGoals } from '@/hooks/useGoals';
-import { useHabits } from '@/hooks/useHabits';
 import { format } from 'date-fns';
 
 interface HabitDetailsDialogProps {
@@ -26,38 +25,20 @@ export const HabitDetailsDialog = ({
   onEditHabit
 }: HabitDetailsDialogProps) => {
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [currentHabit, setCurrentHabit] = useState<Habit>(habit);
   const { goals } = useGoals();
-  const { habits } = useHabits();
-
-  // Refresh habit data when dialog opens or habit changes
-  useEffect(() => {
-    if (habit && open) {
-      const updatedHabit = habits.find(h => h.id === habit.id) || habit;
-      setCurrentHabit(updatedHabit);
-    }
-  }, [habit, open, habits]);
-
-  // Force refresh callback for edit dialog
-  const refreshData = () => {
-    if (habit) {
-      const updatedHabit = habits.find(h => h.id === habit.id) || habit;
-      setCurrentHabit(updatedHabit);
-    }
-  };
 
   // Find the linked goal if one exists
-  const linkedGoal = currentHabit.linkedGoalId 
-    ? goals?.find(goal => goal.id === currentHabit.linkedGoalId)
+  const linkedGoal = habit.linkedGoalId 
+    ? goals?.find(goal => goal.id === habit.linkedGoalId)
     : null;
 
-  console.log('HabitDetailsDialog - Habit:', currentHabit.name, 'linkedGoalId:', currentHabit.linkedGoalId);
+  console.log('HabitDetailsDialog - Habit:', habit.name, 'linkedGoalId:', habit.linkedGoalId);
   console.log('HabitDetailsDialog - Available goals:', goals?.length || 0, goals?.map(g => ({ id: g.id, title: g.title })));
   console.log('HabitDetailsDialog - Found linkedGoal:', linkedGoal);
 
   const handleEditSave = async (habitId: string, updates: Partial<Habit>) => {
     console.log('HabitDetailsDialog - handleEditSave called with:', { habitId, updates });
-    console.log('HabitDetailsDialog - Current habit before update:', currentHabit);
+    console.log('HabitDetailsDialog - Current habit before update:', habit);
     await onEditHabit(habitId, updates);
     setShowEditDialog(false);
   };
@@ -69,18 +50,18 @@ export const HabitDetailsDialog = ({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Target className="h-5 w-5" />
-              {currentHabit.name}
+              {habit.name}
             </DialogTitle>
           </DialogHeader>
           
           <ScrollArea className="flex-1 pr-6">
             <div className="space-y-6">
               {/* Category */}
-              {currentHabit.category && (
+              {habit.category && (
                 <div>
                   <h4 className="text-sm font-medium mb-2">Category</h4>
                   <Badge variant="outline">
-                    {mapDatabaseToDisplay(currentHabit.category)}
+                    {mapDatabaseToDisplay(habit.category)}
                   </Badge>
                 </div>
               )}
@@ -111,11 +92,11 @@ export const HabitDetailsDialog = ({
               </div>
 
               {/* Description */}
-              {currentHabit.description && (
+              {habit.description && (
                 <div>
                   <h4 className="text-sm font-medium mb-2">Description</h4>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    {currentHabit.description}
+                    {habit.description}
                   </p>
                 </div>
               )}
@@ -131,28 +112,28 @@ export const HabitDetailsDialog = ({
                 <div className="grid grid-cols-1 gap-3">
                   <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                     <span className="text-sm text-muted-foreground">Current Streak</span>
-                    <Badge variant={currentHabit.streak > 0 ? 'default' : 'secondary'}>
-                      {currentHabit.streak} {currentHabit.streak === 1 ? 'day' : 'days'}
+                    <Badge variant={habit.streak > 0 ? 'default' : 'secondary'}>
+                      {habit.streak} {habit.streak === 1 ? 'day' : 'days'}
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                     <span className="text-sm text-muted-foreground">Status</span>
-                    <Badge variant={currentHabit.completed ? 'default' : 'outline'}>
-                      {currentHabit.completed ? 'Completed Today' : 'Not Completed Today'}
+                    <Badge variant={habit.completed ? 'default' : 'outline'}>
+                      {habit.completed ? 'Completed Today' : 'Not Completed Today'}
                     </Badge>
                   </div>
                 </div>
               </div>
 
               {/* Created Date */}
-              {currentHabit.createdAt && (
+              {habit.createdAt && (
                 <div>
                   <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
                     Created
                   </h4>
                   <p className="text-sm text-muted-foreground">
-                    {format(new Date(currentHabit.createdAt), 'MMMM d, yyyy')}
+                    {format(new Date(habit.createdAt), 'MMMM d, yyyy')}
                   </p>
                 </div>
               )}
@@ -173,11 +154,10 @@ export const HabitDetailsDialog = ({
 
       {showEditDialog && (
         <EditHabitDialog
-          habit={currentHabit}
+          habit={habit}
           open={showEditDialog}
           onOpenChange={setShowEditDialog}
           onSave={handleEditSave}
-          onRefresh={refreshData}
         />
       )}
     </>
