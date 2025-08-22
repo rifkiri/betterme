@@ -87,6 +87,20 @@ export const GoalDetailsDialog = ({
     fetchLinkedItems();
   }, [goal.id, goal.category, currentUserId, open, weeklyOutputs, habits, allHabits]);
 
+  // Debug logging for assignments
+  useEffect(() => {
+    if (open && goal.category === 'work') {
+      console.log('🎯 [GOAL DETAILS] Assignment Debug:', {
+        goalId: goal.id,
+        totalAssignments: assignments.length,
+        goalAssignments: assignments.filter(a => a.goalId === goal.id),
+        availableUsersCount: availableUsers.length,
+        assignments: assignments,
+        availableUsers: availableUsers
+      });
+    }
+  }, [open, goal.id, goal.category, assignments, availableUsers]);
+
 const getCategoryColor = (category: Goal['category']) => {
     switch (category) {
       case 'work': return 'bg-blue-100 text-blue-800';
