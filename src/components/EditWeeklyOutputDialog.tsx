@@ -66,6 +66,9 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
   }, [weeklyOutput, open, form]);
 
   const handleSubmit = async (values: WeeklyOutputFormValues) => {
+    console.log('EditWeeklyOutputDialog - Form values received:', values);
+    console.log('EditWeeklyOutputDialog - About to call onSave with output ID:', weeklyOutput.id);
+    
     // Ensure the due date is set to end of day in local time to avoid timezone issues
     let dueDate = values.dueDate;
     if (dueDate) {
@@ -80,7 +83,12 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
       linkedGoalId: values.linkedGoalId === "none" ? "none" : values.linkedGoalId,
     });
 
-    onRefresh?.();
+    // Add a small delay before refreshing to ensure database update propagates
+    setTimeout(() => {
+      console.log('EditWeeklyOutputDialog - Calling onRefresh after delay');
+      onRefresh?.();
+    }, 100);
+    
     onOpenChange(false);
   };
 

@@ -19,6 +19,8 @@ interface EditTaskDialogProps {
 export const EditTaskDialog = ({ task, open, onOpenChange, onSave, weeklyOutputs, onRefresh }: EditTaskDialogProps) => {
   const handleSubmit = (values: TaskFormValues) => {
     console.log('EditTaskDialog - Form values received:', values);
+    console.log('EditTaskDialog - About to call onSave with task ID:', task.id);
+    
     onSave(task.id, {
       title: values.title,
       description: values.description || undefined,
@@ -28,7 +30,13 @@ export const EditTaskDialog = ({ task, open, onOpenChange, onSave, weeklyOutputs
       weeklyOutputId: values.weeklyOutputId === "" ? undefined : values.weeklyOutputId,
       taggedUsers: values.taggedUsers || []
     });
-    onRefresh?.();
+    
+    // Add a small delay before refreshing to ensure database update propagates
+    setTimeout(() => {
+      console.log('EditTaskDialog - Calling onRefresh after delay');
+      onRefresh?.();
+    }, 100);
+    
     onOpenChange(false);
   };
 

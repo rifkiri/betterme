@@ -52,9 +52,18 @@ export const TaskDetailsDialog = ({
 
   // Force refresh callback for edit dialog
   const refreshData = () => {
+    console.log('TaskDetailsDialog - refreshData called, looking for task:', task?.id);
     if (task) {
-      const updatedTask = tasks.find(t => t.id === task.id) || task;
-      setCurrentTask(updatedTask);
+      const updatedTask = tasks.find(t => t.id === task.id);
+      console.log('TaskDetailsDialog - Found updated task:', updatedTask);
+      console.log('TaskDetailsDialog - Current task before update:', currentTask);
+      if (updatedTask) {
+        setCurrentTask(updatedTask);
+        console.log('TaskDetailsDialog - Updated currentTask to:', updatedTask);
+      } else {
+        console.log('TaskDetailsDialog - No updated task found, using original');
+        setCurrentTask(task);
+      }
     }
   };
 

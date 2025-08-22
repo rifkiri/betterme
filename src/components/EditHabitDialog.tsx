@@ -57,6 +57,7 @@ export const EditHabitDialog = ({ habit, open, onOpenChange, onSave, onRefresh }
   const handleSubmit = (values: HabitFormValues) => {
     console.log('EditHabitDialog - Form submitted with values:', values);
     console.log('EditHabitDialog - Original habit linkedGoalId:', habit.linkedGoalId);
+    console.log('EditHabitDialog - About to call onSave with habit ID:', habit.id);
     
     const updates = {
       name: values.name,
@@ -69,7 +70,13 @@ export const EditHabitDialog = ({ habit, open, onOpenChange, onSave, onRefresh }
     console.log('EditHabitDialog - linkedGoalId will be set to:', updates.linkedGoalId);
     
     onSave(habit.id, updates);
-    onRefresh?.();
+    
+    // Add a small delay before refreshing to ensure database update propagates
+    setTimeout(() => {
+      console.log('EditHabitDialog - Calling onRefresh after delay');
+      onRefresh?.();
+    }, 100);
+    
     onOpenChange(false);
   };
 
