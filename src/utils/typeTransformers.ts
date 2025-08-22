@@ -1,3 +1,4 @@
+
 import type { Goal, Task, WeeklyOutput, Habit } from '@/types/productivity';
 
 // Transform database row to Goal type
@@ -8,15 +9,12 @@ export const transformGoalRow = (row: any): Goal => ({
   description: row.description,
   category: row.category,
   subcategory: row.subcategory,
-  unit: row.unit,
   progress: row.progress,
   deadline: row.deadline ? new Date(row.deadline) : undefined,
   completed: row.completed,
   archived: row.archived,
   isDeleted: row.is_deleted,
-  deletedDate: row.deleted_date ? new Date(row.deleted_date) : undefined,
   createdDate: new Date(row.created_date),
-  updatedAt: new Date(row.updated_at),
   coachId: row.coach_id,
   leadIds: row.lead_ids || [],
   memberIds: row.member_ids || [],
@@ -30,9 +28,8 @@ export const transformGoalToRow = (goal: Partial<Goal>) => ({
   description: goal.description,
   category: goal.category,
   subcategory: goal.subcategory,
-  unit: goal.unit,
   progress: goal.progress,
-  deadline: goal.deadline?.toISOString(),
+  deadline: goal.deadline?.toISOString().split('T')[0], // Date only
   completed: goal.completed,
   archived: goal.archived,
   user_id: goal.userId,
@@ -52,7 +49,7 @@ export const transformTaskRow = (row: any): Task => ({
   title: row.title,
   description: row.description,
   dueDate: new Date(row.due_date),
-  priority: row.priority,
+  priority: row.priority, // Keep database values as-is
   taggedUsers: row.tagged_users || [],
   completed: row.completed,
   isMoved: row.is_moved,
@@ -61,22 +58,21 @@ export const transformTaskRow = (row: any): Task => ({
   deletedDate: row.deleted_date ? new Date(row.deleted_date) : undefined,
   completedDate: row.completed_date ? new Date(row.completed_date) : undefined,
   createdDate: new Date(row.created_date),
-  updatedAt: new Date(row.updated_at),
 });
 
 // Transform Task type to database row
 export const transformTaskToRow = (task: Partial<Task>) => ({
   title: task.title,
   description: task.description,
-  due_date: task.dueDate?.toISOString(),
-  priority: task.priority,
+  due_date: task.dueDate?.toISOString().split('T')[0], // Date only
+  priority: task.priority?.toLowerCase(), // Convert to lowercase for database
   tagged_users: task.taggedUsers,
   completed: task.completed,
   user_id: task.userId,
   project_id: task.projectId,
   weekly_output_id: task.weeklyOutputId,
   is_moved: task.isMoved,
-  original_due_date: task.originalDueDate?.toISOString(),
+  original_due_date: task.originalDueDate?.toISOString().split('T')[0],
   completed_date: task.completedDate?.toISOString(),
 });
 
@@ -95,19 +91,18 @@ export const transformWeeklyOutputRow = (row: any): WeeklyOutput => ({
   deletedDate: row.deleted_date ? new Date(row.deleted_date) : undefined,
   completedDate: row.completed_date ? new Date(row.completed_date) : undefined,
   createdDate: new Date(row.created_date),
-  updatedAt: new Date(row.updated_at),
 });
 
 // Transform WeeklyOutput type to database row
 export const transformWeeklyOutputToRow = (output: Partial<WeeklyOutput>) => ({
   title: output.title,
   description: output.description,
-  due_date: output.dueDate?.toISOString(),
+  due_date: output.dueDate?.toISOString().split('T')[0], // Date only
   progress: output.progress,
   user_id: output.userId,
   project_id: output.projectId,
   is_moved: output.isMoved,
-  original_due_date: output.originalDueDate?.toISOString(),
+  original_due_date: output.originalDueDate?.toISOString().split('T')[0],
   completed_date: output.completedDate?.toISOString(),
 });
 
@@ -123,8 +118,7 @@ export const transformHabitRow = (row: any): Habit => ({
   isDeleted: row.is_deleted,
   completed: row.completed,
   lastCompletedDate: row.last_completed_date ? new Date(row.last_completed_date) : undefined,
-  createdAt: new Date(row.created_at),
-  updatedAt: new Date(row.updated_at),
+  createdAt: row.created_at,
 });
 
 // Transform Habit type to database row
@@ -136,5 +130,5 @@ export const transformHabitToRow = (habit: Partial<Habit>) => ({
   archived: habit.archived,
   user_id: habit.userId,
   completed: habit.completed,
-  last_completed_date: habit.lastCompletedDate?.toISOString(),
+  last_completed_date: habit.lastCompletedDate?.toISOString().split('T')[0], // Date only
 });

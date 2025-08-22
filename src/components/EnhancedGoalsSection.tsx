@@ -118,7 +118,6 @@ export const EnhancedGoalsSection = ({
         <GoalCard
           key={goal.id}
           goal={goal}
-          habits={habits}
           weeklyOutputs={weeklyOutputs}
           availableUsers={availableUsers}
           currentUserId={currentUserId}
@@ -136,6 +135,8 @@ export const EnhancedGoalsSection = ({
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4">
+      
+      
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Goals</h1>
