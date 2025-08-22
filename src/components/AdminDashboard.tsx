@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserManagement } from './admin/UserManagement';
-import { GoogleSheetsConfig } from './admin/GoogleSheetsConfig';
 import { Users, Settings, Database } from 'lucide-react';
 
 export const AdminDashboard = () => {
@@ -22,7 +21,7 @@ export const AdminDashboard = () => {
           </TabsTrigger>
           <TabsTrigger value="integration" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
-            Google Sheets
+            Data Integration
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
@@ -35,7 +34,15 @@ export const AdminDashboard = () => {
         </TabsContent>
 
         <TabsContent value="integration">
-          {/* GoogleSheetsConfig removed - using simplified architecture */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Data Integration</CardTitle>
+              <CardDescription>Manage data synchronization and integrations</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Integration features will be added here.</p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="settings">

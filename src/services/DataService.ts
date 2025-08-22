@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { Goal, Task, WeeklyOutput, Habit } from '@/types/productivity';
 import { toast } from 'sonner';
@@ -85,13 +86,13 @@ export class DataService {
   static async updateTask(id: string, updates: Partial<Task>): Promise<Task> {
     const { data, error } = await supabase
       .from('tasks')
-      .update(updates)
+      .update(transformTaskToRow(updates))
       .eq('id', id)
       .select()
       .single();
     
     if (error) throw error;
-    return data as Task;
+    return transformTaskRow(data);
   }
 
   static async deleteTask(id: string): Promise<void> {
@@ -119,24 +120,24 @@ export class DataService {
   static async createWeeklyOutput(output: Omit<WeeklyOutput, 'id'>): Promise<WeeklyOutput> {
     const { data, error } = await supabase
       .from('weekly_outputs')
-      .insert(output)
+      .insert(transformWeeklyOutputToRow(output))
       .select()
       .single();
     
     if (error) throw error;
-    return data as WeeklyOutput;
+    return transformWeeklyOutputRow(data);
   }
 
   static async updateWeeklyOutput(id: string, updates: Partial<WeeklyOutput>): Promise<WeeklyOutput> {
     const { data, error } = await supabase
       .from('weekly_outputs')
-      .update(updates)
+      .update(transformWeeklyOutputToRow(updates))
       .eq('id', id)
       .select()
       .single();
     
     if (error) throw error;
-    return data as WeeklyOutput;
+    return transformWeeklyOutputRow(data);
   }
 
   static async deleteWeeklyOutput(id: string): Promise<void> {
@@ -165,24 +166,24 @@ export class DataService {
   static async createHabit(habit: Omit<Habit, 'id'>): Promise<Habit> {
     const { data, error } = await supabase
       .from('habits')
-      .insert(habit)
+      .insert(transformHabitToRow(habit))
       .select()
       .single();
     
     if (error) throw error;
-    return data as Habit;
+    return transformHabitRow(data);
   }
 
   static async updateHabit(id: string, updates: Partial<Habit>): Promise<Habit> {
     const { data, error } = await supabase
       .from('habits')
-      .update(updates)
+      .update(transformHabitToRow(updates))
       .eq('id', id)
       .select()
       .single();
     
     if (error) throw error;
-    return data as Habit;
+    return transformHabitRow(data);
   }
 
   static async deleteHabit(id: string): Promise<void> {

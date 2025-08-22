@@ -1,199 +1,237 @@
-
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Circle, Archive, Loader2, Eye, Link } from 'lucide-react';
-import { Habit, Goal } from '@/types/productivity';
-// Fixed habit-goal linking functionality
-import { AddHabitDialog } from './AddHabitDialog';
-import { ArchivedHabitsDialog } from './ArchivedHabitsDialog';
-import { EditHabitDialog } from './EditHabitDialog';
-import { HabitDetailsDialog } from './HabitDetailsDialog';
-import { StreakDatesDialog } from './StreakDatesDialog';
-import { DateNavigator } from './DateNavigator';
-import { mapDatabaseToDisplay } from '@/utils/habitCategoryUtils';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Plus, Check, X, Edit, Trash2, Calendar, Target } from 'lucide-react';
+import { HabitDialog } from './HabitDialog';
+import { DeleteConfirmationDialog } from './DeleteConfirmationDialog';
 import { format, isToday } from 'date-fns';
+import type { Habit } from '@/types/productivity';
 
 interface HabitsSectionProps {
   habits: Habit[];
-  archivedHabits: Habit[];
-  selectedDate: Date;
-  onDateChange: (date: Date) => void;
-  onAddHabit: (habit: Omit<Habit, 'id' | 'completed' | 'streak'>) => void;
-  onEditHabit: (id: string, updates: Partial<Habit>) => void;
-  onToggleHabit: (id: string) => void;
-  onArchiveHabit: (id: string) => void;
-  onRestoreHabit: (id: string) => void;
-  onPermanentlyDeleteHabit: (id: string) => void;
-  isLoading?: boolean;
-  goals?: Goal[];
+  onToggleHabit: (habitId: string, completed: boolean) => void;
+  onAddHabit: (habit: Omit<Habit, 'id'>) => void;
+  onEditHabit: (habitId: string, updates: Partial<Habit>) => void;
+  onDeleteHabit: (habitId: string) => void;
 }
 
-export const HabitsSection = ({ 
-  habits, 
-  archivedHabits,
-  selectedDate,
-  onDateChange,
+export const HabitsSection: React.FC<HabitsSectionProps> = ({
+  habits,
+  onToggleHabit,
   onAddHabit,
   onEditHabit,
-  onToggleHabit, 
-  onArchiveHabit,
-  onRestoreHabit,
-  onPermanentlyDeleteHabit,
-  isLoading = false,
-  goals = []
-}: HabitsSectionProps) => {
-  const [togglingHabitId, setTogglingHabitId] = useState<string | null>(null);
-  const [streakDialogHabit, setStreakDialogHabit] = useState<Habit | null>(null);
-  const [viewingHabitId, setViewingHabitId] = useState<string | null>(null);
+  onDeleteHabit,
+}) => {
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
+  const [deletingHabit, setDeletingHabit] = useState<Habit | null>(null);
 
+  const handleViewStreak = (habitId: string) => {
+    console.log('View streak for habit:', habitId);
+    // Could show a simple toast or modal with streak info
+  };
 
-  const handleToggleHabit = async (id: string) => {
-    console.log('Toggling habit:', id);
-    setTogglingHabitId(id);
-    try {
-      await onToggleHabit(id);
-    } finally {
-      setTogglingHabitId(null);
+  const handleToggleHabit = (habit: Habit) => {
+    const newCompleted = !habit.completed;
+    onToggleHabit(habit.id, newCompleted);
+  };
+
+  const handleEditHabit = (habit: Habit) => {
+    setEditingHabit(habit);
+  };
+
+  const handleDeleteHabit = (habit: Habit) => {
+    setDeletingHabit(habit);
+  };
+
+  const confirmDelete = () => {
+    if (deletingHabit) {
+      onDeleteHabit(deletingHabit.id);
+      setDeletingHabit(null);
     }
   };
 
-  const handleStreakClick = (habit: Habit) => {
-    if (habit.streak > 0) {
-      setStreakDialogHabit(habit);
-    }
+  const getCategoryColor = (category: string) => {
+    const colors: Record<string, string> = {
+      health: 'bg-green-100 text-green-800',
+      fitness: 'bg-blue-100 text-blue-800',
+      productivity: 'bg-purple-100 text-purple-800',
+      personal: 'bg-orange-100 text-orange-800',
+      learning: 'bg-indigo-100 text-indigo-800',
+      mental: 'bg-pink-100 text-pink-800',
+      relationship: 'bg-red-100 text-red-800',
+      social: 'bg-yellow-100 text-yellow-800',
+      spiritual: 'bg-teal-100 text-teal-800',
+      wealth: 'bg-emerald-100 text-emerald-800',
+      other: 'bg-gray-100 text-gray-800',
+    };
+    return colors[category] || colors.other;
   };
 
-  const handleEditHabit = async (id: string, updates: Partial<Habit>) => {
-    await onEditHabit(id, updates);
-    // No need to update local state since we get fresh data from habits array
+  const getStreakStatus = (habit: Habit) => {
+    if (habit.streak === 0) return 'No streak';
+    if (habit.streak === 1) return '1 day';
+    return `${habit.streak} days`;
   };
-
-  const today = isToday(selectedDate);
 
   return (
-    <Card className="h-fit">
-      <CardHeader className="space-y-4">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <CardTitle>
-            {today ? 'Daily Habits' : `Habits for ${format(selectedDate, 'MMM d, yyyy')}`}
-          </CardTitle>
-          <CardDescription>
-            {today ? 'Build your streaks' : 'View and track past habits'}
-          </CardDescription>
+          <h2 className="text-2xl font-bold text-gray-900">Daily Habits</h2>
+          <p className="text-gray-600">Build consistency with daily habits</p>
         </div>
-        <div className="flex items-center gap-2">
-          <ArchivedHabitsDialog 
-            archivedHabits={archivedHabits}
-            onRestoreHabit={onRestoreHabit}
-            onPermanentlyDeleteHabit={onPermanentlyDeleteHabit}
-          />
-          <AddHabitDialog onAddHabit={onAddHabit} goals={goals} />
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <DateNavigator 
-          selectedDate={selectedDate} 
-          onDateChange={onDateChange} 
-        />
-        
-        {isLoading ? (
-          <div className="text-center py-4 text-muted-foreground">
-            <p>Loading habits...</p>
-          </div>
-        ) : habits.length === 0 ? (
-          <div className="text-center py-4 text-muted-foreground">
-            <p>No habits yet. Add your first habit to start building streaks!</p>
-          </div>
-        ) : (
-          <div key={`habits-${habits.length}-goals-${goals.length}`}>
-            {habits.map(habit => (
-            <div key={habit.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <button 
-                  onClick={() => handleToggleHabit(habit.id)}
-                  disabled={togglingHabitId === habit.id}
-                  className="disabled:opacity-50"
-                >
-                  {togglingHabitId === habit.id ? (
-                    <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
-                  ) : habit.completed ? (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <Circle className="h-5 w-5 text-gray-400" />
-                  )}
-                </button>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className={`font-medium ${habit.completed ? 'text-green-700' : 'text-gray-700'}`}>
-                      {habit.name}
-                    </span>
-                    {habit.linkedGoalId && goals.find(g => g.id === habit.linkedGoalId) && (
-                      <Badge variant="outline" className="text-xs flex items-center gap-1 bg-blue-50 text-blue-600 border-blue-200">
-                        <Link className="h-2 w-2" />
-                        {goals.find(g => g.id === habit.linkedGoalId)?.title}
-                      </Badge>
+        <Button onClick={() => setIsAddDialogOpen(true)} className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Add Habit
+        </Button>
+      </div>
+
+      {habits.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Target className="h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No habits yet</h3>
+            <p className="text-gray-600 text-center mb-4">
+              Start building positive habits to improve your daily routine
+            </p>
+            <Button onClick={() => setIsAddDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Your First Habit
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {habits.map((habit) => (
+            <Card key={habit.id} className={`transition-all duration-200 ${
+              habit.completed ? 'ring-2 ring-green-200 bg-green-50' : 'hover:shadow-md'
+            }`}>
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <CardTitle className="text-lg font-medium">{habit.name}</CardTitle>
+                    {habit.description && (
+                      <CardDescription className="mt-1">{habit.description}</CardDescription>
                     )}
                   </div>
-                  {habit.category && <p className="text-xs text-gray-500">{mapDatabaseToDisplay(habit.category)}</p>}
+                  <div className="flex items-center gap-1 ml-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditHabit(habit)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteHabit(habit)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge 
-                  variant={habit.streak > 0 ? 'default' : 'secondary'} 
-                  className={`text-xs ${habit.streak > 0 ? 'cursor-pointer hover:bg-primary/80' : ''}`}
-                  onClick={() => handleStreakClick(habit)}
-                >
-                  {habit.streak} day streak
-                </Badge>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setViewingHabitId(habit.id)}
-                  className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
-                  title="View Details"
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onArchiveHabit(habit.id)}
-                  className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
-                  title="Archive Habit"
-                >
-                  <Archive className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Badge className={getCategoryColor(habit.category || 'other')}>
+                    {habit.category || 'Other'}
+                  </Badge>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Calendar className="h-4 w-4" />
+                    <span>{getStreakStatus(habit)}</span>
+                  </div>
+                </div>
 
-      {streakDialogHabit && (
-        <StreakDatesDialog
-          habitId={streakDialogHabit.id}
-          habitName={streakDialogHabit.name}
-          streak={streakDialogHabit.streak}
-          open={true}
-          onOpenChange={(open) => !open && setStreakDialogHabit(null)}
-        />
+                {habit.streak > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Streak Progress</span>
+                      <span className="font-medium">{habit.streak} days</span>
+                    </div>
+                    <Progress value={Math.min((habit.streak / 30) * 100, 100)} className="h-2" />
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-2">
+                  <Button
+                    variant={habit.completed ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleToggleHabit(habit)}
+                    className={`flex items-center gap-2 ${
+                      habit.completed 
+                        ? 'bg-green-600 hover:bg-green-700' 
+                        : 'hover:bg-green-50 hover:text-green-700 hover:border-green-300'
+                    }`}
+                  >
+                    {habit.completed ? (
+                      <>
+                        <Check className="h-4 w-4" />
+                        Completed
+                      </>
+                    ) : (
+                      <>
+                        <X className="h-4 w-4" />
+                        Mark Done
+                      </>
+                    )}
+                  </Button>
+
+                  {habit.streak > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleViewStreak(habit.id)}
+                      className="text-gray-600 hover:text-gray-900"
+                    >
+                      View Streak
+                    </Button>
+                  )}
+                </div>
+
+                {habit.lastCompletedDate && (
+                  <div className="text-xs text-gray-500 pt-2 border-t">
+                    Last completed: {
+                      isToday(new Date(habit.lastCompletedDate))
+                        ? 'Today'
+                        : format(new Date(habit.lastCompletedDate), 'MMM d, yyyy')
+                    }
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       )}
 
-      {viewingHabitId && (() => {
-        const currentHabit = habits.find(h => h.id === viewingHabitId);
-        return currentHabit ? (
-          <HabitDetailsDialog
-            habit={currentHabit}
-            goals={goals}
-            open={true}
-            onOpenChange={(open) => !open && setViewingHabitId(null)}
-            onEditHabit={handleEditHabit}
-          />
-        ) : null;
-      })()}
-    </Card>
+      <HabitDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        onSave={onAddHabit}
+      />
+
+      <HabitDialog
+        open={!!editingHabit}
+        onOpenChange={(open) => !open && setEditingHabit(null)}
+        habit={editingHabit}
+        onSave={(updates) => {
+          if (editingHabit) {
+            onEditHabit(editingHabit.id, updates);
+            setEditingHabit(null);
+          }
+        }}
+      />
+
+      <DeleteConfirmationDialog
+        open={!!deletingHabit}
+        onOpenChange={(open) => !open && setDeletingHabit(null)}
+        onConfirm={confirmDelete}
+        title="Delete Habit"
+        description={`Are you sure you want to delete "${deletingHabit?.name}"? This action cannot be undone.`}
+      />
+    </div>
   );
 };
