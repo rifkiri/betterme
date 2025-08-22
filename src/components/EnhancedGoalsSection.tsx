@@ -298,7 +298,10 @@ export const EnhancedGoalsSection = ({
                 variant="outline" 
                 size="sm" 
                 className="h-8 w-8 p-0"
-                onClick={() => onDeleteGoal(goal.id)}
+                onClick={() => {
+                  console.log('🗑️ [UI] Delete button clicked for goal:', goal.id, 'Current user:', currentUserId);
+                  onDeleteGoal(goal.id);
+                }}
                 title="Delete Goal"
               >
                 <Trash2 className="h-4 w-4" />

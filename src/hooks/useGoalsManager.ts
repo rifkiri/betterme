@@ -155,15 +155,37 @@ export const useGoalsManager = ({
   };
 
   const deleteGoal = async (id: string, isAssignedGoal: boolean = false) => {
-    if (!userId) return;
+    if (!userId) {
+      console.log('❌ [DELETE GOAL] No user ID');
+      toast.error('Please sign in to delete goals');
+      return;
+    }
+
+    console.log('🗑️ [DELETE GOAL] Starting delete - Goal:', id, 'User:', userId, 'IsAssigned:', isAssignedGoal);
+
+    // Find the goal to check ownership
+    const goalToDelete = goals.find(g => g.id === id);
+    if (!goalToDelete) {
+      console.log('❌ [DELETE GOAL] Goal not found:', id);
+      toast.error('Goal not found');
+      return;
+    }
+
+    console.log('🗑️ [DELETE GOAL] Goal details:', {
+      goalId: id,
+      goalUserId: goalToDelete.userId,
+      currentUserId: userId,
+      isOwner: goalToDelete.userId === userId,
+      category: goalToDelete.category
+    });
 
     if (isAssignedGoal) {
-      console.log('User cannot delete assigned goal directly. Use leaveWorkGoal instead.');
+      console.log('❌ [DELETE GOAL] User cannot delete assigned goal directly. Use leaveWorkGoal instead.');
       toast.error('You cannot delete this goal. You can only leave it if you are assigned to it.');
       return;
     }
 
-    console.log('Soft deleting goal for user:', userId, 'goal:', id);
+    console.log('🗑️ [DELETE GOAL] Proceeding with soft delete for user:', userId, 'goal:', id);
 
     try {
       if (isSupabaseAvailable()) {
