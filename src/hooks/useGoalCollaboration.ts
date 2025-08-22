@@ -223,54 +223,8 @@ export const useGoalCollaboration = (userId: string, loadAllData?: () => Promise
     if (userId) {
       loadAssignments();
       loadNotifications();
-      
-      // Set up real-time listeners for goal assignments
-      const assignmentsChannel = supabase
-        .channel('goal-assignments-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
-            schema: 'public',
-            table: 'goal_assignments'
-          },
-          (payload) => {
-            console.log('🚀 [REALTIME] Goal assignment changed:', payload);
-            // Reload assignments when any assignment changes
-            loadAssignments();
-            // Also refresh goals data to update role displays
-            if (loadAllData) {
-              loadAllData();
-            }
-          }
-        )
-        .subscribe();
-
-      // Set up real-time listeners for goal notifications
-      const notificationsChannel = supabase
-        .channel('goal-notifications-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'goal_notifications',
-            filter: `user_id=eq.${userId}`
-          },
-          (payload) => {
-            console.log('🔔 [REALTIME] Goal notification changed:', payload);
-            loadNotifications();
-          }
-        )
-        .subscribe();
-
-      // Cleanup function
-      return () => {
-        supabase.removeChannel(assignmentsChannel);
-        supabase.removeChannel(notificationsChannel);
-      };
     }
-  }, [userId, loadAllData]);
+  }, [userId]);
 
   return {
     assignments,
