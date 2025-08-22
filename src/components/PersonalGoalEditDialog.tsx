@@ -246,14 +246,15 @@ export const PersonalGoalEditDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
-        <DialogHeader className="shrink-0">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader className="shrink-0 pb-4">
           <DialogTitle>Edit Personal Goal</DialogTitle>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 px-1">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pb-4">
+        <ScrollArea className="flex-1 overflow-y-auto">
+          <div className="px-1 space-y-6">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="title"
@@ -482,16 +483,17 @@ export const PersonalGoalEditDialog = ({
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  Save Changes
-                </Button>
-              </div>
-            </form>
-          </Form>
+                <div className="flex justify-end space-x-2 pt-6 sticky bottom-0 bg-background border-t mt-6">
+                  <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">
+                    Save Changes
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </div>
         </ScrollArea>
       </DialogContent>
     </Dialog>
