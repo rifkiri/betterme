@@ -7,13 +7,14 @@ import { Separator } from '@/components/ui/separator';
 import { SimpleAddGoalDialog } from './SimpleAddGoalDialog';
 import { JoinGoalDialog } from './JoinGoalDialog';
 import { GoalDetailsDialog } from './GoalDetailsDialog';
-import { Goal, WeeklyOutput } from '@/types/productivity';
-import { Target, Briefcase, User, Plus, CheckCircle, Minus, Edit, Trash2, Eye } from 'lucide-react';
+import { Goal, WeeklyOutput, Habit } from '@/types/productivity';
+import { Target, Briefcase, User, Plus, CheckCircle, Minus, Edit, Trash2, Eye, Link2 } from 'lucide-react';
 
 interface EnhancedGoalsSectionProps {
   goals: Goal[];
   allGoals: Goal[];
   deletedGoals: Goal[];
+  habits: Habit[];
   weeklyOutputs: WeeklyOutput[];
   availableUsers?: Array<{ id: string; name: string; role: string }>;
   currentUserId?: string;
@@ -32,6 +33,7 @@ export const EnhancedGoalsSection = ({
   goals,
   allGoals,
   deletedGoals,
+  habits,
   weeklyOutputs,
   availableUsers = [],
   currentUserId,
@@ -76,6 +78,10 @@ export const EnhancedGoalsSection = ({
     const progressColor = goal.progress >= 80 ? 'bg-green-500' : 
                          goal.progress >= 50 ? 'bg-yellow-500' : 'bg-blue-500';
     
+    // Find linked items
+    const linkedOutputs = weeklyOutputs.filter(output => output.linkedGoalId === goal.id);
+    const linkedHabits = goal.category === 'personal' ? habits.filter(habit => habit.linkedGoalId === goal.id) : [];
+    
     // Debug logging
     console.log('Goal debug:', {
       goalId: goal.id,
@@ -87,7 +93,9 @@ export const EnhancedGoalsSection = ({
       coachId: goal.coachId,
       leadIds: goal.leadIds,
       memberIds: goal.memberIds,
-      createdBy: goal.createdBy
+      createdBy: goal.createdBy,
+      linkedOutputsCount: linkedOutputs.length,
+      linkedHabitsCount: linkedHabits.length
     });
     
     // Determine if user owns the goal or is just assigned to it
@@ -158,6 +166,50 @@ export const EnhancedGoalsSection = ({
               <span className="font-medium ml-1">
                 {goal.deadline.toLocaleDateString()}
               </span>
+            </div>
+          )}
+
+          {/* Linked Items */}
+          {(linkedOutputs.length > 0 || linkedHabits.length > 0) && (
+            <div className="pt-2 border-t">
+              <div className="flex items-center gap-1 mb-2">
+                <Link2 className="h-3 w-3 text-gray-400" />
+                <span className="text-xs text-gray-500">Linked Items</span>
+              </div>
+              <div className="space-y-1">
+                {linkedOutputs.length > 0 && (
+                  <div className="text-xs">
+                    <span className="text-gray-500">Outputs ({linkedOutputs.length}):</span>
+                    <div className="text-gray-700 mt-1 line-clamp-2">
+                      {linkedOutputs.slice(0, 2).map((output, idx) => (
+                        <span key={output.id}>
+                          {output.title}
+                          {idx < Math.min(linkedOutputs.length - 1, 1) && ', '}
+                        </span>
+                      ))}
+                      {linkedOutputs.length > 2 && (
+                        <span className="text-gray-400"> +{linkedOutputs.length - 2} more</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {linkedHabits.length > 0 && (
+                  <div className="text-xs">
+                    <span className="text-gray-500">Habits ({linkedHabits.length}):</span>
+                    <div className="text-gray-700 mt-1 line-clamp-2">
+                      {linkedHabits.slice(0, 2).map((habit, idx) => (
+                        <span key={habit.id}>
+                          {habit.name}
+                          {idx < Math.min(linkedHabits.length - 1, 1) && ', '}
+                        </span>
+                      ))}
+                      {linkedHabits.length > 2 && (
+                        <span className="text-gray-400"> +{linkedHabits.length - 2} more</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
