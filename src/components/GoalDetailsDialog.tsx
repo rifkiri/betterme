@@ -67,13 +67,10 @@ export const GoalDetailsDialog = ({
         
         setLoadingLinkedOutputs(false);
         
-        // For habits on personal goals, we'll skip this for now to simplify
-        // This focuses on fixing the weekly output linking issue first
+        // Find habits linked to this goal for personal goals
         if (goal.category === 'personal') {
-          setLinkedHabits([]);
-        }
-        
-        if (goal.category === 'personal') {
+          const goalLinkedHabits = habits.filter(habit => habit.linkedGoalId === goal.id);
+          setLinkedHabits(goalLinkedHabits);
           setLoadingLinkedHabits(false);
         }
       }
