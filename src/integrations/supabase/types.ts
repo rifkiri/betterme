@@ -14,6 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      goal_assignments: {
+        Row: {
+          acknowledged: boolean | null
+          assigned_by: string | null
+          assigned_date: string | null
+          goal_id: string
+          id: string
+          role: string
+          self_assigned: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          acknowledged?: boolean | null
+          assigned_by?: string | null
+          assigned_date?: string | null
+          goal_id: string
+          id?: string
+          role: string
+          self_assigned?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          acknowledged?: boolean | null
+          assigned_by?: string | null
+          assigned_date?: string | null
+          goal_id?: string
+          id?: string
+          role?: string
+          self_assigned?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      goal_notifications: {
+        Row: {
+          acknowledged: boolean | null
+          created_date: string | null
+          goal_id: string
+          id: string
+          notification_type: string
+          role: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          acknowledged?: boolean | null
+          created_date?: string | null
+          goal_id: string
+          id?: string
+          notification_type: string
+          role?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          acknowledged?: boolean | null
+          created_date?: string | null
+          goal_id?: string
+          id?: string
+          notification_type?: string
+          role?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       goals: {
         Row: {
           archived: boolean
@@ -117,6 +186,7 @@ export type Database = {
           id: string
           is_deleted: boolean
           last_completed_date: string | null
+          linked_goal_id: string | null
           name: string
           streak: number
           updated_at: string
@@ -131,6 +201,7 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           last_completed_date?: string | null
+          linked_goal_id?: string | null
           name: string
           streak?: number
           updated_at?: string
@@ -145,6 +216,7 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           last_completed_date?: string | null
+          linked_goal_id?: string | null
           name?: string
           streak?: number
           updated_at?: string
