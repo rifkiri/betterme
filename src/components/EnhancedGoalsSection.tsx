@@ -311,14 +311,14 @@ export const EnhancedGoalsSection = ({
                 size="sm" 
                 className="h-8 w-8 p-0"
                 onClick={() => {
-                  alert('Delete button clicked for goal: ' + goal.title);
-                  console.log('🗑️ [UI] Delete button clicked for goal:', goal.id, 'Current user:', currentUserId);
-                  console.log('🗑️ [UI] onDeleteGoal function:', typeof onDeleteGoal);
-                  try {
+                  console.log('🗑️ [UI] Delete clicked, onDeleteGoal type:', typeof onDeleteGoal);
+                  console.log('🗑️ [UI] Goal ID:', goal.id);
+                  if (typeof onDeleteGoal === 'function') {
+                    console.log('🗑️ [UI] Calling onDeleteGoal...');
                     onDeleteGoal(goal.id);
-                    console.log('🗑️ [UI] onDeleteGoal called successfully');
-                  } catch (error) {
-                    console.error('🗑️ [UI] Error calling onDeleteGoal:', error);
+                    console.log('🗑️ [UI] onDeleteGoal call completed');
+                  } else {
+                    console.error('🗑️ [UI] onDeleteGoal is not a function!');
                   }
                 }}
                 title="Delete Goal"
