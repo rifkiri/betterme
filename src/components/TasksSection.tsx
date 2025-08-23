@@ -1,18 +1,14 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
-import { format, addDays, isToday, isSameDay } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { format, isToday, isSameDay } from 'date-fns';
 import { Task, WeeklyOutput, Goal } from '@/types/productivity';
 import { AddTaskDialog } from './AddTaskDialog';
 import { TaskItem } from './TaskItem';
 import { DeletedTasksDialog } from './DeletedTasksDialog';
 import { CompletedTasksDialog } from './CompletedTasksDialog';
 import { TaskDetailsDialog } from './TaskDetailsDialog';
+import { DateNavigator } from './DateNavigator';
 
 interface TasksSectionProps {
   tasks: Task[];
@@ -47,7 +43,6 @@ export const TasksSection = ({
 }: TasksSectionProps) => {
   const [selectedTaskDate, setSelectedTaskDate] = useState(new Date());
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   
   // Keep selectedTask synchronized with the latest task data
   useEffect(() => {
@@ -77,15 +72,6 @@ export const TasksSection = ({
   };
   
   const selectedDateTasks = getTasksForSelectedDate(selectedTaskDate);
-  const today = new Date();
-
-  const navigateDate = (direction: 'prev' | 'next') => {
-    setSelectedTaskDate(prev => addDays(prev, direction === 'next' ? 1 : -1));
-  };
-
-  const goToToday = () => {
-    setSelectedTaskDate(new Date());
-  };
 
   return (
     <Card className="h-fit">
@@ -117,69 +103,11 @@ export const TasksSection = ({
         </div>
       </CardHeader>
       <CardContent className="space-y-2 sm:space-y-3">
-        {/* Date Navigation - Mobile optimized */}
-        <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => navigateDate('prev')}
-            className="flex items-center gap-1 h-8 px-2 text-xs"
-          >
-            <ChevronLeft className="h-3 w-3" />
-            <span className="hidden xs:inline">Prev</span>
-          </Button>
-          
-          <div className="flex items-center gap-1 sm:gap-2 min-w-0">
-            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-1 text-xs sm:text-sm font-medium p-1 h-auto"
-                >
-                  <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 shrink-0" />
-                  <span className="truncate">
-                    {format(selectedTaskDate, 'EEE, MMM dd')}
-                  </span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="center">
-                <Calendar
-                  mode="single"
-                  selected={selectedTaskDate}
-                  onSelect={(date) => {
-                    if (date) {
-                      setSelectedTaskDate(date);
-                      setIsCalendarOpen(false);
-                    }
-                  }}
-                  initialFocus
-                  className={cn("p-3 pointer-events-auto")}
-                />
-              </PopoverContent>
-            </Popover>
-            
-            {!isToday(selectedTaskDate) && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={goToToday}
-                className="text-xs h-6 px-2 shrink-0"
-              >
-                Today
-              </Button>
-            )}
-          </div>
-          
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => navigateDate('next')}
-            className="flex items-center gap-1 h-8 px-2 text-xs"
-          >
-            <span className="hidden xs:inline">Next</span>
-            <ChevronRight className="h-3 w-3" />
-          </Button>
-        </div>
+        {/* Date Navigation */}
+        <DateNavigator 
+          selectedDate={selectedTaskDate} 
+          onDateChange={setSelectedTaskDate} 
+        />
 
         {/* Tasks for Selected Date */}
         <div className="space-y-2">
