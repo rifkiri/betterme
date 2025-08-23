@@ -13,13 +13,13 @@ import SignIn from "./pages/SignIn";
 import NotFound from "./pages/NotFound";
 
 // Lazy load pages that aren't immediately needed
-const Index = lazy(() => import("./pages/Index"));
-const Goals = lazy(() => import("./pages/Goals"));
-const Monthly = lazy(() => import("./pages/Monthly"));
-const TeamPage = lazy(() => import("./pages/TeamPage"));
-const Manager = lazy(() => import("./pages/Manager"));
-const Profile = lazy(() => import("./pages/Profile"));
-const Settings = lazy(() => import("./pages/Settings"));
+const Index = lazy(() => import("@/pages/Index"));
+const Goals = lazy(() => import("@/pages/Goals"));
+const Monthly = lazy(() => import("@/pages/Monthly"));
+const TeamPage = lazy(() => import("@/pages/TeamPage"));
+const Manager = lazy(() => import("@/pages/Manager"));
+const Profile = lazy(() => import("@/pages/Profile"));
+const Settings = lazy(() => import("@/pages/Settings"));
 
 // Loading skeleton component
 const PageSkeleton = () => (
