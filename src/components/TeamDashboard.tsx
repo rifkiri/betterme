@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TeamOverview } from './TeamOverview';
 import { IndividualPerformance } from './IndividualPerformance';
 import { Users, User } from 'lucide-react';
+import { PageHeader } from '@/components/ui/standardized';
 
 export const TeamDashboard = () => {
   const [selectedTab, setSelectedTab] = useState('team');
@@ -19,14 +20,10 @@ export const TeamDashboard = () => {
 
   return (
     <div className="max-w-full mx-auto p-1 sm:p-2 lg:p-4">
-      <div className="text-center mb-2 sm:mb-4 px-2">
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
-          Our Team
-        </h1>
-        <p className="text-gray-600 text-xs sm:text-sm lg:text-base">
-          Monitor team productivity and performance
-        </p>
-      </div>
+      <PageHeader 
+        title="Our Team" 
+        subtitle="Monitor team productivity and performance" 
+      />
 
       <Tabs defaultValue={selectedTab} value={selectedTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="flex w-full h-auto p-1 bg-gray-100 rounded-lg overflow-x-auto">

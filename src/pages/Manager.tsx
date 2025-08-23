@@ -104,10 +104,10 @@ const Manager = () => {
       
       <div className="max-w-full mx-auto p-1 sm:p-2 lg:p-4">
         <div className="text-center mb-2 sm:mb-4 px-2">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-1 sm:mb-2">
             Manager Dashboard
           </h1>
-          <p className="text-gray-600 text-xs sm:text-sm lg:text-base">
+          <p className="text-muted-foreground text-xs sm:text-sm lg:text-base">
             Monitor team performance and individual progress
           </p>
         </div>

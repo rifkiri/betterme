@@ -10,6 +10,7 @@ import { GoalDetailsDialog } from './GoalDetailsDialog';
 import { Goal, WeeklyOutput, Habit, GoalAssignment, Task } from '@/types/productivity';
 import { Target, Briefcase, User, Plus, CheckCircle, Minus, Edit, Trash2, Eye, Link2 } from 'lucide-react';
 import { mapSubcategoryDatabaseToDisplay } from '@/utils/goalCategoryUtils';
+import { PageContainer, PageHeader } from '@/components/ui/standardized';
 
 interface EnhancedGoalsSectionProps {
   goals: Goal[];
@@ -347,102 +348,96 @@ export const EnhancedGoalsSection = ({
   };
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 via-white to-green-50 min-h-screen">
-      <div className="max-w-full mx-auto p-1 sm:p-2 lg:p-4">
-        <div className="text-center mb-2 sm:mb-4 px-2">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
-            My Goals
-          </h1>
-          <p className="text-gray-600 text-xs sm:text-sm lg:text-base">
-            Track your personal and work goals, collaborate with your team
-          </p>
-        </div>
+    <PageContainer gradient="blue-green">
+      <PageHeader 
+        title="My Goals" 
+        subtitle="Track your personal and work goals, collaborate with your team" 
+      />
 
-        {/* Tabs positioned below header subtitle like TeamDashboard */}
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'completed')}>
-          <TabsList className="flex w-full h-auto p-1 bg-gray-100 rounded-lg overflow-x-auto mb-6">
-            <TabsTrigger 
-              value="active" 
-              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 py-2 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-            >
-              <Target className="h-3 w-3 sm:h-4 sm:w-4" />
-              Active ({activeGoals.length})
-            </TabsTrigger>
-            <TabsTrigger 
-              value="completed" 
-              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 py-2 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-            >
-              <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
-              Completed ({completedGoals.length})
-            </TabsTrigger>
-          </TabsList>
+      {/* Tabs positioned below header subtitle like TeamDashboard */}
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'completed')}>
+        <TabsList className="flex w-full h-auto p-1 bg-gray-100 rounded-lg overflow-x-auto mb-6">
+          <TabsTrigger 
+            value="active" 
+            className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 py-2 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
+            <Target className="h-3 w-3 sm:h-4 sm:w-4" />
+            Active ({activeGoals.length})
+          </TabsTrigger>
+          <TabsTrigger 
+            value="completed" 
+            className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 py-2 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
+            <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+            Completed ({completedGoals.length})
+          </TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="active" className="space-y-4">
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-medium">Active Goals</h3>
-                  <p className="text-sm text-gray-600">Goals currently in progress</p>
-                </div>
-                <div className="flex gap-3">
-                  <SimpleAddGoalDialog 
-                    onAddGoal={onAddGoal} 
-                    availableUsers={availableUsers}
-                    currentUserId={currentUserId}
-                  />
-                  <JoinGoalDialog
-                    availableGoals={allGoals.filter(goal => {
-                      // Show work goals that are active and not owned by current user
-                      // Allow joining even if user already has an assignment (for role changes)
-                      return goal.category === 'work' && 
-                             goal.progress < 100 && 
-                             !goal.archived && 
-                             goal.userId !== currentUserId;
-                    })}
-                    availableUsers={availableUsers}
-                    currentUserId={currentUserId}
-                    assignments={assignments}
-                    onJoinGoal={(goalId, role) => onJoinWorkGoal(goalId, role)}
-                  />
-                </div>
+        <TabsContent value="active" className="space-y-4">
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-medium">Active Goals</h3>
+                <p className="text-sm text-gray-600">Goals currently in progress</p>
               </div>
-              
-              {activeGoals.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Target className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p>No active goals yet</p>
-                  <p className="text-sm mt-1">Create your first goal to get started.</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {activeGoals.map(renderGoalCard)}
-                </div>
-              )}
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="completed" className="space-y-4">
-            <Card className="p-6">
-              <div className="mb-4">
-                <h3 className="text-lg font-medium">Completed Goals</h3>
-                <p className="text-sm text-gray-600">Goals that have been accomplished</p>
+              <div className="flex gap-3">
+                <SimpleAddGoalDialog 
+                  onAddGoal={onAddGoal} 
+                  availableUsers={availableUsers}
+                  currentUserId={currentUserId}
+                />
+                <JoinGoalDialog
+                  availableGoals={allGoals.filter(goal => {
+                    // Show work goals that are active and not owned by current user
+                    // Allow joining even if user already has an assignment (for role changes)
+                    return goal.category === 'work' && 
+                           goal.progress < 100 && 
+                           !goal.archived && 
+                           goal.userId !== currentUserId;
+                  })}
+                  availableUsers={availableUsers}
+                  currentUserId={currentUserId}
+                  assignments={assignments}
+                  onJoinGoal={(goalId, role) => onJoinWorkGoal(goalId, role)}
+                />
               </div>
-              
-              {completedGoals.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <CheckCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p>No completed goals yet</p>
-                  <p className="text-sm mt-1">Complete some goals to see them here.</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {completedGoals.map(renderGoalCard)}
-                </div>
-              )}
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
+            </div>
+            
+            {activeGoals.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Target className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p>No active goals yet</p>
+                <p className="text-sm mt-1">Create your first goal to get started.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {activeGoals.map(renderGoalCard)}
+              </div>
+            )}
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="completed" className="space-y-4">
+          <Card className="p-6">
+            <div className="mb-4">
+              <h3 className="text-lg font-medium">Completed Goals</h3>
+              <p className="text-sm text-gray-600">Goals that have been accomplished</p>
+            </div>
+            
+            {completedGoals.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <CheckCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p>No completed goals yet</p>
+                <p className="text-sm mt-1">Complete some goals to see them here.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {completedGoals.map(renderGoalCard)}
+              </div>
+            )}
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Goal Details Dialog */}
       {viewingGoal && (
@@ -461,6 +456,6 @@ export const EnhancedGoalsSection = ({
           availableUsers={availableUsers}
         />
       )}
-    </div>
+    </PageContainer>
   );
 };

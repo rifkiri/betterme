@@ -18,6 +18,10 @@ export { DashboardGrid } from '../dashboard-grid';
 export { EmptyState } from '../empty-state';
 export { LoadingState } from '../loading-state';
 
+// Page Components
+export { PageHeader } from '../page-header';
+export { PageContainer } from '../page-container';
+
 // Navigation Components
 export { PeriodNavigator } from '../period-navigator';
 export type { NavigationPeriod, PeriodNavigatorProps } from '../period-navigator';
@@ -53,3 +57,5 @@ export type { EntitySectionProps } from '../entity-section';
 export type { DashboardLayoutProps } from '../dashboard-layout';
 export type { TabItem, TabGroupProps } from '../tab-group';
 export type { FieldWrapperProps } from '../field-wrapper';
+export type { PageHeaderProps } from '../page-header';
+export type { PageContainerProps } from '../page-container';
