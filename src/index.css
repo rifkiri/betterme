@@ -49,6 +49,27 @@
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Content State Colors */
+    --content-default: 214 100% 95%;
+    --content-default-border: 214 85% 85%;
+    --content-default-foreground: 214 100% 25%;
+    
+    --content-success: 120 100% 95%;
+    --content-success-border: 120 85% 85%;
+    --content-success-foreground: 120 100% 25%;
+    
+    --content-warning: 45 100% 95%;
+    --content-warning-border: 45 85% 85%;
+    --content-warning-foreground: 45 100% 25%;
+    
+    --content-danger: 0 100% 95%;
+    --content-danger-border: 0 85% 85%;
+    --content-danger-foreground: 0 100% 25%;
+    
+    --content-info: 200 100% 95%;
+    --content-info-border: 200 85% 85%;
+    --content-info-foreground: 200 100% 25%;
   }
 
   .dark {
@@ -87,6 +108,27 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    
+    /* Content State Colors - Dark Mode */
+    --content-default: 214 50% 15%;
+    --content-default-border: 214 50% 25%;
+    --content-default-foreground: 214 100% 75%;
+    
+    --content-success: 120 50% 15%;
+    --content-success-border: 120 50% 25%;
+    --content-success-foreground: 120 100% 75%;
+    
+    --content-warning: 45 50% 15%;
+    --content-warning-border: 45 50% 25%;
+    --content-warning-foreground: 45 100% 75%;
+    
+    --content-danger: 0 50% 15%;
+    --content-danger-border: 0 50% 25%;
+    --content-danger-foreground: 0 100% 75%;
+    
+    --content-info: 200 50% 15%;
+    --content-info-border: 200 50% 25%;
+    --content-info-foreground: 200 100% 75%;
   }
 }
 
