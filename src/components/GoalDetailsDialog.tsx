@@ -17,11 +17,13 @@ import {
 } from 'lucide-react';
 import { Goal, Task, WeeklyOutput, Habit, GoalAssignment } from '@/types/productivity';
 import { format, isBefore } from 'date-fns';
-import { useState, useEffect } from 'react';
-import { EditGoalDialog } from './EditGoalDialog';
-import { PersonalGoalEditDialog } from './PersonalGoalEditDialog';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useHabits } from '@/hooks/useHabits';
 import { mapSubcategoryDatabaseToDisplay } from '@/utils/goalCategoryUtils';
+
+// Lazy load heavy dialog components to reduce initial bundle size
+const EditGoalDialog = lazy(() => import('./EditGoalDialog').then(module => ({ default: module.EditGoalDialog })));
+const PersonalGoalEditDialog = lazy(() => import('./PersonalGoalEditDialog').then(module => ({ default: module.PersonalGoalEditDialog })));
 
 interface GoalDetailsDialogProps {
   goal: Goal;
@@ -451,29 +453,33 @@ const getCategoryColor = (category: Goal['category']) => {
         </DialogContent>
       </Dialog>
 
-      {editingGoal && goal.category === 'personal' ? (
-        <PersonalGoalEditDialog 
-          goal={goal} 
-          open={true} 
-          onOpenChange={(open) => !open && setEditingGoal(false)} 
-          onSave={onEditGoal}
-          onRefresh={onRefresh}
-          weeklyOutputs={weeklyOutputs}
-        />
-      ) : editingGoal ? (
-        <EditGoalDialog 
-          goal={goal} 
-          open={true} 
-          onOpenChange={(open) => !open && setEditingGoal(false)} 
-          onSave={onEditGoal}
-          onRefresh={onRefresh}
-          weeklyOutputs={weeklyOutputs}
-          habits={habits.length > 0 ? habits : allHabits}
-          assignments={assignments}
-          availableUsers={availableUsers}
-          allowFullEdit={canFullEdit}
-        />
-      ) : null}
+      {editingGoal && (
+        <Suspense fallback={<div className="flex items-center justify-center p-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div></div>}>
+          {goal.category === 'personal' ? (
+            <PersonalGoalEditDialog 
+              goal={goal} 
+              open={true} 
+              onOpenChange={(open) => !open && setEditingGoal(false)} 
+              onSave={onEditGoal}
+              onRefresh={onRefresh}
+              weeklyOutputs={weeklyOutputs}
+            />
+          ) : (
+            <EditGoalDialog 
+              goal={goal} 
+              open={true} 
+              onOpenChange={(open) => !open && setEditingGoal(false)} 
+              onSave={onEditGoal}
+              onRefresh={onRefresh}
+              weeklyOutputs={weeklyOutputs}
+              habits={habits.length > 0 ? habits : allHabits}
+              assignments={assignments}
+              availableUsers={availableUsers}
+              allowFullEdit={canFullEdit}
+            />
+          )}
+        </Suspense>
+      )}
     </>
   );
 };
