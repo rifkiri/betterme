@@ -1,59 +1,51 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Target, CheckCircle, TrendingUp } from 'lucide-react';
+import { StatCard, DashboardGrid } from '@/components/ui/standardized';
 import { TeamData } from '@/types/teamData';
 
 interface TeamSummaryCardsProps {
   teamData: TeamData;
 }
 
+/**
+ * TeamSummaryCards component - refactored to use standardized StatCard components
+ * Provides consistent stat display across team dashboard
+ */
 export const TeamSummaryCards = ({ teamData }: TeamSummaryCardsProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Team Members</CardTitle>
-          <Users className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{teamData.activeMembers}/{teamData.totalMembers}</div>
-          <p className="text-xs text-muted-foreground">Active this week</p>
-        </CardContent>
-      </Card>
+    <DashboardGrid columns={4} gap="md">
+      <StatCard
+        title="Team Members"
+        value={`${teamData.activeMembers}/${teamData.totalMembers}`}
+        description="Active this week"
+        icon={Users}
+        variant="default"
+      />
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Habits Completion</CardTitle>
-          <Target className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{teamData.teamStats.habitsCompletionRate}%</div>
-          <p className="text-xs text-muted-foreground">Team average</p>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="Habits Completion"
+        value={`${teamData.teamStats.habitsCompletionRate}%`}
+        description="Team average"
+        icon={Target}
+        variant="info"
+      />
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Tasks Completion</CardTitle>
-          <CheckCircle className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{teamData.teamStats.tasksCompletionRate}%</div>
-          <p className="text-xs text-muted-foreground">This week</p>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="Tasks Completion"
+        value={`${teamData.teamStats.tasksCompletionRate}%`}
+        description="This week"
+        icon={CheckCircle}
+        variant="success"
+      />
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Outputs Completion</CardTitle>
-          <TrendingUp className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{teamData.teamStats.outputsCompletionRate}%</div>
-          <p className="text-xs text-muted-foreground">Weekly outputs</p>
-        </CardContent>
-      </Card>
-    </div>
+      <StatCard
+        title="Outputs Completion"
+        value={`${teamData.teamStats.outputsCompletionRate}%`}
+        description="Weekly outputs"
+        icon={TrendingUp}
+        variant="gradient"
+      />
+    </DashboardGrid>
   );
 };

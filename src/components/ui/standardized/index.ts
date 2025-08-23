@@ -18,6 +18,16 @@ export { DashboardGrid } from '../dashboard-grid';
 export { EmptyState } from '../empty-state';
 export { LoadingState } from '../loading-state';
 
+// Navigation Components
+export { PeriodNavigator } from '../period-navigator';
+export type { NavigationPeriod, PeriodNavigatorProps } from '../period-navigator';
+
+// Layout Components
+export { EntitySection } from '../entity-section';
+export { DashboardLayout } from '../dashboard-layout';
+export { TabGroup } from '../tab-group';
+export { FieldWrapper } from '../field-wrapper';
+
 // Re-export commonly used base components with standardized styling
 export { BaseDialog } from '../base-dialog';
 export { FormDialog } from '../form-dialog';
@@ -39,3 +49,7 @@ export type { PageLayoutProps } from '../page-layout';
 export type { DashboardGridProps } from '../dashboard-grid';
 export type { EmptyStateProps } from '../empty-state';
 export type { LoadingStateProps } from '../loading-state';
+export type { EntitySectionProps } from '../entity-section';
+export type { DashboardLayoutProps } from '../dashboard-layout';
+export type { TabItem, TabGroupProps } from '../tab-group';
+export type { FieldWrapperProps } from '../field-wrapper';

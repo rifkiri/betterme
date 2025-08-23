@@ -7,7 +7,7 @@ export interface StatCardProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string;
   value: string | number;
   icon: LucideIcon;
-  variant?: "default" | "gradient" | "success" | "warning" | "danger";
+  variant?: "default" | "gradient" | "success" | "warning" | "danger" | "info";
   description?: string;
   trend?: {
     value: string;
@@ -15,7 +15,7 @@ export interface StatCardProps extends React.HTMLAttributes<HTMLDivElement> {
   };
 }
 
-const getStatCardClasses = (variant: "default" | "gradient" | "success" | "warning" | "danger" = "default") => {
+const getStatCardClasses = (variant: "default" | "gradient" | "success" | "warning" | "danger" | "info" = "default") => {
   switch (variant) {
     case "gradient":
       return "bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20";
@@ -25,6 +25,8 @@ const getStatCardClasses = (variant: "default" | "gradient" | "success" | "warni
       return "bg-gradient-to-br from-yellow-50 to-amber-50 border-yellow-200";
     case "danger":
       return "bg-gradient-to-br from-red-50 to-rose-50 border-red-200";
+    case "info":
+      return "bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200";
     default:
       return "bg-card border-border";
   }
