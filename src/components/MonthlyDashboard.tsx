@@ -15,6 +15,7 @@ import {
   DashboardGrid 
 } from '@/components/ui/standardized';
 
+// MonthlyDashboard component using standardized UI components
 export const MonthlyDashboard = () => {
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const {
