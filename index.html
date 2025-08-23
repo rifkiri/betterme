@@ -29,8 +29,11 @@
     <!-- Preconnect to external domains -->
     <link rel="preconnect" href="https://cdn.gpteng.co" crossorigin>
     
-    <!-- Font optimization -->
-    <link rel="preload" href="/src/main.tsx" as="script" crossorigin>
+    <!-- Critical resource preloading to break dependency chains -->
+    <link rel="modulepreload" href="/src/main.tsx" crossorigin>
+    
+    <!-- DNS prefetch for faster domain resolution -->
+    <link rel="dns-prefetch" href="//betterme.lovable.app">
   </head>
 
   <body>

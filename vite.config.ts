@@ -19,4 +19,20 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Separate vendor chunks to reduce main bundle size
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-select', '@radix-ui/react-popover'],
+          'form-vendor': ['react-hook-form', '@hookform/resolvers', 'zod'],
+          'date-vendor': ['date-fns'],
+          'supabase-vendor': ['@supabase/supabase-js'],
+        },
+      },
+    },
+    // Optimize chunk size warnings
+    chunkSizeWarningLimit: 1000,
+  },
 }));
