@@ -13,19 +13,11 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const Profile = () => {
   const { profile, isLoading, updateProfile, signOut } = useUserProfile();
-  const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState('');
   const [position, setPosition] = useState('');
   const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // Check if user is authenticated
-    if (!user) {
-      navigate('/signin');
-    }
-  }, [user, navigate]);
 
   useEffect(() => {
     if (profile) {

@@ -4,6 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import { AuthProvider } from '@/contexts/AuthContext';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { PublicRoute } from '@/components/auth/PublicRoute';
 
 // Import SignIn normally (needed immediately for auth)
 import SignIn from "./pages/SignIn";
@@ -63,71 +66,94 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <BrowserRouter>
-        <Routes>
-          {/* SignIn loads immediately - needed for auth */}
-          <Route path="/signin" element={<SignIn />} />
-          
-          {/* All other pages load on-demand with suspense */}
-          <Route 
-            path="/" 
-            element={
-              <Suspense fallback={<PageSkeleton />}>
-                <Index />
-              </Suspense>
-            } 
-          />
-          <Route 
-            path="/goals" 
-            element={
-              <Suspense fallback={<PageSkeleton />}>
-                <Goals />
-              </Suspense>
-            } 
-          />
-          <Route 
-            path="/monthly" 
-            element={
-              <Suspense fallback={<PageSkeleton />}>
-                <Monthly />
-              </Suspense>
-            } 
-          />
-          <Route 
-            path="/team" 
-            element={
-              <Suspense fallback={<PageSkeleton />}>
-                <TeamPage />
-              </Suspense>
-            } 
-          />
-          <Route 
-            path="/manager" 
-            element={
-              <Suspense fallback={<PageSkeleton />}>
-                <Manager />
-              </Suspense>
-            } 
-          />
-          <Route 
-            path="/profile" 
-            element={
-              <Suspense fallback={<PageSkeleton />}>
-                <Profile />
-              </Suspense>
-            } 
-          />
-          <Route 
-            path="/settings" 
-            element={
-              <Suspense fallback={<PageSkeleton />}>
-                <Settings />
-              </Suspense>
-            } 
-          />
-          
-          {/* 404 page loads immediately */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            {/* Public Routes */}
+            <Route 
+              path="/signin" 
+              element={
+                <PublicRoute>
+                  <SignIn />
+                </PublicRoute>
+              } 
+            />
+            
+            {/* Protected Routes */}
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Suspense fallback={<PageSkeleton />}>
+                    <Index />
+                  </Suspense>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/goals"
+              element={
+                <ProtectedRoute>
+                  <Suspense fallback={<PageSkeleton />}>
+                    <Goals />
+                  </Suspense>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/monthly"
+              element={
+                <ProtectedRoute>
+                  <Suspense fallback={<PageSkeleton />}>
+                    <Monthly />
+                  </Suspense>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/team"
+              element={
+                <ProtectedRoute>
+                  <Suspense fallback={<PageSkeleton />}>
+                    <TeamPage />
+                  </Suspense>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/manager"
+              element={
+                <ProtectedRoute>
+                  <Suspense fallback={<PageSkeleton />}>
+                    <Manager />
+                  </Suspense>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Suspense fallback={<PageSkeleton />}>
+                    <Profile />
+                  </Suspense>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Suspense fallback={<PageSkeleton />}>
+                    <Settings />
+                  </Suspense>
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* 404 Route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

@@ -8,6 +8,8 @@ export const useAuthCheck = () => {
   const { user, loading } = useAuth();
 
   useEffect(() => {
+    // Only redirect if we're certain the user is authenticated
+    // and we're not still loading
     if (!loading && user) {
       navigate('/');
     }
