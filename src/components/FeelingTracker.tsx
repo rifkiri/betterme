@@ -5,6 +5,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Heart, Smile, Meh, Frown, Save, Edit } from 'lucide-react';
 import { useMoodTracking } from '@/hooks/useMoodTracking';
+import { formatDateForDatabase } from '@/lib/utils';
 
 export const FeelingTracker = () => {
   const {
@@ -12,12 +13,12 @@ export const FeelingTracker = () => {
     getMoodForDate
   } = useMoodTracking();
   const [feeling, setFeeling] = useState("5");
-  const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [currentDate, setCurrentDate] = useState(formatDateForDatabase(new Date()));
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
 
   // Check for mood changes when date changes or mood data updates
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatDateForDatabase(new Date());
 
     // If date has changed, reset everything
     if (currentDate !== today) {
@@ -64,7 +65,7 @@ export const FeelingTracker = () => {
   };
   
   const handleRecordMood = async () => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatDateForDatabase(new Date());
     console.log('Recording mood:', parseInt(feeling), 'for date:', today);
     await addMoodEntry(today, parseInt(feeling));
     // Reset user interaction flag after successful save
@@ -120,7 +121,7 @@ export const FeelingTracker = () => {
   }];
 
   const currentValue = parseInt(feeling);
-  const today = new Date().toISOString().split('T')[0];
+  const today = formatDateForDatabase(new Date());
   const todaysMood = getMoodForDate(today);
   const hasRecordedMood = !!todaysMood;
 

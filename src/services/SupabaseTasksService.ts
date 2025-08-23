@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Task } from '@/types/productivity';
+import { formatDateForDatabase } from '@/lib/utils';
 
 export class SupabaseTasksService {
   async getTasks(userId: string): Promise<Task[]> {
@@ -61,8 +62,8 @@ export class SupabaseTasksService {
         description: task.description,
         completed: task.completed,
         priority: this.mapAppPriorityToDatabase(task.priority),
-        due_date: task.dueDate.toISOString().split('T')[0],
-        original_due_date: task.originalDueDate?.toISOString().split('T')[0],
+        due_date: formatDateForDatabase(task.dueDate),
+        original_due_date: task.originalDueDate ? formatDateForDatabase(task.originalDueDate) : null,
         is_moved: task.isMoved,
         is_deleted: task.isDeleted,
         completed_date: task.completedDate?.toISOString(),
@@ -87,8 +88,8 @@ export class SupabaseTasksService {
     if (updates.description !== undefined) supabaseUpdates.description = updates.description;
     if (updates.completed !== undefined) supabaseUpdates.completed = updates.completed;
     if (updates.priority) supabaseUpdates.priority = this.mapAppPriorityToDatabase(updates.priority);
-    if (updates.dueDate) supabaseUpdates.due_date = updates.dueDate.toISOString().split('T')[0];
-    if (updates.originalDueDate) supabaseUpdates.original_due_date = updates.originalDueDate.toISOString().split('T')[0];
+    if (updates.dueDate) supabaseUpdates.due_date = formatDateForDatabase(updates.dueDate);
+    if (updates.originalDueDate) supabaseUpdates.original_due_date = formatDateForDatabase(updates.originalDueDate);
     if (updates.isMoved !== undefined) supabaseUpdates.is_moved = updates.isMoved;
     if (updates.isDeleted !== undefined) supabaseUpdates.is_deleted = updates.isDeleted;
     if (updates.completedDate) supabaseUpdates.completed_date = updates.completedDate.toISOString();

@@ -1,5 +1,6 @@
 
 import { User } from '@/types/userTypes';
+import { formatDateForDatabase } from '@/lib/utils';
 
 export class ProfilesDataTransformer {
   static transformProfileToUser(profile: any): User {
@@ -12,7 +13,7 @@ export class ProfilesDataTransformer {
       temporaryPassword: profile.temporary_password || undefined,
       hasChangedPassword: profile.has_changed_password || false,
       userStatus: profile.user_status || 'active',
-      createdAt: profile.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+      createdAt: profile.created_at?.split('T')[0] || formatDateForDatabase(new Date()),
       lastLogin: profile.last_login?.split('T')[0],
       managerId: (profile as any).manager_id || undefined
     };

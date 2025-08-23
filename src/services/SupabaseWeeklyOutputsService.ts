@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { WeeklyOutput } from '@/types/productivity';
+import { formatDateForDatabase } from '@/lib/utils';
 
 export class SupabaseWeeklyOutputsService {
   async getWeeklyOutputs(userId: string): Promise<WeeklyOutput[]> {
@@ -39,8 +40,8 @@ export class SupabaseWeeklyOutputsService {
         title: output.title,
         description: output.description,
         progress: output.progress,
-        due_date: output.dueDate ? output.dueDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        original_due_date: output.originalDueDate?.toISOString().split('T')[0],
+        due_date: output.dueDate ? formatDateForDatabase(output.dueDate) : formatDateForDatabase(new Date()),
+        original_due_date: output.originalDueDate ? formatDateForDatabase(output.originalDueDate) : null,
         is_moved: output.isMoved || false,
         is_deleted: output.isDeleted || false,
         completed_date: output.completedDate?.toISOString(),
@@ -63,8 +64,8 @@ export class SupabaseWeeklyOutputsService {
     if (updates.title) supabaseUpdates.title = updates.title;
     if (updates.description !== undefined) supabaseUpdates.description = updates.description;
     if (updates.progress !== undefined) supabaseUpdates.progress = updates.progress;
-    if (updates.dueDate) supabaseUpdates.due_date = updates.dueDate.toISOString().split('T')[0];
-    if (updates.originalDueDate) supabaseUpdates.original_due_date = updates.originalDueDate.toISOString().split('T')[0];
+    if (updates.dueDate) supabaseUpdates.due_date = formatDateForDatabase(updates.dueDate);
+    if (updates.originalDueDate) supabaseUpdates.original_due_date = formatDateForDatabase(updates.originalDueDate);
     if (updates.isMoved !== undefined) supabaseUpdates.is_moved = updates.isMoved;
     if (updates.isDeleted !== undefined) supabaseUpdates.is_deleted = updates.isDeleted;
     if (updates.completedDate) supabaseUpdates.completed_date = updates.completedDate.toISOString();

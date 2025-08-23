@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Goal } from '@/types/productivity';
+import { formatDateForDatabase } from '@/lib/utils';
 
 export class SupabaseGoalsService {
   private async getUserRole(userId: string): Promise<string | null> {
@@ -219,7 +220,7 @@ export class SupabaseGoalsService {
         description: goal.description,
         category: goal.category,
         subcategory: goal.subcategory,
-        deadline: goal.deadline ? goal.deadline.toISOString().split('T')[0] : null,
+        deadline: goal.deadline ? formatDateForDatabase(goal.deadline) : null,
         completed: goal.completed,
         archived: goal.archived,
         is_deleted: false,
@@ -245,7 +246,7 @@ export class SupabaseGoalsService {
     if (updates.category) supabaseUpdates.category = updates.category;
     if (updates.subcategory !== undefined) supabaseUpdates.subcategory = updates.subcategory;
     if (updates.deadline !== undefined) {
-      supabaseUpdates.deadline = updates.deadline ? updates.deadline.toISOString().split('T')[0] : null;
+      supabaseUpdates.deadline = updates.deadline ? formatDateForDatabase(updates.deadline) : null;
     }
     if (updates.completed !== undefined) supabaseUpdates.completed = updates.completed;
     if (updates.archived !== undefined) supabaseUpdates.archived = updates.archived;

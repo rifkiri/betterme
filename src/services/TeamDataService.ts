@@ -3,6 +3,7 @@ import { TeamData, TeamMember, OverdueTask, OverdueOutput, TeamTrends } from '@/
 import { User } from '@/types/userTypes';
 import { supabase } from '@/integrations/supabase/client';
 import { isTaskOverdue, isWeeklyOutputOverdue } from '@/utils/dateUtils';
+import { formatDateForDatabase } from '@/lib/utils';
 
 interface TeamDataServiceConfig {
   userId: string;
@@ -377,7 +378,7 @@ class TeamDataService {
               assignee: member.name,
               priority: task.priority as 'High' | 'Medium' | 'Low',
               daysOverdue,
-              originalDueDate: task.dueDate.toISOString().split('T')[0]
+              originalDueDate: formatDateForDatabase(task.dueDate)
             });
           }
         });
@@ -393,7 +394,7 @@ class TeamDataService {
               assignee: member.name,
               progress: output.progress,
               daysOverdue,
-              originalDueDate: output.dueDate.toISOString().split('T')[0]
+              originalDueDate: formatDateForDatabase(output.dueDate)
             });
           }
         });
@@ -424,7 +425,7 @@ class TeamDataService {
     for (let i = 29; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
-      last30Days.push(date.toISOString().split('T')[0]);
+      last30Days.push(formatDateForDatabase(date));
     }
     
     // Get mood data for each day and member
