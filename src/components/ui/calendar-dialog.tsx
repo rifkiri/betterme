@@ -77,13 +77,12 @@ export const CalendarDialog = ({
 
   const handleCalendarSelect = (date: Date | undefined) => {
     if (date) {
+      // Create date in local timezone for all layouts to ensure timezone safety
+      const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      setSelectedDate(localDate);
+      
       if (layout === 'popover') {
-        // Create date in local timezone for popover layout
-        const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-        setSelectedDate(localDate);
         setCalendarOpen(false);
-      } else {
-        setSelectedDate(date);
       }
     }
   };
