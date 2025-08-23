@@ -14,10 +14,10 @@ export const MonthlyChart = ({ tasks, outputs, monthDays }: MonthlyChartProps) =
   // Get weeks in the month
   const monthStart = monthDays[0];
   const monthEnd = monthDays[monthDays.length - 1];
-  const weeks = eachWeekOfInterval({ start: monthStart, end: monthEnd }, { weekStartsOn: 1 });
+  const weeks = eachWeekOfInterval({ start: monthStart, end: monthEnd }, { weekStartsOn: 0 });
 
   const weeklyData = weeks.map(weekStart => {
-    const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
+    const weekEnd = endOfWeek(weekStart, { weekStartsOn: 0 });
     
     const weekTasks = tasks.filter(task => 
       task.dueDate && isWithinInterval(task.dueDate, { start: weekStart, end: weekEnd })

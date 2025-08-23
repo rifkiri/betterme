@@ -45,14 +45,14 @@ export const WeeklyOutputsSection = ({
   const [selectedWeek, setSelectedWeek] = useState(new Date());
   
   const weekStart = startOfWeek(selectedWeek, {
-    weekStartsOn: 1
+    weekStartsOn: 0
   });
   const weekEnd = endOfWeek(selectedWeek, {
-    weekStartsOn: 1
+    weekStartsOn: 0
   });
   const today = new Date();
   const isCurrentWeek = isSameWeek(selectedWeek, today, {
-    weekStartsOn: 1
+    weekStartsOn: 0
   });
 
   // Enhanced filtering for outputs in the selected week

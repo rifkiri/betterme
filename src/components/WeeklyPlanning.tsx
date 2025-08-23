@@ -32,8 +32,8 @@ export const WeeklyPlanning = ({
   const [newGoal, setNewGoal] = useState('');
 
   const today = new Date();
-  const weekStart = startOfWeek(today, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
+  const weekStart = startOfWeek(today, { weekStartsOn: 0 });
+  const weekEnd = endOfWeek(today, { weekStartsOn: 0 });
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   

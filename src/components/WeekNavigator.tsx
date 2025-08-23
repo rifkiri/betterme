@@ -14,10 +14,10 @@ export const WeekNavigator = ({
   onNavigateWeek,
   onGoToCurrentWeek,
 }: WeekNavigatorProps) => {
-  const weekStart = startOfWeek(selectedWeek, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(selectedWeek, { weekStartsOn: 1 });
+  const weekStart = startOfWeek(selectedWeek, { weekStartsOn: 0 });
+  const weekEnd = endOfWeek(selectedWeek, { weekStartsOn: 0 });
   const today = new Date();
-  const isCurrentWeek = isSameWeek(selectedWeek, today, { weekStartsOn: 1 });
+  const isCurrentWeek = isSameWeek(selectedWeek, today, { weekStartsOn: 0 });
 
   return (
     <div className="flex items-center justify-between mb-4 p-2 bg-gray-50 rounded-lg">

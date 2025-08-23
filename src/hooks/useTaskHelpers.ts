@@ -1,6 +1,6 @@
 
 import { Task } from '@/types/productivity';
-import { isTaskOverdue } from '@/utils/dateUtils';
+import { isTaskOverdue, getCurrentWeekInterval } from '@/utils/dateUtils';
 
 export const useTaskHelpers = (tasks: Task[]) => {
   // Helper methods for filtering data
@@ -24,14 +24,12 @@ export const useTaskHelpers = (tasks: Task[]) => {
   const getPendingTasks = () => tasks.filter(task => !task.completed);
 
   const getCurrentWeekTasks = () => {
-    const today = new Date();
-    const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
-    const endOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + 6));
+    const { start, end } = getCurrentWeekInterval();
     
     return tasks.filter(task => 
       task.dueDate && 
-      task.dueDate >= startOfWeek && 
-      task.dueDate <= endOfWeek
+      task.dueDate >= start && 
+      task.dueDate <= end
     );
   };
 

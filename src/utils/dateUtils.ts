@@ -7,8 +7,8 @@ export const getYesterday = () => addDays(getToday(), -1);
 
 export const getCurrentWeekInterval = () => {
   const today = getToday();
-  const weekStart = startOfWeek(today, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
+  const weekStart = startOfWeek(today, { weekStartsOn: 0 });
+  const weekEnd = endOfWeek(today, { weekStartsOn: 0 });
   return { start: weekStart, end: weekEnd };
 };
 
