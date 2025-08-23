@@ -7,6 +7,7 @@ import { useProductivity } from '@/hooks/useProductivity';
 import { useGoalCollaboration } from '@/hooks/useGoalCollaboration';
 import { useUsersData } from '@/hooks/useUsersData';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { PageContainer } from '@/components/ui/standardized';
 
 const Goals = () => {
   const { profile } = useUserProfile();
@@ -68,7 +69,7 @@ const Goals = () => {
   }, [profile?.role]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <PageContainer gradient="blue-green">
       <AppNavigation />
       
       <EnhancedGoalsSection 
@@ -100,7 +101,7 @@ const Goals = () => {
         onAcknowledge={acknowledgeNotification}
         onAcknowledgeAll={acknowledgeAllNotifications}
       />
-    </div>
+    </PageContainer>
   );
 };
 

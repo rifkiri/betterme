@@ -1,11 +1,8 @@
-
-import { useState } from 'react';
 import { WeeklyOutput, Task } from '@/types/productivity';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { FormDialog } from '@/components/ui/standardized';
 import { TaskForm } from './task/TaskForm';
 import { TaskFormValues } from './task/taskFormSchema';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface EditTaskDialogProps {
   task: Task;
@@ -16,8 +13,20 @@ interface EditTaskDialogProps {
   onRefresh?: () => void;
 }
 
-export const EditTaskDialog = ({ task, open, onOpenChange, onSave, weeklyOutputs, onRefresh }: EditTaskDialogProps) => {
-  const handleSubmit = async (values: TaskFormValues) => {
+export const EditTaskDialog = ({ 
+  task, 
+  open, 
+  onOpenChange, 
+  onSave, 
+  weeklyOutputs, 
+  onRefresh 
+}: EditTaskDialogProps) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // Form submission is handled by TaskForm
+  };
+
+  const handleFormSubmit = async (values: TaskFormValues) => {
     console.log('EditTaskDialog - Form values received:', values);
     console.log('EditTaskDialog - About to call onSave with task ID:', task.id);
     
@@ -36,10 +45,6 @@ export const EditTaskDialog = ({ task, open, onOpenChange, onSave, weeklyOutputs
     onOpenChange(false);
   };
 
-  const handleCancel = () => {
-    onOpenChange(false);
-  };
-
   // Convert task to form values
   const taskAsFormValues: TaskFormValues = {
     title: task.title,
@@ -52,33 +57,26 @@ export const EditTaskDialog = ({ task, open, onOpenChange, onSave, weeklyOutputs
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] max-h-[90vh] flex flex-col">
-        <DialogHeader className="shrink-0">
-          <DialogTitle>Edit Task</DialogTitle>
-          <DialogDescription>
-            Update your task details.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <ScrollArea className="h-[60vh] px-1">
-          <div className="pb-4">
-            <TaskForm 
-              initialValues={taskAsFormValues}
-              onSubmit={handleSubmit}
-              onCancel={handleCancel}
-              weeklyOutputs={weeklyOutputs}
-            />
-          </div>
-        </ScrollArea>
-        
-        <div className="flex justify-end space-x-2 pt-4 border-t shrink-0">
-          <Button type="button" variant="outline" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button type="submit" form="task-form">Save Changes</Button>
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Edit Task"
+      description="Update your task details."
+      onSubmit={handleSubmit}
+      submitText="Save Changes"
+      contentClassName="sm:max-w-[425px]"
+      showFooter={false}
+    >
+      <ScrollArea className="h-[60vh] px-1">
+        <div className="pb-4">
+          <TaskForm 
+            initialValues={taskAsFormValues}
+            onSubmit={handleFormSubmit}
+            onCancel={() => onOpenChange(false)}
+            weeklyOutputs={weeklyOutputs}
+          />
         </div>
-      </DialogContent>
-    </Dialog>
+      </ScrollArea>
+    </FormDialog>
   );
 };

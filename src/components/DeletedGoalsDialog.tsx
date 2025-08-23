@@ -1,11 +1,11 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Trash2, RotateCcw, Archive } from 'lucide-react';
 import { Goal } from '@/types/productivity';
 import { format } from 'date-fns';
+import { ListDialog } from '@/components/ui/standardized';
 
 interface DeletedGoalsDialogProps {
   deletedGoals: Goal[];
@@ -18,7 +18,9 @@ export const DeletedGoalsDialog = ({
   onRestore, 
   onPermanentlyDelete 
 }: DeletedGoalsDialogProps) => {
-const getCategoryColor = (category: Goal['category']) => {
+  const [open, setOpen] = useState(false);
+  
+  const getCategoryColor = (category: Goal['category']) => {
     switch (category) {
       case 'work': return 'bg-blue-100 text-blue-800';
       case 'personal': return 'bg-green-100 text-green-800';
@@ -30,78 +32,75 @@ const getCategoryColor = (category: Goal['category']) => {
     return null;
   }
 
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1 text-xs sm:text-sm h-8 sm:h-9">
-          <Archive className="h-3 w-3 sm:h-4 sm:w-4" />
-          <span className="hidden sm:inline">Deleted ({deletedGoals.length})</span>
-          <span className="sm:hidden">({deletedGoals.length})</span>
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
-        <DialogHeader className="shrink-0">
-          <DialogTitle>Deleted Goals ({deletedGoals.length})</DialogTitle>
-        </DialogHeader>
-        
-        <ScrollArea className="flex-1">
-          <div className="space-y-3 p-1">
-          {deletedGoals.map((goal) => (
-            <div key={goal.id} className="border rounded-lg p-3 bg-gray-50">
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-medium text-sm truncate">{goal.title}</h3>
-                    <Badge className={`text-xs shrink-0 ${getCategoryColor(goal.category)}`}>
-                      {goal.category}
-                    </Badge>
-                  </div>
-                  {goal.description && (
-                    <p className="text-xs text-gray-600 mb-2">{goal.description}</p>
-                  )}
-                  <div className="flex items-center gap-4 text-xs text-gray-500">
-                    <span>Progress: {goal.progress}%</span>
-                    {goal.deadline && (
-                      <span>Deadline: {format(goal.deadline, 'MMM dd, yyyy')}</span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onRestore(goal.id)}
-                    className="h-7 px-2 gap-1"
-                  >
-                    <RotateCcw className="h-3 w-3" />
-                    <span className="text-xs">Restore</span>
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => onPermanentlyDelete(goal.id)}
-                    className="h-7 px-2 gap-1"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                    <span className="text-xs">Delete</span>
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="mb-2">
-                <Progress value={goal.progress} className="h-2" />
-              </div>
-            </div>
-          ))}
-          </div>
-        </ScrollArea>
-        
-        <div className="flex justify-end pt-4 border-t shrink-0">
-          <Button variant="outline" onClick={() => {}}>
-            Close
-          </Button>
+  const renderGoalItem = (goal: Goal) => (
+    <>
+      <div className="flex justify-between items-start mb-2">
+        <div className="flex-1 min-w-0">
+          <h4 className="font-medium truncate">{goal.title}</h4>
+          {goal.description && (
+            <p className="text-sm text-gray-600 mt-1 line-clamp-2">{goal.description}</p>
+          )}
         </div>
-      </DialogContent>
-    </Dialog>
+        <Badge className={getCategoryColor(goal.category)}>
+          {goal.category}
+        </Badge>
+      </div>
+      
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <Progress value={goal.progress} className="flex-1" />
+          <span className="text-sm text-gray-600">{goal.progress}%</span>
+        </div>
+        
+        {goal.deadline && (
+          <p className="text-sm text-gray-600">
+            Deadline: {format(new Date(goal.deadline), 'MMM d, yyyy')}
+          </p>
+        )}
+      </div>
+      
+      <div className="flex gap-2 mt-3">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            onRestore(goal.id);
+            setOpen(false);
+          }}
+          className="flex-1"
+        >
+          <RotateCcw className="h-4 w-4 mr-1" />
+          Restore
+        </Button>
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => {
+            onPermanentlyDelete(goal.id);
+            if (deletedGoals.length === 1) {
+              setOpen(false);
+            }
+          }}
+          className="flex-1"
+        >
+          <Trash2 className="h-4 w-4 mr-1" />
+          Delete Forever
+        </Button>
+      </div>
+    </>
+  );
+
+  return (
+    <ListDialog
+      open={open}
+      onOpenChange={setOpen}
+      title={`Deleted Goals (${deletedGoals.length})`}
+      items={deletedGoals}
+      renderItem={renderGoalItem}
+      triggerIcon={<Archive className="h-3 w-3 sm:h-4 sm:w-4" />}
+      triggerText="Deleted"
+      emptyMessage="No deleted goals"
+      scrollHeight="80"
+    />
   );
 };

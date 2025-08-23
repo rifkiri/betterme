@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FormDialog } from '@/components/ui/standardized';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -77,18 +77,22 @@ export const EditHabitDialog = ({ habit, open, onOpenChange, onSave, onRefresh }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] max-h-[90vh] flex flex-col">
-        <DialogHeader className="shrink-0">
-          <DialogTitle>Edit Habit</DialogTitle>
-          <DialogDescription>
-            Update your habit details.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <ScrollArea className="flex-1 px-1">
-          <Form {...form}>
-            <form id="edit-habit-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Edit Habit"
+      description="Update your habit details."
+      onSubmit={(e) => {
+        e.preventDefault();
+        form.handleSubmit(handleSubmit)();
+      }}
+      submitText="Save Changes"
+      isSubmitting={form.formState.isSubmitting}
+      contentClassName="sm:max-w-[425px]"
+    >
+      <ScrollArea className="max-h-[60vh] px-1">
+        <Form {...form}>
+          <div className="space-y-4 pr-2">
             <FormField
               control={form.control}
               name="name"
@@ -176,17 +180,9 @@ export const EditHabitDialog = ({ habit, open, onOpenChange, onSave, onRefresh }
                 </FormItem>
               )}
             />
-            </form>
-          </Form>
-        </ScrollArea>
-        
-        <div className="flex justify-end space-x-2 pt-4 shrink-0">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button type="submit" form="edit-habit-form">Save Changes</Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+          </div>
+        </Form>
+      </ScrollArea>
+    </FormDialog>
   );
 };

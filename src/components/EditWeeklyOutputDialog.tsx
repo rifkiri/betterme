@@ -1,18 +1,19 @@
-
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import * as z from 'zod';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FormDialog } from '@/components/ui/standardized';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { WeeklyOutput, Goal } from '@/types/productivity';
 
@@ -103,16 +104,22 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
   );
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Edit Weekly Output</DialogTitle>
-          <DialogDescription>
-            Update your weekly output details.
-          </DialogDescription>
-        </DialogHeader>
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Edit Weekly Output"
+      description="Update your weekly output details."
+      onSubmit={(e) => {
+        e.preventDefault();
+        form.handleSubmit(handleSubmit)();
+      }}
+      submitText="Save Changes"
+      isSubmitting={form.formState.isSubmitting}
+      contentClassName="sm:max-w-[425px]"
+    >
+      <ScrollArea className="max-h-[60vh] px-1">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <div className="space-y-4 pr-2">
             <FormField
               control={form.control}
               name="title"
@@ -120,7 +127,7 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
                 <FormItem>
                   <FormLabel>Title</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Describe your weekly output..." className="resize-none" {...field} />
+                    <Input placeholder="Describe your weekly output..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -237,16 +244,9 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
                 )}
               />
             )}
-            
-            <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="submit">Save Changes</Button>
-            </div>
-          </form>
+          </div>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </ScrollArea>
+    </FormDialog>
   );
 };
