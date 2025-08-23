@@ -17,7 +17,7 @@ export interface FormDialogProps extends Omit<BaseDialogProps, 'children'> {
 }
 
 /**
- * Form dialog wrapper that preserves existing form patterns and styling
+ * Enhanced form dialog wrapper that preserves existing form patterns and styling
  * Provides flexibility for custom footers and form layouts
  */
 export const FormDialog = ({

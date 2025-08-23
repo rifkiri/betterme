@@ -20,7 +20,7 @@ export interface BaseDialogProps {
 }
 
 /**
- * Base dialog wrapper that preserves all existing styling patterns
+ * Enhanced base dialog wrapper that preserves all existing styling patterns
  * Accepts contentClassName to match existing dialog styles exactly
  */
 export const BaseDialog = ({ 
@@ -45,6 +45,7 @@ export const BaseDialog = ({
       {title}
     </div>
   ) : title;
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {trigger && (

@@ -1,6 +1,6 @@
 
-import { Card, CardContent } from '@/components/ui/card';
 import { LucideIcon } from 'lucide-react';
+import { StatCard } from '@/components/ui/standardized';
 
 interface QuickStatsCardProps {
   title: string;
@@ -9,18 +9,19 @@ interface QuickStatsCardProps {
   gradient: string;
 }
 
-export const QuickStatsCard = ({ title, value, icon: Icon, gradient }: QuickStatsCardProps) => {
+export const QuickStatsCard = ({ title, value, icon, gradient }: QuickStatsCardProps) => {
+  // Map gradient prop to StatCard variant
+  const variant = gradient.includes('blue') ? 'gradient' : 
+                 gradient.includes('green') ? 'success' : 
+                 gradient.includes('yellow') ? 'warning' : 
+                 gradient.includes('red') ? 'danger' : 'default';
+  
   return (
-    <Card className={gradient}>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-700">{title}</p>
-            <p className="text-2xl font-bold text-gray-800">{value}</p>
-          </div>
-          <Icon className="h-8 w-8 text-gray-600" />
-        </div>
-      </CardContent>
-    </Card>
+    <StatCard
+      title={title}
+      value={value}
+      icon={icon}
+      variant={variant}
+    />
   );
 };

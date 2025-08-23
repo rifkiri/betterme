@@ -14,7 +14,7 @@ export interface ListDialogProps extends Omit<BaseDialogProps, 'children' | 'tri
 }
 
 /**
- * Specialized dialog for displaying lists with standardized scroll areas and styling
+ * Enhanced specialized dialog for displaying lists with standardized scroll areas and styling
  * Handles empty states and provides consistent trigger buttons
  */
 export const ListDialog = ({

@@ -1,9 +1,16 @@
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { CheckCircle, Circle, Archive, Loader2, Eye, Link } from 'lucide-react';
+import { CheckCircle, Circle, Archive, Loader2, Eye } from 'lucide-react';
+import { 
+  ItemCard, 
+  SectionHeader, 
+  StatusBadge, 
+  LinkBadge, 
+  EmptyState, 
+  LoadingState,
+  ActionButtonGroup 
+} from '@/components/ui/standardized';
+import { Card, CardContent } from '@/components/ui/card';
 import { Habit, Goal } from '@/types/productivity';
 // Fixed habit-goal linking functionality
 import { AddHabitDialog } from './AddHabitDialog';
@@ -74,24 +81,21 @@ export const HabitsSection = ({
 
   return (
     <Card className="h-fit">
-      <CardHeader className="space-y-4">
-        <div>
-          <CardTitle>
-            {today ? 'Daily Habits' : `Habits for ${format(selectedDate, 'MMM d, yyyy')}`}
-          </CardTitle>
-          <CardDescription>
-            {today ? 'Build your streaks' : 'View and track past habits'}
-          </CardDescription>
-        </div>
-        <div className="flex items-center gap-2">
-          <ArchivedHabitsDialog 
-            archivedHabits={archivedHabits}
-            onRestoreHabit={onRestoreHabit}
-            onPermanentlyDeleteHabit={onPermanentlyDeleteHabit}
-          />
-          <AddHabitDialog onAddHabit={onAddHabit} goals={goals} />
-        </div>
-      </CardHeader>
+      <SectionHeader
+        title={today ? 'Daily Habits' : `Habits for ${format(selectedDate, 'MMM d, yyyy')}`}
+        description={today ? 'Build your streaks' : 'View and track past habits'}
+        actions={
+          <>
+            <ArchivedHabitsDialog 
+              archivedHabits={archivedHabits}
+              onRestoreHabit={onRestoreHabit}
+              onPermanentlyDeleteHabit={onPermanentlyDeleteHabit}
+            />
+            <AddHabitDialog onAddHabit={onAddHabit} goals={goals} />
+          </>
+        }
+      />
+      
       <CardContent className="space-y-3">
         <DateNavigator 
           selectedDate={selectedDate} 
@@ -99,74 +103,71 @@ export const HabitsSection = ({
         />
         
         {isLoading ? (
-          <div className="text-center py-4 text-muted-foreground">
-            <p>Loading habits...</p>
-          </div>
+          <LoadingState message="Loading habits..." />
         ) : habits.length === 0 ? (
-          <div className="text-center py-4 text-muted-foreground">
-            <p>No habits yet. Add your first habit to start building streaks!</p>
-          </div>
+          <EmptyState
+            title="No habits yet"
+            description="Add your first habit to start building streaks!"
+            action={{
+              label: "Add Habit",
+              onClick: () => {/* AddHabitDialog handles this */}
+            }}
+          />
         ) : (
-          <div key={`habits-${habits.length}-goals-${goals.length}`}>
+          <div key={`habits-${habits.length}-goals-${goals.length}`} className="space-y-3">
             {habits.map(habit => (
-            <div key={habit.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <button 
-                  onClick={() => handleToggleHabit(habit.id)}
-                  disabled={togglingHabitId === habit.id}
-                  className="disabled:opacity-50"
-                >
-                  {togglingHabitId === habit.id ? (
-                    <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
-                  ) : habit.completed ? (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <Circle className="h-5 w-5 text-gray-400" />
-                  )}
-                </button>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className={`font-medium ${habit.completed ? 'text-green-700' : 'text-gray-700'}`}>
-                      {habit.name}
-                    </span>
-                    {habit.linkedGoalId && goals.find(g => g.id === habit.linkedGoalId) && (
-                      <Badge variant="outline" className="text-xs flex items-center gap-1 bg-blue-50 text-blue-600 border-blue-200">
-                        <Link className="h-2 w-2" />
-                        {goals.find(g => g.id === habit.linkedGoalId)?.title}
-                      </Badge>
+              <div key={habit.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <button 
+                    onClick={() => handleToggleHabit(habit.id)}
+                    disabled={togglingHabitId === habit.id}
+                    className="disabled:opacity-50"
+                  >
+                    {togglingHabitId === habit.id ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                    ) : habit.completed ? (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <Circle className="h-5 w-5 text-gray-400" />
                     )}
+                  </button>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className={`font-medium ${habit.completed ? 'text-green-700' : 'text-gray-700'}`}>
+                        {habit.name}
+                      </span>
+                      {habit.linkedGoalId && goals.find(g => g.id === habit.linkedGoalId) && (
+                        <LinkBadge variant="info">
+                          {goals.find(g => g.id === habit.linkedGoalId)?.title}
+                        </LinkBadge>
+                      )}
+                    </div>
+                    {habit.category && <p className="text-xs text-gray-500">{mapDatabaseToDisplay(habit.category)}</p>}
                   </div>
-                  {habit.category && <p className="text-xs text-gray-500">{mapDatabaseToDisplay(habit.category)}</p>}
+                </div>
+                <div className="flex flex-col items-center gap-2">
+                  <StatusBadge 
+                    status={habit.streak > 0 ? 'completed' : 'inProgress'}
+                    className={habit.streak > 0 ? 'cursor-pointer hover:bg-primary/80' : ''}
+                    onClick={() => handleStreakClick(habit)}
+                  >
+                    {habit.streak} day streak
+                  </StatusBadge>
+                  <ActionButtonGroup
+                    onView={() => setViewingHabitId(habit.id)}
+                    customActions={
+                      <button
+                        onClick={() => onArchiveHabit(habit.id)}
+                        className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700 flex items-center justify-center"
+                        title="Archive Habit"
+                      >
+                        <Archive className="h-4 w-4" />
+                      </button>
+                    }
+                    layout="vertical"
+                  />
                 </div>
               </div>
-              <div className="flex flex-col items-center gap-2">
-                <Badge 
-                  variant={habit.streak > 0 ? 'default' : 'secondary'} 
-                  className={`text-xs ${habit.streak > 0 ? 'cursor-pointer hover:bg-primary/80' : ''}`}
-                  onClick={() => handleStreakClick(habit)}
-                >
-                  {habit.streak} day streak
-                </Badge>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setViewingHabitId(habit.id)}
-                  className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
-                  title="View Details"
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onArchiveHabit(habit.id)}
-                  className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
-                  title="Archive Habit"
-                >
-                  <Archive className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
             ))}
           </div>
         )}

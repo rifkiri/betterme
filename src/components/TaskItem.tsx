@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { CheckCircle, Circle, Clock, ArrowRight, Trash2, Link, Calendar, Users, Eye } from 'lucide-react';
+import { CheckCircle, Circle, Clock, ArrowRight, Trash2, Users } from 'lucide-react';
 import { Task, WeeklyOutput } from '@/types/productivity';
 import { MoveTaskDialog } from './MoveTaskDialog';
 import { EditTaskDialog } from './EditTaskDialog';
 import { format, isToday, isTomorrow, isPast } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
+import { ItemCard, StatusBadge, LinkBadge, DateDisplay } from '@/components/ui/standardized';
 
 interface TaskItemProps {
   task: Task;
@@ -81,91 +81,83 @@ export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteT
   };
 
   return (
-    <div className={`flex items-center justify-between p-3 border rounded-lg transition-colors ${
-      isOverdue() ? 'bg-red-50 border-red-200 hover:bg-red-100' : 'hover:bg-gray-50'
-    }`}>
-      <div className="flex items-center space-x-3 flex-1">
-        <button onClick={() => onToggleTask(task.id)}>
-          {task.completed ? (
-            <CheckCircle className="h-4 w-4 text-green-500" />
-          ) : (
-            <Circle className="h-4 w-4 text-gray-400" />
-          )}
-        </button>
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <p className={`text-sm font-medium ${task.completed ? 'line-through text-gray-500' : ''}`}>
-              {task.title}
-            </p>
-            {task.isMoved && (
-              <Badge variant="outline" className="text-xs flex items-center gap-1">
-                <ArrowRight className="h-2 w-2" />
-                Moved
-              </Badge>
-            )}
-            {linkedOutput && (
-              <Badge variant="outline" className="text-xs flex items-center gap-1 bg-blue-50 text-blue-600 border-blue-200">
-                <Link className="h-2 w-2" />
-                {linkedOutput.title}
-              </Badge>
-            )}
-          </div>
-          <div className="flex items-center space-x-2 mt-1">
-            <Badge variant={task.priority === 'High' ? 'destructive' : task.priority === 'Medium' ? 'default' : 'secondary'} className="text-xs">
-              {task.priority}
-            </Badge>
-            {task.dueDate && (
-              <span className={`text-xs flex items-center ${getDueDateColor(task.dueDate, task.completed)}`}>
-                <Calendar className="h-3 w-3 mr-1" />
-                {formatDueDate(task.dueDate)}
-                {isOverdue() && ' (Overdue)'}
-              </span>
-            )}
-            {task.estimatedTime && (
-              <span className="text-xs text-gray-500 flex items-center">
-                <Clock className="h-3 w-3 mr-1" />
-                {task.estimatedTime}
-              </span>
-            )}
-          </div>
-          {taggedUsers.length > 0 && (
-            <div className="flex items-center gap-1 mt-1">
-              <Users className="h-3 w-3 text-blue-500" />
-              <div className="flex flex-wrap gap-1">
-                {taggedUsers.map((user) => (
-                  <Badge key={user.id} variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
-                    {user.name}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-      <div className="flex flex-col items-center gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onViewDetails}
-          className="h-8 w-8 p-0"
-          title="View Details"
-        >
-          <Eye className="h-4 w-4" />
-        </Button>
-        {!task.completed && (
+    <ItemCard
+      isCompleted={task.completed}
+      isOverdue={isOverdue()}
+      actions={{
+        onView: onViewDetails,
+        onDelete: () => onDeleteTask(task.id),
+        customActions: !task.completed && (
           <MoveTaskDialog 
             onMoveTask={(newDate) => onMoveTask(task.id, newDate)}
           />
-        )}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onDeleteTask(task.id)}
-          className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
+        )
+      }}
+      header={
+        <div className="flex items-center space-x-3">
+          <button onClick={() => onToggleTask(task.id)}>
+            {task.completed ? (
+              <CheckCircle className="h-4 w-4 text-green-500" />
+            ) : (
+              <Circle className="h-4 w-4 text-gray-400" />
+            )}
+          </button>
+          <p className={`text-sm font-medium ${task.completed ? 'line-through text-gray-500' : ''}`}>
+            {task.title}
+          </p>
+        </div>
+      }
+      badges={
+        <>
+          {task.isMoved && (
+            <Badge variant="outline" className="text-xs flex items-center gap-1">
+              <ArrowRight className="h-2 w-2" />
+              Moved
+            </Badge>
+          )}
+          {linkedOutput && (
+            <LinkBadge variant="info">
+              {linkedOutput.title}
+            </LinkBadge>
+          )}
+          <StatusBadge status={task.priority === 'High' ? 'high' : task.priority === 'Medium' ? 'medium' : 'low'}>
+            {task.priority}
+          </StatusBadge>
+          {taggedUsers.length > 0 && taggedUsers.map((user) => (
+            <Badge key={user.id} variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
+              {user.name}
+            </Badge>
+          ))}
+        </>
+      }
+      metadata={
+        <>
+          {task.dueDate && (
+            <DateDisplay 
+              date={task.dueDate}
+              isOverdue={isOverdue()}
+              prefix="Due:"
+            />
+          )}
+          {task.estimatedTime && (
+            <span className="flex items-center">
+              <Clock className="h-3 w-3 mr-1" />
+              {task.estimatedTime}
+            </span>
+          )}
+          {taggedUsers.length > 0 && (
+            <span className="flex items-center">
+              <Users className="h-3 w-3 mr-1" />
+              {taggedUsers.length} assigned
+            </span>
+          )}
+        </>
+      }
+    >
+      {/* Main content area - can include description or other details */}
+      {task.description && (
+        <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
+      )}
+    </ItemCard>
   );
 };
