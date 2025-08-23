@@ -7,6 +7,7 @@ import { TeamWorkloadMonitoring } from "@/components/manager/TeamWorkloadMonitor
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useTeamDataRealtime } from "@/hooks/useTeamDataRealtime";
 import { Target, Users } from "lucide-react";
+import { PageContainer, PageHeader } from '@/components/ui/standardized';
 
 const Manager = () => {
   const [selectedEmployee, setSelectedEmployee] = useState<string>('');
@@ -99,18 +100,14 @@ const Manager = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <PageContainer>
       <AppNavigation />
       
       <div className="max-w-full mx-auto p-1 sm:p-2 lg:p-4">
-        <div className="text-center mb-2 sm:mb-4 px-2">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-1 sm:mb-2">
-            Manager Dashboard
-          </h1>
-          <p className="text-muted-foreground text-xs sm:text-sm lg:text-base">
-            Monitor team performance and individual progress
-          </p>
-        </div>
+        <PageHeader 
+          title="Manager Dashboard" 
+          subtitle="Monitor team performance and individual progress"
+        />
       
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'workload' | 'individual')} className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-gray-100 rounded-lg p-1">
@@ -169,7 +166,7 @@ const Manager = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </PageContainer>
   );
 };
 
