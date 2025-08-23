@@ -3,14 +3,13 @@ import { useState } from 'react';
 import { CheckCircle, Circle, Archive, Loader2, Eye } from 'lucide-react';
 import { 
   ItemCard, 
-  SectionHeader, 
   StatusBadge, 
   LinkBadge, 
   EmptyState, 
   LoadingState,
   ActionButtonGroup 
 } from '@/components/ui/standardized';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Habit, Goal } from '@/types/productivity';
 // Fixed habit-goal linking functionality
 import { AddHabitDialog } from './AddHabitDialog';
@@ -81,20 +80,26 @@ export const HabitsSection = ({
 
   return (
     <Card className="h-fit">
-      <SectionHeader
-        title={today ? 'Daily Habits' : `Habits for ${format(selectedDate, 'MMM d, yyyy')}`}
-        description={today ? 'Build your streaks' : 'View and track past habits'}
-        actions={
-          <>
+      <CardHeader className="space-y-4 pb-2 sm:pb-4">
+        <div>
+          <CardTitle className="text-base sm:text-lg">
+            {today ? 'Daily Habits' : `Habits for ${format(selectedDate, 'MMM d, yyyy')}`}
+          </CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
+            {today ? 'Build your streaks' : 'View and track past habits'}
+          </CardDescription>
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
             <ArchivedHabitsDialog 
               archivedHabits={archivedHabits}
               onRestoreHabit={onRestoreHabit}
               onPermanentlyDeleteHabit={onPermanentlyDeleteHabit}
             />
             <AddHabitDialog onAddHabit={onAddHabit} goals={goals} />
-          </>
-        }
-      />
+          </div>
+        </div>
+      </CardHeader>
       
       <CardContent className="space-y-3">
         <DateNavigator 
