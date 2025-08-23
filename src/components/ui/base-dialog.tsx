@@ -12,6 +12,11 @@ export interface BaseDialogProps {
   contentClassName?: string;
   headerClassName?: string;
   showHeader?: boolean;
+  // Standardization props
+  maxWidth?: "md" | "2xl";
+  scrollHeight?: "80" | "96";
+  gradientItems?: boolean;
+  headerIcon?: React.ReactNode;
 }
 
 /**
@@ -27,8 +32,19 @@ export const BaseDialog = ({
   trigger,
   contentClassName,
   headerClassName,
-  showHeader = true
+  showHeader = true,
+  maxWidth = "md",
+  headerIcon
 }: BaseDialogProps) => {
+  // Generate standardized content class if not provided
+  const standardContentClassName = contentClassName || `max-w-${maxWidth}`;
+  
+  const titleContent = headerIcon ? (
+    <div className="flex items-center gap-2">
+      {headerIcon}
+      {title}
+    </div>
+  ) : title;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {trigger && (
@@ -36,10 +52,10 @@ export const BaseDialog = ({
           {trigger}
         </DialogTrigger>
       )}
-      <DialogContent className={contentClassName}>
+      <DialogContent className={standardContentClassName}>
         {showHeader && (
           <DialogHeader className={headerClassName}>
-            <DialogTitle>{title}</DialogTitle>
+            <DialogTitle>{titleContent}</DialogTitle>
             {description && <DialogDescription>{description}</DialogDescription>}
           </DialogHeader>
         )}
