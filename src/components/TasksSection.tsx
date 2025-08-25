@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { format, isToday, isSameDay } from 'date-fns';
 import { Task, WeeklyOutput, Goal } from '@/types/productivity';
 import { AddTaskDialog } from './AddTaskDialog';
-import { TaskItem } from './TaskItem';
+import { TaskItemWithPomodoro } from './TaskItemWithPomodoro';
 import { DeletedTasksDialog } from './DeletedTasksDialog';
 import { CompletedTasksDialog } from './CompletedTasksDialog';
 import { TaskDetailsDialog } from './TaskDetailsDialog';
@@ -135,7 +135,7 @@ export const TasksSection = ({
             <h4 className="text-sm font-medium text-orange-600 mb-2">Overdue Tasks</h4>
             <div className="space-y-2">
               {overdueTasks.filter(task => !task.completed).slice(0, 3).map(task => (
-                <TaskItem 
+            <TaskItemWithPomodoro
                   key={task.id} 
                   task={task}
                   onToggleTask={onToggleTask}

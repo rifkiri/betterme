@@ -7,6 +7,7 @@ import { lazy, Suspense } from "react";
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { PublicRoute } from '@/components/auth/PublicRoute';
+import { ActivePomodoroIndicator } from './components/ActivePomodoroIndicator';
 
 // Import SignIn normally (needed immediately for auth)
 import SignIn from "./pages/SignIn";
@@ -67,6 +68,7 @@ const App = () => (
       <Toaster />
       <BrowserRouter>
         <AuthProvider>
+          <ActivePomodoroIndicator />
           <Routes>
             {/* Public Routes */}
             <Route 
