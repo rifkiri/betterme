@@ -115,7 +115,7 @@ export const TasksSection = ({
             <p className="text-center text-gray-500 py-4 text-sm">No tasks for this date</p>
           ) : (
             selectedDateTasks.map(task => (
-              <TaskItem 
+              <TaskItemWithPomodoro 
                 key={task.id} 
                 task={task}
                 onToggleTask={onToggleTask}
