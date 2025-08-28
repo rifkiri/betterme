@@ -39,7 +39,7 @@ export const TaskItemWithPomodoro = ({
 }: TaskItemProps) => {
   const [taggedUsers, setTaggedUsers] = useState<TaggedUser[]>([]);
   const [pomodoroCount, setPomodoroCount] = useState(0);
-  const { session, startWork } = usePomodoroTimer();
+  const { session, startWork, togglePause } = usePomodoroTimer();
   const { currentUser } = useCurrentUser();
   const linkedOutput = task.weeklyOutputId ? weeklyOutputs.find(output => output.id === task.weeklyOutputId) : null;
 
@@ -92,8 +92,12 @@ export const TaskItemWithPomodoro = ({
 
   const isActivePomodoro = session?.taskId === task.id;
 
-  const handlePomodoroStart = () => {
-    if (!task.completed) {
+  const handlePomodoroClick = () => {
+    if (task.completed) return;
+    
+    if (isActivePomodoro) {
+      togglePause();
+    } else {
       startWork(task.id, task.title);
     }
   };
@@ -110,10 +114,9 @@ export const TaskItemWithPomodoro = ({
             {!task.completed && (
               <IconButton
                 icon={<Timer className="h-4 w-4" />}
-                onClick={handlePomodoroStart}
-                tooltip={isActivePomodoro ? "Timer is running" : "Start Pomodoro Timer"}
+                onClick={handlePomodoroClick}
+                tooltip={isActivePomodoro ? "Pause/Resume Timer" : "Start Pomodoro Timer"}
                 variant={isActivePomodoro ? "default" : "outline"}
-                disabled={isActivePomodoro}
               />
             )}
             {!task.completed && (
