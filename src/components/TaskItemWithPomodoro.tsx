@@ -107,12 +107,13 @@ export const TaskItemWithPomodoro = ({
         onDelete: () => onDeleteTask(task.id),
         customActions: (
           <>
-            {!task.completed && !isActivePomodoro && (
+            {!task.completed && (
               <IconButton
                 icon={<Timer className="h-4 w-4" />}
                 onClick={handlePomodoroStart}
-                tooltip="Start Pomodoro Timer"
-                variant="outline"
+                tooltip={isActivePomodoro ? "Timer is running" : "Start Pomodoro Timer"}
+                variant={isActivePomodoro ? "default" : "outline"}
+                disabled={isActivePomodoro}
               />
             )}
             {!task.completed && (
