@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { WeeklyOutput, Task } from '@/types/productivity';
-import { FormDialog } from '@/components/ui/standardized';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { TaskForm } from './task/TaskForm';
 import { TaskFormValues } from './task/taskFormSchema';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface EditTaskDialogProps {
   task: Task;
@@ -21,27 +23,33 @@ export const EditTaskDialog = ({
   weeklyOutputs, 
   onRefresh 
 }: EditTaskDialogProps) => {
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // Form submission is handled by TaskForm
-  };
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleFormSubmit = async (values: TaskFormValues) => {
-    console.log('EditTaskDialog - Form values received:', values);
-    console.log('EditTaskDialog - About to call onSave with task ID:', task.id);
-    
-    await onSave(task.id, {
-      title: values.title,
-      description: values.description || undefined,
-      priority: values.priority,
-      estimatedTime: values.estimatedTime || undefined,
-      dueDate: values.dueDate,
-      weeklyOutputId: values.weeklyOutputId === "" ? undefined : values.weeklyOutputId,
-      taggedUsers: values.taggedUsers || []
-    });
-    
-    console.log('EditTaskDialog - onSave completed, calling onRefresh');
-    onRefresh?.();
+    setIsSubmitting(true);
+    try {
+      console.log('EditTaskDialog - Form values received:', values);
+      console.log('EditTaskDialog - About to call onSave with task ID:', task.id);
+      
+      await onSave(task.id, {
+        title: values.title,
+        description: values.description || undefined,
+        priority: values.priority,
+        estimatedTime: values.estimatedTime || undefined,
+        dueDate: values.dueDate,
+        weeklyOutputId: values.weeklyOutputId === "" ? undefined : values.weeklyOutputId,
+        taggedUsers: values.taggedUsers || []
+      });
+      
+      console.log('EditTaskDialog - onSave completed, calling onRefresh');
+      onRefresh?.();
+      onOpenChange(false);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCancel = () => {
     onOpenChange(false);
   };
 
@@ -57,26 +65,35 @@ export const EditTaskDialog = ({
   };
 
   return (
-    <FormDialog
-      open={open}
-      onOpenChange={onOpenChange}
-      title="Edit Task"
-      description="Update your task details."
-      onSubmit={handleSubmit}
-      submitText="Save Changes"
-      contentClassName="sm:max-w-[425px]"
-      showFooter={false}
-    >
-      <ScrollArea className="h-[60vh] px-1">
-        <div className="pb-4">
-          <TaskForm 
-            initialValues={taskAsFormValues}
-            onSubmit={handleFormSubmit}
-            onCancel={() => onOpenChange(false)}
-            weeklyOutputs={weeklyOutputs}
-          />
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] flex flex-col">
+        <DialogHeader className="shrink-0">
+          <DialogTitle>Edit Task</DialogTitle>
+          <DialogDescription>
+            Update your task details.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <ScrollArea className="h-[60vh] px-1">
+          <div className="pb-4">
+            <TaskForm 
+              initialValues={taskAsFormValues}
+              onSubmit={handleFormSubmit}
+              onCancel={handleCancel}
+              weeklyOutputs={weeklyOutputs}
+            />
+          </div>
+        </ScrollArea>
+        
+        <div className="flex justify-end space-x-2 pt-4 border-t shrink-0">
+          <Button type="button" variant="outline" onClick={handleCancel}>
+            Cancel
+          </Button>
+          <Button type="submit" form="task-form" disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : "Save Changes"}
+          </Button>
         </div>
-      </ScrollArea>
-    </FormDialog>
+      </DialogContent>
+    </Dialog>
   );
 };
