@@ -126,8 +126,18 @@ export class PomodoroSessionManager {
         return;
       }
 
-      // Load active sessions from database
-      const sessions = await SupabaseActivePomodoroService.getActiveSessionsByUser(userId);
+      // Step 1: Auto-cleanup stale sessions (background process)
+      try {
+        const cleanedCount = await SupabaseActivePomodoroService.cleanupStaleSessionsForUser(userId, 24);
+        if (cleanedCount > 0) {
+          console.log(`Auto-cleaned ${cleanedCount} stale Pomodoro sessions`);
+        }
+      } catch (error) {
+        console.error('Error during auto-cleanup:', error);
+      }
+
+      // Step 2: Load only recent active sessions (48 hours max)
+      const sessions = await SupabaseActivePomodoroService.getActiveSessionsByUser(userId, 48);
       
       if (sessions.length > 0) {
         const runningSession = sessions.find(s => s.session_status === 'active-running');
@@ -142,10 +152,18 @@ export class PomodoroSessionManager {
           const sessionWithAccurateTime = { ...runningSession, current_time_remaining: remaining };
           this.globalState.updateSession(sessionWithAccurateTime, true);
         } else if (pausedSession) {
-          toast.info('You have a paused timer. Click to resume.', {
+          // Step 3: Smart notifications with age context and dismiss option
+          const ageHours = SupabaseActivePomodoroService.calculateSessionAge(pausedSession);
+          const ageText = this.formatSessionAge(ageHours);
+          
+          toast.info(`Timer paused ${ageText} ago. Resume or dismiss?`, {
             action: {
               label: 'Resume',
               onClick: () => this.resumeSession(pausedSession.id),
+            },
+            cancel: {
+              label: 'Dismiss',
+              onClick: () => this.terminateSessionById(pausedSession.id),
             },
           });
         }
@@ -574,12 +592,34 @@ export class PomodoroSessionManager {
       const newDuration = this.getCurrentSessionDuration();
       this.timeRemaining = newDuration * 60;
     }
-    
-    this.notifyListeners();
-    
-    // Request notification permission if enabled
-    if (newSettings.notificationsEnabled && 'Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
+  }
+
+  async terminateSessionById(sessionId: string) {
+    try {
+      await SupabaseActivePomodoroService.terminateSession(sessionId);
+      
+      // If it's the current active session, clear it from global state
+      if (this.activeSession?.id === sessionId) {
+        this.globalState.updateSession(null, true);
+      }
+      
+      toast.success('Timer dismissed');
+    } catch (error) {
+      console.error('Error terminating session:', error);
+      toast.error('Failed to dismiss timer');
+    }
+  }
+
+  private formatSessionAge(ageHours: number): string {
+    if (ageHours < 1) {
+      const minutes = Math.floor(ageHours * 60);
+      return minutes <= 1 ? '1 minute' : `${minutes} minutes`;
+    } else if (ageHours < 24) {
+      const hours = Math.floor(ageHours);
+      return hours === 1 ? '1 hour' : `${hours} hours`;
+    } else {
+      const days = Math.floor(ageHours / 24);
+      return days === 1 ? '1 day' : `${days} days`;
     }
   }
 

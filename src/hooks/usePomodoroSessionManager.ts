@@ -42,6 +42,7 @@ export const usePomodoroSessionManager = () => {
     stopSession: () => sessionManager.stopSession(),
     skipSession: () => sessionManager.skipSession(),
     terminateSession: () => sessionManager.terminateSession(),
+    terminateSessionById: (sessionId: string) => sessionManager.terminateSessionById(sessionId),
     resumeSession: (sessionId: string) => sessionManager.resumeSession(sessionId),
     updateSessionSettings: (settings: PomodoroSessionSettings) => sessionManager.updateSessionSettings(settings),
   };

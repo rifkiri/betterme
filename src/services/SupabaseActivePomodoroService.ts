@@ -35,7 +35,7 @@ export class SupabaseActivePomodoroService {
     return data as ActivePomodoroSession;
   }
 
-  static async getActiveSessionsByUser(userId: string): Promise<ActivePomodoroSession[]> {
+  static async getActiveSessionsByUser(userId: string, maxAgeHours: number = 48): Promise<ActivePomodoroSession[]> {
     const { data, error } = await supabase
       .from('active_pomodoro_sessions')
       .select('*')
@@ -44,7 +44,82 @@ export class SupabaseActivePomodoroService {
       .order('updated_at', { ascending: false });
 
     if (error) throw error;
-    return (data || []) as ActivePomodoroSession[];
+    
+    const sessions = (data || []) as ActivePomodoroSession[];
+    
+    // Filter out stale sessions based on age
+    return sessions.filter(session => !this.isSessionStale(session, maxAgeHours));
+  }
+
+  static async cleanupStaleSessionsForUser(userId: string, maxAgeHours: number = 24): Promise<number> {
+    const { data, error } = await supabase
+      .from('active_pomodoro_sessions')
+      .select('*')
+      .eq('user_id', userId)
+      .neq('session_status', 'terminated');
+
+    if (error) {
+      console.error('Error fetching sessions for cleanup:', error);
+      return 0;
+    }
+
+    const sessions = (data || []) as ActivePomodoroSession[];
+    const staleSessions = sessions.filter(session => this.isSessionStale(session, maxAgeHours));
+    
+    if (staleSessions.length === 0) {
+      return 0;
+    }
+
+    // Batch terminate stale sessions
+    const { error: updateError } = await supabase
+      .from('active_pomodoro_sessions')
+      .update({ 
+        session_status: 'terminated',
+        current_start_time: null,
+        current_pause_time: null,
+        current_time_remaining: null
+      })
+      .in('id', staleSessions.map(s => s.id));
+
+    if (updateError) {
+      console.error('Error cleaning up stale sessions:', updateError);
+      return 0;
+    }
+
+    console.log(`Cleaned up ${staleSessions.length} stale Pomodoro sessions`);
+    return staleSessions.length;
+  }
+
+  static isSessionStale(session: ActivePomodoroSession, maxAgeHours: number = 24): boolean {
+    const now = new Date();
+    
+    // For paused sessions, check pause time
+    if (session.session_status === 'active-paused' && session.current_pause_time) {
+      const pauseTime = new Date(session.current_pause_time);
+      const hoursSincePause = (now.getTime() - pauseTime.getTime()) / (1000 * 60 * 60);
+      return hoursSincePause > maxAgeHours;
+    }
+    
+    // For stopped sessions, check updated_at
+    if (session.session_status === 'active-stopped') {
+      const updatedAt = new Date(session.updated_at);
+      const hoursSinceUpdate = (now.getTime() - updatedAt.getTime()) / (1000 * 60 * 60);
+      return hoursSinceUpdate > maxAgeHours;
+    }
+    
+    return false;
+  }
+
+  static calculateSessionAge(session: ActivePomodoroSession): number {
+    const now = new Date();
+    
+    if (session.session_status === 'active-paused' && session.current_pause_time) {
+      const pauseTime = new Date(session.current_pause_time);
+      return (now.getTime() - pauseTime.getTime()) / (1000 * 60 * 60);
+    }
+    
+    const updatedAt = new Date(session.updated_at);
+    return (now.getTime() - updatedAt.getTime()) / (1000 * 60 * 60);
   }
 
   static async getActiveSessionByTask(taskId: string, userId: string): Promise<ActivePomodoroSession | null> {
