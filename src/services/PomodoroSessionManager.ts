@@ -74,6 +74,13 @@ export class PomodoroSessionManager {
         console.log('Restoring paused time:', globalSession.current_time_remaining);
         this.timeRemaining = globalSession.current_time_remaining;
       }
+      // For stopped sessions, restore saved time (full duration)
+      else if (globalSession.session_status === 'active-stopped' &&
+               globalSession.current_time_remaining !== null && 
+               globalSession.current_time_remaining !== undefined) {
+        console.log('Restoring stopped session time:', globalSession.current_time_remaining);
+        this.timeRemaining = globalSession.current_time_remaining;
+      }
       // For running sessions, restore saved time if available
       else if (globalSession.session_status === 'active-running' &&
                globalSession.current_time_remaining !== null && 
@@ -87,6 +94,8 @@ export class PomodoroSessionManager {
           this.timeRemaining = globalSession.current_time_remaining;
         }
       }
+      
+      // Update running state based on session status
       this.isRunning = globalSession.session_status === 'active-running';
     } else {
       // Session terminated globally
@@ -358,18 +367,35 @@ export class PomodoroSessionManager {
     if (!this.activeSession) return;
 
     try {
+      // Handle restarting a stopped session
+      const isRestartingStoppedSession = this.activeSession.session_status === 'active-stopped';
+      const duration = isRestartingStoppedSession && this.activeSession.current_session_type === 'work' 
+        ? this.activeSession.current_time_remaining || this.settings.workDuration * 60
+        : this.settings.workDuration * 60;
+
       const updatedSession = await SupabaseActivePomodoroService.updateActiveSession(this.activeSession.id, {
-        session_status: 'active-running',
         current_session_type: 'work',
+        session_status: 'active-running',
         current_start_time: new Date().toISOString(),
         current_pause_time: null,
-        current_time_remaining: null, // Clear saved time for fresh start
+        current_time_remaining: duration,
       });
 
+      this.activeSession = updatedSession;
+      this.timeRemaining = duration;
+      this.isRunning = true;
+
+      // Update global state
       this.globalState.updateSession(updatedSession, true);
-      this.timeRemaining = updatedSession.work_duration * 60;
+      
+      this.updateTimer();
+      this.notifyListeners();
+      
+      const message = isRestartingStoppedSession ? 'Work session restarted' : 'Work session started';
+      toast.info(message);
     } catch (error) {
-      console.error('Error starting work:', error);
+      console.error('Error starting work session:', error);
+      toast.error('Error starting work session');
     }
   }
 
@@ -377,22 +403,40 @@ export class PomodoroSessionManager {
     if (!this.activeSession) return;
 
     try {
-      const duration = breakType === 'long_break' 
-        ? this.activeSession.long_break_duration 
-        : this.activeSession.short_break_duration;
+      // Handle restarting a stopped session
+      const isRestartingStoppedSession = this.activeSession.session_status === 'active-stopped';
+      const baseDuration = breakType === 'short_break' 
+        ? this.settings.shortBreakDuration * 60 
+        : this.settings.longBreakDuration * 60;
+      
+      const duration = isRestartingStoppedSession && this.activeSession.current_session_type === breakType
+        ? this.activeSession.current_time_remaining || baseDuration
+        : baseDuration;
 
       const updatedSession = await SupabaseActivePomodoroService.updateActiveSession(this.activeSession.id, {
-        session_status: 'active-running',
         current_session_type: breakType,
+        session_status: 'active-running',
         current_start_time: new Date().toISOString(),
         current_pause_time: null,
-        current_time_remaining: null, // Clear saved time for fresh start
+        current_time_remaining: duration,
       });
 
+      this.activeSession = updatedSession;
+      this.timeRemaining = duration;
+      this.isRunning = true;
+
+      // Update global state
       this.globalState.updateSession(updatedSession, true);
-      this.timeRemaining = duration * 60;
+      
+      this.updateTimer();
+      this.notifyListeners();
+      
+      const breakTypeText = breakType === 'short_break' ? 'Short break' : 'Long break';
+      const message = isRestartingStoppedSession ? `${breakTypeText} restarted` : `${breakTypeText} started`;
+      toast.info(message);
     } catch (error) {
       console.error('Error starting break:', error);
+      toast.error('Error starting break');
     }
   }
 
@@ -437,35 +481,36 @@ export class PomodoroSessionManager {
     if (!this.activeSession) return;
 
     try {
-      // Save interrupted session if it was a work session and had elapsed time
-      if (this.activeSession.current_session_type === 'work' && this.activeSession.current_start_time) {
-        const elapsed = Math.floor((Date.now() - new Date(this.activeSession.current_start_time).getTime()) / 1000 / 60);
-        if (elapsed > 0) {
-          await SupabasePomodoroService.saveSession({
-            user_id: this.currentUser!.id,
-            task_id: this.activeSession.task_id,
-            session_id: this.activeSession.session_id,
-            duration_minutes: elapsed,
-            session_type: 'work',
-            interrupted: true,
-            pomodoro_number: this.activeSession.completed_work_sessions + 1,
-            break_number: this.activeSession.completed_break_sessions,
-          });
-        }
-      }
+      // 1. Stop timer immediately
+      this.isRunning = false;
+      this.clearTimer();
 
-      await SupabaseActivePomodoroService.updateActiveSession(this.activeSession.id, {
+      // 2. Save interrupted session if there's elapsed time
+      await this.saveInterruptedSession();
+
+      // 3. Reset time to beginning and update database to stopped state
+      const fullDuration = this.getCurrentSessionDuration() * 60;
+      const updatedSession = await SupabaseActivePomodoroService.updateActiveSession(this.activeSession.id, {
         session_status: 'active-stopped',
         current_start_time: null,
         current_pause_time: null,
+        current_time_remaining: fullDuration
       });
 
-      const duration = this.getCurrentSessionDuration();
-      this.timeRemaining = duration * 60;
-      
-      toast.info('Timer stopped');
+      // 4. Update local state
+      this.timeRemaining = fullDuration;
+      this.activeSession = updatedSession;
+
+      // 5. Update global state for cross-tab consistency
+      this.globalState.updateSession(updatedSession, true);
+
+      // 6. Notify listeners and provide feedback
+      this.notifyListeners();
+      toast.info('Timer stopped and reset');
+
     } catch (error) {
       console.error('Error stopping session:', error);
+      toast.error('Error stopping timer');
     }
   }
 
@@ -549,6 +594,32 @@ export class PomodoroSessionManager {
       }
     } catch (error) {
       console.error('Error saving skipped session:', error);
+    }
+  }
+
+  // Save interrupted session to history (for stop functionality)
+  private async saveInterruptedSession() {
+    if (!this.activeSession || !this.currentUser || !this.activeSession.current_start_time) return;
+
+    try {
+      const elapsed = Math.floor((Date.now() - new Date(this.activeSession.current_start_time).getTime()) / 1000 / 60);
+      
+      if (elapsed > 0) {
+        const isWorkSession = this.activeSession.current_session_type === 'work';
+        
+        await SupabasePomodoroService.saveSession({
+          user_id: this.currentUser.id,
+          task_id: this.activeSession.task_id,
+          session_id: this.activeSession.session_id,
+          duration_minutes: elapsed,
+          session_type: this.activeSession.current_session_type as any,
+          interrupted: true,
+          pomodoro_number: isWorkSession ? this.activeSession.completed_work_sessions + 1 : this.activeSession.completed_work_sessions,
+          break_number: isWorkSession ? this.activeSession.completed_break_sessions : this.activeSession.completed_break_sessions + 1,
+        });
+      }
+    } catch (error) {
+      console.error('Error saving interrupted session:', error);
     }
   }
 
