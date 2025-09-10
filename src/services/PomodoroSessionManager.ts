@@ -364,12 +364,7 @@ export class PomodoroSessionManager {
         this.globalState.updateSession(updatedSession, true);
         this.notifyListeners(); // Notify immediately after work session completion
         
-        // Emit event for real-time counter updates
-        pomodoroEventEmitter.emit('session_completed', {
-          sessionId: this.activeSession.session_id,
-          taskId: this.activeSession.task_id,
-          sessionType: 'work'
-        });
+        // Event emission now handled in saveSessionOnce after successful save
         
         if (this.settings.autoStartBreaks) {
           const breakType = this.determineNextBreakType(updatedSession.completed_work_sessions, updatedSession.sessions_until_long_break);
@@ -1085,8 +1080,8 @@ export class PomodoroSessionManager {
 
   // Helper method to prevent duplicate session saves
   private async saveSessionOnce(sessionData: any, saveContext: string): Promise<void> {
-    // Create more unique session key with duration and timestamp to prevent false duplicates  
-    const sessionKey = `${sessionData.session_id}-${sessionData.session_type}-${sessionData.interrupted ? 'interrupted' : 'completed'}-${sessionData.duration_minutes}-${Date.now()}`;
+    // Create session key WITHOUT timestamp for proper deduplication
+    const sessionKey = `${sessionData.session_id}-${sessionData.session_type}-${sessionData.interrupted ? 'interrupted' : 'completed'}-${sessionData.pomodoro_number}-${sessionData.break_number}`;
     
     // Check if this exact session is already being processed
     if (this.savedSessions.has(sessionKey)) {
@@ -1116,6 +1111,23 @@ export class PomodoroSessionManager {
       });
       
     } catch (error) {
+      // Handle duplicate constraint violations gracefully
+      if (error?.message?.includes('unique_session_completion') || error?.code === '23505') {
+        console.info('🔄 Session already exists in database, skipping duplicate save:', { sessionKey, context: saveContext });
+        this.savedSessions.add(sessionKey); // Mark as saved to prevent retries
+        
+        // Still emit event for UI updates even if duplicate
+        pomodoroEventEmitter.emit('session_completed', {
+          sessionType: sessionData.session_type,
+          taskId: sessionData.task_id || undefined,
+          duration: sessionData.duration_minutes,
+          interrupted: sessionData.interrupted || false,
+          pomodoroNumber: sessionData.pomodoro_number,
+          breakNumber: sessionData.break_number
+        });
+        return;
+      }
+      
       console.error('❌ Failed to save session:', { sessionKey, context: saveContext, error });
       // Don't add to savedSessions if save failed - allow retry
       throw error;
