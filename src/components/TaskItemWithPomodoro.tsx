@@ -8,8 +8,7 @@ import { format, isToday, isTomorrow, isPast } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { ItemCard, StatusBadge, LinkBadge, DateDisplay } from '@/components/ui/standardized';
 import { IconButton } from '@/components/ui/icon-button';
-import { EnhancedPomodoroTimer } from '@/components/pomodoro/EnhancedPomodoroTimer';
-import { usePomodoroTimer } from '@/hooks/usePomodoroTimer';
+import { usePomodoroSessionManager } from '@/hooks/usePomodoroSessionManager';
 import { SupabasePomodoroService } from '@/services/SupabasePomodoroService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
@@ -39,8 +38,7 @@ export const TaskItemWithPomodoro = ({
 }: TaskItemProps) => {
   const [taggedUsers, setTaggedUsers] = useState<TaggedUser[]>([]);
   const [pomodoroCount, setPomodoroCount] = useState(0);
-  const [showTimer, setShowTimer] = useState(false);
-  const { session, startWork, togglePause } = usePomodoroTimer();
+  const { activeSession, createSession } = usePomodoroSessionManager();
   const { currentUser } = useCurrentUser();
   const linkedOutput = task.weeklyOutputId ? weeklyOutputs.find(output => output.id === task.weeklyOutputId) : null;
 
@@ -62,7 +60,7 @@ export const TaskItemWithPomodoro = ({
     };
 
     fetchPomodoroCount();
-  }, [task.id, currentUser?.id, session]); // Re-fetch when session changes
+  }, [task.id, currentUser?.id, activeSession]); // Re-fetch when session changes
 
   const fetchTaggedUsers = async () => {
     if (!task.taggedUsers || task.taggedUsers.length === 0) {
@@ -91,19 +89,12 @@ export const TaskItemWithPomodoro = ({
     return task.dueDate && isPast(task.dueDate) && !isToday(task.dueDate) && !task.completed;
   };
 
-  const isActivePomodoro = session?.taskId === task.id;
+  const isActivePomodoro = activeSession?.task_id === task.id;
 
   const handlePomodoroClick = () => {
     if (task.completed) return;
-    
-    if (!showTimer) {
-      setShowTimer(true);
-      startWork(task.id, task.title);
-    } else if (isActivePomodoro) {
-      togglePause();
-    } else {
-      startWork(task.id, task.title);
-    }
+    // Create session for this specific task
+    createSession(task.id, task.title);
   };
 
   return (
@@ -203,10 +194,6 @@ export const TaskItemWithPomodoro = ({
       {task.description && (
         <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
       )}
-      
-        <div className="mt-4">
-          <EnhancedPomodoroTimer task={task} />
-        </div>
     </ItemCard>
   );
 };
