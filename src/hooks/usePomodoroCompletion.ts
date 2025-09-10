@@ -11,7 +11,9 @@ export const usePomodoroCompletion = () => {
     duration: number,
     sessionType: 'work' | 'short_break' | 'long_break',
     interrupted: boolean = false,
-    suppressToast: boolean = false // Add option to suppress toast for interim saves
+    suppressToast: boolean = false, // Add option to suppress toast for interim saves
+    pomodoroNumber?: number,
+    breakNumber?: number
   ) => {
     if (!currentUser?.id) return;
 
@@ -24,6 +26,8 @@ export const usePomodoroCompletion = () => {
         session_status: 'completed',
         interrupted,
         completed_at: new Date().toISOString(),
+        pomodoro_number: pomodoroNumber,
+        break_number: breakNumber,
       });
       
       if (!interrupted && !suppressToast && sessionType === 'work') {

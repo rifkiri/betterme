@@ -244,10 +244,39 @@ export class PomodoroSessionManager {
     this.playSound();
 
     try {
-      // Save completed session to history - determine session type first
+      // Save completed session to history with proper cumulative numbering
       const isWorkSession = this.activeSession.current_session_type === 'work';
       const currentWorkSessions = this.activeSession.completed_work_sessions;
       const currentBreakSessions = this.activeSession.completed_break_sessions;
+      
+      // Calculate proper cumulative pomodoro and break numbers
+      let cumulativePomodoroNumber = 1;
+      let cumulativeBreakNumber = 0;
+      
+      if (this.activeSession.task_id) {
+        // Import TaskPomodoroStatsService to get cumulative counts
+        const { TaskPomodoroStatsService } = await import('@/services/TaskPomodoroStatsService');
+        
+        if (isWorkSession) {
+          // Get next cumulative pomodoro number for this task
+          cumulativePomodoroNumber = await TaskPomodoroStatsService.getNextPomodoroNumber(
+            this.activeSession.task_id, 
+            this.currentUser.id
+          );
+        } else {
+          // For breaks, get current cumulative work session count
+          const stats = await TaskPomodoroStatsService.getTaskStats(
+            this.activeSession.task_id, 
+            this.currentUser.id
+          );
+          cumulativePomodoroNumber = stats.totalWorkSessions + currentWorkSessions;
+          cumulativeBreakNumber = stats.totalBreakSessions + currentBreakSessions + 1;
+        }
+      } else {
+        // For non-task sessions, use session-level counters
+        cumulativePomodoroNumber = isWorkSession ? currentWorkSessions + 1 : currentWorkSessions;
+        cumulativeBreakNumber = !isWorkSession ? currentBreakSessions + 1 : currentBreakSessions;
+      }
       
       await SupabasePomodoroService.saveSession({
         user_id: this.currentUser.id,
@@ -256,14 +285,15 @@ export class PomodoroSessionManager {
         duration_minutes: this.getCurrentSessionDuration(),
         session_type: this.activeSession.current_session_type as any,
         session_status: 'completed',
-        pomodoro_number: isWorkSession ? currentWorkSessions + 1 : currentWorkSessions,
-        break_number: !isWorkSession ? currentBreakSessions + 1 : currentBreakSessions,
+        pomodoro_number: cumulativePomodoroNumber,
+        break_number: cumulativeBreakNumber,
         completed_at: new Date().toISOString(),
       });
-      console.log('💾 Session saved to history:', {
+      console.log('💾 Session saved to history with cumulative numbers:', {
         type: this.activeSession.current_session_type,
-        work_count: isWorkSession ? currentWorkSessions + 1 : currentWorkSessions,
-        break_count: !isWorkSession ? currentBreakSessions + 1 : currentBreakSessions,
+        cumulative_pomodoro: cumulativePomodoroNumber,
+        cumulative_break: cumulativeBreakNumber,
+        taskId: this.activeSession.task_id
       });
 
       if (isWorkSession) {
@@ -636,6 +666,35 @@ export class PomodoroSessionManager {
         if (elapsed > 0) {
           const isWorkSession = this.activeSession.current_session_type === 'work';
           
+          // Calculate proper cumulative pomodoro and break numbers for interrupted sessions
+          let cumulativePomodoroNumber = 1;
+          let cumulativeBreakNumber = 0;
+          
+          if (this.activeSession.task_id) {
+            // Import TaskPomodoroStatsService to get cumulative counts
+            const { TaskPomodoroStatsService } = await import('@/services/TaskPomodoroStatsService');
+            
+            if (isWorkSession) {
+              // Get next cumulative pomodoro number for this task
+              cumulativePomodoroNumber = await TaskPomodoroStatsService.getNextPomodoroNumber(
+                this.activeSession.task_id, 
+                this.currentUser.id
+              );
+            } else {
+              // For breaks, get current cumulative work session count
+              const stats = await TaskPomodoroStatsService.getTaskStats(
+                this.activeSession.task_id, 
+                this.currentUser.id
+              );
+              cumulativePomodoroNumber = stats.totalWorkSessions + this.activeSession.completed_work_sessions;
+              cumulativeBreakNumber = stats.totalBreakSessions + this.activeSession.completed_break_sessions + 1;
+            }
+          } else {
+            // For non-task sessions, use session-level counters
+            cumulativePomodoroNumber = isWorkSession ? this.activeSession.completed_work_sessions + 1 : this.activeSession.completed_work_sessions;
+            cumulativeBreakNumber = isWorkSession ? this.activeSession.completed_break_sessions : this.activeSession.completed_break_sessions + 1;
+          }
+          
           await SupabasePomodoroService.saveSession({
             user_id: this.currentUser.id,
             task_id: this.activeSession.task_id,
@@ -643,8 +702,8 @@ export class PomodoroSessionManager {
             duration_minutes: elapsed,
             session_type: this.activeSession.current_session_type as any,
             interrupted: true,
-            pomodoro_number: isWorkSession ? this.activeSession.completed_work_sessions + 1 : this.activeSession.completed_work_sessions,
-            break_number: isWorkSession ? this.activeSession.completed_break_sessions : this.activeSession.completed_break_sessions + 1,
+            pomodoro_number: cumulativePomodoroNumber,
+            break_number: cumulativeBreakNumber,
           });
         }
       }
@@ -663,6 +722,35 @@ export class PomodoroSessionManager {
       if (elapsed > 0) {
         const isWorkSession = this.activeSession.current_session_type === 'work';
         
+        // Calculate proper cumulative pomodoro and break numbers for interrupted sessions
+        let cumulativePomodoroNumber = 1;
+        let cumulativeBreakNumber = 0;
+        
+        if (this.activeSession.task_id) {
+          // Import TaskPomodoroStatsService to get cumulative counts
+          const { TaskPomodoroStatsService } = await import('@/services/TaskPomodoroStatsService');
+          
+          if (isWorkSession) {
+            // Get next cumulative pomodoro number for this task
+            cumulativePomodoroNumber = await TaskPomodoroStatsService.getNextPomodoroNumber(
+              this.activeSession.task_id, 
+              this.currentUser.id
+            );
+          } else {
+            // For breaks, get current cumulative work session count
+            const stats = await TaskPomodoroStatsService.getTaskStats(
+              this.activeSession.task_id, 
+              this.currentUser.id
+            );
+            cumulativePomodoroNumber = stats.totalWorkSessions + this.activeSession.completed_work_sessions;
+            cumulativeBreakNumber = stats.totalBreakSessions + this.activeSession.completed_break_sessions + 1;
+          }
+        } else {
+          // For non-task sessions, use session-level counters
+          cumulativePomodoroNumber = isWorkSession ? this.activeSession.completed_work_sessions + 1 : this.activeSession.completed_work_sessions;
+          cumulativeBreakNumber = isWorkSession ? this.activeSession.completed_break_sessions : this.activeSession.completed_break_sessions + 1;
+        }
+        
         await SupabasePomodoroService.saveSession({
           user_id: this.currentUser.id,
           task_id: this.activeSession.task_id,
@@ -670,8 +758,8 @@ export class PomodoroSessionManager {
           duration_minutes: elapsed,
           session_type: this.activeSession.current_session_type as any,
           interrupted: true,
-          pomodoro_number: isWorkSession ? this.activeSession.completed_work_sessions + 1 : this.activeSession.completed_work_sessions,
-          break_number: isWorkSession ? this.activeSession.completed_break_sessions : this.activeSession.completed_break_sessions + 1,
+          pomodoro_number: cumulativePomodoroNumber,
+          break_number: cumulativeBreakNumber,
         });
       }
     } catch (error) {

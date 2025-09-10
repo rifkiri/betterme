@@ -25,6 +25,7 @@ import { ItemCard, StatusBadge, LinkBadge, DateDisplay } from '@/components/ui/s
 import { IconButton } from '@/components/ui/icon-button';
 import { usePomodoroSessionManager } from '@/hooks/usePomodoroSessionManager';
 import { usePomodoroCounter } from '@/hooks/usePomodoroCounter';
+import { TaskPomodoroStatsService } from '@/services/TaskPomodoroStatsService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { PomodoroSettings } from './pomodoro/PomodoroSettings';
 import { getSessionStartAction, getStartButtonTooltip } from '@/utils/pomodoroSessionHelpers';
@@ -74,7 +75,7 @@ export const TaskItemWithPomodoro = ({
     terminateSession
   } = usePomodoroSessionManager();
   const { currentUser } = useCurrentUser();
-  const { count: pomodoroCount } = usePomodoroCounter(task.id);
+  const { cumulativeCount: pomodoroCount, totalDuration } = usePomodoroCounter(task.id);
   const linkedOutput = task.weeklyOutputId ? weeklyOutputs.find(output => output.id === task.weeklyOutputId) : null;
 
   useEffect(() => {
@@ -217,7 +218,12 @@ export const TaskItemWithPomodoro = ({
           {pomodoroCount > 0 && !task.completed && (
             <Badge variant="outline" className="gap-1 ml-2">
               <Timer className="h-3 w-3" />
-              {pomodoroCount}
+              <span>{pomodoroCount}</span>
+              {totalDuration > 0 && (
+                <span className="text-xs opacity-60">
+                  ({TaskPomodoroStatsService.formatDuration(totalDuration)})
+                </span>
+              )}
             </Badge>
           )}
         </div>
