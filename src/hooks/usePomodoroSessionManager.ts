@@ -38,6 +38,7 @@ export const usePomodoroSessionManager = () => {
   const [settings, setSettings] = useState<PomodoroSessionSettings>(DEFAULT_SETTINGS);
   const [isRunning, setIsRunning] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
+  const [isTerminating, setIsTerminating] = useState(false);
   
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -72,7 +73,7 @@ export const usePomodoroSessionManager = () => {
 
   // Load active session on mount (only if no global session exists)
   useEffect(() => {
-    if (!currentUser?.id || globalSession) return;
+    if (!currentUser?.id || globalSession || isTerminating) return;
 
     const loadActiveSessions = async () => {
       try {
@@ -92,8 +93,8 @@ export const usePomodoroSessionManager = () => {
             const remaining = Math.max(0, (session.current_time_remaining || 0) - elapsed);
             setTimeRemaining(remaining);
             setIsRunning(true);
-          } else if (pausedSession) {
-            // Show resume option for paused session
+          } else if (pausedSession && !isTerminating) {
+            // Show resume option for paused session (only if not terminating)
             toast.info('You have a paused timer. Click to resume.', {
               action: {
                 label: 'Resume',
@@ -109,7 +110,7 @@ export const usePomodoroSessionManager = () => {
     };
 
     loadActiveSessions();
-  }, [currentUser?.id, globalSession, updateGlobalSession]);
+  }, [currentUser?.id, globalSession, updateGlobalSession, isTerminating]);
 
   // Timer interval effect
   useEffect(() => {
@@ -417,6 +418,9 @@ export const usePomodoroSessionManager = () => {
   const terminateSession = useCallback(async () => {
     if (!activeSession) return;
 
+    // Set terminating flag to prevent race conditions
+    setIsTerminating(true);
+
     // Store session ID before clearing state
     const sessionId = activeSession.id;
     
@@ -441,6 +445,9 @@ export const usePomodoroSessionManager = () => {
     } catch (error) {
       console.error('Error terminating session:', error);
       toast.error('Error terminating session');
+    } finally {
+      // Clear terminating flag after completion
+      setIsTerminating(false);
     }
   }, [activeSession, terminateGlobalSession]);
 
