@@ -36,8 +36,11 @@ export const TaskItemWithPomodoro = ({
   onViewDetails, 
   weeklyOutputs = [] 
 }: TaskItemProps) => {
+  // Component state
   const [taggedUsers, setTaggedUsers] = useState<TaggedUser[]>([]);
   const [pomodoroCount, setPomodoroCount] = useState(0);
+  
+  // Hooks
   const { activeSession, createSession } = usePomodoroSessionManager();
   const { currentUser } = useCurrentUser();
   const linkedOutput = task.weeklyOutputId ? weeklyOutputs.find(output => output.id === task.weeklyOutputId) : null;
