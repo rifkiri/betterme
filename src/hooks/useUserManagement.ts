@@ -1,12 +1,12 @@
 
 import { useEffect } from 'react';
 import { useCurrentUser } from './useCurrentUser';
-import { useUsersData } from './useUsersData';
+import { useAdminUsersData } from './useAdminUsersData';
 import { useUserCrud } from './useUserCrud';
 
 export const useUserManagement = () => {
   const { currentUser, isAdmin } = useCurrentUser();
-  const { users, isLoading, loadUsers } = useUsersData();
+  const { users, isLoading, loadUsers } = useAdminUsersData();
   const { handleAddUser, handleDeleteUser, handleUpdateUser, handleActivateUser } = useUserCrud(isAdmin, loadUsers);
 
   useEffect(() => {

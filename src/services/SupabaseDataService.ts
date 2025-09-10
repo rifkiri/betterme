@@ -11,6 +11,10 @@ export class SupabaseDataService {
     return await supabaseProfilesService.getUsers();
   }
 
+  async getAllUsersForAdmin() {
+    return await supabaseProfilesService.getAllUsersForAdmin();
+  }
+
   async addUser(user: any) {
     return await supabaseProfilesService.addUser(user);
   }

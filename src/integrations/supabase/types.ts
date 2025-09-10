@@ -527,6 +527,21 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_all_users_for_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          email: string
+          has_changed_password: boolean
+          id: string
+          last_login: string
+          name: string
+          role: string
+          temporary_password: string
+          user_position: string
+          user_status: string
+        }[]
+      }
       get_filtered_users_for_role: {
         Args: Record<PropertyKey, never>
         Returns: {

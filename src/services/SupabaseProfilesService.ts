@@ -10,7 +10,7 @@ export class SupabaseProfilesService {
   private baseService = new BaseProfilesService();
 
   async getUsers(): Promise<User[]> {
-    // Use the secure role-based filtering function
+    // Use the secure role-based filtering function (ACTIVE USERS ONLY)
     const { data: profilesData, error } = await supabase
       .rpc('get_filtered_users_for_role');
 
@@ -31,6 +31,32 @@ export class SupabaseProfilesService {
       userStatus: profile.user_status as 'pending' | 'active',
       createdAt: profile.created_at,
       lastLogin: undefined,
+      managerId: undefined
+    }));
+  }
+
+  async getAllUsersForAdmin(): Promise<User[]> {
+    // Use the admin-only function that includes pending users
+    const { data: profilesData, error } = await supabase
+      .rpc('get_all_users_for_admin');
+
+    if (error) {
+      console.error('Error fetching all users for admin:', error);
+      throw error;
+    }
+
+    // Transform the data to match User interface
+    return (profilesData || []).map(profile => ({
+      id: profile.id,
+      name: profile.name,
+      email: profile.email,
+      role: profile.role as 'admin' | 'manager' | 'team-member',
+      position: profile.user_position,
+      temporaryPassword: profile.temporary_password,
+      hasChangedPassword: profile.has_changed_password,
+      userStatus: profile.user_status as 'pending' | 'active',
+      createdAt: profile.created_at,
+      lastLogin: profile.last_login,
       managerId: undefined
     }));
   }
