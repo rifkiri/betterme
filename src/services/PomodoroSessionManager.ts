@@ -694,36 +694,20 @@ export class PomodoroSessionManager {
       await this.saveSkippedSession();
       
       if (isWorkSession) {
-        // Increment completed work sessions (like completion logic)
-        const newCompletedWork = this.activeSession.completed_work_sessions + 1;
+        // Do NOT increment completed_work_sessions for skipped sessions
+        // Use current completed work count for break type determination
+        const currentWorkCount = this.activeSession.completed_work_sessions;
         
-        // Update database with incremented count
-        const updatedSession = await SupabaseActivePomodoroService.updateActiveSession(this.activeSession.id, {
-          completed_work_sessions: newCompletedWork,
-        });
-        
-        // Update local state
-        this.activeSession = updatedSession;
-        
-        // Determine break type using incremented count
-        const nextBreakType = this.determineNextBreakType(newCompletedWork, this.activeSession.sessions_until_long_break);
+        // Determine break type based on actual completed sessions (not incremented)
+        const nextBreakType = this.determineNextBreakType(currentWorkCount, this.activeSession.sessions_until_long_break);
         
         await this.startBreak(nextBreakType);
         
         const breakTypeText = nextBreakType === 'long_break' ? 'long break' : 'short break';
-        toast.info(`Skipped to ${breakTypeText} (${newCompletedWork}/${this.activeSession.sessions_until_long_break} work sessions)`);
+        toast.info(`Skipped to ${breakTypeText} (${currentWorkCount}/${this.activeSession.sessions_until_long_break} work sessions)`);
       } else {
-        // Increment completed break sessions 
-        const newCompletedBreaks = this.activeSession.completed_break_sessions + 1;
-        
-        // Update database with incremented count
-        const updatedSession = await SupabaseActivePomodoroService.updateActiveSession(this.activeSession.id, {
-          completed_break_sessions: newCompletedBreaks,
-        });
-        
-        // Update local state
-        this.activeSession = updatedSession;
-        
+        // For break sessions, also don't increment break counter
+        // Just transition to work session
         await this.startWork();
         toast.info('Skipped to work session');
       }
