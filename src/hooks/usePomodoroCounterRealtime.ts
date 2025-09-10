@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { TaskPomodoroStatsService, PomodoroCountData } from '@/services/TaskPomodoroStatsService';
 import { PomodoroSessionManager } from '@/services/PomodoroSessionManager';
-import { supabase } from '@/integrations/supabase/client';
 
 export interface UsePomodoroCounterRealtimeResult {
   count: number;
@@ -31,6 +30,7 @@ export const usePomodoroCounterRealtime = (taskId?: string): UsePomodoroCounterR
       // Use optimized cumulative stats lookup
       const result = await TaskPomodoroStatsService.getTaskCountData(taskId, currentUser.id);
       setData(result);
+      console.info('📊 Counter data fetched:', { taskId, result });
     } catch (error) {
       console.error('Error fetching pomodoro counter data:', error);
       setData({ workSessionCount: 0, totalDuration: 0 });
@@ -44,15 +44,20 @@ export const usePomodoroCounterRealtime = (taskId?: string): UsePomodoroCounterR
     fetchData();
   }, [fetchData]);
 
-  // Subscribe to completion events for instant updates
+  // Subscribe to completion events for immediate updates
   useEffect(() => {
     if (!taskId) return;
 
     const sessionManager = PomodoroSessionManager.getInstance();
     const unsubscribe = sessionManager.subscribeToEvents('session_completed', (event) => {
       if (event.taskId === taskId && event.sessionType === 'work') {
+        console.info('🔄 Session completed event received, refetching counter data:', { 
+          taskId, 
+          eventDuration: event.duration,
+          eventPomodoroNumber: event.pomodoroNumber 
+        });
         // Immediate refetch when work session completes for this task
-        fetchData();
+        setTimeout(() => fetchData(), 100); // Small delay to ensure database is updated
       }
     });
 
@@ -66,9 +71,10 @@ export const usePomodoroCounterRealtime = (taskId?: string): UsePomodoroCounterR
     const unsubscribe = TaskPomodoroStatsService.subscribeToTaskChanges(
       taskId, 
       currentUser.id,
-      (data) => {
+      (newData) => {
         // Update state with new data from real-time subscription
-        setData(data);
+        console.info('🔄 Real-time stats update received:', { taskId, newData });
+        setData(newData);
       }
     );
 

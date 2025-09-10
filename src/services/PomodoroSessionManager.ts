@@ -10,6 +10,10 @@ interface PomodoroEvent {
   sessionId?: string;
   taskId?: string;
   sessionType?: string;
+  duration?: number;
+  interrupted?: boolean;
+  pomodoroNumber?: number;
+  breakNumber?: number;
 }
 
 class PomodoroEventEmitter {
@@ -341,7 +345,8 @@ export class PomodoroSessionManager {
         break_number: cumulativeBreakNumber,
         completed_at: new Date().toISOString(),
       }, 'handleSessionComplete');
-      console.log('💾 Session saved to history with cumulative numbers:', {
+      
+      console.info('💾 Session saved to history with cumulative numbers:', {
         type: this.activeSession.current_session_type,
         cumulative_pomodoro: cumulativePomodoroNumber,
         cumulative_break: cumulativeBreakNumber,
@@ -1080,23 +1085,39 @@ export class PomodoroSessionManager {
 
   // Helper method to prevent duplicate session saves
   private async saveSessionOnce(sessionData: any, saveContext: string): Promise<void> {
-    const sessionKey = `${sessionData.session_id}-${sessionData.session_type}-${sessionData.interrupted ? 'interrupted' : 'completed'}`;
+    // Create more unique session key with duration and timestamp to prevent false duplicates  
+    const sessionKey = `${sessionData.session_id}-${sessionData.session_type}-${sessionData.interrupted ? 'interrupted' : 'completed'}-${sessionData.duration_minutes}-${Date.now()}`;
     
+    // Check if this exact session is already being processed
     if (this.savedSessions.has(sessionKey)) {
-      console.log('🚫 Session already saved:', { sessionKey, context: saveContext });
+      console.info('🚫 Session already saved:', { sessionKey, context: saveContext });
       return;
     }
 
-    console.log('💾 Saving session:', { sessionKey, context: saveContext });
-    this.savedSessions.add(sessionKey);
+    console.info('💾 Starting session save:', { sessionKey, context: saveContext, duration: sessionData.duration_minutes });
     
     try {
+      // Save to database first
       await SupabasePomodoroService.saveSession(sessionData);
-      console.log('✅ Session saved successfully:', { sessionKey, context: saveContext });
+      
+      // Only mark as saved AFTER successful database save
+      this.savedSessions.add(sessionKey);
+      
+      console.info('✅ Session saved successfully:', { sessionKey, context: saveContext });
+      
+      // Emit event after successful save
+      pomodoroEventEmitter.emit('session_completed', {
+        sessionType: sessionData.session_type,
+        taskId: sessionData.task_id || undefined,
+        duration: sessionData.duration_minutes,
+        interrupted: sessionData.interrupted || false,
+        pomodoroNumber: sessionData.pomodoro_number,
+        breakNumber: sessionData.break_number
+      });
+      
     } catch (error) {
-      // Remove from saved set if save failed so it can be retried
-      this.savedSessions.delete(sessionKey);
       console.error('❌ Failed to save session:', { sessionKey, context: saveContext, error });
+      // Don't add to savedSessions if save failed - allow retry
       throw error;
     }
   }

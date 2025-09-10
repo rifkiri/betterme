@@ -26,6 +26,9 @@ export class TaskPomodoroStatsService {
     userId: string
   ): Promise<TaskPomodoroStats> {
     try {
+      // Add debug logging
+      console.info('🔍 Fetching task stats from cumulative table:', { taskId, userId });
+      
       const { data, error } = await supabase
         .from('task_pomodoro_stats')
         .select('*')
@@ -48,13 +51,16 @@ export class TaskPomodoroStatsService {
         throw error;
       }
 
-      return {
+      const result = {
         totalWorkSessions: data.work_sessions_count || 0,
         totalWorkDuration: data.work_duration_total || 0,
         totalBreakSessions: data.break_sessions_count || 0,
         totalBreakDuration: data.break_duration_total || 0,
         lastSessionDate: data.last_work_session_at ? new Date(data.last_work_session_at) : null
       };
+      
+      console.info('📊 Task stats retrieved:', { taskId, result });
+      return result;
 
     } catch (error) {
       console.error('Error fetching task Pomodoro stats:', error);

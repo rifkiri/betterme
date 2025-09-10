@@ -52,10 +52,14 @@ export const usePomodoroCounter = (taskId?: string): PomodoroCounterData => {
   // Refetch when work sessions complete for current task
   useEffect(() => {
     if (activeSession?.task_id === taskId && activeSession?.completed_work_sessions) {
-      // Debounced refetch to avoid rapid API calls
+      console.info('🔄 Active session work count changed, refetching stats:', { 
+        taskId, 
+        completedWorkSessions: activeSession.completed_work_sessions 
+      });
+      // Immediate refetch to sync with database
       const timeoutId = setTimeout(() => {
         fetchCumulativeStats();
-      }, 500);
+      }, 200);
       return () => clearTimeout(timeoutId);
     }
   }, [activeSession?.completed_work_sessions, activeSession?.task_id, taskId, fetchCumulativeStats]);
