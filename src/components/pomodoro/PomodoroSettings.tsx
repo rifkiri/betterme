@@ -3,14 +3,14 @@ import { FormDialog } from '@/components/ui/form-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { PomodoroSettings as Settings } from '@/hooks/usePomodoroTimer';
+import { PomodoroSessionSettings } from '@/hooks/usePomodoroSessionManager';
 import { FieldWrapper } from '@/components/ui/field-wrapper';
 
 interface PomodoroSettingsProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  settings: Settings;
-  onSave: (settings: Settings) => void;
+  settings: PomodoroSessionSettings;
+  onSave: (settings: PomodoroSessionSettings) => void;
 }
 
 export const PomodoroSettings: React.FC<PomodoroSettingsProps> = ({
@@ -19,7 +19,7 @@ export const PomodoroSettings: React.FC<PomodoroSettingsProps> = ({
   settings,
   onSave,
 }) => {
-  const [formData, setFormData] = useState<Settings>(settings);
+  const [formData, setFormData] = useState<PomodoroSessionSettings>(settings);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

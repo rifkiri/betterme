@@ -42,13 +42,18 @@ export const usePomodoroSessionManager = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Sync with global session state
+  // Sync with global session state (avoid overriding time for running sessions)
   useEffect(() => {
     if (globalSession !== activeSession) {
       setActiveSession(globalSession);
       
-      if (globalSession && globalSession.current_time_remaining) {
-        setTimeRemaining(globalSession.current_time_remaining);
+      if (globalSession) {
+        // Only update time remaining if session isn't currently running or if it's a new session
+        if (!isRunning || !activeSession || globalSession.id !== activeSession.id) {
+          if (globalSession.current_time_remaining !== null && globalSession.current_time_remaining !== undefined) {
+            setTimeRemaining(globalSession.current_time_remaining);
+          }
+        }
         setIsRunning(globalSession.session_status === 'active-running');
       } else if (!globalSession) {
         // Session terminated globally
@@ -60,7 +65,7 @@ export const usePomodoroSessionManager = () => {
         }
       }
     }
-  }, [globalSession]);
+  }, [globalSession, activeSession?.id]);
 
   // Load settings from localStorage
   useEffect(() => {
@@ -87,9 +92,21 @@ export const usePomodoroSessionManager = () => {
           const pausedSession = sessions.find(s => s.session_status === 'active-paused');
           
           if (runningSession && runningSession.current_start_time) {
-            updateGlobalSession(runningSession);
+            // Calculate accurate remaining time based on elapsed time since start
             const elapsed = Math.floor((Date.now() - new Date(runningSession.current_start_time).getTime()) / 1000);
-            const remaining = Math.max(0, (runningSession.current_time_remaining || 0) - elapsed);
+            const totalDuration = (() => {
+              switch (runningSession.current_session_type) {
+                case 'work': return runningSession.work_duration * 60;
+                case 'short_break': return runningSession.short_break_duration * 60;
+                case 'long_break': return runningSession.long_break_duration * 60;
+                default: return 0;
+              }
+            })();
+            const remaining = Math.max(0, totalDuration - elapsed);
+            
+            // Update session with calculated remaining time
+            const sessionWithAccurateTime = { ...runningSession, current_time_remaining: remaining };
+            updateGlobalSession(sessionWithAccurateTime);
             setTimeRemaining(remaining);
             setIsRunning(true);
           } else if (pausedSession && !globalState.isCurrentlyTerminating()) {

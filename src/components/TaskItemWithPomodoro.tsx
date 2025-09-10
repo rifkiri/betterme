@@ -22,7 +22,6 @@ import { usePomodoroSessionManager } from '@/hooks/usePomodoroSessionManager';
 import { SupabasePomodoroService } from '@/services/SupabasePomodoroService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { PomodoroCardTimer } from './pomodoro/PomodoroCardTimer';
-import { PomodoroControls } from './pomodoro/PomodoroControls';
 
 interface TaskItemProps {
   task: Task;
