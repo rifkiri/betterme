@@ -40,35 +40,42 @@ const STORAGE_KEY = 'pomodoro_session';
 const SETTINGS_KEY = 'pomodoro_settings';
 
 export const usePomodoroTimer = () => {
-  const [session, setSession] = useState<PomodoroSession | null>(null);
-  const [settings, setSettings] = useState<PomodoroSettings>(DEFAULT_SETTINGS);
+  const [session, setSession] = useState<PomodoroSession | null>(() => {
+    // Synchronously load session from localStorage on initial render
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsedSession = JSON.parse(saved) as PomodoroSession;
+        // Calculate time remaining based on pause state
+        if (parsedSession.isPaused && parsedSession.pausedTime) {
+          const elapsedWhilePaused = Date.now() - parsedSession.pausedTime;
+          parsedSession.startTime += elapsedWhilePaused;
+        }
+        return parsedSession;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  });
+  const [settings, setSettings] = useState<PomodoroSettings>(() => {
+    // Synchronously load settings from localStorage on initial render
+    try {
+      const saved = localStorage.getItem(SETTINGS_KEY);
+      return saved ? { ...DEFAULT_SETTINGS, ...JSON.parse(saved) } : DEFAULT_SETTINGS;
+    } catch {
+      return DEFAULT_SETTINGS;
+    }
+  });
   const [isRunning, setIsRunning] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { saveCompletedSession } = usePomodoroCompletion();
 
-  // Load settings from localStorage
+  // Initialize session state and handle timer resumption
   useEffect(() => {
-    const stored = localStorage.getItem(SETTINGS_KEY);
-    if (stored) {
-      setSettings(JSON.parse(stored));
-    }
-  }, []);
-
-  // Load session from localStorage
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsedSession = JSON.parse(stored) as PomodoroSession;
-      // Calculate time remaining based on pause state
-      if (parsedSession.isPaused && parsedSession.pausedTime) {
-        const elapsedWhilePaused = Date.now() - parsedSession.pausedTime;
-        parsedSession.startTime += elapsedWhilePaused;
-      }
-      setSession(parsedSession);
-      if (!parsedSession.isPaused) {
-        setIsRunning(true);
-      }
+    if (session && !session.isPaused) {
+      setIsRunning(true);
     }
   }, []);
 

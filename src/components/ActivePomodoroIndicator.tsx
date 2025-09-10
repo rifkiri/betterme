@@ -20,7 +20,12 @@ export const ActivePomodoroIndicator: React.FC = () => {
   } = usePomodoroTimer();
 
   if (!session) {
-    return null;
+    return (
+      <div 
+        className="fixed bottom-4 right-4 z-[9999] opacity-0 pointer-events-none transition-opacity duration-200"
+        style={{ display: 'none' }}
+      />
+    );
   }
 
   const formatTime = (seconds: number) => {
@@ -31,7 +36,7 @@ export const ActivePomodoroIndicator: React.FC = () => {
 
   return (
     <>
-      <div className="fixed bottom-4 right-4 z-50">
+      <div className="fixed bottom-4 right-4 z-[9999] opacity-100 transition-opacity duration-200">
         {expanded ? (
           <div className="bg-background border rounded-lg shadow-lg p-4 w-80">
             <PomodoroDisplay session={session} />
