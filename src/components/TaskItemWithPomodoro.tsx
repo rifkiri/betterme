@@ -276,23 +276,23 @@ export const TaskItemWithPomodoro = ({
     >
       {/* Integrated Pomodoro Timer */}
       {showCardTimer && (
-        <div className="border-t border-border mt-3 pt-3 space-y-3">
+        <div className="mt-3 rounded-lg bg-muted/30 p-4 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {getSessionIcon()}
-              <span className="font-medium text-sm">{getSessionLabel()}</span>
+              <span className="font-semibold text-sm">{getSessionLabel()}</span>
             </div>
             <StatusBadge status={isRunning ? 'high' : 'medium'}>
-              {isRunning ? 'Running' : 'Paused'}
+              {isRunning ? 'Active' : 'Paused'}
             </StatusBadge>
           </div>
           
           <div className="text-sm text-muted-foreground">
-            Working on: {task.title}
+            Working on: <span className="font-medium text-foreground">{task.title}</span>
           </div>
           
-          <div className="space-y-2">
-            <div className="text-2xl font-bold text-center">
+          <div className="space-y-3">
+            <div className="text-4xl font-bold text-center tracking-tight">
               {formatTime(timeRemaining)}
             </div>
             <Progress value={progressPercentage} className="h-2" />
@@ -303,20 +303,20 @@ export const TaskItemWithPomodoro = ({
               icon={<Timer className="h-4 w-4" />}
               onClick={isRunning ? togglePause : startWork}
               tooltip={isRunning ? 'Pause' : activeSession?.session_status === 'active-stopped' ? 'Start' : 'Resume'}
-              variant="default"
-            />
-            
-            <IconButton
-              icon={<Clock className="h-4 w-4" />}
-              onClick={stopSession}
-              tooltip="Stop session"
-              variant="outline"
+              variant={isRunning ? "default" : "outline"}
             />
             
             <IconButton
               icon={<Target className="h-4 w-4" />}
               onClick={skipSession}
               tooltip="Skip to next"
+              variant="outline"
+            />
+            
+            <IconButton
+              icon={<Clock className="h-4 w-4" />}
+              onClick={stopSession}
+              tooltip="Stop session"
               variant="outline"
             />
             
