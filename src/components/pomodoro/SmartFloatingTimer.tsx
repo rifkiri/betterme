@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { usePomodoroSessionManager } from '@/hooks/usePomodoroSessionManager';
 import { useRouteContext } from '@/hooks/useRouteContext';
 import { useActiveTaskVisibility } from '@/hooks/useActiveTaskVisibility';
@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 
 export const SmartFloatingTimer: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isExpanded, setIsExpanded] = useState(false);
   const { isOnTasksPage, isTaskSectionVisible, hasNavigatedAway } = useRouteContext();
   
@@ -33,7 +34,8 @@ export const SmartFloatingTimer: React.FC = () => {
   // 1. Card timer is not visible (is_card_visible = false), OR
   // 2. User has navigated away from tasks page, OR
   // 3. On tasks page but the specific active task is not visible
-  const shouldShowFloating = activeSession && (
+  // BUT never show on the home route (/)
+  const shouldShowFloating = activeSession && location.pathname !== '/' && (
     !activeSession.is_card_visible ||
     hasNavigatedAway ||
     (isOnTasksPage && (!isTaskSectionVisible || !isActiveTaskVisible))
