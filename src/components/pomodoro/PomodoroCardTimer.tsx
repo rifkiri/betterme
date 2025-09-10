@@ -143,13 +143,6 @@ export const PomodoroCardTimer: React.FC<PomodoroCardTimerProps> = ({
                 tooltip="Minimize timer"
                 variant="ghost"
               />
-              <IconButton
-                icon={<X className="h-4 w-4" />}
-                onClick={onClose}
-                tooltip="Close session"
-                variant="ghost"
-                colorScheme="destructive"
-              />
             </div>
           </div>
 
@@ -217,6 +210,14 @@ export const PomodoroCardTimer: React.FC<PomodoroCardTimerProps> = ({
                     onClick={() => setSettingsOpen(true)}
                     tooltip="Timer settings"
                     variant="outline"
+                  />
+                  
+                  <IconButton
+                    icon={<X className="h-4 w-4" />}
+                    onClick={onClose}
+                    tooltip="Terminate session"
+                    variant="outline"
+                    colorScheme="destructive"
                   />
                 </>
               }
