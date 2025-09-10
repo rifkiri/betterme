@@ -23,6 +23,7 @@ export interface PomodoroSession {
   pausedTime?: number;
   completedPomodoros: number;
   timeRemaining: number;
+  isStopped?: boolean;
 }
 
 const DEFAULT_SETTINGS: PomodoroSettings = {
@@ -72,10 +73,29 @@ export const usePomodoroTimer = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { saveCompletedSession } = usePomodoroCompletion();
 
-  // Initialize session state and handle timer resumption
+  // Handle session resumption on page load with user confirmation
   useEffect(() => {
-    if (session && !session.isPaused) {
-      setIsRunning(true);
+    if (session && !session.isStopped) {
+      if (session.isPaused) {
+        // Show toast asking user if they want to resume
+        toast.info('You have a paused timer. Click to resume.', {
+          action: {
+            label: 'Resume',
+            onClick: () => {
+              const pauseDuration = Date.now() - (session.pausedTime || 0);
+              setSession({
+                ...session,
+                isPaused: false,
+                startTime: session.startTime + pauseDuration,
+                pausedTime: undefined,
+              });
+              setIsRunning(true);
+            }
+          },
+          duration: 10000,
+        });
+      }
+      // Note: We don't auto-resume running sessions to prevent unwanted behavior
     }
   }, []);
 
@@ -268,21 +288,30 @@ export const usePomodoroTimer = () => {
   }, [session]);
 
   // Stop session
-  const stopSession = useCallback(async () => {
-    // Save interrupted session if it was a work session
+  const stopSession = useCallback(() => {
+    // Immediately stop timer and clear interval
+    setIsRunning(false);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    // Save interrupted session if it was a work session (async in background)
     if (session && session.sessionType === 'work') {
       const elapsed = Math.floor((Date.now() - session.startTime) / 1000 / 60);
       if (elapsed > 0) {
-        await saveCompletedSession(
+        // Don't await - let it run in background to avoid blocking UI
+        saveCompletedSession(
           session.taskId,
           elapsed,
           session.sessionType,
           true
-        );
+        ).catch(console.error);
       }
     }
+
+    // Mark session as stopped and remove from storage
     setSession(null);
-    setIsRunning(false);
     localStorage.removeItem(STORAGE_KEY);
     toast.info('Timer stopped');
   }, [session, saveCompletedSession]);
