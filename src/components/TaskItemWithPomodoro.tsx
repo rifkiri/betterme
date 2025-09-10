@@ -2,10 +2,6 @@ import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { 
-  Play, 
-  Pause, 
-  Square, 
-  SkipForward, 
   CheckCircle, 
   Circle, 
   ArrowRight, 
@@ -26,6 +22,7 @@ import { usePomodoroSessionManager } from '@/hooks/usePomodoroSessionManager';
 import { SupabasePomodoroService } from '@/services/SupabasePomodoroService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { PomodoroCardTimer } from './pomodoro/PomodoroCardTimer';
+import { PomodoroControls } from './pomodoro/PomodoroControls';
 
 interface TaskItemProps {
   task: Task;
@@ -290,6 +287,10 @@ export const TaskItemWithPomodoro = ({
             </StatusBadge>
           </div>
           
+          <div className="text-sm text-muted-foreground">
+            Working on: {task.title}
+          </div>
+          
           <div className="space-y-2">
             <div className="text-2xl font-bold text-center">
               {formatTime(timeRemaining)}
@@ -298,34 +299,32 @@ export const TaskItemWithPomodoro = ({
           </div>
 
           <div className="flex justify-center gap-2">
-            {activeSession?.session_status === 'active-stopped' ? (
-              <IconButton
-                icon={<Play className="h-4 w-4" />}
-                onClick={startWork}
-                tooltip="Start timer"
-                variant="default"
-              />
-            ) : (
-              <IconButton
-                icon={isRunning ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                onClick={togglePause}
-                tooltip={isRunning ? 'Pause' : 'Resume'}
-                variant="default"
-              />
-            )}
+            <IconButton
+              icon={<Timer className="h-4 w-4" />}
+              onClick={isRunning ? togglePause : startWork}
+              tooltip={isRunning ? 'Pause' : activeSession?.session_status === 'active-stopped' ? 'Start' : 'Resume'}
+              variant="default"
+            />
             
             <IconButton
-              icon={<Square className="h-4 w-4" />}
+              icon={<Clock className="h-4 w-4" />}
               onClick={stopSession}
-              tooltip="Stop timer"
-              colorScheme="destructive"
+              tooltip="Stop session"
               variant="outline"
             />
             
             <IconButton
-              icon={<SkipForward className="h-4 w-4" />}
+              icon={<Target className="h-4 w-4" />}
               onClick={skipSession}
-              tooltip="Skip to next session"
+              tooltip="Skip to next"
+              variant="outline"
+            />
+            
+            <IconButton
+              icon={<Coffee className="h-4 w-4" />}
+              onClick={terminateSession}
+              tooltip="Terminate session"
+              colorScheme="destructive"
               variant="outline"
             />
           </div>
