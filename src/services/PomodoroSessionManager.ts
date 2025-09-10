@@ -584,6 +584,20 @@ export class PomodoroSessionManager {
         // Cap to new total duration if needed
         const newTotalSeconds = newDuration * 60;
         this.timeRemaining = Math.min(newTimeRemaining, newTotalSeconds);
+        
+        // Persist adjusted time to database for paused sessions
+        if (this.activeSession.session_status === 'active-paused') {
+          try {
+            const updatedSession = await SupabaseActivePomodoroService.updateActiveSession(this.activeSession.id, {
+              current_time_remaining: this.timeRemaining
+            });
+            
+            // Update global state for real-time sync across tabs
+            this.globalState.updateSession(updatedSession, true);
+          } catch (error) {
+            console.error('Error persisting adjusted time for paused session:', error);
+          }
+        }
       }
     }
     
