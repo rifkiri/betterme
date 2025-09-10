@@ -8,7 +8,7 @@ import {
   Users, 
   Timer,
   Clock,
-  Coffee,
+  X,
   Target
 } from 'lucide-react';
 import { Task, WeeklyOutput } from '@/types/productivity';
@@ -160,7 +160,7 @@ export const TaskItemWithPomodoro = ({
         return <Target className="h-4 w-4" />;
       case 'short_break':
       case 'long_break':
-        return <Coffee className="h-4 w-4" />;
+        return <X className="h-4 w-4" />;
       default:
         return <Clock className="h-4 w-4" />;
     }
@@ -321,7 +321,7 @@ export const TaskItemWithPomodoro = ({
             />
             
             <IconButton
-              icon={<Coffee className="h-4 w-4" />}
+              icon={<X className="h-4 w-4" />}
               onClick={terminateSession}
               tooltip="Terminate session"
               colorScheme="destructive"
