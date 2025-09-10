@@ -9,7 +9,8 @@ import {
   Timer,
   Clock,
   X,
-  Target
+  Target,
+  Settings
 } from 'lucide-react';
 import { Task, WeeklyOutput } from '@/types/productivity';
 import { MoveTaskDialog } from './MoveTaskDialog';
@@ -22,6 +23,7 @@ import { usePomodoroSessionManager } from '@/hooks/usePomodoroSessionManager';
 import { SupabasePomodoroService } from '@/services/SupabasePomodoroService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { PomodoroCardTimer } from './pomodoro/PomodoroCardTimer';
+import { PomodoroSettings } from './pomodoro/PomodoroSettings';
 
 interface TaskItemProps {
   task: Task;
@@ -50,6 +52,7 @@ export const TaskItemWithPomodoro = ({
   // Component state
   const [taggedUsers, setTaggedUsers] = useState<TaggedUser[]>([]);
   const [pomodoroCount, setPomodoroCount] = useState(0);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   
   // Hooks
   const { 
@@ -318,6 +321,13 @@ export const TaskItemWithPomodoro = ({
             />
             
             <IconButton
+              icon={<Settings className="h-4 w-4" />}
+              onClick={() => setSettingsOpen(true)}
+              tooltip="Timer settings"
+              variant="outline"
+            />
+            
+            <IconButton
               icon={<X className="h-4 w-4" />}
               onClick={terminateSession}
               tooltip="Terminate session"
@@ -331,6 +341,13 @@ export const TaskItemWithPomodoro = ({
       {task.description && (
         <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
       )}
+      
+      <PomodoroSettings
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        settings={settings}
+        onSave={updateSessionSettings}
+      />
     </ItemCard>
   );
 };
