@@ -48,6 +48,17 @@ export const usePomodoroCounter = (taskId?: string): PomodoroCounterData => {
     }
   }, [activeSession?.task_id, fetchCumulativeStats, taskId]);
 
+  // Refetch when work sessions complete for current task
+  useEffect(() => {
+    if (activeSession?.task_id === taskId && activeSession?.completed_work_sessions) {
+      // Debounced refetch to avoid rapid API calls
+      const timeoutId = setTimeout(() => {
+        fetchCumulativeStats();
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [activeSession?.completed_work_sessions, activeSession?.task_id, taskId, fetchCumulativeStats]);
+
   const currentSessionCount = TaskPomodoroStatsService.getCurrentSessionProgress(activeSession, taskId);
 
   return {
