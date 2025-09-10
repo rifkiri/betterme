@@ -13,9 +13,10 @@ interface UserTableRowProps {
   onEditUser: (user: User) => void;
   onDeleteUser: (userId: string) => void;
   onUpdateUser: (userId: string, updates: Partial<User>) => void;
+  onActivateUser?: (userId: string) => void;
 }
 
-export const UserTableRow = ({ user, onEditUser, onDeleteUser, onUpdateUser }: UserTableRowProps) => {
+export const UserTableRow = ({ user, onEditUser, onDeleteUser, onUpdateUser, onActivateUser }: UserTableRowProps) => {
   const handleRoleChange = (userId: string, newRole: UserRole) => {
     onUpdateUser(userId, {
       role: newRole
@@ -52,6 +53,7 @@ export const UserTableRow = ({ user, onEditUser, onDeleteUser, onUpdateUser }: U
           user={user}
           onEdit={onEditUser}
           onDelete={onDeleteUser}
+          onActivateUser={onActivateUser}
         />
       </TableCell>
     </TableRow>

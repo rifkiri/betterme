@@ -23,6 +23,10 @@ export class SupabaseDataService {
     return await supabaseProfilesService.deleteUser(userId);
   }
 
+  async activateUser(userId: string) {
+    return await supabaseProfilesService.activateUser(userId);
+  }
+
   // Habits management
   async getHabits(userId: string) {
     return await supabaseHabitsService.getHabits(userId);

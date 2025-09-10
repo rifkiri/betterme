@@ -2,16 +2,17 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { User } from '@/types/userTypes';
-import { Trash2, Eye, Edit } from 'lucide-react';
+import { Trash2, Eye, Edit, UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface UserTableActionsProps {
   user: User;
   onEdit: (user: User) => void;
   onDelete: (userId: string) => void;
+  onActivateUser?: (userId: string) => void;
 }
 
-export const UserTableActions = ({ user, onEdit, onDelete }: UserTableActionsProps) => {
+export const UserTableActions = ({ user, onEdit, onDelete, onActivateUser }: UserTableActionsProps) => {
   const handleShowPassword = (user: User) => {
     if (user.userStatus === 'pending' && user.temporaryPassword) {
       toast.info(`Temporary password: ${user.temporaryPassword}`, {
@@ -33,6 +34,11 @@ export const UserTableActions = ({ user, onEdit, onDelete }: UserTableActionsPro
       <Button variant="outline" size="sm" onClick={() => handleShowPassword(user)}>
         <Eye className="h-4 w-4" />
       </Button>
+      {user.userStatus === 'pending' && onActivateUser && (
+        <Button variant="default" size="sm" onClick={() => onActivateUser(user.id)}>
+          <UserCheck className="h-4 w-4" />
+        </Button>
+      )}
       <Button variant="outline" size="sm" onClick={() => onDelete(user.id)}>
         <Trash2 className="h-4 w-4" />
       </Button>

@@ -80,6 +80,13 @@ export class SupabaseProfilesService {
     await this.baseService.deleteProfile(userId);
   }
 
+  async activateUser(userId: string): Promise<void> {
+    await this.baseService.updateProfile(userId, {
+      user_status: 'active',
+      has_changed_password: true
+    });
+  }
+
   async getUserByEmail(email: string): Promise<User | null> {
     const data = await this.baseService.getProfileByEmail(email);
     

@@ -111,4 +111,8 @@ export class UserCrudService {
   static async updateUserProfile(userId: string, updates: Partial<User>) {
     return await supabaseDataService.updateUser(userId, updates);
   }
+
+  static async activateUser(userId: string) {
+    return await supabaseDataService.activateUser(userId);
+  }
 }

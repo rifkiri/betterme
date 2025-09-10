@@ -17,7 +17,8 @@ export const UserManagement = () => {
     loadUsers,
     handleAddUser,
     handleDeleteUser,
-    handleUpdateUser
+    handleUpdateUser,
+    handleActivateUser
   } = useUserManagement();
 
   return (
@@ -32,6 +33,7 @@ export const UserManagement = () => {
           users={users}
           onDeleteUser={handleDeleteUser}
           onUpdateUser={handleUpdateUser}
+          onActivateUser={handleActivateUser}
         />
       </Card>
 

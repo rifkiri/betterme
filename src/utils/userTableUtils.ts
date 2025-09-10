@@ -19,8 +19,8 @@ export const getStatusBadgeVariant = (status: string) => {
     case 'active':
       return 'default';
     case 'pending':
-      return 'outline';
-    default:
       return 'secondary';
+    default:
+      return 'outline';
   }
 };

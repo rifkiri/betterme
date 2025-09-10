@@ -17,7 +17,7 @@ export const useUserActions = (isAdmin: boolean, loadUsers: () => Promise<void>)
       const sanitizedUser = validateNewUser(newUser);
       await UserCrudService.createUser(sanitizedUser);
       await loadUsers();
-      toast.success('User created successfully');
+      toast.success('User created successfully with pending status');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to add user';
       toast.error(errorMessage);
@@ -86,9 +86,27 @@ export const useUserActions = (isAdmin: boolean, loadUsers: () => Promise<void>)
     }
   };
 
+  const handleActivateUser = async (userId: string) => {
+    if (!isAdmin) {
+      toast.error('Only admins can activate users');
+      return;
+    }
+
+    try {
+      await UserCrudService.activateUser(userId);
+      await loadUsers();
+      toast.success('User activated successfully');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to activate user';
+      toast.error(errorMessage);
+      console.error('Failed to activate user:', error);
+    }
+  };
+
   return {
     handleAddUser,
     handleDeleteUser,
-    handleUpdateUser
+    handleUpdateUser,
+    handleActivateUser
   };
 };

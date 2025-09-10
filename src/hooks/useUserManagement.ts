@@ -7,7 +7,7 @@ import { useUserCrud } from './useUserCrud';
 export const useUserManagement = () => {
   const { currentUser, isAdmin } = useCurrentUser();
   const { users, isLoading, loadUsers } = useUsersData();
-  const { handleAddUser, handleDeleteUser, handleUpdateUser } = useUserCrud(isAdmin, loadUsers);
+  const { handleAddUser, handleDeleteUser, handleUpdateUser, handleActivateUser } = useUserCrud(isAdmin, loadUsers);
 
   useEffect(() => {
     if (isAdmin) {
@@ -23,6 +23,7 @@ export const useUserManagement = () => {
     loadUsers,
     handleAddUser,
     handleDeleteUser,
-    handleUpdateUser
+    handleUpdateUser,
+    handleActivateUser
   };
 };
