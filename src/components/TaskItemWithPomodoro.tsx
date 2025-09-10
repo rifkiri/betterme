@@ -10,7 +10,11 @@ import {
   Clock,
   X,
   Target,
-  Settings
+  Settings,
+  Play,
+  Pause,
+  Square,
+  SkipForward
 } from 'lucide-react';
 import { Task, WeeklyOutput } from '@/types/productivity';
 import { MoveTaskDialog } from './MoveTaskDialog';
@@ -300,21 +304,21 @@ export const TaskItemWithPomodoro = ({
 
           <div className="flex justify-center gap-2">
             <IconButton
-              icon={<Timer className="h-4 w-4" />}
+              icon={isRunning ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
               onClick={isRunning ? togglePause : startWork}
               tooltip={isRunning ? 'Pause' : activeSession?.session_status === 'active-stopped' ? 'Start' : 'Resume'}
               variant={isRunning ? "default" : "outline"}
             />
             
             <IconButton
-              icon={<Target className="h-4 w-4" />}
+              icon={<SkipForward className="h-4 w-4" />}
               onClick={skipSession}
               tooltip="Skip to next"
               variant="outline"
             />
             
             <IconButton
-              icon={<Clock className="h-4 w-4" />}
+              icon={<Square className="h-4 w-4" />}
               onClick={stopSession}
               tooltip="Stop session"
               variant="outline"
