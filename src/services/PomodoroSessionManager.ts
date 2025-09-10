@@ -240,9 +240,9 @@ export class PomodoroSessionManager {
   private getCurrentSessionDuration(): number {
     if (!this.activeSession) return 0;
     switch (this.activeSession.current_session_type) {
-      case 'work': return this.activeSession.work_duration;
-      case 'short_break': return this.activeSession.short_break_duration;
-      case 'long_break': return this.activeSession.long_break_duration;
+      case 'work': return this.settings.workDuration;
+      case 'short_break': return this.settings.shortBreakDuration;
+      case 'long_break': return this.settings.longBreakDuration;
       default: return 0;
     }
   }
@@ -472,20 +472,79 @@ export class PomodoroSessionManager {
     }
   }
 
-  updateSessionSettings(newSettings: PomodoroSessionSettings) {
+  async updateSessionSettings(newSettings: PomodoroSessionSettings) {
+    const oldSettings = { ...this.settings };
     this.settings = newSettings;
     this.saveSettings();
     
-    // Update time remaining if session is stopped and session type matches
-    if (this.activeSession && !this.isRunning && this.activeSession.session_status === 'active-stopped') {
+    // Update activeSession database record with new durations
+    if (this.activeSession) {
+      try {
+        await SupabaseActivePomodoroService.updateSettings(this.activeSession.id, {
+          work_duration: newSettings.workDuration,
+          short_break_duration: newSettings.shortBreakDuration,
+          long_break_duration: newSettings.longBreakDuration,
+          sessions_until_long_break: newSettings.sessionsUntilLongBreak,
+        });
+
+        // Update local session object to reflect new durations
+        this.activeSession = {
+          ...this.activeSession,
+          work_duration: newSettings.workDuration,
+          short_break_duration: newSettings.shortBreakDuration,
+          long_break_duration: newSettings.longBreakDuration,
+          sessions_until_long_break: newSettings.sessionsUntilLongBreak,
+        };
+      } catch (error) {
+        console.error('Error updating session settings in database:', error);
+      }
+    }
+    
+    // Calculate proportional time adjustment for active/paused sessions
+    if (this.activeSession && (this.activeSession.session_status === 'active-running' || this.activeSession.session_status === 'active-paused')) {
+      const oldDuration = this.getOldSessionDuration(this.activeSession.current_session_type, oldSettings);
+      const newDuration = this.getCurrentSessionDuration();
+      
+      if (oldDuration !== newDuration) {
+        // Calculate progress percentage
+        const oldTotalSeconds = oldDuration * 60;
+        const elapsedSeconds = oldTotalSeconds - this.timeRemaining;
+        const progress = elapsedSeconds / oldTotalSeconds;
+        
+        // Apply proportional adjustment
+        const newTotalSeconds = newDuration * 60;
+        const newTimeRemaining = Math.max(0, newTotalSeconds - (progress * newTotalSeconds));
+        
+        this.timeRemaining = Math.floor(newTimeRemaining);
+        
+        // If new time remaining is 0 or negative, complete the session
+        if (this.timeRemaining <= 0) {
+          this.handleSessionComplete();
+          return;
+        }
+      }
+    }
+    
+    // Update time remaining if session is stopped
+    if (this.activeSession && this.activeSession.session_status === 'active-stopped') {
       const newDuration = this.getCurrentSessionDuration();
       this.timeRemaining = newDuration * 60;
-      this.notifyListeners();
     }
+    
+    this.notifyListeners();
     
     // Request notification permission if enabled
     if (newSettings.notificationsEnabled && 'Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
+    }
+  }
+
+  private getOldSessionDuration(sessionType: string, oldSettings: PomodoroSessionSettings): number {
+    switch (sessionType) {
+      case 'work': return oldSettings.workDuration;
+      case 'short_break': return oldSettings.shortBreakDuration;
+      case 'long_break': return oldSettings.longBreakDuration;
+      default: return 0;
     }
   }
 }

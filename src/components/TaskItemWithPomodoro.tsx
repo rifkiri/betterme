@@ -143,11 +143,11 @@ export const TaskItemWithPomodoro = ({
     if (!activeSession) return 25;
     switch (activeSession.current_session_type) {
       case 'work':
-        return activeSession.work_duration;
+        return settings.workDuration;
       case 'short_break':
-        return activeSession.short_break_duration;
+        return settings.shortBreakDuration;
       case 'long_break':
-        return activeSession.long_break_duration;
+        return settings.longBreakDuration;
       default:
         return 25;
     }

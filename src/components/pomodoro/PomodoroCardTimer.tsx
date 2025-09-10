@@ -60,11 +60,11 @@ export const PomodoroCardTimer: React.FC<PomodoroCardTimerProps> = ({
   const getCurrentSessionDuration = () => {
     switch (session.current_session_type) {
       case 'work':
-        return session.work_duration;
+        return settings.workDuration;
       case 'short_break':
-        return session.short_break_duration;
+        return settings.shortBreakDuration;
       case 'long_break':
-        return session.long_break_duration;
+        return settings.longBreakDuration;
       default:
         return 25;
     }
