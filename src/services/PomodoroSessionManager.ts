@@ -236,14 +236,13 @@ export class PomodoroSessionManager {
         this.activeSession = updatedSession;
         
         if (this.settings.autoStartBreaks) {
-          const breakType = updatedSession.completed_work_sessions % updatedSession.sessions_until_long_break === 0 
-            ? 'long_break' : 'short_break';
+          const breakType = this.determineNextBreakType(updatedSession.completed_work_sessions, updatedSession.sessions_until_long_break);
           this.startBreak(breakType);
         } else {
+          const nextBreakType = this.determineNextBreakType(updatedSession.completed_work_sessions, updatedSession.sessions_until_long_break);
           await SupabaseActivePomodoroService.updateActiveSession(this.activeSession.id, {
             session_status: 'active-stopped',
-            current_session_type: updatedSession.completed_work_sessions % updatedSession.sessions_until_long_break === 0 
-              ? 'long_break' : 'short_break',
+            current_session_type: nextBreakType,
           });
         }
       } else {
@@ -476,17 +475,80 @@ export class PomodoroSessionManager {
     try {
       const isWorkSession = this.activeSession.current_session_type === 'work';
       
-      if (isWorkSession) {
-        const nextBreakType = this.activeSession.completed_work_sessions % this.activeSession.sessions_until_long_break === 0 
-          ? 'long_break' : 'short_break';
-        await this.startBreak(nextBreakType);
-      } else {
-        await this.startWork();
-      }
+      // Save skipped session to history
+      await this.saveSkippedSession();
       
-      toast.info(`Skipped to ${isWorkSession ? 'break' : 'work session'}`);
+      if (isWorkSession) {
+        // Increment completed work sessions (like completion logic)
+        const newCompletedWork = this.activeSession.completed_work_sessions + 1;
+        
+        // Update database with incremented count
+        const updatedSession = await SupabaseActivePomodoroService.updateActiveSession(this.activeSession.id, {
+          completed_work_sessions: newCompletedWork,
+        });
+        
+        // Update local state
+        this.activeSession = updatedSession;
+        
+        // Determine break type using incremented count
+        const nextBreakType = this.determineNextBreakType(newCompletedWork, this.activeSession.sessions_until_long_break);
+        
+        await this.startBreak(nextBreakType);
+        
+        const breakTypeText = nextBreakType === 'long_break' ? 'long break' : 'short break';
+        toast.info(`Skipped to ${breakTypeText} (${newCompletedWork}/${this.activeSession.sessions_until_long_break} work sessions)`);
+      } else {
+        // Increment completed break sessions 
+        const newCompletedBreaks = this.activeSession.completed_break_sessions + 1;
+        
+        // Update database with incremented count
+        const updatedSession = await SupabaseActivePomodoroService.updateActiveSession(this.activeSession.id, {
+          completed_break_sessions: newCompletedBreaks,
+        });
+        
+        // Update local state
+        this.activeSession = updatedSession;
+        
+        await this.startWork();
+        toast.info('Skipped to work session');
+      }
     } catch (error) {
       console.error('Error skipping session:', error);
+      toast.error('Error skipping session');
+    }
+  }
+
+  // Reusable method for consistent break type determination
+  private determineNextBreakType(completedWorkSessions: number, sessionsUntilLongBreak: number): 'short_break' | 'long_break' {
+    return completedWorkSessions % sessionsUntilLongBreak === 0 ? 'long_break' : 'short_break';
+  }
+
+  // Save skipped session to history
+  private async saveSkippedSession() {
+    if (!this.activeSession || !this.currentUser) return;
+
+    try {
+      // Calculate elapsed time using existing pattern
+      if (this.activeSession.current_start_time) {
+        const elapsed = Math.floor((Date.now() - new Date(this.activeSession.current_start_time).getTime()) / 1000 / 60);
+        
+        if (elapsed > 0) {
+          const isWorkSession = this.activeSession.current_session_type === 'work';
+          
+          await SupabasePomodoroService.saveSession({
+            user_id: this.currentUser.id,
+            task_id: this.activeSession.task_id,
+            session_id: this.activeSession.session_id,
+            duration_minutes: elapsed,
+            session_type: this.activeSession.current_session_type as any,
+            interrupted: true,
+            pomodoro_number: isWorkSession ? this.activeSession.completed_work_sessions + 1 : this.activeSession.completed_work_sessions,
+            break_number: isWorkSession ? this.activeSession.completed_break_sessions : this.activeSession.completed_break_sessions + 1,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error saving skipped session:', error);
     }
   }
 
