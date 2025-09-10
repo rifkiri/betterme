@@ -336,6 +336,7 @@ export class PomodoroSessionManager {
         duration_minutes: this.getCurrentSessionDuration(),
         session_type: this.activeSession.current_session_type as any,
         session_status: 'completed',
+        interrupted: false, // Mark as uninterrupted when timer completes naturally
         pomodoro_number: cumulativePomodoroNumber,
         break_number: cumulativeBreakNumber,
         completed_at: new Date().toISOString(),
