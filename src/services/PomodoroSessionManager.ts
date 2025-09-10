@@ -43,6 +43,7 @@ export class PomodoroSessionManager {
   private isInitializing: boolean = false;
   private isCompleting: boolean = false;
   private completedSessions: Set<string> = new Set();
+  private savedSessions: Set<string> = new Set();
 
   static getInstance(): PomodoroSessionManager {
     if (!PomodoroSessionManager.instance) {
@@ -290,7 +291,7 @@ export class PomodoroSessionManager {
         cumulativeBreakNumber = !isWorkSession ? currentBreakSessions + 1 : currentBreakSessions;
       }
       
-      await SupabasePomodoroService.saveSession({
+      await this.saveSessionOnce({
         user_id: this.currentUser.id,
         task_id: this.activeSession.task_id,
         session_id: this.activeSession.session_id,
@@ -300,7 +301,7 @@ export class PomodoroSessionManager {
         pomodoro_number: cumulativePomodoroNumber,
         break_number: cumulativeBreakNumber,
         completed_at: new Date().toISOString(),
-      });
+      }, 'handleSessionComplete');
       console.log('💾 Session saved to history with cumulative numbers:', {
         type: this.activeSession.current_session_type,
         cumulative_pomodoro: cumulativePomodoroNumber,
@@ -448,6 +449,11 @@ export class PomodoroSessionManager {
         }
       }
 
+      // Clear tracking sets for new session
+      this.savedSessions.clear();
+      this.completedSessions.clear();
+      console.log('🧹 Cleared session tracking for new session');
+
       // Step 2: Create new session after cleanup
       const newSession = await SupabaseActivePomodoroService.createActiveSession({
         user_id: this.currentUser.id,
@@ -532,7 +538,7 @@ export class PomodoroSessionManager {
           }
         }
         
-        await SupabasePomodoroService.saveSession({
+        await this.saveSessionOnce({
           user_id: this.currentUser.id,
           task_id: session.task_id,
           session_id: session.session_id,
@@ -543,7 +549,7 @@ export class PomodoroSessionManager {
           completed_at: new Date().toISOString(),
           pomodoro_number: cumulativePomodoroNumber,
           break_number: cumulativeBreakNumber,
-        });
+        }, 'saveInterruptedSessionForSession');
       }
     } catch (error) {
       console.error('Error saving interrupted session:', error);
@@ -780,7 +786,7 @@ export class PomodoroSessionManager {
             cumulativeBreakNumber = isWorkSession ? this.activeSession.completed_break_sessions : this.activeSession.completed_break_sessions + 1;
           }
           
-          await SupabasePomodoroService.saveSession({
+          await this.saveSessionOnce({
             user_id: this.currentUser.id,
             task_id: this.activeSession.task_id,
             session_id: this.activeSession.session_id,
@@ -789,7 +795,7 @@ export class PomodoroSessionManager {
             interrupted: true,
             pomodoro_number: cumulativePomodoroNumber,
             break_number: cumulativeBreakNumber,
-          });
+          }, 'skipSession');
         }
       }
     } catch (error) {
@@ -836,7 +842,7 @@ export class PomodoroSessionManager {
           cumulativeBreakNumber = isWorkSession ? this.activeSession.completed_break_sessions : this.activeSession.completed_break_sessions + 1;
         }
         
-        await SupabasePomodoroService.saveSession({
+        await this.saveSessionOnce({
           user_id: this.currentUser.id,
           task_id: this.activeSession.task_id,
           session_id: this.activeSession.session_id,
@@ -845,7 +851,7 @@ export class PomodoroSessionManager {
           interrupted: true,
           pomodoro_number: cumulativePomodoroNumber,
           break_number: cumulativeBreakNumber,
-        });
+        }, 'saveInterruptedSession');
       }
     } catch (error) {
       console.error('Error saving interrupted session:', error);
@@ -1007,6 +1013,29 @@ export class PomodoroSessionManager {
       case 'short_break': return oldSettings.shortBreakDuration;
       case 'long_break': return oldSettings.longBreakDuration;
       default: return 0;
+    }
+  }
+
+  // Helper method to prevent duplicate session saves
+  private async saveSessionOnce(sessionData: any, saveContext: string): Promise<void> {
+    const sessionKey = `${sessionData.session_id}-${sessionData.session_type}-${sessionData.interrupted ? 'interrupted' : 'completed'}`;
+    
+    if (this.savedSessions.has(sessionKey)) {
+      console.log('🚫 Session already saved:', { sessionKey, context: saveContext });
+      return;
+    }
+
+    console.log('💾 Saving session:', { sessionKey, context: saveContext });
+    this.savedSessions.add(sessionKey);
+    
+    try {
+      await SupabasePomodoroService.saveSession(sessionData);
+      console.log('✅ Session saved successfully:', { sessionKey, context: saveContext });
+    } catch (error) {
+      // Remove from saved set if save failed so it can be retried
+      this.savedSessions.delete(sessionKey);
+      console.error('❌ Failed to save session:', { sessionKey, context: saveContext, error });
+      throw error;
     }
   }
 }
