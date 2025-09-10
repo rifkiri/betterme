@@ -75,7 +75,7 @@ export const TaskItemWithPomodoro = ({
     terminateSession
   } = usePomodoroSessionManager();
   const { currentUser } = useCurrentUser();
-  const { cumulativeCount: pomodoroCount, totalDuration } = usePomodoroCounter(task.id);
+  const { cumulativeCount, totalDuration, currentSessionCount } = usePomodoroCounter(task.id);
   const linkedOutput = task.weeklyOutputId ? weeklyOutputs.find(output => output.id === task.weeklyOutputId) : null;
 
   useEffect(() => {
@@ -215,10 +215,10 @@ export const TaskItemWithPomodoro = ({
               {task.title}
             </p>
           </div>
-          {pomodoroCount > 0 && !task.completed && (
+          {cumulativeCount + currentSessionCount > 0 && !task.completed && (
             <Badge variant="outline" className="gap-1 ml-2">
               <Timer className="h-3 w-3" />
-              <span>{pomodoroCount}</span>
+              <span>{cumulativeCount + currentSessionCount}</span>
               {totalDuration > 0 && (
                 <span className="text-xs opacity-60">
                   ({TaskPomodoroStatsService.formatDuration(totalDuration)})

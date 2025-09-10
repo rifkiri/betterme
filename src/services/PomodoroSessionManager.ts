@@ -269,8 +269,8 @@ export class PomodoroSessionManager {
             this.activeSession.task_id, 
             this.currentUser.id
           );
-          cumulativePomodoroNumber = stats.totalWorkSessions + currentWorkSessions;
-          cumulativeBreakNumber = stats.totalBreakSessions + currentBreakSessions + 1;
+          cumulativePomodoroNumber = stats.totalWorkSessions;
+          cumulativeBreakNumber = stats.totalBreakSessions + 1;
         }
       } else {
         // For non-task sessions, use session-level counters
@@ -686,8 +686,8 @@ export class PomodoroSessionManager {
                 this.activeSession.task_id, 
                 this.currentUser.id
               );
-              cumulativePomodoroNumber = stats.totalWorkSessions + this.activeSession.completed_work_sessions;
-              cumulativeBreakNumber = stats.totalBreakSessions + this.activeSession.completed_break_sessions + 1;
+              cumulativePomodoroNumber = stats.totalWorkSessions;
+              cumulativeBreakNumber = stats.totalBreakSessions + 1;
             }
           } else {
             // For non-task sessions, use session-level counters
@@ -742,8 +742,8 @@ export class PomodoroSessionManager {
               this.activeSession.task_id, 
               this.currentUser.id
             );
-            cumulativePomodoroNumber = stats.totalWorkSessions + this.activeSession.completed_work_sessions;
-            cumulativeBreakNumber = stats.totalBreakSessions + this.activeSession.completed_break_sessions + 1;
+            cumulativePomodoroNumber = stats.totalWorkSessions;
+            cumulativeBreakNumber = stats.totalBreakSessions + 1;
           }
         } else {
           // For non-task sessions, use session-level counters

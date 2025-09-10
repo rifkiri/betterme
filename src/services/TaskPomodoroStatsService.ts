@@ -40,11 +40,6 @@ export class TaskPomodoroStatsService {
       const totalBreakSessions = breakSessions.length;
       const totalBreakDuration = breakSessions.reduce((sum, s) => sum + s.duration_minutes, 0);
 
-      // Add current active session progress if applicable
-      const currentSessionProgress = (activeSession?.task_id === taskId && activeSession?.completed_work_sessions > 0) 
-        ? activeSession.completed_work_sessions 
-        : 0;
-
       // Get last session date
       const lastSessionDate = sessions.length > 0 
         ? new Date(sessions[0].completed_at) // sessions are ordered by completion date desc
@@ -55,9 +50,10 @@ export class TaskPomodoroStatsService {
         totalWorkDuration,
         totalBreakSessions,
         totalBreakDuration,
-        currentSessionProgress,
+        currentSessionProgress: 0, // Remove active session from historical stats
         lastSessionDate
       };
+
     } catch (error) {
       console.error('Error fetching task Pomodoro stats:', error);
       return {
@@ -72,15 +68,23 @@ export class TaskPomodoroStatsService {
   }
 
   /**
-   * Get cumulative work session count for a task (including active session)
+   * Get cumulative work session count for a task (historical only)
    */
   static async getCumulativeWorkCount(
     taskId: string, 
-    userId: string, 
-    activeSession?: any
+    userId: string
   ): Promise<number> {
-    const stats = await this.getTaskStats(taskId, userId, activeSession);
-    return stats.totalWorkSessions + stats.currentSessionProgress;
+    const stats = await this.getTaskStats(taskId, userId);
+    return stats.totalWorkSessions;
+  }
+
+  /**
+   * Get current active session progress for a task
+   */
+  static getCurrentSessionProgress(activeSession: any, taskId: string): number {
+    return (activeSession?.task_id === taskId && activeSession?.completed_work_sessions > 0) 
+      ? activeSession.completed_work_sessions 
+      : 0;
   }
 
   /**

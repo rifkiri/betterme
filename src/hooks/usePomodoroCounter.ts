@@ -23,14 +23,10 @@ export const usePomodoroCounter = (taskId?: string): PomodoroCounterData => {
     
     setLoading(true);
     try {
-      const stats = await TaskPomodoroStatsService.getTaskStats(
-        taskId, 
-        currentUser.id, 
-        activeSession
-      );
+      const stats = await TaskPomodoroStatsService.getTaskStats(taskId, currentUser.id);
       
-      // Set cumulative count (historical + current active session progress)
-      setCumulativeCount(stats.totalWorkSessions + stats.currentSessionProgress);
+      // Set only historical cumulative count (no active session included)
+      setCumulativeCount(stats.totalWorkSessions);
       setTotalDuration(stats.totalWorkDuration);
     } catch (error) {
       console.error('Error fetching cumulative pomodoro stats:', error);
@@ -39,20 +35,20 @@ export const usePomodoroCounter = (taskId?: string): PomodoroCounterData => {
     } finally {
       setLoading(false);
     }
-  }, [taskId, currentUser?.id, activeSession?.completed_work_sessions]);
+  }, [taskId, currentUser?.id]);
 
   useEffect(() => {
     fetchCumulativeStats();
   }, [fetchCumulativeStats]);
 
-  // Refetch when active session changes or completes
+  // Refetch when active session task changes (not when progress changes)
   useEffect(() => {
-    fetchCumulativeStats();
-  }, [activeSession?.task_id, activeSession?.completed_work_sessions, fetchCumulativeStats]);
+    if (activeSession?.task_id !== taskId) {
+      fetchCumulativeStats();
+    }
+  }, [activeSession?.task_id, fetchCumulativeStats, taskId]);
 
-  const currentSessionCount = (activeSession?.task_id === taskId) 
-    ? activeSession.completed_work_sessions || 0 
-    : 0;
+  const currentSessionCount = TaskPomodoroStatsService.getCurrentSessionProgress(activeSession, taskId);
 
   return {
     cumulativeCount,
