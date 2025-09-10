@@ -7,7 +7,7 @@ export interface PomodoroSessionRecord {
   session_id?: string;
   duration_minutes: number;
   session_type: 'work' | 'short_break' | 'long_break';
-  session_status?: 'active' | 'paused' | 'stopped' | 'completed';
+  session_status?: 'completed' | 'stopped' | 'skipped' | 'terminated';
   pomodoro_number?: number;
   break_number?: number;
   completed_at?: string;
@@ -42,7 +42,7 @@ export class SupabasePomodoroService {
     return (data || []).map(item => ({
       ...item,
       session_type: item.session_type as 'work' | 'short_break' | 'long_break',
-      session_status: item.session_status as 'active' | 'paused' | 'stopped' | 'completed'
+      session_status: item.session_status as 'completed' | 'stopped' | 'skipped' | 'terminated'
     })) as PomodoroSessionRecord[];
   }
 
@@ -70,7 +70,7 @@ export class SupabasePomodoroService {
     return (data || []).map(item => ({
       ...item,
       session_type: item.session_type as 'work' | 'short_break' | 'long_break',
-      session_status: item.session_status as 'active' | 'paused' | 'stopped' | 'completed'
+      session_status: item.session_status as 'completed' | 'stopped' | 'skipped' | 'terminated'
     })) as PomodoroSessionRecord[];
   }
 
@@ -86,7 +86,7 @@ export class SupabasePomodoroService {
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('session_type', 'work')
-      .eq('interrupted', false)
+      .eq('session_status', 'completed') // Only count completed sessions, not stopped/skipped
       .gte('completed_at', today.toISOString())
       .lt('completed_at', tomorrow.toISOString());
 

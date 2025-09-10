@@ -353,16 +353,18 @@ export class PomodoroSessionManager {
         taskId: this.activeSession.task_id
       });
 
-      if (isWorkSession) {
-        this.showNotification('Work Session Complete!', `Great job! You've completed ${this.getCurrentSessionDuration()} minutes of focused work.`);
-        
-        const updatedSession = await SupabaseActivePomodoroService.updateActiveSession(this.activeSession.id, {
-          completed_work_sessions: this.activeSession.completed_work_sessions + 1,
-        });
-        console.log('📈 Work session completed - new count:', updatedSession.completed_work_sessions);
-        this.activeSession = updatedSession;
-        this.globalState.updateSession(updatedSession, true);
-        this.notifyListeners(); // Notify immediately after work session completion
+        // Move counter increment AFTER successful database save
+        // This fixes the race condition by incrementing only after successful save
+        if (isWorkSession) {
+          this.showNotification('Work Session Complete!', `Great job! You've completed ${this.getCurrentSessionDuration()} minutes of focused work.`);
+          
+          const updatedSession = await SupabaseActivePomodoroService.updateActiveSession(this.activeSession.id, {
+            completed_work_sessions: this.activeSession.completed_work_sessions + 1,
+          });
+          console.log('📈 Work session completed - new count:', updatedSession.completed_work_sessions);
+          this.activeSession = updatedSession;
+          this.globalState.updateSession(updatedSession, true);
+          this.notifyListeners(); // Notify immediately after work session completion
         
         // Event emission now handled in saveSessionOnce after successful save
         
@@ -854,7 +856,8 @@ export class PomodoroSessionManager {
             session_id: this.activeSession.session_id,
             duration_minutes: elapsed,
             session_type: this.activeSession.current_session_type as any,
-            interrupted: true,
+            session_status: 'skipped',
+            interrupted: false, // Use session_status instead of interrupted flag
             pomodoro_number: cumulativePomodoroNumber,
             break_number: cumulativeBreakNumber,
           }, 'skipSession');
@@ -910,7 +913,8 @@ export class PomodoroSessionManager {
           session_id: this.activeSession.session_id,
           duration_minutes: elapsed,
           session_type: this.activeSession.current_session_type as any,
-          interrupted: true,
+          session_status: 'stopped',
+          interrupted: false, // Use session_status instead of interrupted flag
           pomodoro_number: cumulativePomodoroNumber,
           break_number: cumulativeBreakNumber,
         }, 'saveInterruptedSession');
@@ -1081,7 +1085,7 @@ export class PomodoroSessionManager {
   // Helper method to prevent duplicate session saves
   private async saveSessionOnce(sessionData: any, saveContext: string): Promise<void> {
     // Create session key WITHOUT timestamp for proper deduplication
-    const sessionKey = `${sessionData.session_id}-${sessionData.session_type}-${sessionData.interrupted ? 'interrupted' : 'completed'}-${sessionData.pomodoro_number}-${sessionData.break_number}`;
+    const sessionKey = `${sessionData.session_id}-${sessionData.session_type}-${sessionData.session_status}-${sessionData.pomodoro_number}-${sessionData.break_number}`;
     
     // Check if this exact session is already being processed
     if (this.savedSessions.has(sessionKey)) {
@@ -1089,7 +1093,7 @@ export class PomodoroSessionManager {
       return;
     }
 
-    console.info('💾 Starting session save:', { sessionKey, context: saveContext, duration: sessionData.duration_minutes });
+    console.info('💾 Starting session save:', { sessionKey, context: saveContext, duration: sessionData.duration_minutes, status: sessionData.session_status });
     
     try {
       // Save to database first
@@ -1098,14 +1102,14 @@ export class PomodoroSessionManager {
       // Only mark as saved AFTER successful database save
       this.savedSessions.add(sessionKey);
       
-      console.info('✅ Session saved successfully:', { sessionKey, context: saveContext });
+      console.info('✅ Session saved successfully:', { sessionKey, context: saveContext, status: sessionData.session_status });
       
       // Emit event after successful save
       pomodoroEventEmitter.emit('session_completed', {
         sessionType: sessionData.session_type,
         taskId: sessionData.task_id || undefined,
         duration: sessionData.duration_minutes,
-        interrupted: sessionData.interrupted || false,
+        interrupted: sessionData.session_status !== 'completed', // Only completed sessions count as not interrupted
         pomodoroNumber: sessionData.pomodoro_number,
         breakNumber: sessionData.break_number
       });
@@ -1121,7 +1125,7 @@ export class PomodoroSessionManager {
           sessionType: sessionData.session_type,
           taskId: sessionData.task_id || undefined,
           duration: sessionData.duration_minutes,
-          interrupted: sessionData.interrupted || false,
+          interrupted: sessionData.session_status !== 'completed',
           pomodoroNumber: sessionData.pomodoro_number,
           breakNumber: sessionData.break_number
         });

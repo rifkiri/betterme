@@ -10,7 +10,7 @@ export const usePomodoroCompletion = () => {
     taskId: string | null,
     duration: number,
     sessionType: 'work' | 'short_break' | 'long_break',
-    interrupted: boolean = false,
+    sessionStatus: 'completed' | 'stopped' | 'skipped' | 'terminated' = 'completed',
     suppressToast: boolean = false, // Add option to suppress toast for interim saves
     pomodoroNumber?: number,
     breakNumber?: number
@@ -23,14 +23,15 @@ export const usePomodoroCompletion = () => {
         task_id: taskId || undefined,
         duration_minutes: duration,
         session_type: sessionType,
-        session_status: 'completed',
-        interrupted,
+        session_status: sessionStatus,
+        interrupted: false, // We now use session_status to distinguish completion types
         completed_at: new Date().toISOString(),
         pomodoro_number: pomodoroNumber,
         break_number: breakNumber,
       });
       
-      if (!interrupted && !suppressToast && sessionType === 'work') {
+      // Only show toast for naturally completed work sessions
+      if (sessionStatus === 'completed' && !suppressToast && sessionType === 'work') {
         toast.success('Pomodoro session saved!');
       }
     } catch (error) {
