@@ -287,8 +287,12 @@ export const TaskItemWithPomodoro = ({
               {getSessionIcon()}
               <span className="font-semibold text-sm">{getSessionLabel()}</span>
             </div>
-            <StatusBadge status={isRunning ? 'high' : 'medium'}>
-              {isRunning ? 'Active' : 'Paused'}
+            <StatusBadge status={
+              activeSession?.session_status === 'active-running' ? 'high' : 
+              activeSession?.session_status === 'active-paused' ? 'medium' : 'low'
+            }>
+              {activeSession?.session_status === 'active-running' ? 'Active' : 
+               activeSession?.session_status === 'active-paused' ? 'Paused' : 'Stopped'}
             </StatusBadge>
           </div>
           
