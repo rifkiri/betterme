@@ -500,28 +500,27 @@ export class PomodoroSessionManager {
       }
     }
     
-    // Calculate proportional time adjustment for active/paused sessions
+    // Calculate absolute difference time adjustment for active/paused sessions
     if (this.activeSession && (this.activeSession.session_status === 'active-running' || this.activeSession.session_status === 'active-paused')) {
       const oldDuration = this.getOldSessionDuration(this.activeSession.current_session_type, oldSettings);
       const newDuration = this.getCurrentSessionDuration();
       
       if (oldDuration !== newDuration) {
-        // Calculate progress percentage
-        const oldTotalSeconds = oldDuration * 60;
-        const elapsedSeconds = oldTotalSeconds - this.timeRemaining;
-        const progress = elapsedSeconds / oldTotalSeconds;
+        // Calculate absolute difference in seconds
+        const durationDifferenceSeconds = (newDuration - oldDuration) * 60;
         
-        // Apply proportional adjustment
-        const newTotalSeconds = newDuration * 60;
-        const newTimeRemaining = Math.max(0, newTotalSeconds - (progress * newTotalSeconds));
+        // Apply absolute adjustment: newTimeRemaining = currentTimeRemaining + difference
+        const newTimeRemaining = this.timeRemaining + durationDifferenceSeconds;
         
-        this.timeRemaining = Math.floor(newTimeRemaining);
-        
-        // If new time remaining is 0 or negative, complete the session
-        if (this.timeRemaining <= 0) {
+        // Handle edge cases
+        if (newTimeRemaining <= 0) {
           this.handleSessionComplete();
           return;
         }
+        
+        // Cap to new total duration if needed
+        const newTotalSeconds = newDuration * 60;
+        this.timeRemaining = Math.min(newTimeRemaining, newTotalSeconds);
       }
     }
     
