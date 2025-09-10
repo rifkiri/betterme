@@ -422,6 +422,16 @@ export class PomodoroSessionManager {
     if (!this.currentUser?.id) return null;
 
     try {
+      // Step 1: Check for and terminate any existing active sessions
+      const existingSessions = await SupabaseActivePomodoroService.getActiveSessionsByUser(this.currentUser.id);
+      
+      for (const session of existingSessions) {
+        if (session.session_status !== 'terminated') {
+          await this.terminateExistingSession(session);
+        }
+      }
+
+      // Step 2: Create new session after cleanup
       const newSession = await SupabaseActivePomodoroService.createActiveSession({
         user_id: this.currentUser.id,
         task_id: taskId,
@@ -446,6 +456,80 @@ export class PomodoroSessionManager {
       console.error('Error creating session:', error);
       toast.error('Error creating Pomodoro session');
       return null;
+    }
+  }
+
+  private async terminateExistingSession(session: ActivePomodoroSession): Promise<void> {
+    try {
+      // Save any incomplete work if session was running or paused
+      if (session.session_status === 'active-running' || session.session_status === 'active-paused') {
+        await this.saveInterruptedSessionForSession(session);
+        console.log(`💾 Saved interrupted session for task: ${session.task_title || 'No task'}`);
+      }
+      
+      // Terminate the session in database
+      await SupabaseActivePomodoroService.terminateSession(session.id);
+      console.log(`🔄 Terminated previous session for task: ${session.task_title || 'No task'}`);
+    } catch (error) {
+      console.error('Error terminating existing session:', error);
+    }
+  }
+
+  private async saveInterruptedSessionForSession(session: ActivePomodoroSession): Promise<void> {
+    if (!this.currentUser?.id) return;
+
+    try {
+      let elapsedTime = 0;
+      
+      // Calculate elapsed time based on session status
+      if (session.session_status === 'active-running' && session.current_start_time) {
+        const startTime = new Date(session.current_start_time).getTime();
+        const currentTime = Date.now();
+        elapsedTime = Math.floor((currentTime - startTime) / 1000 / 60); // Convert to minutes
+      } else if (session.session_status === 'active-paused' && session.current_time_remaining) {
+        const totalDuration = this.getSessionDuration(session.current_session_type, session) / 60;
+        elapsedTime = totalDuration - Math.floor(session.current_time_remaining / 60);
+      }
+      
+      // Only save if there's meaningful elapsed time (at least 1 minute)
+      if (elapsedTime >= 1) {
+        const isWorkSession = session.current_session_type === 'work';
+        let cumulativePomodoroNumber = 1;
+        let cumulativeBreakNumber = 0;
+        
+        if (session.task_id) {
+          const { TaskPomodoroStatsService } = await import('@/services/TaskPomodoroStatsService');
+          
+          if (isWorkSession) {
+            cumulativePomodoroNumber = await TaskPomodoroStatsService.getNextPomodoroNumber(
+              session.task_id, 
+              this.currentUser.id
+            );
+          } else {
+            const stats = await TaskPomodoroStatsService.getTaskStats(
+              session.task_id, 
+              this.currentUser.id
+            );
+            cumulativePomodoroNumber = stats.totalWorkSessions;
+            cumulativeBreakNumber = stats.totalBreakSessions + 1;
+          }
+        }
+        
+        await SupabasePomodoroService.saveSession({
+          user_id: this.currentUser.id,
+          task_id: session.task_id,
+          session_id: session.session_id,
+          duration_minutes: elapsedTime,
+          session_type: session.current_session_type as any,
+          session_status: 'completed',
+          interrupted: true,
+          completed_at: new Date().toISOString(),
+          pomodoro_number: cumulativePomodoroNumber,
+          break_number: cumulativeBreakNumber,
+        });
+      }
+    } catch (error) {
+      console.error('Error saving interrupted session:', error);
     }
   }
 
