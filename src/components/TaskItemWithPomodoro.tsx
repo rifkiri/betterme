@@ -11,6 +11,7 @@ import { IconButton } from '@/components/ui/icon-button';
 import { usePomodoroSessionManager } from '@/hooks/usePomodoroSessionManager';
 import { SupabasePomodoroService } from '@/services/SupabasePomodoroService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { PomodoroCardTimer } from './pomodoro/PomodoroCardTimer';
 
 interface TaskItemProps {
   task: Task;
@@ -41,7 +42,21 @@ export const TaskItemWithPomodoro = ({
   const [pomodoroCount, setPomodoroCount] = useState(0);
   
   // Hooks
-  const { activeSession, createSession } = usePomodoroSessionManager();
+  const { 
+    activeSession, 
+    createSession, 
+    showCard,
+    settings,
+    isRunning,
+    timeRemaining,
+    startWork,
+    togglePause,
+    stopSession,
+    skipSession,
+    updateSessionSettings,
+    minimizeCard,
+    terminateSession
+  } = usePomodoroSessionManager();
   const { currentUser } = useCurrentUser();
   const linkedOutput = task.weeklyOutputId ? weeklyOutputs.find(output => output.id === task.weeklyOutputId) : null;
 
@@ -94,14 +109,36 @@ export const TaskItemWithPomodoro = ({
 
   const isActivePomodoro = activeSession?.task_id === task.id;
 
-  const handlePomodoroClick = () => {
+  const handlePomodoroClick = async () => {
     if (task.completed) return;
-    // Create session for this specific task
-    createSession(task.id, task.title);
+    // Create session for this specific task and show card timer
+    await createSession(task.id, task.title);
+    await showCard();
   };
 
+  // Show card timer if there's an active session for this task
+  const showCardTimer = activeSession?.task_id === task.id && activeSession?.is_card_visible;
+
   return (
-    <ItemCard
+    <>
+      {showCardTimer && (
+        <div className="mb-4">
+          <PomodoroCardTimer
+            session={activeSession}
+            settings={settings}
+            isRunning={isRunning}
+            timeRemaining={timeRemaining}
+            onStart={startWork}
+            onPause={togglePause}
+            onStop={stopSession}
+            onSkip={skipSession}
+            onUpdateSettings={updateSessionSettings}
+            onMinimize={minimizeCard}
+            onClose={terminateSession}
+          />
+        </div>
+      )}
+      <ItemCard
       isCompleted={task.completed}
       isOverdue={isOverdue()}
       actions={{
@@ -198,5 +235,6 @@ export const TaskItemWithPomodoro = ({
         <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
       )}
     </ItemCard>
+    </>
   );
 };
