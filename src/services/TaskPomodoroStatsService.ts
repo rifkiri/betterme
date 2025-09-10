@@ -87,7 +87,8 @@ export class TaskPomodoroStatsService {
     // Only count the current session in progress (0 or 1)
     // Do not count completed sessions already saved to history
     return (activeSession.session_status === 'active-running' || 
-            activeSession.session_status === 'active-paused') ? 1 : 0;
+            activeSession.session_status === 'active-paused' ||
+            activeSession.session_status === 'active-stopped') ? 1 : 0;
   }
 
   /**
