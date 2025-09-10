@@ -31,7 +31,6 @@ export const EnhancedPomodoroTimer: React.FC<EnhancedPomodoroTimerProps> = ({
     stopSession,
     skipSession,
     updateSessionSettings,
-    minimizeCard,
   } = usePomodoroSessionManager();
 
   const [taskActiveSession, setTaskActiveSession] = useState(null);
@@ -81,7 +80,6 @@ export const EnhancedPomodoroTimer: React.FC<EnhancedPomodoroTimerProps> = ({
 
   const handleMinimize = async () => {
     if (taskActiveSession) {
-      await minimizeCard();
       setIsSessionVisible(false);
     }
     onMinimize?.();

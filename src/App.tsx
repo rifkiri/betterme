@@ -10,7 +10,6 @@ import { PublicRoute } from '@/components/auth/PublicRoute';
 import { ActivePomodoroIndicator } from './components/ActivePomodoroIndicator';
 import { cleanupPomodoroGlobalState } from '@/hooks/usePomodoroGlobalState';
 
-import { SmartFloatingTimer } from '@/components/pomodoro/SmartFloatingTimer';
 import SignIn from "./pages/SignIn";
 import NotFound from "./pages/NotFound";
 
@@ -162,7 +161,6 @@ const App = () => {
             {/* 404 Route */}
             <Route path="*" element={<NotFound />} />
             </Routes>
-            <SmartFloatingTimer />
           </AuthProvider>
         </BrowserRouter>
         <Toaster />

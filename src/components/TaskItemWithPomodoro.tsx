@@ -56,7 +56,6 @@ export const TaskItemWithPomodoro = ({
   const { 
     activeSession, 
     createSession, 
-    showCard,
     settings,
     isRunning,
     timeRemaining,
@@ -65,7 +64,6 @@ export const TaskItemWithPomodoro = ({
     stopSession,
     skipSession,
     updateSessionSettings,
-    minimizeCard,
     terminateSession
   } = usePomodoroSessionManager();
   const { currentUser } = useCurrentUser();
@@ -122,9 +120,8 @@ export const TaskItemWithPomodoro = ({
 
   const handlePomodoroClick = async () => {
     if (task.completed) return;
-    // Create session for this specific task and show card timer
+    // Create session for this specific task
     await createSession(task.id, task.title);
-    await showCard();
   };
 
   // Show card timer if there's an active session for this task

@@ -159,52 +159,6 @@ export const usePomodoroSessionManager = () => {
     return () => clearTimeout(debounceTimer);
   }, [isRunning, timeRemaining, activeSession?.id]);
 
-  // Route-based visibility state management
-  useEffect(() => {
-    if (!activeSession) return;
-
-    const updateVisibilityForRoute = async () => {
-      try {
-        const isOnTasksPage = location.pathname === '/';
-        
-        if (isOnTasksPage) {
-          // User is on tasks page - show card timer if it was hidden
-          if (!activeSession.is_card_visible) {
-            await SupabaseActivePomodoroService.updateActiveSession(activeSession.id, {
-              is_card_visible: true,
-              is_floating_visible: false,
-            });
-            // Update local state to trigger re-render
-            setActiveSession(prev => prev ? {
-              ...prev,
-              is_card_visible: true,
-              is_floating_visible: false,
-            } : null);
-          }
-        } else {
-          // User navigated away - show floating timer
-          if (activeSession.is_card_visible) {
-            await SupabaseActivePomodoroService.updateActiveSession(activeSession.id, {
-              is_card_visible: false,
-              is_floating_visible: true,
-            });
-            // Update local state to trigger re-render
-            setActiveSession(prev => prev ? {
-              ...prev,
-              is_card_visible: false,
-              is_floating_visible: true,
-            } : null);
-          }
-        }
-      } catch (error) {
-        console.error('Error updating visibility for route change:', error);
-      }
-    };
-
-    // Debounce the update to avoid rapid state changes
-    const debounceTimer = setTimeout(updateVisibilityForRoute, 300);
-    return () => clearTimeout(debounceTimer);
-  }, [location.pathname, activeSession?.id]);
 
   // Audio and notifications
   const playSound = useCallback(() => {
@@ -571,31 +525,6 @@ export const usePomodoroSessionManager = () => {
     }
   }, [activeSession, startBreak, startWork]);
 
-  const minimizeCard = useCallback(async () => {
-    if (!activeSession) return;
-
-    try {
-      await SupabaseActivePomodoroService.updateActiveSession(activeSession.id, {
-        is_card_visible: false,
-        is_floating_visible: true,
-      });
-    } catch (error) {
-      console.error('Error minimizing card:', error);
-    }
-  }, [activeSession]);
-
-  const showCard = useCallback(async () => {
-    if (!activeSession) return;
-
-    try {
-      await SupabaseActivePomodoroService.updateActiveSession(activeSession.id, {
-        is_card_visible: true,
-        is_floating_visible: false,
-      });
-    } catch (error) {
-      console.error('Error showing card:', error);
-    }
-  }, [activeSession]);
 
   return {
     // State
@@ -617,9 +546,5 @@ export const usePomodoroSessionManager = () => {
     
     // Settings
     updateSessionSettings,
-    
-    // UI controls
-    minimizeCard,
-    showCard,
   };
 };
