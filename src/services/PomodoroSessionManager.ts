@@ -41,6 +41,7 @@ export class PomodoroSessionManager {
   private globalState: PomodoroGlobalState;
   private isInitialized: boolean = false;
   private isInitializing: boolean = false;
+  private isCompleting: boolean = false;
 
   static getInstance(): PomodoroSessionManager {
     if (!PomodoroSessionManager.instance) {
@@ -231,7 +232,9 @@ export class PomodoroSessionManager {
   }
 
   private async handleSessionComplete() {
-    if (!this.activeSession || !this.currentUser) return;
+    if (!this.activeSession || !this.currentUser || this.isCompleting) return;
+    
+    this.isCompleting = true;
 
     console.log('📊 Session completing - current counters:', {
       work: this.activeSession.completed_work_sessions,
@@ -350,6 +353,8 @@ export class PomodoroSessionManager {
     } catch (error) {
       console.error('Error handling session completion:', error);
       toast.error('Error saving session completion');
+    } finally {
+      this.isCompleting = false;
     }
     
     this.notifyListeners();
