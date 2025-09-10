@@ -67,6 +67,7 @@ export const TaskItemWithPomodoro = ({
     timeRemaining,
     startWork,
     togglePause,
+    resumeWork,
     stopSession,
     skipSession,
     updateSessionSettings,
@@ -305,8 +306,20 @@ export const TaskItemWithPomodoro = ({
           <div className="flex justify-center gap-2">
             <IconButton
               icon={isRunning ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-              onClick={isRunning ? togglePause : startWork}
-              tooltip={isRunning ? 'Pause' : activeSession?.session_status === 'active-stopped' ? 'Start' : 'Resume'}
+              onClick={
+                isRunning 
+                  ? togglePause 
+                  : activeSession?.session_status === 'active-paused' 
+                    ? resumeWork 
+                    : startWork
+              }
+              tooltip={
+                isRunning 
+                  ? 'Pause' 
+                  : activeSession?.session_status === 'active-paused' 
+                    ? 'Resume' 
+                    : 'Start'
+              }
               variant={isRunning ? "default" : "outline"}
             />
             

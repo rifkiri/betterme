@@ -38,6 +38,7 @@ export const usePomodoroSessionManager = () => {
     startWork: () => sessionManager.startWork(),
     startBreak: (breakType: 'short_break' | 'long_break') => sessionManager.startBreak(breakType),
     togglePause: () => sessionManager.togglePause(),
+    resumeWork: () => sessionManager.resumeWork(),
     stopSession: () => sessionManager.stopSession(),
     skipSession: () => sessionManager.skipSession(),
     terminateSession: () => sessionManager.terminateSession(),
