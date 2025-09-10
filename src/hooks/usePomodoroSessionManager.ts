@@ -417,25 +417,30 @@ export const usePomodoroSessionManager = () => {
   const terminateSession = useCallback(async () => {
     if (!activeSession) return;
 
-    // Immediately clear global state to hide all timers across all hook instances
-    terminateGlobalSession();
+    // Store session ID before clearing state
+    const sessionId = activeSession.id;
     
+    // Clear timer immediately
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
+    
+    // Clear local state immediately to hide UI
+    setIsRunning(false);
+    setActiveSession(null);
+    setTimeRemaining(0);
+    
+    // Clear global state to hide timers across all instances
+    terminateGlobalSession();
 
     try {
       // Clean up database state
-      await SupabaseActivePomodoroService.updateActiveSession(activeSession.id, {
-        is_card_visible: false,
-        is_floating_visible: false,
-      });
-      
-      await SupabaseActivePomodoroService.terminateSession(activeSession.id);
-      toast.info('Session closed');
+      await SupabaseActivePomodoroService.terminateSession(sessionId);
+      toast.info('Session terminated');
     } catch (error) {
       console.error('Error terminating session:', error);
+      toast.error('Error terminating session');
     }
   }, [activeSession, terminateGlobalSession]);
 
