@@ -440,6 +440,45 @@ export type Database = {
         }
         Relationships: []
       }
+      task_pomodoro_stats: {
+        Row: {
+          break_duration_total: number
+          break_sessions_count: number
+          created_at: string
+          last_break_session_at: string | null
+          last_work_session_at: string | null
+          task_id: string
+          updated_at: string
+          user_id: string
+          work_duration_total: number
+          work_sessions_count: number
+        }
+        Insert: {
+          break_duration_total?: number
+          break_sessions_count?: number
+          created_at?: string
+          last_break_session_at?: string | null
+          last_work_session_at?: string | null
+          task_id: string
+          updated_at?: string
+          user_id: string
+          work_duration_total?: number
+          work_sessions_count?: number
+        }
+        Update: {
+          break_duration_total?: number
+          break_sessions_count?: number
+          created_at?: string
+          last_break_session_at?: string | null
+          last_work_session_at?: string | null
+          task_id?: string
+          updated_at?: string
+          user_id?: string
+          work_duration_total?: number
+          work_sessions_count?: number
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           completed: boolean

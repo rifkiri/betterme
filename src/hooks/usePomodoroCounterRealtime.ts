@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { PomodoroCounterService, PomodoroCountData } from '@/services/PomodoroCounterService';
+import { TaskPomodoroStatsService, PomodoroCountData } from '@/services/TaskPomodoroStatsService';
 import { PomodoroSessionManager } from '@/services/PomodoroSessionManager';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -12,8 +12,8 @@ export interface UsePomodoroCounterRealtimeResult {
 }
 
 /**
- * Real-time Pomodoro counter hook with instant updates
- * Subscribes to database changes for immediate UI updates
+ * Real-time Pomodoro counter hook using optimized cumulative stats table
+ * Provides instant O(1) lookups and reliable real-time updates
  */
 export const usePomodoroCounterRealtime = (taskId?: string): UsePomodoroCounterRealtimeResult => {
   const { currentUser } = useCurrentUser();
@@ -28,7 +28,8 @@ export const usePomodoroCounterRealtime = (taskId?: string): UsePomodoroCounterR
 
     setIsLoading(true);
     try {
-      const result = await PomodoroCounterService.getTaskCountData(taskId, currentUser.id);
+      // Use optimized cumulative stats lookup
+      const result = await TaskPomodoroStatsService.getTaskCountData(taskId, currentUser.id);
       setData(result);
     } catch (error) {
       console.error('Error fetching pomodoro counter data:', error);
@@ -58,31 +59,21 @@ export const usePomodoroCounterRealtime = (taskId?: string): UsePomodoroCounterR
     return unsubscribe;
   }, [taskId, fetchData]);
 
-  // Real-time subscription
+  // Real-time subscription to cumulative stats table
   useEffect(() => {
     if (!taskId || !currentUser?.id) return;
 
-    const channel = supabase
-      .channel(`pomodoro-counter-${taskId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'pomodoro_sessions',
-          filter: `task_id=eq.${taskId}`,
-        },
-        () => {
-          // Immediate refetch on any change
-          fetchData();
-        }
-      )
-      .subscribe();
+    const unsubscribe = TaskPomodoroStatsService.subscribeToTaskChanges(
+      taskId, 
+      currentUser.id,
+      (data) => {
+        // Update state with new data from real-time subscription
+        setData(data);
+      }
+    );
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [taskId, currentUser?.id, fetchData]);
+    return unsubscribe;
+  }, [taskId, currentUser?.id]);
 
   return {
     count: data.workSessionCount,

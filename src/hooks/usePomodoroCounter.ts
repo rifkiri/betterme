@@ -23,6 +23,7 @@ export const usePomodoroCounter = (taskId?: string): PomodoroCounterData => {
     
     setLoading(true);
     try {
+      // Use new O(1) cumulative stats lookup
       const stats = await TaskPomodoroStatsService.getTaskStats(taskId, currentUser.id);
       
       // Set only historical cumulative count (no active session included)
