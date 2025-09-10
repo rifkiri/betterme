@@ -3,6 +3,42 @@ import { SupabaseActivePomodoroService, ActivePomodoroSession } from '@/services
 import { SupabasePomodoroService } from '@/services/SupabasePomodoroService';
 import { PomodoroGlobalState } from '@/hooks/usePomodoroGlobalState';
 
+// Event system for real-time counter updates
+type PomodoroEventType = 'session_completed' | 'session_started' | 'session_terminated';
+interface PomodoroEvent {
+  type: PomodoroEventType;
+  sessionId?: string;
+  taskId?: string;
+  sessionType?: string;
+}
+
+class PomodoroEventEmitter {
+  private listeners: { [K in PomodoroEventType]?: Array<(event: PomodoroEvent) => void> } = {};
+
+  on(event: PomodoroEventType, callback: (event: PomodoroEvent) => void) {
+    if (!this.listeners[event]) {
+      this.listeners[event] = [];
+    }
+    this.listeners[event]!.push(callback);
+  }
+
+  emit(event: PomodoroEventType, data: Omit<PomodoroEvent, 'type'>) {
+    const listeners = this.listeners[event];
+    if (listeners) {
+      listeners.forEach(callback => callback({ type: event, ...data }));
+    }
+  }
+
+  off(event: PomodoroEventType, callback: (event: PomodoroEvent) => void) {
+    const listeners = this.listeners[event];
+    if (listeners) {
+      this.listeners[event] = listeners.filter(cb => cb !== callback);
+    }
+  }
+}
+
+export const pomodoroEventEmitter = new PomodoroEventEmitter();
+
 export interface PomodoroSessionSettings {
   workDuration: number;
   shortBreakDuration: number;
@@ -320,6 +356,13 @@ export class PomodoroSessionManager {
         this.globalState.updateSession(updatedSession, true);
         this.notifyListeners(); // Notify immediately after work session completion
         
+        // Emit event for real-time counter updates
+        pomodoroEventEmitter.emit('session_completed', {
+          sessionId: this.activeSession.session_id,
+          taskId: this.activeSession.task_id,
+          sessionType: 'work'
+        });
+        
         if (this.settings.autoStartBreaks) {
           const breakType = this.determineNextBreakType(updatedSession.completed_work_sessions, updatedSession.sessions_until_long_break);
           this.startBreak(breakType);
@@ -410,6 +453,14 @@ export class PomodoroSessionManager {
     this.listeners.add(callback);
     return () => {
       this.listeners.delete(callback);
+    };
+  }
+
+  // Subscribe to Pomodoro events (for counter updates)
+  subscribeToEvents(event: PomodoroEventType, callback: (event: PomodoroEvent) => void): (() => void) {
+    pomodoroEventEmitter.on(event, callback);
+    return () => {
+      pomodoroEventEmitter.off(event, callback);
     };
   }
 

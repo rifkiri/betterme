@@ -24,8 +24,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { ItemCard, StatusBadge, LinkBadge, DateDisplay } from '@/components/ui/standardized';
 import { IconButton } from '@/components/ui/icon-button';
 import { usePomodoroSessionManager } from '@/hooks/usePomodoroSessionManager';
-import { usePomodoroCounter } from '@/hooks/usePomodoroCounter';
-import { TaskPomodoroStatsService } from '@/services/TaskPomodoroStatsService';
+import { usePomodoroCounterRealtime } from '@/hooks/usePomodoroCounterRealtime';
+import { PomodoroCounter } from '@/components/ui/PomodoroCounter';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { PomodoroSettings } from './pomodoro/PomodoroSettings';
 import { getSessionStartAction, getStartButtonTooltip } from '@/utils/pomodoroSessionHelpers';
@@ -75,7 +75,11 @@ export const TaskItemWithPomodoro = ({
     terminateSession
   } = usePomodoroSessionManager();
   const { currentUser } = useCurrentUser();
-  const { cumulativeCount, totalDuration, currentSessionCount } = usePomodoroCounter(task.id);
+  const { 
+    count, 
+    duration, 
+    isLoading: pomodoroStatsLoading 
+  } = usePomodoroCounterRealtime(task.id);
   const linkedOutput = task.weeklyOutputId ? weeklyOutputs.find(output => output.id === task.weeklyOutputId) : null;
 
   useEffect(() => {
@@ -216,16 +220,13 @@ export const TaskItemWithPomodoro = ({
               {task.title}
             </p>
           </div>
-          {cumulativeCount + currentSessionCount > 0 && !task.completed && (
-            <Badge variant="outline" className="gap-1 ml-2">
-              <Timer className="h-3 w-3" />
-              <span>{cumulativeCount + currentSessionCount}</span>
-              {totalDuration > 0 && (
-                <span className="text-xs opacity-60">
-                  ({TaskPomodoroStatsService.formatDuration(totalDuration)})
-                </span>
-              )}
-            </Badge>
+          {!task.completed && (
+            <PomodoroCounter 
+              count={count} 
+              duration={duration} 
+              isLoading={pomodoroStatsLoading}
+              className="ml-2"
+            />
           )}
         </div>
       }
