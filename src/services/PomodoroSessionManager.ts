@@ -74,12 +74,18 @@ export class PomodoroSessionManager {
         console.log('Restoring paused time:', globalSession.current_time_remaining);
         this.timeRemaining = globalSession.current_time_remaining;
       }
-      // For stopped sessions, restore saved time (full duration)
-      else if (globalSession.session_status === 'active-stopped' &&
-               globalSession.current_time_remaining !== null && 
-               globalSession.current_time_remaining !== undefined) {
-        console.log('Restoring stopped session time:', globalSession.current_time_remaining);
-        this.timeRemaining = globalSession.current_time_remaining;
+      // For stopped sessions, restore saved time (full duration) with validation
+      else if (globalSession.session_status === 'active-stopped') {
+        if (globalSession.current_time_remaining !== null && 
+            globalSession.current_time_remaining !== undefined) {
+          console.log('Restoring stopped session time:', globalSession.current_time_remaining);
+          this.timeRemaining = globalSession.current_time_remaining;
+        } else {
+          // Fallback: calculate correct duration if not set
+          const expectedDuration = this.calculateSessionDuration(globalSession.current_session_type);
+          console.log('Setting fallback duration for stopped session:', expectedDuration);
+          this.timeRemaining = expectedDuration;
+        }
       }
       // For running sessions, restore saved time if available
       else if (globalSession.session_status === 'active-running' &&
@@ -194,6 +200,15 @@ export class PomodoroSessionManager {
     }
   }
 
+  private calculateSessionDuration(sessionType: string, breakType?: 'short_break' | 'long_break'): number {
+    switch (sessionType) {
+      case 'work': return this.settings.workDuration * 60;
+      case 'short_break': return this.settings.shortBreakDuration * 60;
+      case 'long_break': return this.settings.longBreakDuration * 60;
+      default: return 0;
+    }
+  }
+
   private clearTimer() {
     if (this.intervalRef) {
       clearInterval(this.intervalRef);
@@ -258,11 +273,14 @@ export class PomodoroSessionManager {
           this.startBreak(breakType);
         } else {
           const nextBreakType = this.determineNextBreakType(updatedSession.completed_work_sessions, updatedSession.sessions_until_long_break);
+          const breakDuration = this.calculateSessionDuration(nextBreakType);
           const stoppedSession = await SupabaseActivePomodoroService.updateActiveSession(this.activeSession.id, {
             session_status: 'active-stopped',
             current_session_type: nextBreakType,
+            current_time_remaining: breakDuration,
           });
           this.activeSession = stoppedSession;
+          this.timeRemaining = breakDuration;
           this.globalState.updateSession(stoppedSession, true);
         }
       } else {
@@ -279,11 +297,14 @@ export class PomodoroSessionManager {
         if (this.settings.autoStartWork) {
           this.startWork();
         } else {
+          const workDuration = this.calculateSessionDuration('work');
           const stoppedSession = await SupabaseActivePomodoroService.updateActiveSession(this.activeSession.id, {
             session_status: 'active-stopped',
             current_session_type: 'work',
+            current_time_remaining: workDuration,
           });
           this.activeSession = stoppedSession;
+          this.timeRemaining = workDuration;
           this.globalState.updateSession(stoppedSession, true);
         }
       }
