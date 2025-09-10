@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePomodoroSessionManager } from '@/hooks/usePomodoroSessionManager';
 import { useRouteContext } from '@/hooks/useRouteContext';
+import { useActiveTaskVisibility } from '@/hooks/useActiveTaskVisibility';
 import { PomodoroCardTimer } from './PomodoroCardTimer';
 import { IconButton } from '@/components/ui/icon-button';
 import { Clock, Maximize2, ExternalLink } from 'lucide-react';
@@ -26,15 +27,17 @@ export const SmartFloatingTimer: React.FC = () => {
     showCard,
   } = usePomodoroSessionManager();
 
-  // Show floating timer when:
-  // 1. There's an active session, AND
-  // 2. The in-card timer is not showing, AND
-  // 3. User has navigated away from tasks page OR tasks section is not visible
-  const shouldShowFloating = activeSession && 
-    !activeSession.is_card_visible && (
-      hasNavigatedAway || 
-      (isOnTasksPage && !isTaskSectionVisible)
-    );
+  const isActiveTaskVisible = useActiveTaskVisibility(activeSession);
+
+  // Show floating timer when there's an active session AND either:
+  // 1. Card timer is not visible (is_card_visible = false), OR
+  // 2. User has navigated away from tasks page, OR
+  // 3. On tasks page but the specific active task is not visible
+  const shouldShowFloating = activeSession && (
+    !activeSession.is_card_visible ||
+    hasNavigatedAway ||
+    (isOnTasksPage && (!isTaskSectionVisible || !isActiveTaskVisible))
+  );
 
   if (!shouldShowFloating) return null;
 

@@ -182,6 +182,7 @@ export const TaskItemWithPomodoro = ({
 
   return (
     <ItemCard
+      data-task-id={task.id}
       isCompleted={task.completed}
       isOverdue={isOverdue()}
       actions={{
