@@ -117,7 +117,7 @@ export const PomodoroCardTimer: React.FC<PomodoroCardTimerProps> = ({
       case 'active-paused':
         return 'Paused';
       case 'active-stopped':
-        return 'Ready';
+        return 'Stopped';
       default:
         return 'Active';
     }
