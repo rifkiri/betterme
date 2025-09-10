@@ -30,12 +30,20 @@ export const SmartFloatingTimer: React.FC = () => {
 
   const isActiveTaskVisible = useActiveTaskVisibility(activeSession);
 
-  // Show floating timer when there's an active session AND either:
+  // Helper function to check if session is truly active
+  const isValidActiveSession = (session: any) => {
+    return session && 
+           (session.session_status === 'active-running' || session.session_status === 'active-paused') &&
+           typeof session.time_remaining === 'number' && 
+           session.time_remaining >= 0;
+  };
+
+  // Show floating timer when there's a valid active session AND either:
   // 1. Card timer is not visible (is_card_visible = false), OR
   // 2. User has navigated away from tasks page, OR
   // 3. On tasks page but the specific active task is not visible
   // BUT never show on the home route (/)
-  const shouldShowFloating = activeSession && location.pathname !== '/' && (
+  const shouldShowFloating = isValidActiveSession(activeSession) && location.pathname !== '/' && (
     !activeSession.is_card_visible ||
     hasNavigatedAway ||
     (isOnTasksPage && (!isTaskSectionVisible || !isActiveTaskVisible))
