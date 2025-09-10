@@ -1042,6 +1042,9 @@ export class PomodoroSessionManager {
       const newDuration = this.getCurrentSessionDuration();
       this.timeRemaining = newDuration * 60;
     }
+    
+    // Notify all listeners about the settings change
+    this.notifyListeners();
   }
 
   async terminateSessionById(sessionId: string) {
