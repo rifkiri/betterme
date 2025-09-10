@@ -1,6 +1,23 @@
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Circle, Clock, ArrowRight, Users, Timer } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { 
+  Play, 
+  Pause, 
+  Square, 
+  SkipForward, 
+  Settings, 
+  Minimize2, 
+  X,
+  Clock,
+  Coffee,
+  Target,
+  CheckCircle, 
+  Circle, 
+  ArrowRight, 
+  Users, 
+  Timer 
+} from 'lucide-react';
 import { Task, WeeklyOutput } from '@/types/productivity';
 import { MoveTaskDialog } from './MoveTaskDialog';
 import { EditTaskDialog } from './EditTaskDialog';
@@ -119,26 +136,58 @@ export const TaskItemWithPomodoro = ({
   // Show card timer if there's an active session for this task
   const showCardTimer = activeSession?.task_id === task.id && activeSession?.is_card_visible;
 
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const getCurrentSessionDuration = () => {
+    if (!activeSession) return 25;
+    switch (activeSession.current_session_type) {
+      case 'work':
+        return activeSession.work_duration;
+      case 'short_break':
+        return activeSession.short_break_duration;
+      case 'long_break':
+        return activeSession.long_break_duration;
+      default:
+        return 25;
+    }
+  };
+
+  const totalSeconds = getCurrentSessionDuration() * 60;
+  const progressPercentage = totalSeconds > 0 ? ((totalSeconds - timeRemaining) / totalSeconds) * 100 : 0;
+
+  const getSessionIcon = () => {
+    if (!activeSession) return <Clock className="h-4 w-4" />;
+    switch (activeSession.current_session_type) {
+      case 'work':
+        return <Target className="h-4 w-4" />;
+      case 'short_break':
+      case 'long_break':
+        return <Coffee className="h-4 w-4" />;
+      default:
+        return <Clock className="h-4 w-4" />;
+    }
+  };
+
+  const getSessionLabel = () => {
+    if (!activeSession) return 'Session';
+    switch (activeSession.current_session_type) {
+      case 'work':
+        return 'Work Session';
+      case 'short_break':
+        return 'Short Break';
+      case 'long_break':
+        return 'Long Break';
+      default:
+        return 'Session';
+    }
+  };
+
   return (
-    <>
-      {showCardTimer && (
-        <div className="mb-4">
-          <PomodoroCardTimer
-            session={activeSession}
-            settings={settings}
-            isRunning={isRunning}
-            timeRemaining={timeRemaining}
-            onStart={startWork}
-            onPause={togglePause}
-            onStop={stopSession}
-            onSkip={skipSession}
-            onUpdateSettings={updateSessionSettings}
-            onMinimize={minimizeCard}
-            onClose={terminateSession}
-          />
-        </div>
-      )}
-      <ItemCard
+    <ItemCard
       isCompleted={task.completed}
       isOverdue={isOverdue()}
       actions={{
@@ -231,10 +280,64 @@ export const TaskItemWithPomodoro = ({
         </>
       }
     >
+      {/* Integrated Pomodoro Timer */}
+      {showCardTimer && (
+        <div className="border-t border-border mt-3 pt-3 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {getSessionIcon()}
+              <span className="font-medium text-sm">{getSessionLabel()}</span>
+            </div>
+            <StatusBadge status={isRunning ? 'high' : 'medium'}>
+              {isRunning ? 'Running' : 'Paused'}
+            </StatusBadge>
+          </div>
+          
+          <div className="space-y-2">
+            <div className="text-2xl font-bold text-center">
+              {formatTime(timeRemaining)}
+            </div>
+            <Progress value={progressPercentage} className="h-2" />
+          </div>
+
+          <div className="flex justify-center gap-2">
+            {activeSession?.session_status === 'active-stopped' ? (
+              <IconButton
+                icon={<Play className="h-4 w-4" />}
+                onClick={startWork}
+                tooltip="Start timer"
+                variant="default"
+              />
+            ) : (
+              <IconButton
+                icon={isRunning ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                onClick={togglePause}
+                tooltip={isRunning ? 'Pause' : 'Resume'}
+                variant="default"
+              />
+            )}
+            
+            <IconButton
+              icon={<Square className="h-4 w-4" />}
+              onClick={stopSession}
+              tooltip="Stop timer"
+              colorScheme="destructive"
+              variant="outline"
+            />
+            
+            <IconButton
+              icon={<SkipForward className="h-4 w-4" />}
+              onClick={skipSession}
+              tooltip="Skip to next session"
+              variant="outline"
+            />
+          </div>
+        </div>
+      )}
+      
       {task.description && (
         <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
       )}
     </ItemCard>
-    </>
   );
 };
