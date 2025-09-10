@@ -26,8 +26,8 @@ import { IconButton } from '@/components/ui/icon-button';
 import { usePomodoroSessionManager } from '@/hooks/usePomodoroSessionManager';
 import { SupabasePomodoroService } from '@/services/SupabasePomodoroService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { PomodoroCardTimer } from './pomodoro/PomodoroCardTimer';
 import { PomodoroSettings } from './pomodoro/PomodoroSettings';
+import { getSessionStartAction, getStartButtonTooltip } from '@/utils/pomodoroSessionHelpers';
 
 interface TaskItemProps {
   task: Task;
@@ -66,6 +66,7 @@ export const TaskItemWithPomodoro = ({
     isRunning,
     timeRemaining,
     startWork,
+    startBreak,
     togglePause,
     resumeWork,
     stopSession,
@@ -310,20 +311,13 @@ export const TaskItemWithPomodoro = ({
           <div className="flex justify-center gap-2">
             <IconButton
               icon={isRunning ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-              onClick={
-                isRunning 
-                  ? togglePause 
-                  : activeSession?.session_status === 'active-paused' 
-                    ? resumeWork 
-                    : startWork
-              }
-              tooltip={
-                isRunning 
-                  ? 'Pause' 
-                  : activeSession?.session_status === 'active-paused' 
-                    ? 'Resume' 
-                    : 'Start'
-              }
+              onClick={getSessionStartAction(activeSession, isRunning, {
+                startWork,
+                startBreak,
+                resumeWork,
+                togglePause
+              })}
+              tooltip={getStartButtonTooltip(activeSession, isRunning)}
               variant={isRunning ? "default" : "outline"}
             />
             

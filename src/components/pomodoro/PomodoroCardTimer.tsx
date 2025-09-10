@@ -19,6 +19,7 @@ import {
 import { ActivePomodoroSession } from '@/services/SupabaseActivePomodoroService';
 import { PomodoroSessionSettings } from '@/hooks/usePomodoroSessionManager';
 import { PomodoroSettings } from './PomodoroSettings';
+import { getSessionStartAction, getStartButtonTooltip } from '@/utils/pomodoroSessionHelpers';
 
 interface PomodoroCardTimerProps {
   session: ActivePomodoroSession | null;
@@ -26,7 +27,9 @@ interface PomodoroCardTimerProps {
   isRunning: boolean;
   timeRemaining: number;
   onStart: () => void;
+  onStartBreak: (type: 'short_break' | 'long_break') => void;
   onPause: () => void;
+  onResume: () => void;
   onStop: () => void;
   onSkip: () => void;
   onUpdateSettings: (settings: PomodoroSessionSettings) => void;
@@ -40,7 +43,9 @@ export const PomodoroCardTimer: React.FC<PomodoroCardTimerProps> = ({
   isRunning,
   timeRemaining,
   onStart,
+  onStartBreak,
   onPause,
+  onResume,
   onStop,
   onSkip,
   onUpdateSettings,
@@ -172,21 +177,17 @@ export const PomodoroCardTimer: React.FC<PomodoroCardTimerProps> = ({
             <ActionButtonGroup
               customActions={
                 <>
-                  {session.session_status === 'active-stopped' ? (
-                    <IconButton
-                      icon={<Play className="h-4 w-4" />}
-                      onClick={onStart}
-                      tooltip="Start timer"
-                      variant="default"
-                    />
-                  ) : (
-                    <IconButton
-                      icon={session.session_status === 'active-paused' ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
-                      onClick={onPause}
-                      tooltip={session.session_status === 'active-paused' ? 'Resume' : 'Pause'}
-                      variant="default"
-                    />
-                  )}
+                  <IconButton
+                    icon={isRunning ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                    onClick={getSessionStartAction(session, isRunning, {
+                      startWork: onStart,
+                      startBreak: onStartBreak,
+                      resumeWork: onResume,
+                      togglePause: onPause
+                    })}
+                    tooltip={getStartButtonTooltip(session, isRunning)}
+                    variant="default"
+                  />
                   
                   {session.session_status !== 'active-stopped' && (
                     <IconButton
