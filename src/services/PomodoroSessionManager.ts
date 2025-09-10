@@ -65,10 +65,20 @@ export class PomodoroSessionManager {
     this.activeSession = globalSession;
     
     if (globalSession) {
+      console.log('Syncing with global session:', globalSession.session_status, 'saved time:', globalSession.current_time_remaining);
+      
       // Always restore saved time when resuming from paused state
       if (globalSession.session_status === 'active-paused' && 
           globalSession.current_time_remaining !== null && 
           globalSession.current_time_remaining !== undefined) {
+        console.log('Restoring paused time:', globalSession.current_time_remaining);
+        this.timeRemaining = globalSession.current_time_remaining;
+      }
+      // For running sessions, restore saved time if available
+      else if (globalSession.session_status === 'active-running' &&
+               globalSession.current_time_remaining !== null && 
+               globalSession.current_time_remaining !== undefined) {
+        console.log('Restoring running session time:', globalSession.current_time_remaining);
         this.timeRemaining = globalSession.current_time_remaining;
       }
       // For running sessions, only update if it's a new session or we don't have a current session
@@ -376,6 +386,8 @@ export class PomodoroSessionManager {
       const newStatus = this.isRunning ? 'active-paused' : 'active-running';
       const now = new Date().toISOString();
       
+      console.log('Pausing with time remaining:', this.timeRemaining);
+      
       const updatedSession = await SupabaseActivePomodoroService.updateActiveSession(this.activeSession.id, {
         session_status: newStatus,
         current_start_time: !this.isRunning ? now : this.activeSession.current_start_time,
@@ -383,6 +395,7 @@ export class PomodoroSessionManager {
         current_time_remaining: this.isRunning ? this.timeRemaining : null, // Save time when pausing
       });
 
+      console.log('Updated session after pause/resume:', updatedSession.current_time_remaining);
       this.globalState.updateSession(updatedSession, true);
     } catch (error) {
       console.error('Error toggling pause:', error);
@@ -467,12 +480,21 @@ export class PomodoroSessionManager {
 
   async resumeSession(sessionId: string) {
     try {
+      // First get the current session to preserve saved time
+      const currentSessions = await SupabaseActivePomodoroService.getActiveSessionsByUser(this.currentUser!.id);
+      const currentSession = currentSessions.find(s => s.id === sessionId);
+      
+      console.log('Resuming session with saved time:', currentSession?.current_time_remaining);
+      
       const updatedSession = await SupabaseActivePomodoroService.updateActiveSession(sessionId, {
         session_status: 'active-running',
         current_start_time: new Date().toISOString(),
         current_pause_time: null,
+        // Preserve the saved time - don't clear it
+        current_time_remaining: currentSession?.current_time_remaining || null,
       });
 
+      console.log('Updated session after resume:', updatedSession.current_time_remaining);
       this.globalState.updateSession(updatedSession, true);
       toast.success('Session resumed');
     } catch (error) {
