@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { SupabaseActivePomodoroService, ActivePomodoroSession } from '@/services/SupabaseActivePomodoroService';
 import { SupabasePomodoroService } from '@/services/SupabasePomodoroService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { usePomodoroGlobalState } from '@/hooks/usePomodoroGlobalState';
 
 export interface PomodoroSessionSettings {
   workDuration: number;
@@ -32,6 +33,7 @@ const SETTINGS_KEY = 'pomodoro-settings';
 export const usePomodoroSessionManager = () => {
   const { currentUser } = useCurrentUser();
   const location = useLocation();
+  const { globalSession, updateGlobalSession, terminateGlobalSession } = usePomodoroGlobalState();
   const [activeSession, setActiveSession] = useState<ActivePomodoroSession | null>(null);
   const [settings, setSettings] = useState<PomodoroSessionSettings>(DEFAULT_SETTINGS);
   const [isRunning, setIsRunning] = useState(false);
@@ -39,6 +41,26 @@ export const usePomodoroSessionManager = () => {
   
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Sync with global session state
+  useEffect(() => {
+    if (globalSession !== activeSession) {
+      setActiveSession(globalSession);
+      
+      if (globalSession && globalSession.current_time_remaining) {
+        setTimeRemaining(globalSession.current_time_remaining);
+        setIsRunning(globalSession.session_status === 'active-running');
+      } else if (!globalSession) {
+        // Session terminated globally
+        setIsRunning(false);
+        setTimeRemaining(0);
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+      }
+    }
+  }, [globalSession]);
 
   // Load settings from localStorage
   useEffect(() => {
@@ -48,9 +70,9 @@ export const usePomodoroSessionManager = () => {
     }
   }, []);
 
-  // Load active session on mount
+  // Load active session on mount (only if no global session exists)
   useEffect(() => {
-    if (!currentUser?.id) return;
+    if (!currentUser?.id || globalSession) return;
 
     const loadActiveSessions = async () => {
       try {
@@ -60,11 +82,9 @@ export const usePomodoroSessionManager = () => {
         
         if (runningSession || pausedSession) {
           const session = runningSession || pausedSession;
-          setActiveSession(session);
           
-          if (session.current_time_remaining) {
-            setTimeRemaining(session.current_time_remaining);
-          }
+          // Update global state with loaded session
+          updateGlobalSession(session);
           
           if (runningSession && session.current_start_time) {
             // Calculate actual remaining time based on elapsed time
@@ -89,7 +109,7 @@ export const usePomodoroSessionManager = () => {
     };
 
     loadActiveSessions();
-  }, [currentUser?.id]);
+  }, [currentUser?.id, globalSession, updateGlobalSession]);
 
   // Timer interval effect
   useEffect(() => {
@@ -320,7 +340,8 @@ export const usePomodoroSessionManager = () => {
         is_floating_visible: false,
       });
 
-      setActiveSession(newSession);
+      // Update global state with new session
+      updateGlobalSession(newSession);
       setTimeRemaining(newSession.work_duration * 60);
       return newSession;
     } catch (error) {
@@ -328,7 +349,7 @@ export const usePomodoroSessionManager = () => {
       toast.error('Error creating Pomodoro session');
       return null;
     }
-  }, [currentUser, settings]);
+  }, [currentUser, settings, updateGlobalSession]);
 
   const startWork = useCallback(async () => {
     if (!activeSession) return;
@@ -342,12 +363,13 @@ export const usePomodoroSessionManager = () => {
       });
 
       setActiveSession(updatedSession);
+      updateGlobalSession(updatedSession);
       setTimeRemaining(updatedSession.work_duration * 60);
       setIsRunning(true);
     } catch (error) {
       console.error('Error starting work:', error);
     }
-  }, [activeSession]);
+  }, [activeSession, updateGlobalSession]);
 
   const startBreak = useCallback(async (breakType: 'short_break' | 'long_break') => {
     if (!activeSession) return;
@@ -365,12 +387,13 @@ export const usePomodoroSessionManager = () => {
       });
 
       setActiveSession(updatedSession);
+      updateGlobalSession(updatedSession);
       setTimeRemaining(duration * 60);
       setIsRunning(true);
     } catch (error) {
       console.error('Error starting break:', error);
     }
-  }, [activeSession]);
+  }, [activeSession, updateGlobalSession]);
 
   const togglePause = useCallback(async () => {
     if (!activeSession) return;
@@ -386,11 +409,12 @@ export const usePomodoroSessionManager = () => {
       });
 
       setActiveSession(updatedSession);
+      updateGlobalSession(updatedSession);
       setIsRunning(!isRunning);
     } catch (error) {
       console.error('Error toggling pause:', error);
     }
-  }, [activeSession, isRunning]);
+  }, [activeSession, isRunning, updateGlobalSession]);
 
   const stopSession = useCallback(async () => {
     if (!activeSession) return;
@@ -439,10 +463,8 @@ export const usePomodoroSessionManager = () => {
   const terminateSession = useCallback(async () => {
     if (!activeSession) return;
 
-    // Immediately clear local state to hide all timers
-    setIsRunning(false);
-    setActiveSession(null);
-    setTimeRemaining(0);
+    // Immediately clear global state to hide all timers across all hook instances
+    terminateGlobalSession();
     
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -461,7 +483,7 @@ export const usePomodoroSessionManager = () => {
     } catch (error) {
       console.error('Error terminating session:', error);
     }
-  }, [activeSession]);
+  }, [activeSession, terminateGlobalSession]);
 
   const resumeSession = useCallback(async (sessionId: string) => {
     if (!activeSession || activeSession.id !== sessionId) return;

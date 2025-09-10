@@ -3,11 +3,12 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { PublicRoute } from '@/components/auth/PublicRoute';
 import { ActivePomodoroIndicator } from './components/ActivePomodoroIndicator';
+import { cleanupPomodoroGlobalState } from '@/hooks/usePomodoroGlobalState';
 
 import { SmartFloatingTimer } from '@/components/pomodoro/SmartFloatingTimer';
 import SignIn from "./pages/SignIn";
@@ -62,12 +63,20 @@ const PageSkeleton = () => (
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
+const App = () => {
+  // Cleanup global state on app unmount
+  useEffect(() => {
+    return () => {
+      cleanupPomodoroGlobalState();
+    };
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
             {/* Public Routes */}
             <Route 
               path="/signin" 
@@ -152,13 +161,14 @@ const App = () => (
             
             {/* 404 Route */}
             <Route path="*" element={<NotFound />} />
-          </Routes>
-          <SmartFloatingTimer />
-        </AuthProvider>
-      </BrowserRouter>
-      <Toaster />
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+            </Routes>
+            <SmartFloatingTimer />
+          </AuthProvider>
+        </BrowserRouter>
+        <Toaster />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
