@@ -322,7 +322,11 @@ export const TaskItemWithPomodoro = ({
             
             <IconButton
               icon={<X className="h-4 w-4" />}
-              onClick={terminateSession}
+              onClick={async () => {
+                // Ensure card is minimized before termination to clean up visibility flags
+                await minimizeCard();
+                await terminateSession();
+              }}
               tooltip="Terminate session"
               colorScheme="destructive"
               variant="outline"

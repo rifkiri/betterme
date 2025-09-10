@@ -28,11 +28,13 @@ export const SmartFloatingTimer: React.FC = () => {
 
   // Show floating timer when:
   // 1. There's an active session, AND
-  // 2. User has navigated away from tasks page OR tasks section is not visible
-  const shouldShowFloating = activeSession && (
-    hasNavigatedAway || 
-    (isOnTasksPage && !isTaskSectionVisible)
-  );
+  // 2. The in-card timer is not showing, AND
+  // 3. User has navigated away from tasks page OR tasks section is not visible
+  const shouldShowFloating = activeSession && 
+    !activeSession.is_card_visible && (
+      hasNavigatedAway || 
+      (isOnTasksPage && !isTaskSectionVisible)
+    );
 
   if (!shouldShowFloating) return null;
 

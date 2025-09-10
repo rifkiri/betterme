@@ -397,6 +397,12 @@ export const usePomodoroSessionManager = () => {
     }
 
     try {
+      // Ensure visibility flags are reset before termination
+      await SupabaseActivePomodoroService.updateActiveSession(activeSession.id, {
+        is_card_visible: false,
+        is_floating_visible: false,
+      });
+      
       await SupabaseActivePomodoroService.terminateSession(activeSession.id);
       setActiveSession(null);
       setTimeRemaining(0);
