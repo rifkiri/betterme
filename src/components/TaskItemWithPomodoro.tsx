@@ -24,7 +24,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ItemCard, StatusBadge, LinkBadge, DateDisplay } from '@/components/ui/standardized';
 import { IconButton } from '@/components/ui/icon-button';
 import { usePomodoroSessionManager } from '@/hooks/usePomodoroSessionManager';
-import { SupabasePomodoroService } from '@/services/SupabasePomodoroService';
+import { usePomodoroCounter } from '@/hooks/usePomodoroCounter';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { PomodoroSettings } from './pomodoro/PomodoroSettings';
 import { getSessionStartAction, getStartButtonTooltip } from '@/utils/pomodoroSessionHelpers';
@@ -55,7 +55,6 @@ export const TaskItemWithPomodoro = ({
 }: TaskItemProps) => {
   // Component state
   const [taggedUsers, setTaggedUsers] = useState<TaggedUser[]>([]);
-  const [pomodoroCount, setPomodoroCount] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
   
   // Hooks
@@ -75,6 +74,7 @@ export const TaskItemWithPomodoro = ({
     terminateSession
   } = usePomodoroSessionManager();
   const { currentUser } = useCurrentUser();
+  const { count: pomodoroCount } = usePomodoroCounter(task.id);
   const linkedOutput = task.weeklyOutputId ? weeklyOutputs.find(output => output.id === task.weeklyOutputId) : null;
 
   useEffect(() => {
@@ -85,17 +85,6 @@ export const TaskItemWithPomodoro = ({
     }
   }, [task.taggedUsers]);
 
-  useEffect(() => {
-    const fetchPomodoroCount = async () => {
-      if (!currentUser?.id) return;
-      
-      const sessions = await SupabasePomodoroService.getSessionsByTask(task.id, currentUser.id);
-      const workSessions = sessions.filter(s => s.session_type === 'work' && !s.interrupted);
-      setPomodoroCount(workSessions.length);
-    };
-
-    fetchPomodoroCount();
-  }, [task.id, currentUser?.id, activeSession]); // Re-fetch when session changes
 
   const fetchTaggedUsers = async () => {
     if (!task.taggedUsers || task.taggedUsers.length === 0) {

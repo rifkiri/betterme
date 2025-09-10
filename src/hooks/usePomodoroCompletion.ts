@@ -10,7 +10,8 @@ export const usePomodoroCompletion = () => {
     taskId: string | null,
     duration: number,
     sessionType: 'work' | 'short_break' | 'long_break',
-    interrupted: boolean = false
+    interrupted: boolean = false,
+    suppressToast: boolean = false // Add option to suppress toast for interim saves
   ) => {
     if (!currentUser?.id) return;
 
@@ -20,10 +21,12 @@ export const usePomodoroCompletion = () => {
         task_id: taskId || undefined,
         duration_minutes: duration,
         session_type: sessionType,
+        session_status: 'completed',
         interrupted,
+        completed_at: new Date().toISOString(),
       });
       
-      if (!interrupted && sessionType === 'work') {
+      if (!interrupted && !suppressToast && sessionType === 'work') {
         toast.success('Pomodoro session saved!');
       }
     } catch (error) {

@@ -244,19 +244,28 @@ export class PomodoroSessionManager {
     this.playSound();
 
     try {
-      // Save completed session to history
+      // Save completed session to history - determine session type first
+      const isWorkSession = this.activeSession.current_session_type === 'work';
+      const currentWorkSessions = this.activeSession.completed_work_sessions;
+      const currentBreakSessions = this.activeSession.completed_break_sessions;
+      
       await SupabasePomodoroService.saveSession({
         user_id: this.currentUser.id,
         task_id: this.activeSession.task_id,
         session_id: this.activeSession.session_id,
         duration_minutes: this.getCurrentSessionDuration(),
         session_type: this.activeSession.current_session_type as any,
-        pomodoro_number: this.activeSession.completed_work_sessions + 1,
-        break_number: this.activeSession.completed_break_sessions,
+        session_status: 'completed',
+        pomodoro_number: isWorkSession ? currentWorkSessions + 1 : currentWorkSessions,
+        break_number: !isWorkSession ? currentBreakSessions + 1 : currentBreakSessions,
+        completed_at: new Date().toISOString(),
+      });
+      console.log('💾 Session saved to history:', {
+        type: this.activeSession.current_session_type,
+        work_count: isWorkSession ? currentWorkSessions + 1 : currentWorkSessions,
+        break_count: !isWorkSession ? currentBreakSessions + 1 : currentBreakSessions,
       });
 
-      const isWorkSession = this.activeSession.current_session_type === 'work';
-      
       if (isWorkSession) {
         this.showNotification('Work Session Complete!', `Great job! You've completed ${this.getCurrentSessionDuration()} minutes of focused work.`);
         
