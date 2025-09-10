@@ -65,8 +65,14 @@ export class PomodoroSessionManager {
     this.activeSession = globalSession;
     
     if (globalSession) {
-      // Only update time remaining if session isn't currently running or if it's a new session
-      if (!this.isRunning || !this.activeSession || globalSession.id !== this.activeSession.id) {
+      // Always restore saved time when resuming from paused state
+      if (globalSession.session_status === 'active-paused' && 
+          globalSession.current_time_remaining !== null && 
+          globalSession.current_time_remaining !== undefined) {
+        this.timeRemaining = globalSession.current_time_remaining;
+      }
+      // For running sessions, only update if it's a new session or we don't have a current session
+      else if (!this.isRunning || !this.activeSession || globalSession.id !== this.activeSession.id) {
         if (globalSession.current_time_remaining !== null && globalSession.current_time_remaining !== undefined) {
           this.timeRemaining = globalSession.current_time_remaining;
         }
@@ -330,6 +336,7 @@ export class PomodoroSessionManager {
         current_session_type: 'work',
         current_start_time: new Date().toISOString(),
         current_pause_time: null,
+        current_time_remaining: null, // Clear saved time for fresh start
       });
 
       this.globalState.updateSession(updatedSession, true);
@@ -352,6 +359,7 @@ export class PomodoroSessionManager {
         current_session_type: breakType,
         current_start_time: new Date().toISOString(),
         current_pause_time: null,
+        current_time_remaining: null, // Clear saved time for fresh start
       });
 
       this.globalState.updateSession(updatedSession, true);
@@ -372,6 +380,7 @@ export class PomodoroSessionManager {
         session_status: newStatus,
         current_start_time: !this.isRunning ? now : this.activeSession.current_start_time,
         current_pause_time: this.isRunning ? now : null,
+        current_time_remaining: this.isRunning ? this.timeRemaining : null, // Save time when pausing
       });
 
       this.globalState.updateSession(updatedSession, true);
