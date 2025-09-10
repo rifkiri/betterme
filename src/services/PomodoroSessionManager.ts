@@ -218,6 +218,12 @@ export class PomodoroSessionManager {
   private async handleSessionComplete() {
     if (!this.activeSession || !this.currentUser) return;
 
+    console.log('📊 Session completing - current counters:', {
+      work: this.activeSession.completed_work_sessions,
+      break: this.activeSession.completed_break_sessions,
+      sessionType: this.activeSession.current_session_type
+    });
+
     this.isRunning = false;
     this.clearTimer();
     this.playSound();
@@ -242,8 +248,10 @@ export class PomodoroSessionManager {
         const updatedSession = await SupabaseActivePomodoroService.updateActiveSession(this.activeSession.id, {
           completed_work_sessions: this.activeSession.completed_work_sessions + 1,
         });
+        console.log('📈 Work session completed - new count:', updatedSession.completed_work_sessions);
         this.activeSession = updatedSession;
         this.globalState.updateSession(updatedSession, true);
+        this.notifyListeners(); // Notify immediately after work session completion
         
         if (this.settings.autoStartBreaks) {
           const breakType = this.determineNextBreakType(updatedSession.completed_work_sessions, updatedSession.sessions_until_long_break);
@@ -263,8 +271,10 @@ export class PomodoroSessionManager {
         const updatedSession = await SupabaseActivePomodoroService.updateActiveSession(this.activeSession.id, {
           completed_break_sessions: this.activeSession.completed_break_sessions + 1,
         });
+        console.log('🛀 Break session completed - new count:', updatedSession.completed_break_sessions);
         this.activeSession = updatedSession;
         this.globalState.updateSession(updatedSession, true);
+        this.notifyListeners(); // Notify immediately after break session completion
         
         if (this.settings.autoStartWork) {
           this.startWork();
@@ -330,8 +340,18 @@ export class PomodoroSessionManager {
   }
 
   getState() {
+    // Ensure we return the most current session state by checking global state
+    const globalSession = this.globalState.getCurrentSession();
+    const currentSession = globalSession || this.activeSession;
+    
+    console.log('🔄 getState called - returning session with counters:', {
+      work: currentSession?.completed_work_sessions || 0,
+      break: currentSession?.completed_break_sessions || 0,
+      sessionId: currentSession?.id?.substring(0, 8) || 'none'
+    });
+    
     return {
-      activeSession: this.activeSession,
+      activeSession: currentSession,
       settings: this.settings,
       isRunning: this.isRunning,
       timeRemaining: this.timeRemaining,

@@ -26,7 +26,8 @@ export const usePomodoroSessionManager = () => {
     return unsubscribe;
   }, [sessionManager]);
 
-  // Get current state from session manager
+  // Get current state from session manager - this will be called on every render
+  // after the updateCounter changes, ensuring fresh state is returned
   const state = sessionManager.getState();
   
   return {

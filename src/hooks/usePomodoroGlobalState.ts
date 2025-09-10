@@ -133,6 +133,11 @@ export const usePomodoroGlobalState = () => {
     
     // Subscribe to global state changes
     const unsubscribe = globalState.subscribe((session) => {
+      console.log('🌐 Global state updated with session counters:', {
+        work: session?.completed_work_sessions || 0,
+        break: session?.completed_break_sessions || 0,
+        sessionId: session?.id?.substring(0, 8) || 'none'
+      });
       setGlobalSession(session);
       setUpdateCounter(prev => prev + 1); // Force re-render
     });
