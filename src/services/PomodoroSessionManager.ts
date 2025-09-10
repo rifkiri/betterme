@@ -280,7 +280,7 @@ export class PomodoroSessionManager {
     }
     
     this.isCompleting = true;
-    this.completedSessions.add(sessionKey);
+    // NOTE: completedSessions.add() moved to end of method after all operations succeed
 
     console.log('📊 Session completing - current counters:', {
       work: this.activeSession.completed_work_sessions,
@@ -292,6 +292,8 @@ export class PomodoroSessionManager {
     this.clearTimer();
     this.playSound();
 
+    let completionError: any = null;
+    
     try {
       // Save completed session to history with proper cumulative numbering
       const isWorkSession = this.activeSession.current_session_type === 'work';
@@ -404,13 +406,21 @@ export class PomodoroSessionManager {
         }
       }
     } catch (error) {
+      completionError = error;
       console.error('Error handling session completion:', error);
       toast.error('Error saving session completion');
+      // Don't mark as completed if there was an error
     } finally {
       this.isCompleting = false;
-      // Clean up completed session tracking after completion
-      const sessionKey = `${this.activeSession?.id}-${this.activeSession?.current_session_type}`;
-      setTimeout(() => this.completedSessions.delete(sessionKey), 5000); // Clean up after 5 seconds
+      
+      // Only mark session as completed if no error occurred
+      if (!completionError) {
+        this.completedSessions.add(sessionKey);
+        console.log('✅ Session marked as completed successfully:', sessionKey);
+        
+        // Clean up completed session tracking after successful completion
+        setTimeout(() => this.completedSessions.delete(sessionKey), 5000);
+      }
     }
     
     this.notifyListeners();
