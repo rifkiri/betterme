@@ -9,6 +9,7 @@ class PomodoroGlobalState {
   private currentSession: ActivePomodoroSession | null = null;
   private storageKey = 'pomodoro-global-session';
   private realtimeChannel: any = null;
+  private isTerminating: boolean = false;
 
   static getInstance(): PomodoroGlobalState {
     if (!PomodoroGlobalState.instance) {
@@ -106,6 +107,15 @@ class PomodoroGlobalState {
     this.updateSession(null, true);
   }
 
+  // Global termination state management
+  setTerminating(isTerminating: boolean) {
+    this.isTerminating = isTerminating;
+  }
+
+  isCurrentlyTerminating(): boolean {
+    return this.isTerminating;
+  }
+
   cleanup() {
     if (this.realtimeChannel) {
       supabase.removeChannel(this.realtimeChannel);
@@ -166,3 +176,5 @@ export const cleanupPomodoroGlobalState = () => {
   const instance = PomodoroGlobalState.getInstance();
   instance.cleanup();
 };
+
+export { PomodoroGlobalState };

@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { SupabaseActivePomodoroService, ActivePomodoroSession } from '@/services/SupabaseActivePomodoroService';
 import { SupabasePomodoroService } from '@/services/SupabasePomodoroService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { usePomodoroGlobalState } from '@/hooks/usePomodoroGlobalState';
+import { usePomodoroGlobalState, PomodoroGlobalState } from '@/hooks/usePomodoroGlobalState';
 
 export interface PomodoroSessionSettings {
   workDuration: number;
@@ -38,7 +38,6 @@ export const usePomodoroSessionManager = () => {
   const [settings, setSettings] = useState<PomodoroSessionSettings>(DEFAULT_SETTINGS);
   const [isRunning, setIsRunning] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
-  const [isTerminating, setIsTerminating] = useState(false);
   
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -73,34 +72,33 @@ export const usePomodoroSessionManager = () => {
 
   // Load active session on mount (only if no global session exists)
   useEffect(() => {
-    if (!currentUser?.id || globalSession || isTerminating) return;
+    if (!currentUser?.id || globalSession) return;
+
+    // Check global termination state to prevent race conditions
+    const globalState = PomodoroGlobalState.getInstance();
+    if (globalState.isCurrentlyTerminating()) return;
 
     const loadActiveSessions = async () => {
       try {
         const sessions = await SupabaseActivePomodoroService.getActiveSessionsByUser(currentUser.id);
-        const runningSession = sessions.find(s => s.session_status === 'active-running');
-        const pausedSession = sessions.find(s => s.session_status === 'active-paused');
         
-        if (runningSession || pausedSession) {
-          const session = runningSession || pausedSession;
+        if (sessions.length > 0) {
+          const runningSession = sessions.find(s => s.session_status === 'active-running');
+          const pausedSession = sessions.find(s => s.session_status === 'active-paused');
           
-          // Update global state with loaded session
-          updateGlobalSession(session);
-          
-          if (runningSession && session.current_start_time) {
-            // Calculate actual remaining time based on elapsed time
-            const elapsed = Math.floor((Date.now() - new Date(session.current_start_time).getTime()) / 1000);
-            const remaining = Math.max(0, (session.current_time_remaining || 0) - elapsed);
+          if (runningSession && runningSession.current_start_time) {
+            updateGlobalSession(runningSession);
+            const elapsed = Math.floor((Date.now() - new Date(runningSession.current_start_time).getTime()) / 1000);
+            const remaining = Math.max(0, (runningSession.current_time_remaining || 0) - elapsed);
             setTimeRemaining(remaining);
             setIsRunning(true);
-          } else if (pausedSession && !isTerminating) {
+          } else if (pausedSession && !globalState.isCurrentlyTerminating()) {
             // Show resume option for paused session (only if not terminating)
             toast.info('You have a paused timer. Click to resume.', {
               action: {
                 label: 'Resume',
-                onClick: () => resumeSession(session.id)
+                onClick: () => resumeSession(pausedSession.id),
               },
-              duration: 10000,
             });
           }
         }
@@ -110,7 +108,7 @@ export const usePomodoroSessionManager = () => {
     };
 
     loadActiveSessions();
-  }, [currentUser?.id, globalSession, updateGlobalSession, isTerminating]);
+  }, [currentUser?.id, globalSession, updateGlobalSession]);
 
   // Timer interval effect
   useEffect(() => {
@@ -418,8 +416,9 @@ export const usePomodoroSessionManager = () => {
   const terminateSession = useCallback(async () => {
     if (!activeSession) return;
 
-    // Set terminating flag to prevent race conditions
-    setIsTerminating(true);
+    // Set global terminating flag to prevent race conditions across all hook instances
+    const globalState = PomodoroGlobalState.getInstance();
+    globalState.setTerminating(true);
 
     // Store session ID before clearing state
     const sessionId = activeSession.id;
@@ -446,8 +445,8 @@ export const usePomodoroSessionManager = () => {
       console.error('Error terminating session:', error);
       toast.error('Error terminating session');
     } finally {
-      // Clear terminating flag after completion
-      setIsTerminating(false);
+      // Clear global terminating flag after completion
+      globalState.setTerminating(false);
     }
   }, [activeSession, terminateGlobalSession]);
 
