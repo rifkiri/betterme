@@ -75,14 +75,14 @@ export class PomodoroSessionManager {
           globalSession.current_time_remaining !== null && 
           globalSession.current_time_remaining !== undefined) {
         console.log('Restoring paused time:', globalSession.current_time_remaining);
-        this.timeRemaining = globalSession.current_time_remaining;
+        this.timeRemaining = Math.max(0, globalSession.current_time_remaining);
       }
       // For stopped sessions, restore saved time (full duration) with validation
       else if (globalSession.session_status === 'active-stopped') {
         if (globalSession.current_time_remaining !== null && 
             globalSession.current_time_remaining !== undefined) {
           console.log('Restoring stopped session time:', globalSession.current_time_remaining);
-          this.timeRemaining = globalSession.current_time_remaining;
+          this.timeRemaining = Math.max(0, globalSession.current_time_remaining);
         } else {
           // Fallback: calculate correct duration if not set
           const expectedDuration = this.calculateSessionDuration(globalSession.current_session_type);
@@ -224,7 +224,7 @@ export class PomodoroSessionManager {
     
     if (this.isRunning && this.activeSession && this.timeRemaining > 0) {
       this.intervalRef = setInterval(() => {
-        this.timeRemaining -= 1;
+        this.timeRemaining = Math.max(0, this.timeRemaining - 1);
         if (this.timeRemaining <= 0) {
           this.handleSessionComplete();
         }

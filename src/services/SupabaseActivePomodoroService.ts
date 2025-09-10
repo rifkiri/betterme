@@ -136,6 +136,11 @@ export class SupabaseActivePomodoroService {
   }
 
   static async updateActiveSession(id: string, updates: Partial<ActivePomodoroSession>): Promise<ActivePomodoroSession> {
+    // Validate time remaining is not negative before saving
+    if (updates.current_time_remaining !== undefined && updates.current_time_remaining !== null) {
+      updates.current_time_remaining = Math.max(0, updates.current_time_remaining);
+    }
+
     const { data, error } = await supabase
       .from('active_pomodoro_sessions')
       .update(updates)
