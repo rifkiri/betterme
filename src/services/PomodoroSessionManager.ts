@@ -243,16 +243,19 @@ export class PomodoroSessionManager {
           completed_work_sessions: this.activeSession.completed_work_sessions + 1,
         });
         this.activeSession = updatedSession;
+        this.globalState.updateSession(updatedSession, true);
         
         if (this.settings.autoStartBreaks) {
           const breakType = this.determineNextBreakType(updatedSession.completed_work_sessions, updatedSession.sessions_until_long_break);
           this.startBreak(breakType);
         } else {
           const nextBreakType = this.determineNextBreakType(updatedSession.completed_work_sessions, updatedSession.sessions_until_long_break);
-          await SupabaseActivePomodoroService.updateActiveSession(this.activeSession.id, {
+          const stoppedSession = await SupabaseActivePomodoroService.updateActiveSession(this.activeSession.id, {
             session_status: 'active-stopped',
             current_session_type: nextBreakType,
           });
+          this.activeSession = stoppedSession;
+          this.globalState.updateSession(stoppedSession, true);
         }
       } else {
         this.showNotification('Break Complete!', 'Break time is over. Ready to get back to work?');
@@ -261,14 +264,17 @@ export class PomodoroSessionManager {
           completed_break_sessions: this.activeSession.completed_break_sessions + 1,
         });
         this.activeSession = updatedSession;
+        this.globalState.updateSession(updatedSession, true);
         
         if (this.settings.autoStartWork) {
           this.startWork();
         } else {
-          await SupabaseActivePomodoroService.updateActiveSession(this.activeSession.id, {
+          const stoppedSession = await SupabaseActivePomodoroService.updateActiveSession(this.activeSession.id, {
             session_status: 'active-stopped',
             current_session_type: 'work',
           });
+          this.activeSession = stoppedSession;
+          this.globalState.updateSession(stoppedSession, true);
         }
       }
     } catch (error) {
