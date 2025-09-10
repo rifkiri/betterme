@@ -6,17 +6,14 @@ import {
   Pause, 
   Square, 
   SkipForward, 
-  Settings, 
-  Minimize2, 
-  X,
-  Clock,
-  Coffee,
-  Target,
   CheckCircle, 
   Circle, 
   ArrowRight, 
   Users, 
-  Timer 
+  Timer,
+  Clock,
+  Coffee,
+  Target
 } from 'lucide-react';
 import { Task, WeeklyOutput } from '@/types/productivity';
 import { MoveTaskDialog } from './MoveTaskDialog';
