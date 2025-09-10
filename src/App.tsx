@@ -9,7 +9,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { PublicRoute } from '@/components/auth/PublicRoute';
 import { ActivePomodoroIndicator } from './components/ActivePomodoroIndicator';
 
-// Import SignIn normally (needed immediately for auth)
+import { SmartFloatingTimer } from '@/components/pomodoro/SmartFloatingTimer';
 import SignIn from "./pages/SignIn";
 import NotFound from "./pages/NotFound";
 
@@ -65,10 +65,8 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
       <BrowserRouter>
         <AuthProvider>
-          <ActivePomodoroIndicator />
           <Routes>
             {/* Public Routes */}
             <Route 
@@ -155,8 +153,10 @@ const App = () => (
             {/* 404 Route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <SmartFloatingTimer />
         </AuthProvider>
       </BrowserRouter>
+      <Toaster />
     </TooltipProvider>
   </QueryClientProvider>
 );

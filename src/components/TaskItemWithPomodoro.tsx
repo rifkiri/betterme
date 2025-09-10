@@ -8,7 +8,7 @@ import { format, isToday, isTomorrow, isPast } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { ItemCard, StatusBadge, LinkBadge, DateDisplay } from '@/components/ui/standardized';
 import { IconButton } from '@/components/ui/icon-button';
-import { PomodoroTimer } from '@/components/pomodoro/PomodoroTimer';
+import { EnhancedPomodoroTimer } from '@/components/pomodoro/EnhancedPomodoroTimer';
 import { usePomodoroTimer } from '@/hooks/usePomodoroTimer';
 import { SupabasePomodoroService } from '@/services/SupabasePomodoroService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -204,11 +204,9 @@ export const TaskItemWithPomodoro = ({
         <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
       )}
       
-      {(showTimer || isActivePomodoro) && (
         <div className="mt-4">
-          <PomodoroTimer task={task} compact />
+          <EnhancedPomodoroTimer task={task} />
         </div>
-      )}
     </ItemCard>
   );
 };

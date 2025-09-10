@@ -14,6 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      active_pomodoro_sessions: {
+        Row: {
+          completed_break_sessions: number
+          completed_work_sessions: number
+          created_at: string
+          current_pause_time: string | null
+          current_session_type: string
+          current_start_time: string | null
+          current_time_remaining: number | null
+          id: string
+          is_card_visible: boolean
+          is_floating_visible: boolean
+          long_break_duration: number
+          session_id: string
+          session_status: string
+          sessions_until_long_break: number
+          short_break_duration: number
+          task_id: string | null
+          task_title: string | null
+          updated_at: string
+          user_id: string
+          work_duration: number
+        }
+        Insert: {
+          completed_break_sessions?: number
+          completed_work_sessions?: number
+          created_at?: string
+          current_pause_time?: string | null
+          current_session_type?: string
+          current_start_time?: string | null
+          current_time_remaining?: number | null
+          id?: string
+          is_card_visible?: boolean
+          is_floating_visible?: boolean
+          long_break_duration?: number
+          session_id: string
+          session_status?: string
+          sessions_until_long_break?: number
+          short_break_duration?: number
+          task_id?: string | null
+          task_title?: string | null
+          updated_at?: string
+          user_id: string
+          work_duration?: number
+        }
+        Update: {
+          completed_break_sessions?: number
+          completed_work_sessions?: number
+          created_at?: string
+          current_pause_time?: string | null
+          current_session_type?: string
+          current_start_time?: string | null
+          current_time_remaining?: number | null
+          id?: string
+          is_card_visible?: boolean
+          is_floating_visible?: boolean
+          long_break_duration?: number
+          session_id?: string
+          session_status?: string
+          sessions_until_long_break?: number
+          short_break_duration?: number
+          task_id?: string | null
+          task_title?: string | null
+          updated_at?: string
+          user_id?: string
+          work_duration?: number
+        }
+        Relationships: []
+      }
       goal_assignments: {
         Row: {
           acknowledged: boolean | null
@@ -278,31 +347,43 @@ export type Database = {
       }
       pomodoro_sessions: {
         Row: {
+          break_number: number | null
           completed_at: string | null
           created_at: string | null
           duration_minutes: number
           id: string
           interrupted: boolean | null
+          pomodoro_number: number | null
+          session_id: string | null
+          session_status: string | null
           session_type: string
           task_id: string | null
           user_id: string
         }
         Insert: {
+          break_number?: number | null
           completed_at?: string | null
           created_at?: string | null
           duration_minutes: number
           id?: string
           interrupted?: boolean | null
+          pomodoro_number?: number | null
+          session_id?: string | null
+          session_status?: string | null
           session_type: string
           task_id?: string | null
           user_id: string
         }
         Update: {
+          break_number?: number | null
           completed_at?: string | null
           created_at?: string | null
           duration_minutes?: number
           id?: string
           interrupted?: boolean | null
+          pomodoro_number?: number | null
+          session_id?: string | null
+          session_status?: string | null
           session_type?: string
           task_id?: string | null
           user_id?: string

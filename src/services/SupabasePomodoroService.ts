@@ -4,10 +4,14 @@ export interface PomodoroSessionRecord {
   id?: string;
   user_id: string;
   task_id?: string;
+  session_id?: string;
   duration_minutes: number;
   session_type: 'work' | 'short_break' | 'long_break';
+  session_status?: 'active' | 'paused' | 'stopped' | 'completed';
+  pomodoro_number?: number;
+  break_number?: number;
   completed_at?: string;
-  interrupted: boolean;
+  interrupted?: boolean;
 }
 
 export class SupabasePomodoroService {
@@ -37,8 +41,9 @@ export class SupabasePomodoroService {
 
     return (data || []).map(item => ({
       ...item,
-      session_type: item.session_type as 'work' | 'short_break' | 'long_break'
-    }));
+      session_type: item.session_type as 'work' | 'short_break' | 'long_break',
+      session_status: item.session_status as 'active' | 'paused' | 'stopped' | 'completed'
+    })) as PomodoroSessionRecord[];
   }
 
   static async getSessionsByUser(userId: string, startDate?: Date, endDate?: Date): Promise<PomodoroSessionRecord[]> {
@@ -64,8 +69,9 @@ export class SupabasePomodoroService {
 
     return (data || []).map(item => ({
       ...item,
-      session_type: item.session_type as 'work' | 'short_break' | 'long_break'
-    }));
+      session_type: item.session_type as 'work' | 'short_break' | 'long_break',
+      session_status: item.session_status as 'active' | 'paused' | 'stopped' | 'completed'
+    })) as PomodoroSessionRecord[];
   }
 
   static async getTodaySessionCount(userId: string): Promise<number> {
