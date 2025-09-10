@@ -82,13 +82,9 @@ export class TaskPomodoroStatsService {
    * Get current active session progress for a task
    */
   static getCurrentSessionProgress(activeSession: any, taskId: string): number {
-    if (activeSession?.task_id !== taskId) return 0;
-    
-    // Only count the current session in progress (0 or 1)
-    // Do not count completed sessions already saved to history
-    return (activeSession.session_status === 'active-running' || 
-            activeSession.session_status === 'active-paused' ||
-            activeSession.session_status === 'active-stopped') ? 1 : 0;
+    // Sessions are only counted once they are completed and saved to the database
+    // Active sessions should not contribute to the count until completion
+    return 0;
   }
 
   /**
