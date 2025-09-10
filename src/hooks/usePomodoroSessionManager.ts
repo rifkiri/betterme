@@ -439,22 +439,24 @@ export const usePomodoroSessionManager = () => {
   const terminateSession = useCallback(async () => {
     if (!activeSession) return;
 
+    // Immediately clear local state to hide all timers
     setIsRunning(false);
+    setActiveSession(null);
+    setTimeRemaining(0);
+    
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
 
     try {
-      // Ensure visibility flags are reset before termination
+      // Clean up database state
       await SupabaseActivePomodoroService.updateActiveSession(activeSession.id, {
         is_card_visible: false,
         is_floating_visible: false,
       });
       
       await SupabaseActivePomodoroService.terminateSession(activeSession.id);
-      setActiveSession(null);
-      setTimeRemaining(0);
       toast.info('Session closed');
     } catch (error) {
       console.error('Error terminating session:', error);
