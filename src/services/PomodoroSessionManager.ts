@@ -296,6 +296,14 @@ export class PomodoroSessionManager {
         taskId: this.activeSession.task_id
       });
 
+      // Reset completed sessions counter after saving to history to prevent double counting
+      const resetSession = await SupabaseActivePomodoroService.updateActiveSession(this.activeSession.id, {
+        completed_work_sessions: 0,
+        completed_break_sessions: 0,
+      });
+      this.activeSession = resetSession;
+      this.globalState.updateSession(resetSession, true);
+
       if (isWorkSession) {
         this.showNotification('Work Session Complete!', `Great job! You've completed ${this.getCurrentSessionDuration()} minutes of focused work.`);
         
@@ -789,6 +797,14 @@ export class PomodoroSessionManager {
             pomodoro_number: cumulativePomodoroNumber,
             break_number: cumulativeBreakNumber,
           });
+
+          // Reset completed sessions counter after saving to history to prevent double counting
+          const resetSession = await SupabaseActivePomodoroService.updateActiveSession(this.activeSession.id, {
+            completed_work_sessions: 0,
+            completed_break_sessions: 0,
+          });
+          this.activeSession = resetSession;
+          this.globalState.updateSession(resetSession, true);
         }
       }
     } catch (error) {
@@ -845,6 +861,14 @@ export class PomodoroSessionManager {
           pomodoro_number: cumulativePomodoroNumber,
           break_number: cumulativeBreakNumber,
         });
+
+        // Reset completed sessions counter after saving to history to prevent double counting
+        const resetSession = await SupabaseActivePomodoroService.updateActiveSession(this.activeSession.id, {
+          completed_work_sessions: 0,
+          completed_break_sessions: 0,
+        });
+        this.activeSession = resetSession;
+        this.globalState.updateSession(resetSession, true);
       }
     } catch (error) {
       console.error('Error saving interrupted session:', error);
