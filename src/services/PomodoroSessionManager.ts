@@ -42,6 +42,7 @@ export class PomodoroSessionManager {
   private isInitialized: boolean = false;
   private isInitializing: boolean = false;
   private isCompleting: boolean = false;
+  private completedSessions: Set<string> = new Set();
 
   static getInstance(): PomodoroSessionManager {
     if (!PomodoroSessionManager.instance) {
@@ -234,7 +235,15 @@ export class PomodoroSessionManager {
   private async handleSessionComplete() {
     if (!this.activeSession || !this.currentUser || this.isCompleting) return;
     
+    // Prevent duplicate completion of the same session
+    const sessionKey = `${this.activeSession.id}-${this.activeSession.current_session_type}`;
+    if (this.completedSessions.has(sessionKey)) {
+      console.log('🚫 Session already completed:', sessionKey);
+      return;
+    }
+    
     this.isCompleting = true;
+    this.completedSessions.add(sessionKey);
 
     console.log('📊 Session completing - current counters:', {
       work: this.activeSession.completed_work_sessions,
@@ -355,6 +364,9 @@ export class PomodoroSessionManager {
       toast.error('Error saving session completion');
     } finally {
       this.isCompleting = false;
+      // Clean up completed session tracking after completion
+      const sessionKey = `${this.activeSession?.id}-${this.activeSession?.current_session_type}`;
+      setTimeout(() => this.completedSessions.delete(sessionKey), 5000); // Clean up after 5 seconds
     }
     
     this.notifyListeners();
@@ -925,9 +937,11 @@ export class PomodoroSessionManager {
         // Apply absolute adjustment: newTimeRemaining = currentTimeRemaining + difference
         const newTimeRemaining = this.timeRemaining + durationDifferenceSeconds;
         
-        // Handle edge cases
+        // Handle edge cases - adjust time but don't trigger completion
         if (newTimeRemaining <= 0) {
-          this.handleSessionComplete();
+          // Set minimum time remaining instead of completing
+          this.timeRemaining = 1; // 1 second remaining
+          console.log('⚠️ Settings adjustment resulted in near-zero time, setting to 1 second');
           return;
         }
         
