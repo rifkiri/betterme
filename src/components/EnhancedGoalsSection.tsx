@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -7,8 +7,10 @@ import { Separator } from '@/components/ui/separator';
 import { SimpleAddGoalDialog } from './SimpleAddGoalDialog';
 import { JoinGoalDialog } from './JoinGoalDialog';
 import { GoalDetailsDialog } from './GoalDetailsDialog';
+import { MarketplaceGoalCard } from './MarketplaceGoalCard';
+import { MarketplaceFilters } from '@/components/ui/MarketplaceFilters';
 import { Goal, WeeklyOutput, Habit, GoalAssignment, Task } from '@/types/productivity';
-import { Target, Briefcase, User, Plus, CheckCircle, Minus, Edit, Trash2, Eye, Link2 } from 'lucide-react';
+import { Target, Briefcase, User, Plus, CheckCircle, Minus, Edit, Trash2, Eye, Link2, Store } from 'lucide-react';
 import { mapSubcategoryDatabaseToDisplay } from '@/utils/goalCategoryUtils';
 import { PageContainer, PageHeader } from '@/components/ui/standardized';
 
@@ -55,8 +57,14 @@ export const EnhancedGoalsSection = ({
   onLeaveWorkGoal,
   onRefresh
 }: EnhancedGoalsSectionProps) => {
-  const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
+  const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'marketplace'>('active');
   const [viewingGoal, setViewingGoal] = useState<Goal | null>(null);
+  
+  // Marketplace filters state
+  const [marketplaceSearch, setMarketplaceSearch] = useState('');
+  const [marketplaceSubcategory, setMarketplaceSubcategory] = useState('all');
+  const [marketplaceRole, setMarketplaceRole] = useState('all');
+  const [marketplaceSortBy, setMarketplaceSortBy] = useState('newest');
 
   // Update viewingGoal when goals array changes to keep it in sync
   useEffect(() => {
@@ -76,6 +84,89 @@ export const EnhancedGoalsSection = ({
   const completedGoals = goals.filter(goal => goal.progress >= 100);
 
   const isManager = userRole === 'manager' || userRole === 'admin';
+
+  // Filter marketplace goals
+  const marketplaceGoals = useMemo(() => {
+    let filtered = allGoals.filter(goal => 
+      goal.category === 'work' && 
+      !goal.archived && 
+      goal.progress < 100 &&
+      goal.userId !== currentUserId // Don't show user's own goals in marketplace
+    );
+
+    // Apply search filter
+    if (marketplaceSearch) {
+      const searchLower = marketplaceSearch.toLowerCase();
+      filtered = filtered.filter(goal => 
+        goal.title.toLowerCase().includes(searchLower) ||
+        (goal.description && goal.description.toLowerCase().includes(searchLower))
+      );
+    }
+
+    // Apply subcategory filter
+    if (marketplaceSubcategory !== 'all') {
+      filtered = filtered.filter(goal => goal.subcategory === marketplaceSubcategory);
+    }
+
+    // Apply role availability filter
+    if (marketplaceRole !== 'all') {
+      filtered = filtered.filter(goal => {
+        const goalAssignments = assignments.filter(a => a.goalId === goal.id);
+        const coach = goalAssignments.find(a => a.role === 'coach');
+        const lead = goalAssignments.find(a => a.role === 'lead');
+        
+        switch(marketplaceRole) {
+          case 'coach':
+            return !coach;
+          case 'lead':
+            return !lead;
+          case 'member':
+            return true; // Members can always join
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch(marketplaceSortBy) {
+        case 'newest':
+          return b.createdDate.getTime() - a.createdDate.getTime();
+        case 'oldest':
+          return a.createdDate.getTime() - b.createdDate.getTime();
+        case 'deadline':
+          if (!a.deadline && !b.deadline) return 0;
+          if (!a.deadline) return 1;
+          if (!b.deadline) return -1;
+          return a.deadline.getTime() - b.deadline.getTime();
+        case 'progress-asc':
+          return a.progress - b.progress;
+        case 'progress-desc':
+          return b.progress - a.progress;
+        case 'team-size':
+          const aSize = assignments.filter(as => as.goalId === a.id).length;
+          const bSize = assignments.filter(as => as.goalId === b.id).length;
+          return bSize - aSize;
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [allGoals, currentUserId, marketplaceSearch, marketplaceSubcategory, marketplaceRole, marketplaceSortBy, assignments]);
+
+  const clearMarketplaceFilters = () => {
+    setMarketplaceSearch('');
+    setMarketplaceSubcategory('all');
+    setMarketplaceRole('all');
+    setMarketplaceSortBy('newest');
+  };
+
+  const hasActiveMarketplaceFilters = marketplaceSearch !== '' || 
+                                      marketplaceSubcategory !== 'all' || 
+                                      marketplaceRole !== 'all' ||
+                                      marketplaceSortBy !== 'newest';
 
   const getCategoryIcon = (category: 'work' | 'personal') => {
     return category === 'work' ? <Briefcase className="h-4 w-4" /> : <User className="h-4 w-4" />;
@@ -355,7 +446,7 @@ export const EnhancedGoalsSection = ({
       />
 
       {/* Tabs positioned below header subtitle like TeamDashboard */}
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'completed')}>
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'completed' | 'marketplace')}>
         <TabsList className="flex w-full h-auto p-1 bg-gray-100 rounded-lg overflow-x-auto mb-6">
           <TabsTrigger 
             value="active" 
@@ -370,6 +461,13 @@ export const EnhancedGoalsSection = ({
           >
             <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
             Completed ({completedGoals.length})
+          </TabsTrigger>
+          <TabsTrigger 
+            value="marketplace" 
+            className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 py-2 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
+            <Store className="h-3 w-3 sm:h-4 sm:w-4" />
+            Goal Marketplace ({marketplaceGoals.length})
           </TabsTrigger>
         </TabsList>
 
@@ -433,6 +531,63 @@ export const EnhancedGoalsSection = ({
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {completedGoals.map(renderGoalCard)}
+              </div>
+            )}
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="marketplace" className="space-y-4">
+          <Card className="p-6">
+            <div className="mb-4">
+              <h3 className="text-lg font-medium">Goal Marketplace</h3>
+              <p className="text-sm text-gray-600">Discover and join work goals from across the organization</p>
+            </div>
+
+            {/* Marketplace Filters */}
+            <MarketplaceFilters
+              searchTerm={marketplaceSearch}
+              onSearchChange={setMarketplaceSearch}
+              selectedSubcategory={marketplaceSubcategory}
+              onSubcategoryChange={setMarketplaceSubcategory}
+              selectedRole={marketplaceRole}
+              onRoleChange={setMarketplaceRole}
+              sortBy={marketplaceSortBy}
+              onSortChange={setMarketplaceSortBy}
+              onClearFilters={clearMarketplaceFilters}
+              hasActiveFilters={hasActiveMarketplaceFilters}
+            />
+            
+            {/* Results Count */}
+            {marketplaceGoals.length > 0 && (
+              <div className="text-sm text-gray-600 mb-4">
+                Found {marketplaceGoals.length} {marketplaceGoals.length === 1 ? 'goal' : 'goals'}
+              </div>
+            )}
+            
+            {/* Marketplace Goals Grid */}
+            {marketplaceGoals.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Store className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p>No goals available in the marketplace</p>
+                <p className="text-sm mt-1">Check back later for new opportunities to collaborate.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {marketplaceGoals.map(goal => {
+                  const userAssignment = assignments.find(a => a.goalId === goal.id && a.userId === currentUserId);
+                  return (
+                    <MarketplaceGoalCard
+                      key={goal.id}
+                      goal={goal}
+                      assignments={assignments}
+                      availableUsers={availableUsers}
+                      currentUserId={currentUserId}
+                      isJoined={!!userAssignment}
+                      onJoin={onJoinWorkGoal}
+                      onViewDetails={setViewingGoal}
+                    />
+                  );
+                })}
               </div>
             )}
           </Card>
