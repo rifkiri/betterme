@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { SimpleAddGoalDialog } from './SimpleAddGoalDialog';
 import { JoinGoalDialog } from './JoinGoalDialog';
+import { DeletedGoalsDialog } from './DeletedGoalsDialog';
 import { GoalDetailsDialog } from './GoalDetailsDialog';
 import { MarketplaceGoalCard } from './MarketplaceGoalCard';
 import { MarketplaceFilters } from '@/components/ui/MarketplaceFilters';
@@ -483,19 +484,10 @@ export const EnhancedGoalsSection = ({
                   availableUsers={availableUsers}
                   currentUserId={currentUserId}
                 />
-                <JoinGoalDialog
-                  availableGoals={allGoals.filter(goal => {
-                    // Show work goals that are active and not owned by current user
-                    // Allow joining even if user already has an assignment (for role changes)
-                    return goal.category === 'work' && 
-                           goal.progress < 100 && 
-                           !goal.archived && 
-                           goal.userId !== currentUserId;
-                  })}
-                  availableUsers={availableUsers}
-                  currentUserId={currentUserId}
-                  assignments={assignments}
-                  onJoinGoal={(goalId, role) => onJoinWorkGoal(goalId, role)}
+                <DeletedGoalsDialog
+                  deletedGoals={deletedGoals}
+                  onRestore={onRestoreGoal}
+                  onPermanentlyDelete={onPermanentlyDeleteGoal}
                 />
               </div>
             </div>
