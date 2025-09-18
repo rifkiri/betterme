@@ -9,7 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
-import { CalendarIcon, Users, UserCog, User, Target, X } from 'lucide-react';
+import { CalendarIcon, Users, UserCog, User, Target, X, Info } from 'lucide-react';
 import { format } from 'date-fns';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,6 +21,7 @@ import { getSubcategoryOptions, mapSubcategoryDisplayToDatabase, mapSubcategoryD
 import { supabaseWeeklyOutputsService } from '@/services/SupabaseWeeklyOutputsService';
 import { supabaseGoalAssignmentsService } from '@/services/SupabaseGoalAssignmentsService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useUserRole } from '@/hooks/useUserRole';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Badge } from '@/components/ui/badge';
 
@@ -71,6 +72,7 @@ export const EditGoalDialog = ({
   const [selectedLead, setSelectedLead] = useState<string>('');
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const { currentUser } = useCurrentUser();
+  const { isTeamMember, isManagerOrAdmin } = useUserRole();
   
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -157,7 +159,7 @@ export const EditGoalDialog = ({
       category: 'work',
       subcategory: data.subcategory === "none" ? undefined : mapSubcategoryDisplayToDatabase(data.subcategory),
       deadline: deadline,
-      visibility: data.visibility || 'all',
+      visibility: isManagerOrAdmin ? 'all' : (data.visibility || 'all'),
     });
 
     // Update output linkages
@@ -472,8 +474,8 @@ export const EditGoalDialog = ({
                     )}
                   />
 
-                  {/* Visibility Selector for Work Goals */}
-                  {isWorkGoal && (
+                  {/* Visibility Selector for Work Goals - Team Members Only */}
+                  {isWorkGoal && isTeamMember && (
                     <FormField
                       control={form.control}
                       name="visibility"
@@ -487,6 +489,14 @@ export const EditGoalDialog = ({
                         </FormItem>
                       )}
                     />
+                  )}
+
+                  {/* Transparency notice for managers/admins */}
+                  {isWorkGoal && isManagerOrAdmin && (
+                    <div className="text-sm text-muted-foreground bg-blue-50 dark:bg-blue-950/20 p-3 rounded-md flex items-start gap-2">
+                      <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>Your goals are always visible to the team for transparency</span>
+                    </div>
                   )}
                 </>
               )}

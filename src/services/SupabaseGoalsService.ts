@@ -213,6 +213,10 @@ export class SupabaseGoalsService {
   async addGoal(goal: Goal & { userId: string }): Promise<void> {
     console.log('Adding goal for user:', goal.userId, goal);
     
+    // Check user role to enforce visibility rules
+    const userRole = await this.getUserRole(goal.userId);
+    const enforceVisibility = (userRole === 'manager' || userRole === 'admin') ? 'all' : (goal.visibility || 'all');
+    
     const { error } = await supabase
       .from('goals')
       .insert({
@@ -229,7 +233,7 @@ export class SupabaseGoalsService {
         // linked_output_ids removed - now handled by ItemLinkageService
         created_by: goal.createdBy,
         assignment_date: goal.assignmentDate ? goal.assignmentDate.toISOString() : null,
-        visibility: goal.visibility || 'all' // Default to 'all' for backward compatibility
+        visibility: enforceVisibility
       });
 
     if (error) {
@@ -240,6 +244,12 @@ export class SupabaseGoalsService {
 
   async updateGoal(id: string, userId: string, updates: Partial<Goal>): Promise<void> {
     console.log('Updating goal:', id, 'for user:', userId, 'with updates:', updates);
+    
+    // Check user role to enforce visibility rules
+    const userRole = await this.getUserRole(userId);
+    const enforceVisibility = (userRole === 'manager' || userRole === 'admin') 
+      ? 'all' 
+      : (updates.visibility !== undefined ? updates.visibility : undefined);
     
     const supabaseUpdates: any = {};
     
@@ -260,7 +270,7 @@ export class SupabaseGoalsService {
     if (updates.assignmentDate !== undefined) {
       supabaseUpdates.assignment_date = updates.assignmentDate ? updates.assignmentDate.toISOString() : null;
     }
-    if (updates.visibility !== undefined) supabaseUpdates.visibility = updates.visibility;
+    if (enforceVisibility !== undefined) supabaseUpdates.visibility = enforceVisibility;
 
     // Handle soft delete (archiving) - only set archived, not is_deleted
     // is_deleted should only be set for permanent deletion

@@ -13,13 +13,14 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CalendarIcon, Plus, Target, Users, UserCog, UserCheck, User, X } from 'lucide-react';
+import { CalendarIcon, Plus, Target, Users, UserCog, UserCheck, User, X, Info } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { z } from 'zod';
 import { Goal } from '@/types/productivity';
 import { getSubcategoryOptions, mapSubcategoryDisplayToDatabase } from '@/utils/goalCategoryUtils';
 import { GoalVisibilitySelector, GoalVisibility } from '@/components/ui/GoalVisibilitySelector';
+import { useUserRole } from '@/hooks/useUserRole';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -51,6 +52,7 @@ export const SimpleAddGoalDialog = ({
   const [selectedLead, setSelectedLead] = useState<string>('');
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [visibility, setVisibility] = useState<GoalVisibility>('all');
+  const { isTeamMember, isManagerOrAdmin } = useUserRole();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -84,7 +86,7 @@ export const SimpleAddGoalDialog = ({
       completed: false,
       archived: false,
       createdBy: data.category === 'work' ? currentUserId : undefined,
-      visibility: data.category === 'work' ? (data.visibility || 'all') : undefined,
+      visibility: data.category === 'work' ? (isManagerOrAdmin ? 'all' : (data.visibility || 'all')) : undefined,
     });
 
     form.reset();
@@ -262,8 +264,8 @@ export const SimpleAddGoalDialog = ({
               )}
             />
 
-            {/* Visibility Selector for Work Goals */}
-            {watchCategory === 'work' && (
+            {/* Visibility Selector for Work Goals - Team Members Only */}
+            {watchCategory === 'work' && isTeamMember && (
               <FormField
                 control={form.control}
                 name="visibility"
@@ -277,6 +279,14 @@ export const SimpleAddGoalDialog = ({
                   </FormItem>
                 )}
               />
+            )}
+
+            {/* Transparency notice for managers/admins */}
+            {watchCategory === 'work' && isManagerOrAdmin && (
+              <div className="text-sm text-muted-foreground bg-blue-50 dark:bg-blue-950/20 p-3 rounded-md flex items-start gap-2">
+                <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <span>Your goals are always visible to the team for transparency</span>
+              </div>
             )}
 
             {/* Work Goal Role Assignments */}
