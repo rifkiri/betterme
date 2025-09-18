@@ -85,6 +85,10 @@ export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
         {goal.description && (
           <CardDescription className="line-clamp-2 mt-2">{goal.description}</CardDescription>
         )}
+        {/* Creator Info */}
+        <div className="text-sm text-muted-foreground mt-2">
+          Created by: {availableUsers.find(u => u.id === (goal.createdBy || goal.userId))?.name || 'Unknown'}
+        </div>
       </CardHeader>
 
       <CardContent className="space-y-4">
