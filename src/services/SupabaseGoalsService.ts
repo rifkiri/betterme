@@ -126,7 +126,8 @@ export class SupabaseGoalsService {
         progress: goal.progress || 0,
         userId: goal.user_id,
         createdBy: goal.created_by,
-        assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined
+        assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined,
+        visibility: goal.visibility || 'all'
       }));
 
       // Debug: Check subcategory data after transformation
@@ -227,7 +228,8 @@ export class SupabaseGoalsService {
         progress: 0, // Always start with 0% progress
         // linked_output_ids removed - now handled by ItemLinkageService
         created_by: goal.createdBy,
-        assignment_date: goal.assignmentDate ? goal.assignmentDate.toISOString() : null
+        assignment_date: goal.assignmentDate ? goal.assignmentDate.toISOString() : null,
+        visibility: goal.visibility || 'all' // Default to 'all' for backward compatibility
       });
 
     if (error) {
@@ -258,6 +260,7 @@ export class SupabaseGoalsService {
     if (updates.assignmentDate !== undefined) {
       supabaseUpdates.assignment_date = updates.assignmentDate ? updates.assignmentDate.toISOString() : null;
     }
+    if (updates.visibility !== undefined) supabaseUpdates.visibility = updates.visibility;
 
     // Handle soft delete (archiving) - only set archived, not is_deleted
     // is_deleted should only be set for permanent deletion

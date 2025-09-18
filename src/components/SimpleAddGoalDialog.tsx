@@ -270,7 +270,8 @@ export const SimpleAddGoalDialog = ({
                   <div className="flex items-center gap-2">
                     <UserCog className="h-4 w-4 text-blue-600" />
                     <span className="font-medium text-sm">Coach</span>
-                  </div>
+          </div>
+
                   <Select value={selectedCoach} onValueChange={(value) => setSelectedCoach(value === 'none' ? '' : value)}>
                     <SelectTrigger className="bg-white">
                       <SelectValue placeholder="Select a coach (optional)" />

@@ -78,6 +78,7 @@ export interface Goal {
   // Role arrays removed - now handled by goal_assignments table  
   createdBy?: string; // Manager who created the work goal
   assignmentDate?: Date;
+  visibility?: 'all' | 'managers' | 'self'; // Who can view the work goal
 }
 
 export interface GoalAssignment {

@@ -16,6 +16,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '@/lib/utils';
 import { Goal, WeeklyOutput, Habit, GoalAssignment } from '@/types/productivity';
+import { GoalVisibilitySelector, GoalVisibility } from '@/components/ui/GoalVisibilitySelector';
 import { getSubcategoryOptions, mapSubcategoryDisplayToDatabase, mapSubcategoryDatabaseToDisplay } from '@/utils/goalCategoryUtils';
 import { supabaseWeeklyOutputsService } from '@/services/SupabaseWeeklyOutputsService';
 import { supabaseGoalAssignmentsService } from '@/services/SupabaseGoalAssignmentsService';
@@ -68,6 +69,7 @@ export const EditGoalDialog = ({
   const [selectedCoach, setSelectedCoach] = useState<string>('');
   const [selectedLead, setSelectedLead] = useState<string>('');
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  const [visibility, setVisibility] = useState<GoalVisibility>(goal.visibility || 'all');
   const { currentUser } = useCurrentUser();
   
   const form = useForm<FormData>({
@@ -477,7 +479,7 @@ export const EditGoalDialog = ({
                     You can edit linked outputs and role assignments for this goal. 
                     Only the goal creator can edit the basic goal details.
                   </p>
-                </div>
+          </div>
               )}
               <FormField
                 control={form.control}
