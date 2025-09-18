@@ -63,12 +63,6 @@ export const GoalDetailsDialog = ({
   // Get habits data for personal goals
   const { habits: allHabits } = useHabits();
 
-  // Early return if no goal
-  if (!goal || !goal.id) {
-    console.error('[GoalDetailsDialog] No valid goal provided');
-    return null;
-  }
-
   useEffect(() => {
     const fetchLinkedItems = async () => {
       if (open && goal && goal.id) {
@@ -103,6 +97,12 @@ export const GoalDetailsDialog = ({
 
     fetchLinkedItems();
   }, [goal?.id, goal?.category, currentUserId, open, weeklyOutputs, habits, allHabits]);
+
+  // Early return AFTER all hooks have been called
+  if (!goal || !goal.id) {
+    console.error('[GoalDetailsDialog] No valid goal provided');
+    return null;
+  }
 
 const getCategoryColor = (category: Goal['category']) => {
     switch (category) {
