@@ -63,31 +63,46 @@ export const GoalDetailsDialog = ({
   // Get habits data for personal goals
   const { habits: allHabits } = useHabits();
 
+  // Early return if no goal
+  if (!goal || !goal.id) {
+    console.error('[GoalDetailsDialog] No valid goal provided');
+    return null;
+  }
+
   useEffect(() => {
     const fetchLinkedItems = async () => {
-      if (open) {
+      if (open && goal && goal.id) {
+        console.log('[GoalDetailsDialog] Fetching linked items for goal:', goal.id);
         setLoadingLinkedOutputs(true);
         if (goal.category === 'personal') {
           setLoadingLinkedHabits(true);
         }
         
-        // Find outputs linked to this goal using the restored linkedGoalId field
-        const goalLinkedOutputs = weeklyOutputs.filter(output => output.linkedGoalId === goal.id);
-        setLinkedOutputs(goalLinkedOutputs);
-        
-        setLoadingLinkedOutputs(false);
-        
-        // Find habits linked to this goal for personal goals
-        if (goal.category === 'personal') {
-          const goalLinkedHabits = (habits.length > 0 ? habits : allHabits).filter(habit => habit.linkedGoalId === goal.id);
-          setLinkedHabits(goalLinkedHabits);
+        try {
+          // Find outputs linked to this goal using the restored linkedGoalId field
+          const goalLinkedOutputs = weeklyOutputs.filter(output => output.linkedGoalId === goal.id);
+          console.log('[GoalDetailsDialog] Found linked outputs:', goalLinkedOutputs.length);
+          setLinkedOutputs(goalLinkedOutputs);
+          
+          setLoadingLinkedOutputs(false);
+          
+          // Find habits linked to this goal for personal goals
+          if (goal.category === 'personal') {
+            const goalLinkedHabits = (habits.length > 0 ? habits : allHabits).filter(habit => habit.linkedGoalId === goal.id);
+            console.log('[GoalDetailsDialog] Found linked habits:', goalLinkedHabits.length);
+            setLinkedHabits(goalLinkedHabits);
+            setLoadingLinkedHabits(false);
+          }
+        } catch (error) {
+          console.error('[GoalDetailsDialog] Error fetching linked items:', error);
+          setLoadingLinkedOutputs(false);
           setLoadingLinkedHabits(false);
         }
       }
     };
 
     fetchLinkedItems();
-  }, [goal.id, goal.category, currentUserId, open, weeklyOutputs, habits, allHabits]);
+  }, [goal?.id, goal?.category, currentUserId, open, weeklyOutputs, habits, allHabits]);
 
 const getCategoryColor = (category: Goal['category']) => {
     switch (category) {
@@ -110,6 +125,16 @@ const getCategoryColor = (category: Goal['category']) => {
   const hasAssignmentRole = userAssignment?.role;
   const canFullEdit = isGoalCreator;
   const canEditLinkagesAndRoles = hasAssignmentRole || isGoalCreator;
+
+  console.log('[GoalDetailsDialog] Rendering:', { 
+    open, 
+    goalId: goal?.id,
+    goalTitle: goal?.title,
+    canFullEdit,
+    canEditLinkagesAndRoles,
+    currentUserId,
+    hasGoal: !!goal
+  });
 
   return (
     <>

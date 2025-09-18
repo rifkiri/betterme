@@ -60,6 +60,7 @@ export const EnhancedGoalsSection = ({
 }: EnhancedGoalsSectionProps) => {
   const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'marketplace'>('active');
   const [viewingGoal, setViewingGoal] = useState<Goal | null>(null);
+  const [isLoadingGoalDetails, setIsLoadingGoalDetails] = useState(false);
   
   // Marketplace filters state
   const [marketplaceSearch, setMarketplaceSearch] = useState('');
@@ -67,18 +68,43 @@ export const EnhancedGoalsSection = ({
   const [marketplaceRole, setMarketplaceRole] = useState('all');
   const [marketplaceSortBy, setMarketplaceSortBy] = useState('newest');
 
+  // Handle opening goal details with better error handling
+  const handleViewGoalDetails = (goal: Goal) => {
+    console.log('[EnhancedGoalsSection] Opening goal details:', {
+      goalId: goal.id,
+      title: goal.title,
+      category: goal.category,
+      visibility: goal.visibility,
+      currentUserId,
+      userRole
+    });
+    
+    // Ensure we have a valid goal object before opening dialog
+    if (!goal || !goal.id) {
+      console.error('[EnhancedGoalsSection] Invalid goal object:', goal);
+      return;
+    }
+    
+    setViewingGoal(goal);
+  };
+
   // Update viewingGoal when goals array changes to keep it in sync
   useEffect(() => {
     if (viewingGoal) {
-      const updatedGoal = goals.find(goal => goal.id === viewingGoal.id);
+      // Try to find the goal in either the user's goals or all goals
+      const updatedGoal = goals.find(goal => goal.id === viewingGoal.id) || 
+                          allGoals.find(goal => goal.id === viewingGoal.id);
+      
       if (updatedGoal && JSON.stringify(updatedGoal) !== JSON.stringify(viewingGoal)) {
+        console.log('[EnhancedGoalsSection] Updating viewing goal with new data');
         setViewingGoal(updatedGoal);
       } else if (!updatedGoal) {
         // Goal was deleted or moved, close the dialog
+        console.log('[EnhancedGoalsSection] Goal no longer available, closing dialog');
         setViewingGoal(null);
       }
     }
-  }, [goals, viewingGoal]);
+  }, [goals, allGoals, viewingGoal]);
 
   // Filter goals by completion status instead of category
   const activeGoals = goals.filter(goal => goal.progress < 100 && !goal.archived);
@@ -365,11 +391,9 @@ export const EnhancedGoalsSection = ({
               variant="outline" 
               size="sm" 
               className="h-8 w-8 p-0"
-              onClick={() => {
-                console.log('Opening goal details for:', goal);
-                setViewingGoal(goal);
-              }}
+              onClick={() => handleViewGoalDetails(goal)}
               title="View Details"
+              disabled={isLoadingGoalDetails}
             >
               <Eye className="h-4 w-4" />
             </Button>
@@ -578,7 +602,7 @@ export const EnhancedGoalsSection = ({
                       currentUserId={currentUserId}
                       isJoined={!!userAssignment}
                       onJoin={onJoinWorkGoal}
-                      onViewDetails={setViewingGoal}
+                      onViewDetails={handleViewGoalDetails}
                     />
                   );
                 })}
@@ -588,23 +612,26 @@ export const EnhancedGoalsSection = ({
         </TabsContent>
       </Tabs>
 
-      {/* Goal Details Dialog */}
-      {viewingGoal && (
-        <GoalDetailsDialog
-          goal={viewingGoal}
-          open={!!viewingGoal}
-          onOpenChange={() => setViewingGoal(null)}
-          onEditGoal={onEditGoal}
-          onUpdateProgress={onUpdateGoalProgress}
-          weeklyOutputs={weeklyOutputs}
-          tasks={tasks}
-          habits={habits}
-          currentUserId={currentUserId}
-          onRefresh={onRefresh}
-          assignments={assignments}
-          availableUsers={availableUsers}
-        />
-      )}
+      {/* Goal Details Dialog - Always render but control visibility with open prop */}
+      <GoalDetailsDialog
+        goal={viewingGoal || {} as Goal}
+        open={!!viewingGoal}
+        onOpenChange={(open) => {
+          console.log('[EnhancedGoalsSection] Dialog open change:', open);
+          if (!open) {
+            setViewingGoal(null);
+          }
+        }}
+        onEditGoal={onEditGoal}
+        onUpdateProgress={onUpdateGoalProgress}
+        weeklyOutputs={weeklyOutputs}
+        tasks={tasks}
+        habits={habits}
+        currentUserId={currentUserId}
+        onRefresh={onRefresh}
+        assignments={assignments}
+        availableUsers={availableUsers}
+      />
     </PageContainer>
   );
 };

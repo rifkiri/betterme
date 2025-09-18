@@ -43,12 +43,30 @@ export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
   const isUserOwnGoal = goal.userId === currentUserId || goal.createdBy === currentUserId;
 
   const handleQuickJoin = async () => {
+    if (!selectedRole) {
+      console.error('[MarketplaceGoalCard] No role selected for joining');
+      return;
+    }
+    
+    console.log('[MarketplaceGoalCard] Joining goal with role:', selectedRole);
     setIsJoining(true);
     try {
       await onJoin(goal.id, selectedRole);
+    } catch (error) {
+      console.error('[MarketplaceGoalCard] Error joining goal:', error);
     } finally {
       setIsJoining(false);
     }
+  };
+
+  const handleViewDetails = () => {
+    console.log('[MarketplaceGoalCard] Opening details for goal:', {
+      id: goal.id,
+      title: goal.title,
+      visibility: goal.visibility,
+      category: goal.category
+    });
+    onViewDetails(goal);
   };
 
   const progressColor = goal.progress >= 80 ? 'bg-green-500' : 
@@ -199,10 +217,7 @@ export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
             variant="outline"
             size="sm"
             className="flex-1"
-            onClick={() => {
-              console.log('Opening goal details from marketplace for:', goal);
-              onViewDetails(goal);
-            }}
+            onClick={handleViewDetails}
           >
             View Details
           </Button>
