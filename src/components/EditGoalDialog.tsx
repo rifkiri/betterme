@@ -30,6 +30,7 @@ const formSchema = z.object({
   category: z.enum(['work', 'personal']),
   subcategory: z.string().optional(),
   deadline: z.date().optional(),
+  visibility: z.enum(['all', 'managers', 'self']).optional(),
   selectedOutputIds: z.array(z.string()).optional(),
   selectedHabitIds: z.array(z.string()).optional(),
 });
@@ -69,7 +70,6 @@ export const EditGoalDialog = ({
   const [selectedCoach, setSelectedCoach] = useState<string>('');
   const [selectedLead, setSelectedLead] = useState<string>('');
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
-  const [visibility, setVisibility] = useState<GoalVisibility>(goal.visibility || 'all');
   const { currentUser } = useCurrentUser();
   
   const form = useForm<FormData>({
@@ -95,6 +95,7 @@ export const EditGoalDialog = ({
         category: 'work',
         subcategory: goal.subcategory ? mapSubcategoryDatabaseToDisplay(goal.subcategory) : "none",
         deadline: goal.deadline,
+        visibility: goal.visibility || 'all',
         selectedOutputIds: [],
         selectedHabitIds: [],
       });
@@ -156,6 +157,7 @@ export const EditGoalDialog = ({
       category: 'work',
       subcategory: data.subcategory === "none" ? undefined : mapSubcategoryDisplayToDatabase(data.subcategory),
       deadline: deadline,
+      visibility: data.visibility || 'all',
     });
 
     // Update output linkages
@@ -469,6 +471,23 @@ export const EditGoalDialog = ({
                       </FormItem>
                     )}
                   />
+
+                  {/* Visibility Selector for Work Goals */}
+                  {isWorkGoal && (
+                    <FormField
+                      control={form.control}
+                      name="visibility"
+                      render={({ field }) => (
+                        <FormItem>
+                          <GoalVisibilitySelector 
+                            value={field.value as GoalVisibility || 'all'}
+                            onChange={field.onChange}
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                 </>
               )}
 
