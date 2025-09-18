@@ -196,10 +196,13 @@ export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
         {/* Action Buttons */}
         <div className="flex gap-2 pt-2 border-t">
           <Button 
-            variant="outline" 
+            variant="outline"
             size="sm"
             className="flex-1"
-            onClick={() => onViewDetails(goal)}
+            onClick={() => {
+              console.log('Opening goal details from marketplace for:', goal);
+              onViewDetails(goal);
+            }}
           >
             View Details
           </Button>

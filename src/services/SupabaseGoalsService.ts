@@ -148,6 +148,18 @@ export class SupabaseGoalsService {
     console.log('Getting all goals for work goal joining');
     
     try {
+      // Get current user to check their role
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.error('No authenticated user found');
+        return [];
+      }
+
+      const userRole = await this.getUserRole(user.id);
+      console.log('Current user role:', userRole);
+      
+      // The RLS policy will handle the filtering based on visibility
+      // We just need to fetch all non-deleted goals and let RLS do its job
       const { data, error } = await supabase
         .from('goals')
         .select('*')
@@ -156,15 +168,18 @@ export class SupabaseGoalsService {
 
       if (error) {
         console.error('Error fetching all goals:', error);
-        throw error;
+        // Return empty array instead of throwing to prevent UI crashes
+        return [];
       }
 
       console.log('Raw goals from database:', {
         count: data?.length || 0,
+        userRole: userRole,
         data: data?.map(goal => ({
           id: goal.id,
           title: goal.title,
           category: goal.category,
+          visibility: goal.visibility,
           user_id: goal.user_id,
           progress: goal.progress,
           archived: goal.archived,
@@ -189,7 +204,8 @@ export class SupabaseGoalsService {
         archived: goal.archived,
         progress: goal.progress || 0,
         createdBy: goal.created_by,
-        assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined
+        assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined,
+        visibility: (goal.visibility || 'all') as 'all' | 'managers' | 'self'
       }));
 
       console.log('Transformed goals for frontend:', {
@@ -199,14 +215,16 @@ export class SupabaseGoalsService {
           title: g.title,
           userId: g.userId,
           progress: g.progress,
-          archived: g.archived
+          archived: g.archived,
+          visibility: g.visibility
         }))
       });
 
       return transformedGoals;
     } catch (error) {
       console.error('Error in getAllGoals:', error);
-      throw error;
+      // Return empty array instead of throwing to prevent UI crashes
+      return [];
     }
   }
 

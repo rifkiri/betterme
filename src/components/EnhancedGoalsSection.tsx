@@ -365,7 +365,10 @@ export const EnhancedGoalsSection = ({
               variant="outline" 
               size="sm" 
               className="h-8 w-8 p-0"
-              onClick={() => setViewingGoal(goal)}
+              onClick={() => {
+                console.log('Opening goal details for:', goal);
+                setViewingGoal(goal);
+              }}
               title="View Details"
             >
               <Eye className="h-4 w-4" />
