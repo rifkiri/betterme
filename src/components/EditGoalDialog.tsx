@@ -159,7 +159,7 @@ export const EditGoalDialog = ({
       category: 'work',
       subcategory: data.subcategory === "none" ? undefined : mapSubcategoryDisplayToDatabase(data.subcategory),
       deadline: deadline,
-      visibility: isManagerOrAdmin ? 'all' : (data.visibility || 'all'),
+      visibility: isTeamMember ? 'all' : (data.visibility || 'all'),
     });
 
     // Update output linkages
@@ -474,8 +474,8 @@ export const EditGoalDialog = ({
                     )}
                   />
 
-                  {/* Visibility Selector for Work Goals - Team Members Only */}
-                  {isWorkGoal && isTeamMember && (
+                  {/* Visibility Selector for Work Goals - Managers/Admins Only */}
+                  {isWorkGoal && isManagerOrAdmin && (
                     <FormField
                       control={form.control}
                       name="visibility"
@@ -491,11 +491,11 @@ export const EditGoalDialog = ({
                     />
                   )}
 
-                  {/* Transparency notice for managers/admins */}
-                  {isWorkGoal && isManagerOrAdmin && (
+                  {/* Transparency notice for team members */}
+                  {isWorkGoal && isTeamMember && (
                     <div className="text-sm text-muted-foreground bg-blue-50 dark:bg-blue-950/20 p-3 rounded-md flex items-start gap-2">
                       <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                      <span>Your goals are always visible to the team for transparency</span>
+                      <span>Goal visibility is managed by your managers</span>
                     </div>
                   )}
                 </>

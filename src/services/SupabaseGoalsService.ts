@@ -215,7 +215,7 @@ export class SupabaseGoalsService {
     
     // Check user role to enforce visibility rules
     const userRole = await this.getUserRole(goal.userId);
-    const enforceVisibility = (userRole === 'manager' || userRole === 'admin') ? 'all' : (goal.visibility || 'all');
+    const enforceVisibility = (userRole === 'team-member') ? 'all' : (goal.visibility || 'all');
     
     const { error } = await supabase
       .from('goals')
@@ -247,7 +247,7 @@ export class SupabaseGoalsService {
     
     // Check user role to enforce visibility rules
     const userRole = await this.getUserRole(userId);
-    const enforceVisibility = (userRole === 'manager' || userRole === 'admin') 
+    const enforceVisibility = (userRole === 'team-member') 
       ? 'all' 
       : (updates.visibility !== undefined ? updates.visibility : undefined);
     

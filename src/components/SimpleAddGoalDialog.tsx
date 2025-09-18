@@ -86,7 +86,7 @@ export const SimpleAddGoalDialog = ({
       completed: false,
       archived: false,
       createdBy: data.category === 'work' ? currentUserId : undefined,
-      visibility: data.category === 'work' ? (isManagerOrAdmin ? 'all' : (data.visibility || 'all')) : undefined,
+      visibility: data.category === 'work' ? (isTeamMember ? 'all' : (data.visibility || 'all')) : undefined,
     });
 
     form.reset();
@@ -264,8 +264,8 @@ export const SimpleAddGoalDialog = ({
               )}
             />
 
-            {/* Visibility Selector for Work Goals - Team Members Only */}
-            {watchCategory === 'work' && isTeamMember && (
+            {/* Visibility Selector for Work Goals - Managers/Admins Only */}
+            {watchCategory === 'work' && isManagerOrAdmin && (
               <FormField
                 control={form.control}
                 name="visibility"
@@ -281,11 +281,11 @@ export const SimpleAddGoalDialog = ({
               />
             )}
 
-            {/* Transparency notice for managers/admins */}
-            {watchCategory === 'work' && isManagerOrAdmin && (
+            {/* Transparency notice for team members */}
+            {watchCategory === 'work' && isTeamMember && (
               <div className="text-sm text-muted-foreground bg-blue-50 dark:bg-blue-950/20 p-3 rounded-md flex items-start gap-2">
                 <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                <span>Your goals are always visible to the team for transparency</span>
+                <span>Goal visibility is managed by your managers</span>
               </div>
             )}
 
