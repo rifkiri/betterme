@@ -40,6 +40,7 @@ export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
   // Check which roles are available
   const isCoachAvailable = !coach;
   const isLeadAvailable = !lead;
+  const isUserOwnGoal = goal.userId === currentUserId || goal.createdBy === currentUserId;
 
   const handleQuickJoin = async () => {
     setIsJoining(true);
@@ -59,14 +60,20 @@ export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
 
   return (
     <Card className="hover:shadow-lg transition-all duration-300 relative overflow-hidden">
-      {isJoined && (
-        <div className="absolute top-2 right-2 z-10">
+      {/* Status Badges */}
+      <div className="absolute top-2 right-2 z-10 flex gap-2">
+        {isUserOwnGoal && (
+          <Badge className="bg-primary text-primary-foreground">
+            Your Goal
+          </Badge>
+        )}
+        {isJoined && !isUserOwnGoal && (
           <Badge className="bg-green-100 text-green-800">
             <CheckCircle className="h-3 w-3 mr-1" />
             Joined
           </Badge>
-        </div>
-      )}
+        )}
+      </div>
       
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
@@ -174,7 +181,7 @@ export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
           </div>
 
           {/* Available Roles */}
-          {(isCoachAvailable || isLeadAvailable) && !isJoined && (
+          {(isCoachAvailable || isLeadAvailable) && !isJoined && !isUserOwnGoal && (
             <div className="flex items-center gap-2 pt-1">
               <span className="text-xs text-green-600 font-medium">Open roles:</span>
               <div className="flex gap-1">
@@ -197,7 +204,7 @@ export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
             View Details
           </Button>
           
-          {!isJoined && (
+          {!isJoined && !isUserOwnGoal && (
             <>
               <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as 'coach' | 'lead' | 'member')}>
                 <SelectTrigger className="w-[120px] h-9">
@@ -222,7 +229,7 @@ export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
             </>
           )}
           
-          {isJoined && (
+          {isJoined && !isUserOwnGoal && (
             <Button 
               size="sm"
               variant="outline"
@@ -231,6 +238,18 @@ export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
             >
               <CheckCircle className="h-4 w-4 mr-1" />
               Already Joined
+            </Button>
+          )}
+          
+          {isUserOwnGoal && (
+            <Button 
+              size="sm"
+              variant="secondary"
+              className="flex-1"
+              disabled
+            >
+              <User className="h-4 w-4 mr-1" />
+              Your Goal
             </Button>
           )}
         </div>

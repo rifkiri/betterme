@@ -85,13 +85,12 @@ export const EnhancedGoalsSection = ({
 
   const isManager = userRole === 'manager' || userRole === 'admin';
 
-  // Filter marketplace goals
+  // Filter marketplace goals (including user's own goals)
   const marketplaceGoals = useMemo(() => {
     let filtered = allGoals.filter(goal => 
       goal.category === 'work' && 
       !goal.archived && 
-      goal.progress < 100 &&
-      goal.userId !== currentUserId // Don't show user's own goals in marketplace
+      goal.progress < 100
     );
 
     // Apply search filter
