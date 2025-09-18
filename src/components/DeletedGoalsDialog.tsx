@@ -77,7 +77,7 @@ export const DeletedGoalsDialog = ({
       items={deletedGoals}
       renderItem={renderGoalItem}
       triggerIcon={<Archive className="h-3 w-3 sm:h-4 sm:w-4" />}
-      triggerText={`Deleted (${deletedGoals.length})`}
+      triggerText="Deleted"
       emptyMessage="No deleted goals"
       scrollHeight="80"
     />
