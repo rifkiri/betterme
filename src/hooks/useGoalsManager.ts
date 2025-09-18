@@ -177,7 +177,11 @@ export const useGoalsManager = ({
     console.log('Restoring goal for user:', userId, 'goal:', id);
 
     try {
-      await supabaseDataService.updateGoal(id, userId, { archived: false });
+      await supabaseDataService.updateGoal(id, userId, { 
+        archived: false,
+        isDeleted: false,
+        deletedDate: null
+      });
       await loadAllData();
       toast.success('Goal restored');
     } catch (error) {

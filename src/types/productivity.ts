@@ -71,6 +71,8 @@ export interface Goal {
   createdDate: Date;
   completed: boolean;
   archived: boolean;
+  isDeleted?: boolean;
+  deletedDate?: Date;
   progress: number; // 0-100, manually controlled
   // linkedOutputIds removed - now handled by ItemLinkageService
   // Role arrays removed - now handled by goal_assignments table  

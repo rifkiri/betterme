@@ -365,12 +365,17 @@ export class SupabaseGoalsService {
   async permanentlyDeleteGoal(id: string, userId: string): Promise<void> {
     console.log('Permanently deleting goal:', id, 'for user:', userId);
     
-    // Only allow goal creators to delete their goals - simplified permission model
+    // Soft delete by setting both archived and is_deleted flags
+    // This preserves data integrity and avoids RLS permission issues
     const { error } = await supabase
       .from('goals')
-      .delete()
+      .update({ 
+        archived: true,
+        is_deleted: true,
+        deleted_date: new Date().toISOString()
+      })
       .eq('id', id)
-      .eq('user_id', userId); // Only goal creators can delete
+      .eq('user_id', userId);
 
     if (error) {
       console.error('Error permanently deleting goal:', error);

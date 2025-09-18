@@ -64,9 +64,9 @@ export const useProductivityData = () => {
         setDeletedTasks(tasksData.filter(t => t.isDeleted));
         setWeeklyOutputs(weeklyOutputsData.filter(w => !w.isDeleted));
         setDeletedWeeklyOutputs(weeklyOutputsData.filter(w => w.isDeleted));
-        setGoals(goalsData.filter(g => !g.archived));
-        setDeletedGoals(goalsData.filter(g => g.archived));
-        setAllGoals(allGoalsData.filter(g => !g.archived));
+        setGoals(goalsData.filter(g => !g.archived && !g.isDeleted));
+        setDeletedGoals(goalsData.filter(g => g.archived && !g.isDeleted));
+        setAllGoals(allGoalsData.filter(g => !g.archived && !g.isDeleted));
         
         console.log('Data loaded successfully for user:', userId);
       } else {
