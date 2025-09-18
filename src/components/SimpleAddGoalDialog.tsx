@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { z } from 'zod';
 import { Goal } from '@/types/productivity';
 import { getSubcategoryOptions, mapSubcategoryDisplayToDatabase } from '@/utils/goalCategoryUtils';
+import { GoalVisibilitySelector, GoalVisibility } from '@/components/ui/GoalVisibilitySelector';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -26,6 +27,7 @@ const formSchema = z.object({
   category: z.enum(['work', 'personal']),
   subcategory: z.string().optional(),
   deadline: z.date().optional(),
+  visibility: z.enum(['all', 'managers', 'self']).optional(),
   coachId: z.string().optional(),
   leadId: z.string().optional(),
   memberIds: z.array(z.string()).optional(),
@@ -48,6 +50,7 @@ export const SimpleAddGoalDialog = ({
   const [selectedCoach, setSelectedCoach] = useState<string>('');
   const [selectedLead, setSelectedLead] = useState<string>('');
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  const [visibility, setVisibility] = useState<GoalVisibility>('all');
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -57,6 +60,7 @@ export const SimpleAddGoalDialog = ({
       category: 'personal',
       subcategory: '',
       deadline: undefined,
+      visibility: 'all',
       coachId: '',
       leadId: '',
       memberIds: [],
@@ -80,6 +84,7 @@ export const SimpleAddGoalDialog = ({
       completed: false,
       archived: false,
       createdBy: data.category === 'work' ? currentUserId : undefined,
+      visibility: data.category === 'work' ? (data.visibility || 'all') : undefined,
     });
 
     form.reset();
@@ -256,6 +261,23 @@ export const SimpleAddGoalDialog = ({
                 </FormItem>
               )}
             />
+
+            {/* Visibility Selector for Work Goals */}
+            {watchCategory === 'work' && (
+              <FormField
+                control={form.control}
+                name="visibility"
+                render={({ field }) => (
+                  <FormItem>
+                    <GoalVisibilitySelector 
+                      value={field.value as GoalVisibility || 'all'}
+                      onChange={field.onChange}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             {/* Work Goal Role Assignments */}
             {watchCategory === 'work' && (
