@@ -26,9 +26,7 @@ export const DeletedGoalsDialog = ({
     }
   };
 
-  if (deletedGoals.length === 0) {
-    return null;
-  }
+  // Keep button visible even when empty for consistency
 
   const renderGoalItem = (goal: Goal) => (
     <div className="flex items-center justify-between gap-4">
@@ -79,7 +77,7 @@ export const DeletedGoalsDialog = ({
       items={deletedGoals}
       renderItem={renderGoalItem}
       triggerIcon={<Archive className="h-3 w-3 sm:h-4 sm:w-4" />}
-      triggerText="Deleted"
+      triggerText={`Deleted (${deletedGoals.length})`}
       emptyMessage="No deleted goals"
       scrollHeight="80"
     />
