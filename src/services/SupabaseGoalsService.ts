@@ -365,8 +365,47 @@ export class SupabaseGoalsService {
   async permanentlyDeleteGoal(id: string, userId: string): Promise<void> {
     console.log('Permanently deleting goal:', id, 'for user:', userId);
     
-    // Soft delete by setting both archived and is_deleted flags
-    // This preserves data integrity and avoids RLS permission issues
+    // Step 1: Unlink weekly outputs that reference this goal
+    const { error: weeklyOutputsError } = await supabase
+      .from('weekly_outputs')
+      .update({ linked_goal_id: null })
+      .eq('linked_goal_id', id);
+    
+    if (weeklyOutputsError) {
+      console.error('Error unlinking weekly outputs:', weeklyOutputsError);
+    }
+    
+    // Step 2: Unlink habits that reference this goal
+    const { error: habitsError } = await supabase
+      .from('habits')
+      .update({ linked_goal_id: null })
+      .eq('linked_goal_id', id);
+    
+    if (habitsError) {
+      console.error('Error unlinking habits:', habitsError);
+    }
+    
+    // Step 3: Delete goal assignments (these are specific to the goal)
+    const { error: assignmentsError } = await supabase
+      .from('goal_assignments')
+      .delete()
+      .eq('goal_id', id);
+    
+    if (assignmentsError) {
+      console.error('Error deleting goal assignments:', assignmentsError);
+    }
+    
+    // Step 4: Delete goal notifications (these are specific to the goal)
+    const { error: notificationsError } = await supabase
+      .from('goal_notifications')
+      .delete()
+      .eq('goal_id', id);
+    
+    if (notificationsError) {
+      console.error('Error deleting goal notifications:', notificationsError);
+    }
+    
+    // Step 5: Soft delete the goal by setting both archived and is_deleted flags
     const { error } = await supabase
       .from('goals')
       .update({ 
