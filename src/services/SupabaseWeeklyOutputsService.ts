@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { WeeklyOutput } from '@/types/productivity';
-import { formatDateForDatabase } from '@/lib/utils';
+import { formatDateForDatabase, parseLocalDate } from '@/lib/utils';
 
 export class SupabaseWeeklyOutputsService {
   async getWeeklyOutputs(userId: string): Promise<WeeklyOutput[]> {
@@ -21,12 +21,12 @@ export class SupabaseWeeklyOutputsService {
       title: output.title,
       description: output.description,
       progress: output.progress,
-      dueDate: new Date(output.due_date),
-      originalDueDate: output.original_due_date ? new Date(output.original_due_date) : undefined,
+      dueDate: parseLocalDate(output.due_date),
+      originalDueDate: output.original_due_date ? parseLocalDate(output.original_due_date) : undefined,
       isMoved: output.is_moved,
       isDeleted: output.is_deleted,
-      completedDate: output.completed_date ? new Date(output.completed_date) : undefined,
-      deletedDate: output.deleted_date ? new Date(output.deleted_date) : undefined,
+      completedDate: output.completed_date ? parseLocalDate(output.completed_date) : undefined,
+      deletedDate: output.deleted_date ? parseLocalDate(output.deleted_date) : undefined,
       createdDate: new Date(output.created_date),
       linkedGoalId: output.linked_goal_id || undefined, // Restored from database column
       visibility: (output as any).visibility || 'all'

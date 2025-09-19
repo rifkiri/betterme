@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Task } from '@/types/productivity';
-import { formatDateForDatabase } from '@/lib/utils';
+import { formatDateForDatabase, parseLocalDate } from '@/lib/utils';
 
 export class SupabaseTasksService {
   async getTasks(userId: string): Promise<Task[]> {
@@ -22,12 +22,12 @@ export class SupabaseTasksService {
       description: task.description,
       completed: task.completed,
       priority: this.mapDatabasePriorityToApp(task.priority),
-      dueDate: new Date(task.due_date),
-      originalDueDate: task.original_due_date ? new Date(task.original_due_date) : undefined,
+      dueDate: parseLocalDate(task.due_date),
+      originalDueDate: task.original_due_date ? parseLocalDate(task.original_due_date) : undefined,
       isMoved: task.is_moved,
       isDeleted: task.is_deleted,
-      completedDate: task.completed_date ? new Date(task.completed_date) : undefined,
-      deletedDate: task.deleted_date ? new Date(task.deleted_date) : undefined,
+      completedDate: task.completed_date ? parseLocalDate(task.completed_date) : undefined,
+      deletedDate: task.deleted_date ? parseLocalDate(task.deleted_date) : undefined,
       createdDate: new Date(task.created_date),
       weeklyOutputId: task.weekly_output_id,
       taggedUsers: (task as any).tagged_users || [],
