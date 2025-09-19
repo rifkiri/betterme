@@ -12,6 +12,9 @@ import { supabaseGoalAssignmentsService } from '@/services/SupabaseGoalAssignmen
 import { User } from '@/types/userTypes';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { TeamWorkloadCharts } from './TeamWorkloadCharts';
+import { UserGoalAssignmentCard } from './UserGoalAssignmentCard';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { LayoutGrid, UserSquare } from 'lucide-react';
 
 interface TeamWorkloadMonitoringProps {
   teamData: any;
@@ -46,6 +49,24 @@ interface MemberWorkload {
   };
 }
 
+interface UserGoalAssignment {
+  userId: string;
+  userName: string;
+  email: string;
+  assignments: Array<{
+    goalId: string;
+    goalTitle: string;
+    role: 'coach' | 'lead' | 'member';
+    progress: number;
+  }>;
+  totalGoals: number;
+  roleBreakdown: {
+    coach: number;
+    lead: number;
+    member: number;
+  };
+}
+
 export const TeamWorkloadMonitoring = ({ 
   teamData, 
   isLoading, 
@@ -55,10 +76,12 @@ export const TeamWorkloadMonitoring = ({
   const [workloadData, setWorkloadData] = useState<{
     memberWorkloads: MemberWorkload[];
     workGoals: WorkGoal[];
-  }>({ memberWorkloads: [], workGoals: [] });
+    userGoalAssignments: UserGoalAssignment[];
+  }>({ memberWorkloads: [], workGoals: [], userGoalAssignments: [] });
   const [loadingWorkload, setLoadingWorkload] = useState(false);
   const [sortBy, setSortBy] = useState<'goals' | 'outputs' | 'tasks' | 'name'>('goals');
   const [userProfiles, setUserProfiles] = useState<Map<string, User>>(new Map());
+  const [goalViewType, setGoalViewType] = useState<'goal' | 'user'>('goal');
 
   useEffect(() => {
     console.log('TeamWorkloadMonitoring useEffect - teamData:', teamData);
@@ -128,6 +151,11 @@ export const TeamWorkloadMonitoring = ({
 
       // Get all work goals for goals view
       const allGoals = await supabaseGoalsService.getAllGoals();
+      const allAssignments = await supabaseGoalAssignmentsService.getAllGoalAssignments();
+      
+      // Create user-centric goal assignment data
+      const userAssignmentMap = new Map<string, UserGoalAssignment>();
+      
       for (const goal of allGoals.filter(g => g.category === 'work' && !g.archived)) {
         // Get goal assignments from goal_assignments table
         const assignments = await supabaseGoalAssignmentsService.getAssignmentsForGoal(goal.id);
@@ -136,6 +164,37 @@ export const TeamWorkloadMonitoring = ({
         const coach = assignments.find(a => a.role === 'coach');
         const leads = assignments.filter(a => a.role === 'lead');
         const members = assignments.filter(a => a.role === 'member');
+        
+        // Process assignments for user-centric view
+        for (const assignment of assignments) {
+          const userProfile = userProfilesMap.get(assignment.userId);
+          if (!userProfile) continue;
+          
+          if (!userAssignmentMap.has(assignment.userId)) {
+            userAssignmentMap.set(assignment.userId, {
+              userId: assignment.userId,
+              userName: userProfile.name,
+              email: userProfile.email,
+              assignments: [],
+              totalGoals: 0,
+              roleBreakdown: {
+                coach: 0,
+                lead: 0,
+                member: 0
+              }
+            });
+          }
+          
+          const userAssignment = userAssignmentMap.get(assignment.userId)!;
+          userAssignment.assignments.push({
+            goalId: goal.id,
+            goalTitle: goal.title || '',
+            role: assignment.role,
+            progress: goal.progress
+          });
+          userAssignment.totalGoals++;
+          userAssignment.roleBreakdown[assignment.role]++;
+        }
         
         // Get linked outputs and tasks - Note: will need to use ItemLinkageService in the future
         const outputs: any[] = [];
@@ -161,8 +220,11 @@ export const TeamWorkloadMonitoring = ({
           tasks
         });
       }
+      
+      // Convert map to array for userGoalAssignments
+      const userGoalAssignments = Array.from(userAssignmentMap.values());
 
-      setWorkloadData({ memberWorkloads, workGoals });
+      setWorkloadData({ memberWorkloads, workGoals, userGoalAssignments });
     } catch (error) {
       console.error('Error loading workload data:', error);
     } finally {
@@ -475,55 +537,101 @@ export const TeamWorkloadMonitoring = ({
               
               <Card>
                 <CardHeader>
-                  <CardTitle>Goal Assignments</CardTitle>
-                  <CardDescription>Work goals with team member assignments</CardDescription>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Goal Assignments</CardTitle>
+                    <ToggleGroup type="single" value={goalViewType} onValueChange={(value) => value && setGoalViewType(value as 'goal' | 'user')}>
+                      <ToggleGroupItem value="goal" aria-label="Goal view">
+                        <LayoutGrid className="h-4 w-4 mr-2" />
+                        Goal View
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="user" aria-label="User view">
+                        <UserSquare className="h-4 w-4 mr-2" />
+                        User View
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+                  </div>
+                  <CardDescription>
+                    {goalViewType === 'goal' 
+                      ? 'Work goals with team member assignments' 
+                      : 'Team members and their assigned goals'}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {workloadData.workGoals.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {workloadData.workGoals.map((goal) => {
-                        const totalAssigned = (goal.coach ? 1 : 0) + goal.leads.length + goal.members.length;
-                        return (
-                          <Card key={goal.id} className="p-4 hover:shadow-md transition-shadow">
-                            <div className="space-y-3">
-                              <div className="flex items-start justify-between">
-                                <h3 className="font-medium text-gray-900 leading-tight">{goal.title}</h3>
-                                <Badge variant="outline" className="ml-2 flex-shrink-0">
-                                  {totalAssigned} {totalAssigned === 1 ? 'person' : 'people'}
-                                </Badge>
-                              </div>
-                              
-                              <div className="space-y-2">
-                                <div className="flex items-center justify-between text-sm">
-                                  <span className="text-gray-600">Progress:</span>
-                                  <span className="font-medium">{goal.progress}%</span>
+                  {goalViewType === 'goal' ? (
+                    // Goal View (existing implementation)
+                    workloadData.workGoals.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {workloadData.workGoals.map((goal) => {
+                          const totalAssigned = (goal.coach ? 1 : 0) + goal.leads.length + goal.members.length;
+                          return (
+                            <Card key={goal.id} className="p-4 hover:shadow-md transition-shadow">
+                              <div className="space-y-3">
+                                <div className="flex items-start justify-between">
+                                  <h3 className="font-medium text-gray-900 leading-tight">{goal.title}</h3>
+                                  <Badge variant="outline" className="ml-2 flex-shrink-0">
+                                    {totalAssigned} {totalAssigned === 1 ? 'person' : 'people'}
+                                  </Badge>
                                 </div>
-                                <Progress value={goal.progress} className="h-2" />
-                              </div>
+                                
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between text-sm">
+                                    <span className="text-gray-600">Progress:</span>
+                                    <span className="font-medium">{goal.progress}%</span>
+                                  </div>
+                                  <Progress value={goal.progress} className="h-2" />
+                                </div>
 
-                              {totalAssigned > 0 && (
-                                <div className="space-y-2 text-sm">
-                                  {goal.coach && (
-                                    <div className="flex items-center gap-2">
-                                      <UserCog className="h-3 w-3 text-blue-600" />
-                                      <span className="text-gray-600">Coach:</span>
-                                      <span className="font-medium">{goal.coach}</span>
-                                    </div>
-                                  )}
-                                  
-                                  {goal.leads.length > 0 && (
-                                    <div className="flex items-center gap-2">
-                                      <UserCheck className="h-3 w-3 text-green-600" />
-                                      <span className="text-gray-600">Leads:</span>
-                                      <span className="font-medium">{goal.leads.join(', ')}</span>
-                                    </div>
-                                  )}
-                                  
-                                  {goal.members.length > 0 && (
-                                    <div className="flex items-center gap-2">
-                                      <Users className="h-3 w-3 text-purple-600" />
-                                      <span className="text-gray-600">Members:</span>
-                                      <span className="font-medium">{goal.members.join(', ')}</span>
+                                {totalAssigned > 0 && (
+                                  <div className="space-y-2 text-sm">
+                                    {goal.coach && (
+                                      <div className="flex items-center gap-2">
+                                        <UserCog className="h-3 w-3 text-blue-600" />
+                                        <span className="text-gray-600">Coach:</span>
+                                        <span className="font-medium">{goal.coach}</span>
+                                      </div>
+                                    )}
+                                    
+                                    {goal.leads.length > 0 && (
+                                      <div className="flex items-center gap-2">
+                                        <UserCheck className="h-3 w-3 text-green-600" />
+                                        <span className="text-gray-600">Leads:</span>
+                                        <span className="font-medium">{goal.leads.join(', ')}</span>
+                                      </div>
+                                    )}
+                                    
+                                    {goal.members.length > 0 && (
+                                      <div className="flex items-center gap-2">
+                                        <Users className="h-3 w-3 text-purple-600" />
+                                        <span className="text-gray-600">Members:</span>
+                                        <span className="font-medium">{goal.members.join(', ')}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-center text-gray-500 py-8">No work goals found</p>
+                    )
+                  ) : (
+                    // User View (new implementation)
+                    workloadData.userGoalAssignments.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {workloadData.userGoalAssignments.map((assignment) => (
+                          <UserGoalAssignmentCard
+                            key={assignment.userId}
+                            assignment={assignment}
+                            onViewDetails={onSelectEmployee}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-center text-gray-500 py-8">No goal assignments found</p>
+                    )
+                  )}
                                     </div>
                                   )}
                                 </div>
