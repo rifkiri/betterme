@@ -17,12 +17,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '@/lib/utils';
 import { WeeklyOutput, Goal } from '@/types/productivity';
+import { GoalVisibilitySelector } from '@/components/ui/GoalVisibilitySelector';
+import { useUserRole } from '@/hooks/useUserRole';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
   dueDate: z.date().optional(),
   goalId: z.string().optional(),
+  visibility: z.enum(['all', 'managers', 'self']).optional()
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -34,6 +37,7 @@ interface AddWeeklyOutputDialogProps {
 
 export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }: AddWeeklyOutputDialogProps) => {
   const [open, setOpen] = useState(false);
+  const { isManagerOrAdmin } = useUserRole();
 
   const getCategoryColor = (category: Goal['category']) => {
     switch (category) {
@@ -50,6 +54,7 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
       description: '',
       dueDate: undefined,
       goalId: undefined,
+      visibility: 'all',
     },
   });
 
@@ -66,6 +71,7 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
       progress: 0,
       dueDate: dueDate,
       linkedGoalId: data.goalId !== "none" ? data.goalId : undefined,
+      visibility: data.visibility || 'all',
     });
     
     form.reset();
@@ -218,6 +224,22 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
                 </FormItem>
               )}
             />
+
+            {isManagerOrAdmin && (
+              <FormField
+                control={form.control}
+                name="visibility"
+                render={({ field }) => (
+                  <FormItem>
+                    <GoalVisibilitySelector
+                      value={field.value || 'all'}
+                      onChange={field.onChange}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             </form>
           </Form>

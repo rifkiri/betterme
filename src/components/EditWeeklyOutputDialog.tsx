@@ -16,12 +16,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { WeeklyOutput, Goal } from '@/types/productivity';
+import { GoalVisibilitySelector } from '@/components/ui/GoalVisibilitySelector';
+import { useUserRole } from '@/hooks/useUserRole';
 
 const weeklyOutputSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
   dueDate: z.date().optional(),
   linkedGoalId: z.string().optional(),
+  visibility: z.enum(['all', 'managers', 'self']).optional()
 });
 
 type WeeklyOutputFormValues = z.infer<typeof weeklyOutputSchema>;
@@ -37,6 +40,7 @@ interface EditWeeklyOutputDialogProps {
 
 export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSave, goals = [], onRefresh }: EditWeeklyOutputDialogProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { isManagerOrAdmin } = useUserRole();
   
   const getCategoryColor = (category: Goal['category']) => {
     switch (category) {
@@ -53,6 +57,7 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
       description: weeklyOutput.description || '',
       dueDate: weeklyOutput.dueDate || undefined,
       linkedGoalId: weeklyOutput.linkedGoalId || 'none',
+      visibility: weeklyOutput.visibility || 'all',
     }
   });
 
@@ -63,6 +68,7 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
         description: weeklyOutput.description || '',
         dueDate: weeklyOutput.dueDate || undefined,
         linkedGoalId: weeklyOutput.linkedGoalId || 'none',
+        visibility: weeklyOutput.visibility || 'all',
       });
     }
   }, [weeklyOutput, open, form]);
@@ -85,6 +91,7 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
         description: values.description,
         dueDate: dueDate,
         linkedGoalId: values.linkedGoalId === "none" ? "none" : values.linkedGoalId,
+        visibility: values.visibility || 'all',
       });
 
       console.log('EditWeeklyOutputDialog - onSave completed, calling onRefresh');

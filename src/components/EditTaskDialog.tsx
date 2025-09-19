@@ -38,7 +38,8 @@ export const EditTaskDialog = ({
         estimatedTime: values.estimatedTime || undefined,
         dueDate: values.dueDate,
         weeklyOutputId: values.weeklyOutputId === "" ? undefined : values.weeklyOutputId,
-        taggedUsers: values.taggedUsers || []
+        taggedUsers: values.taggedUsers || [],
+        visibility: values.visibility || 'all'
       });
       
       console.log('EditTaskDialog - onSave completed, calling onRefresh');
@@ -61,7 +62,8 @@ export const EditTaskDialog = ({
     estimatedTime: task.estimatedTime || '',
     dueDate: task.dueDate || new Date(),
     weeklyOutputId: task.weeklyOutputId || undefined,
-    taggedUsers: task.taggedUsers || []
+    taggedUsers: task.taggedUsers || [],
+    visibility: task.visibility || 'all'
   };
 
   return (

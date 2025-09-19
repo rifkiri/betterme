@@ -28,7 +28,8 @@ export const AddTaskDialog = ({
       dueDate: values.dueDate || new Date(),
       originalDueDate: values.dueDate || new Date(),
       weeklyOutputId: values.weeklyOutputId || undefined,
-      taggedUsers: values.taggedUsers || []
+      taggedUsers: values.taggedUsers || [],
+      visibility: values.visibility || 'all'
     });
     setOpen(false);
   };

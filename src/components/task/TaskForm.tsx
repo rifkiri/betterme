@@ -43,7 +43,8 @@ export const TaskForm = ({
       estimatedTime: '',
       dueDate: new Date(),
       weeklyOutputId: undefined,
-      taggedUsers: []
+      taggedUsers: [],
+      visibility: 'all'
     }
   });
 
@@ -215,6 +216,22 @@ export const TaskForm = ({
             </FormItem>
           )}
         />
+
+        {isManagerOrAdmin && (
+          <FormField
+            control={form.control}
+            name="visibility"
+            render={({ field }) => (
+              <FormItem>
+                <GoalVisibilitySelector
+                  value={field.value || 'all'}
+                  onChange={field.onChange}
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
         
       </form>
     </Form>
