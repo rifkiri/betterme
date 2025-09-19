@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { CalendarIcon, Trash2, Link, Eye, Minus, Plus, CheckCircle } from 'lucide-react';
-import { Goal, Task, WeeklyOutput } from '@/types/productivity';
+import { Goal, Task, WeeklyOutput, GoalAssignment } from '@/types/productivity';
 import { format, isToday, isTomorrow } from 'date-fns';
 import { EditGoalDialog } from './EditGoalDialog';
 import { PersonalGoalEditDialog } from './PersonalGoalEditDialog';
@@ -18,6 +18,7 @@ import { ProgressControls } from '@/components/ui/progress-controls';
 import { ActionButtonGroup } from '@/components/ui/action-button-group';
 import { DateDisplay } from '@/components/ui/date-display';
 import { getContentCardVariant, getStatusBadgeStatus, formatCountDisplay } from '@/utils/standardizedHelpers';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface GoalCardProps {
   goal: Goal;
@@ -30,7 +31,7 @@ interface GoalCardProps {
   isOverdue?: boolean;
   isCompleted?: boolean;
   onRefresh?: () => Promise<void>;
-  assignments?: any[];
+  assignments?: GoalAssignment[];
   availableUsers?: any[];
 }
 
@@ -49,8 +50,14 @@ export const GoalCard = ({
   availableUsers = []
 }: GoalCardProps) => {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const { user } = useAuth();
   
-const getCategoryColor = (category: Goal['category']) => {
+  // Check if user can update progress
+  const isGoalOwner = goal.userId === user?.id;
+  const isAssignedToGoal = assignments?.some(a => a.userId === user?.id && a.goalId === goal.id);
+  const canUpdateProgress = isGoalOwner || isAssignedToGoal;
+  
+  const getCategoryColor = (category: Goal['category']) => {
     switch (category) {
       case 'work': return 'bg-blue-100 text-blue-800';
       case 'personal': return 'bg-green-100 text-green-800';
@@ -126,13 +133,15 @@ const getCategoryColor = (category: Goal['category']) => {
           <Progress value={goal.progress} className={`h-2 ${isOverdue ? 'bg-red-100' : ''}`} />
         </div>
         
-        <ProgressControls
-          progress={goal.progress}
-          onDecrease={() => onUpdateProgress(goal.id, Math.max(0, goal.progress - 10))}
-          onIncrease={() => onUpdateProgress(goal.id, Math.min(100, goal.progress + 10))}
-          onComplete={() => onUpdateProgress(goal.id, 100)}
-          step={10}
-        />
+        {canUpdateProgress && (
+          <ProgressControls
+            progress={goal.progress}
+            onDecrease={() => onUpdateProgress(goal.id, Math.max(0, goal.progress - 10))}
+            onIncrease={() => onUpdateProgress(goal.id, Math.min(100, goal.progress + 10))}
+            onComplete={() => onUpdateProgress(goal.id, 100)}
+            step={10}
+          />
+        )}
       </ContentCard>
       
       <GoalDetailsDialog

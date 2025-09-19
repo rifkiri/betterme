@@ -20,6 +20,7 @@ import { format, isBefore } from 'date-fns';
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { useHabits } from '@/hooks/useHabits';
 import { mapSubcategoryDatabaseToDisplay } from '@/utils/goalCategoryUtils';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Lazy load heavy dialog components to reduce initial bundle size
 const EditGoalDialog = lazy(() => import('./EditGoalDialog').then(module => ({ default: module.EditGoalDialog })));
@@ -59,6 +60,12 @@ export const GoalDetailsDialog = ({
   const [linkedHabits, setLinkedHabits] = useState<Habit[]>([]);
   const [loadingLinkedOutputs, setLoadingLinkedOutputs] = useState(false);
   const [loadingLinkedHabits, setLoadingLinkedHabits] = useState(false);
+  const { user } = useAuth();
+  
+  // Check if user can update progress
+  const isGoalOwner = goal?.userId === user?.id;
+  const isAssignedToGoal = assignments?.some(a => a.userId === user?.id && a.goalId === goal?.id);
+  const canUpdateProgress = isGoalOwner || isAssignedToGoal;
   
   // Get habits data for personal goals
   const { habits: allHabits } = useHabits();
@@ -197,38 +204,40 @@ const getCategoryColor = (category: Goal['category']) => {
 
               <div className="space-y-2">
                 <Progress value={goal.progress} className="h-3" />
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onUpdateProgress(goal.id, Math.max(0, goal.progress - 10))}
-                    disabled={goal.progress <= 0}
-                    className="h-8 w-8 p-0"
-                    title="Decrease Progress"
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onUpdateProgress(goal.id, Math.min(100, goal.progress + 10))}
-                    disabled={goal.progress >= 100}
-                    className="h-8 w-8 p-0"
-                    title="Increase Progress"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                  {goal.progress !== 100 && (
+                {canUpdateProgress && (
+                  <div className="flex items-center gap-2">
                     <Button
                       size="sm"
-                      onClick={() => onUpdateProgress(goal.id, 100)}
+                      variant="outline"
+                      onClick={() => onUpdateProgress(goal.id, Math.max(0, goal.progress - 10))}
+                      disabled={goal.progress <= 0}
                       className="h-8 w-8 p-0"
-                      title="Mark as Complete"
+                      title="Decrease Progress"
                     >
-                      <CheckCircle2 className="h-4 w-4" />
+                      <Minus className="h-4 w-4" />
                     </Button>
-                  )}
-                </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onUpdateProgress(goal.id, Math.min(100, goal.progress + 10))}
+                      disabled={goal.progress >= 100}
+                      className="h-8 w-8 p-0"
+                      title="Increase Progress"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                    {goal.progress !== 100 && (
+                      <Button
+                        size="sm"
+                        onClick={() => onUpdateProgress(goal.id, 100)}
+                        className="h-8 w-8 p-0"
+                        title="Mark as Complete"
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
