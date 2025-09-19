@@ -632,29 +632,6 @@ export const TeamWorkloadMonitoring = ({
                       <p className="text-center text-gray-500 py-8">No goal assignments found</p>
                     )
                   )}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                              
-                              {goal.outputs.length > 0 && (
-                                <div className="pt-2 border-t">
-                                  <div className="text-xs text-gray-500 flex items-center gap-1">
-                                    <Calendar className="h-3 w-3" />
-                                    {goal.outputs.length} linked output{goal.outputs.length > 1 ? 's' : ''}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </Card>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12 text-gray-500">
-                      No work goals with assignments found
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             </div>
