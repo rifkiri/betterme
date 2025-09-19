@@ -30,7 +30,8 @@ export class SupabaseTasksService {
       deletedDate: task.deleted_date ? new Date(task.deleted_date) : undefined,
       createdDate: new Date(task.created_date),
       weeklyOutputId: task.weekly_output_id,
-      taggedUsers: (task as any).tagged_users || []
+      taggedUsers: (task as any).tagged_users || [],
+      visibility: (task as any).visibility || 'all'
     }));
   }
 
@@ -70,7 +71,8 @@ export class SupabaseTasksService {
         deleted_date: task.deletedDate?.toISOString(),
         created_date: task.createdDate.toISOString(),
         weekly_output_id: task.weeklyOutputId || null,
-        tagged_users: task.taggedUsers || null
+        tagged_users: task.taggedUsers || null,
+        visibility: task.visibility || 'all'
       });
 
     if (error) {
@@ -104,6 +106,7 @@ export class SupabaseTasksService {
       }
     }
     if (updates.taggedUsers !== undefined) supabaseUpdates.tagged_users = updates.taggedUsers || null;
+    if (updates.visibility !== undefined) supabaseUpdates.visibility = updates.visibility || 'all';
 
     console.log('SupabaseTasksService - Final supabase updates object:', supabaseUpdates);
 

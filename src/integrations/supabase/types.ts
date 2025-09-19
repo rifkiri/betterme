@@ -500,6 +500,7 @@ export type Database = {
           title: string
           updated_at: string
           user_id: string
+          visibility: string | null
           weekly_output_id: string | null
         }
         Insert: {
@@ -519,6 +520,7 @@ export type Database = {
           title: string
           updated_at?: string
           user_id: string
+          visibility?: string | null
           weekly_output_id?: string | null
         }
         Update: {
@@ -538,6 +540,7 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+          visibility?: string | null
           weekly_output_id?: string | null
         }
         Relationships: [
@@ -574,6 +577,7 @@ export type Database = {
           title: string
           updated_at: string
           user_id: string
+          visibility: string | null
         }
         Insert: {
           completed_date?: string | null
@@ -591,6 +595,7 @@ export type Database = {
           title: string
           updated_at?: string
           user_id: string
+          visibility?: string | null
         }
         Update: {
           completed_date?: string | null
@@ -608,6 +613,7 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+          visibility?: string | null
         }
         Relationships: [
           {

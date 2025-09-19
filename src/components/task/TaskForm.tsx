@@ -15,6 +15,8 @@ import { WeeklyOutput } from '@/types/productivity';
 import { taskFormSchema, TaskFormValues } from './taskFormSchema';
 import { UserSelector } from './UserSelector';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { GoalVisibilitySelector } from '@/components/ui/GoalVisibilitySelector';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface TaskFormProps {
   onSubmit: (values: TaskFormValues) => void;
@@ -30,6 +32,7 @@ export const TaskForm = ({
   initialValues
 }: TaskFormProps) => {
   const { profile } = useUserProfile();
+  const { isManagerOrAdmin } = useUserRole();
   
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),

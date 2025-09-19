@@ -29,6 +29,7 @@ export interface Task {
   deletedDate?: Date;
   weeklyOutputId?: string;
   taggedUsers?: string[]; // Array of user IDs who are tagged for support
+  visibility?: 'all' | 'managers' | 'self'; // Who can view this task
 }
 
 export interface WeeklyPlan {
@@ -58,6 +59,7 @@ export interface WeeklyOutput {
   isDeleted?: boolean;
   deletedDate?: Date;
   linkedGoalId?: string;
+  visibility?: 'all' | 'managers' | 'self'; // Who can view this output
 }
 
 export interface Goal {

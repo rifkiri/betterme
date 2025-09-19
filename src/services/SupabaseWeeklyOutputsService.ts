@@ -28,7 +28,8 @@ export class SupabaseWeeklyOutputsService {
       completedDate: output.completed_date ? new Date(output.completed_date) : undefined,
       deletedDate: output.deleted_date ? new Date(output.deleted_date) : undefined,
       createdDate: new Date(output.created_date),
-      linkedGoalId: output.linked_goal_id || undefined // Restored from database column
+      linkedGoalId: output.linked_goal_id || undefined, // Restored from database column
+      visibility: (output as any).visibility || 'all'
     }));
   }
 
@@ -47,7 +48,8 @@ export class SupabaseWeeklyOutputsService {
         completed_date: output.completedDate?.toISOString(),
         deleted_date: output.deletedDate?.toISOString(),
         created_date: output.createdDate.toISOString(),
-        linked_goal_id: output.linkedGoalId || null
+        linked_goal_id: output.linkedGoalId || null,
+        visibility: output.visibility || 'all'
       });
 
     if (error) {
@@ -73,6 +75,9 @@ export class SupabaseWeeklyOutputsService {
     if (updates.linkedGoalId !== undefined) {
       supabaseUpdates.linked_goal_id = (updates.linkedGoalId === "none" || !updates.linkedGoalId) ? null : updates.linkedGoalId;
       console.log('SupabaseWeeklyOutputsService - linkedGoalId update:', updates.linkedGoalId, '→', supabaseUpdates.linked_goal_id);
+    }
+    if (updates.visibility !== undefined) {
+      supabaseUpdates.visibility = updates.visibility || 'all';
     }
 
     console.log('SupabaseWeeklyOutputsService - Final supabase updates object:', supabaseUpdates);
