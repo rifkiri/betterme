@@ -2,6 +2,8 @@
 import { EmployeeData } from '@/types/individualData';
 import { User } from '@/types/userTypes';
 import { supabaseDataService } from '@/services/SupabaseDataService';
+import { isTaskOverdue, isWeeklyOutputOverdue } from '@/utils/dateUtils';
+import { differenceInDays } from 'date-fns';
 
 export const transformToEmployeeData = (
   user: User, 
@@ -31,22 +33,27 @@ export const transformToEmployeeData = (
   // Get overdue items
   const today = new Date();
   const overdueTasks = tasks.filter(t => 
-    !t.completed && !t.isDeleted && t.dueDate && new Date(t.dueDate) < today
+    !t.completed && !t.isDeleted && t.dueDate && isTaskOverdue(new Date(t.dueDate))
   ).map(t => ({
     id: t.id,
     title: t.title,
-    daysOverdue: Math.floor((today.getTime() - new Date(t.dueDate).getTime()) / (1000 * 60 * 60 * 24)),
+    daysOverdue: Math.max(0, differenceInDays(today, new Date(t.dueDate))),
     priority: t.priority || 'Medium',
     originalDueDate: t.originalDueDate || t.dueDate
   }));
 
   const overdueOutputs = outputs.filter(o => 
-    o.progress < 100 && !o.isDeleted && o.dueDate && new Date(o.dueDate) < today
+    !o.isDeleted && o.dueDate && isWeeklyOutputOverdue(
+      new Date(o.dueDate), 
+      o.progress || 0,
+      o.completedDate ? new Date(o.completedDate) : undefined,
+      o.createdAt ? new Date(o.createdAt) : undefined
+    )
   ).map(o => ({
     id: o.id,
     title: o.title,
     progress: o.progress,
-    daysOverdue: Math.floor((today.getTime() - new Date(o.dueDate).getTime()) / (1000 * 60 * 60 * 24)),
+    daysOverdue: Math.max(0, differenceInDays(today, new Date(o.dueDate))),
     originalDueDate: o.originalDueDate || o.dueDate
   }));
 
