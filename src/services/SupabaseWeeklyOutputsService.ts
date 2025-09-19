@@ -25,8 +25,8 @@ export class SupabaseWeeklyOutputsService {
       originalDueDate: output.original_due_date ? parseLocalDate(output.original_due_date) : undefined,
       isMoved: output.is_moved,
       isDeleted: output.is_deleted,
-      completedDate: output.completed_date ? parseLocalDate(output.completed_date) : undefined,
-      deletedDate: output.deleted_date ? parseLocalDate(output.deleted_date) : undefined,
+      completedDate: output.completed_date ? new Date(output.completed_date) : undefined,
+      deletedDate: output.deleted_date ? new Date(output.deleted_date) : undefined,
       createdDate: new Date(output.created_date),
       linkedGoalId: output.linked_goal_id || undefined, // Restored from database column
       visibility: (output as any).visibility || 'all'
