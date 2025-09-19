@@ -7,6 +7,7 @@ import { createReadOnlyHandlers } from '@/utils/employeeDashboardTransformer';
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { Habit, Task, WeeklyOutput } from '@/types/productivity';
 import { format } from 'date-fns';
+import { isTaskOverdue, isWeeklyOutputOverdue } from '@/utils/dateUtils';
 
 interface FullEmployeeDashboardViewProps {
   employee: EmployeeData;
@@ -80,12 +81,16 @@ export const FullEmployeeDashboardView = ({ employee, onBack }: FullEmployeeDash
 
   // Calculate overdue items from all historical data
   const overdueData = useMemo(() => {
-    const today = new Date();
     const overdueTasks = allTasks.filter(task => 
-      !task.completed && task.dueDate < today
+      !task.completed && task.dueDate && isTaskOverdue(task.dueDate)
     );
     const overdueOutputs = allWeeklyOutputs.filter(output => 
-      output.progress < 100 && output.dueDate < today
+      output.dueDate && isWeeklyOutputOverdue(
+        output.dueDate, 
+        output.progress, 
+        output.completedDate, 
+        output.createdDate
+      )
     );
 
     return { overdueTasks, overdueOutputs };
