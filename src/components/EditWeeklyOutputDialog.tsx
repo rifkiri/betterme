@@ -124,9 +124,9 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px] max-h-[90vh] flex flex-col">
         <DialogHeader className="shrink-0">
-          <DialogTitle>Edit Weekly Output</DialogTitle>
+          <DialogTitle>Edit Bi-Weekly Output</DialogTitle>
           <DialogDescription>
-            Update your weekly output details.
+            Update your bi-weekly output details.
           </DialogDescription>
         </DialogHeader>
         
@@ -141,7 +141,7 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
                     <FormItem>
                       <FormLabel>Title</FormLabel>
                       <FormControl>
-                        <Input placeholder="Describe your weekly output..." {...field} />
+                        <Input placeholder="Describe your bi-weekly output..." {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

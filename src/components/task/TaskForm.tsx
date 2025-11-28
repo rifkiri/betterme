@@ -134,15 +134,15 @@ export const TaskForm = ({
           name="weeklyOutputId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm font-medium">Link to Weekly Output (Optional)</FormLabel>
+              <FormLabel className="text-sm font-medium">Link to Bi-Weekly Output (Optional)</FormLabel>
               <Select onValueChange={field.onChange} value={field.value || ""}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a weekly output" />
+                    <SelectValue placeholder="Select a bi-weekly output" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="none">No weekly output</SelectItem>
+                  <SelectItem value="none">No bi-weekly output</SelectItem>
                   {weeklyOutputs
                     .filter(output => output.progress < 100 && !output.isDeleted)
                     .map(output => (

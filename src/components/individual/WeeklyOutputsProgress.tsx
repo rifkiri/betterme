@@ -27,7 +27,7 @@ export const WeeklyOutputsProgress = ({ outputs }: WeeklyOutputsProgressProps) =
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5" />
-          Weekly Outputs Progress
+          Bi-Weekly Outputs Progress
         </CardTitle>
       </CardHeader>
       <CardContent>

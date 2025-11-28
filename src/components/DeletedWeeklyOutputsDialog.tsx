@@ -56,15 +56,15 @@ export const DeletedWeeklyOutputsDialog = ({
     <ListDialog
       open={dialog.open}
       onOpenChange={dialog.setOpen}
-      title="Deleted Weekly Outputs"
-      description="Restore or permanently delete your deleted weekly outputs"
+      title="Deleted Bi-Weekly Outputs"
+      description="Restore or permanently delete your deleted bi-weekly outputs"
       maxWidth="md"
       scrollHeight="80"
       items={deletedWeeklyOutputs}
       renderItem={renderOutput}
       triggerIcon={<Trash2 className="h-4 w-4" />}
       triggerText="Deleted"
-      emptyMessage="No deleted weekly outputs"
+      emptyMessage="No deleted bi-weekly outputs"
     />
   );
 };

@@ -34,8 +34,8 @@ export const TeamWorkloadCharts = ({ chartData, chartType, onMemberClick }: Team
         };
       case 'outputs':
         return {
-          title: 'Weekly Outputs Distribution',
-          description: 'Number of active weekly outputs per team member',
+          title: 'Bi-Weekly Outputs Distribution',
+          description: 'Number of active bi-weekly outputs per team member',
           dataKey: 'outputs',
           fill: '#10B981'
         };

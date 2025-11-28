@@ -42,7 +42,7 @@ export const TeamSummaryCards = ({ teamData }: TeamSummaryCardsProps) => {
       <StatCard
         title="Outputs Completion"
         value={`${teamData.teamStats.outputsCompletionRate}%`}
-        description="Weekly outputs"
+        description="Bi-weekly outputs"
         icon={TrendingUp}
         variant="gradient"
       />

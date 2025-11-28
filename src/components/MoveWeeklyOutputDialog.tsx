@@ -12,11 +12,11 @@ export const MoveWeeklyOutputDialog = ({ onMoveOutput, disabled }: MoveWeeklyOut
     <CalendarDialog
       onSelectDate={onMoveOutput}
       disabled={disabled}
-      title="Move Weekly Output"
-      description="Select a new due date for this weekly output."
+      title="Move Bi-Weekly Output"
+      description="Select a new due date for this bi-weekly output."
       buttonText="Move Output"
       triggerIcon={<ArrowRight className="h-4 w-4" />}
-      triggerTitle="Move Weekly Output"
+      triggerTitle="Move Bi-Weekly Output"
       dateProcessing="as-is"
       layout="scroll"
       contentClassName="sm:max-w-[425px] max-h-[90vh] flex flex-col"

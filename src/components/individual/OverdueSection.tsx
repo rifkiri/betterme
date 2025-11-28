@@ -81,7 +81,7 @@ export const OverdueSection = ({ overdueTasks, overdueOutputs }: OverdueSectionP
             <Calendar className="h-5 w-5 text-orange-500" />
             Overdue Outputs
           </CardTitle>
-          <CardDescription>Weekly outputs that are past their due date</CardDescription>
+          <CardDescription>Bi-weekly outputs that are past their due date</CardDescription>
         </CardHeader>
         <CardContent>
           {actuallyOverdueOutputs.length > 0 ? (

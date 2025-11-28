@@ -26,7 +26,7 @@ export const CompletedWeeklyOutputsDialog = ({
     if (newProgress < 100) {
       toast({
         title: "Output reverted",
-        description: "Weekly output moved back to active status",
+        description: "Bi-weekly output moved back to active status",
       });
     }
   };
@@ -78,7 +78,7 @@ export const CompletedWeeklyOutputsDialog = ({
     <ListDialog
       open={dialog.open}
       onOpenChange={dialog.setOpen}
-      title="Completed Weekly Outputs"
+      title="Completed Bi-Weekly Outputs"
       headerIcon={<Trophy className="h-5 w-5 text-amber-600" />}
       maxWidth="2xl"
       scrollHeight="96"
@@ -87,7 +87,7 @@ export const CompletedWeeklyOutputsDialog = ({
       renderItem={renderOutput}
       triggerIcon={<Trophy className="h-4 w-4 text-amber-600" />}
       triggerText="Completed"
-      emptyMessage="No completed weekly outputs yet"
+      emptyMessage="No completed bi-weekly outputs yet"
     />
   );
 };

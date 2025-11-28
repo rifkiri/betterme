@@ -97,7 +97,7 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] flex flex-col">
         <DialogHeader className="shrink-0">
-          <DialogTitle>Add Weekly Output</DialogTitle>
+          <DialogTitle>Add Bi-Weekly Output</DialogTitle>
         </DialogHeader>
         
         <ScrollArea className="h-[60vh] px-1">

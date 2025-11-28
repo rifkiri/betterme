@@ -20,8 +20,9 @@ import {
   isSameMonth 
 } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { getBiWeeklyInterval, isSameBiWeek } from '@/utils/dateUtils';
 
-export type NavigationPeriod = 'day' | 'week' | 'month';
+export type NavigationPeriod = 'day' | 'week' | 'biweek' | 'month';
 
 export interface PeriodNavigatorProps {
   selectedDate: Date;
@@ -56,6 +57,9 @@ export const PeriodNavigator = ({
       case 'week':
         onDateChange(addWeeks(selectedDate, multiplier));
         break;
+      case 'biweek':
+        onDateChange(addWeeks(selectedDate, multiplier * 2));
+        break;
       case 'month':
         onDateChange(addMonths(selectedDate, multiplier));
         break;
@@ -75,18 +79,24 @@ export const PeriodNavigator = ({
         const weekEnd = endOfWeek(selectedDate, { weekStartsOn: 0 });
         return `${format(weekStart, 'MMM dd')} - ${format(weekEnd, 'MMM dd')}`;
       }
+      case 'biweek': {
+        const { start, end } = getBiWeeklyInterval(selectedDate);
+        return `${format(start, 'MMM dd')} - ${format(end, 'MMM dd')}`;
+      }
       case 'month':
         return format(selectedDate, 'MMMM yyyy');
     }
   };
 
-  const isCurrentPeriod = () => {
+  const isCurrentPeriodCheck = () => {
     const today = new Date();
     switch (period) {
       case 'day':
         return isToday(selectedDate);
       case 'week':
         return isSameWeek(selectedDate, today, { weekStartsOn: 0 });
+      case 'biweek':
+        return isSameBiWeek(selectedDate, today);
       case 'month':
         return isSameMonth(selectedDate, today);
     }
@@ -98,6 +108,8 @@ export const PeriodNavigator = ({
         return { prev: 'Prev', next: 'Next' };
       case 'week':
         return { prev: 'Prev Week', next: 'Next Week' };
+      case 'biweek':
+        return { prev: 'Prev Period', next: 'Next Period' };
       case 'month':
         return { prev: 'Previous', next: 'Next' };
     }
@@ -109,6 +121,8 @@ export const PeriodNavigator = ({
         return 'Today';
       case 'week':
         return 'Current Week';
+      case 'biweek':
+        return 'Current Period';
       case 'month':
         return 'Current Month';
     }
@@ -182,7 +196,7 @@ export const PeriodNavigator = ({
           </div>
         )}
         
-        {!isCurrentPeriod() && (
+        {!isCurrentPeriodCheck() && (
           <Button
             variant="ghost"
             size="sm"

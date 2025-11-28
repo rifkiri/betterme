@@ -9,7 +9,8 @@ import { AddWeeklyOutputDialog } from './AddWeeklyOutputDialog';
 import { WeeklyOutputCard } from './WeeklyOutputCard';
 import { WeekNavigator } from './WeekNavigator';
 import { WeeklyOutput, Task, Goal } from '@/types/productivity';
-import { format, startOfWeek, endOfWeek, addWeeks, isWithinInterval, isSameWeek, isBefore } from 'date-fns';
+import { format, addWeeks, isWithinInterval, isBefore } from 'date-fns';
+import { getBiWeeklyInterval, isSameBiWeek } from '@/utils/dateUtils';
 
 interface WeeklyOutputsSectionProps {
   weeklyOutputs: WeeklyOutput[];
@@ -42,33 +43,27 @@ export const WeeklyOutputsSection = ({
   onPermanentlyDeleteWeeklyOutput,
   onRefresh
 }: WeeklyOutputsSectionProps) => {
-  const [selectedWeek, setSelectedWeek] = useState(new Date());
+  const [selectedPeriod, setSelectedPeriod] = useState(new Date());
   
-  const weekStart = startOfWeek(selectedWeek, {
-    weekStartsOn: 0
-  });
-  const weekEnd = endOfWeek(selectedWeek, {
-    weekStartsOn: 0
-  });
+  // Get bi-weekly (2-week) interval
+  const { start: periodStart, end: periodEnd } = getBiWeeklyInterval(selectedPeriod);
   const today = new Date();
-  const isCurrentWeek = isSameWeek(selectedWeek, today, {
-    weekStartsOn: 0
-  });
+  const isCurrentPeriod = isSameBiWeek(selectedPeriod, today);
 
-  // Enhanced filtering for outputs in the selected week
-  const getOutputsForSelectedWeek = () => {
+  // Enhanced filtering for outputs in the selected bi-weekly period
+  const getOutputsForSelectedPeriod = () => {
     return weeklyOutputs.filter(output => {
-      // Show outputs due in this week (regardless of completion status)
-      if (output.dueDate && isWithinInterval(output.dueDate, { start: weekStart, end: weekEnd })) {
+      // Show outputs due in this period (regardless of completion status)
+      if (output.dueDate && isWithinInterval(output.dueDate, { start: periodStart, end: periodEnd })) {
         return true;
       }
       
-      // Show completed outputs that were completed in this week (even if they were overdue)
-      if (output.progress >= 100 && output.completedDate && isWithinInterval(output.completedDate, { start: weekStart, end: weekEnd })) {
+      // Show completed outputs that were completed in this period (even if they were overdue)
+      if (output.progress >= 100 && output.completedDate && isWithinInterval(output.completedDate, { start: periodStart, end: periodEnd })) {
         return true;
       }
       
-      // Show outputs without due dates in all weeks
+      // Show outputs without due dates in all periods
       if (!output.dueDate) {
         return true;
       }
@@ -77,29 +72,30 @@ export const WeeklyOutputsSection = ({
     });
   };
 
-  const weekOutputs = getOutputsForSelectedWeek();
+  const periodOutputs = getOutputsForSelectedPeriod();
 
-  // For current week, show incomplete outputs from previous weeks that are truly overdue
-  const rolledOverOutputs = isCurrentWeek ? weeklyOutputs.filter(output => {
+  // For current period, show incomplete outputs from previous periods that are truly overdue
+  const rolledOverOutputs = isCurrentPeriod ? weeklyOutputs.filter(output => {
     // Must have a due date and progress must be less than 100%
     if (!output.dueDate || output.progress >= 100) return false;
     
     // Must be due before today (overdue)
     if (!isBefore(output.dueDate, today)) return false;
     
-    // Must NOT be from the current week
+    // Must NOT be from the current bi-weekly period
     return !isWithinInterval(output.dueDate, {
-      start: weekStart,
-      end: weekEnd
+      start: periodStart,
+      end: periodEnd
     });
   }) : [];
 
-  const navigateWeek = (direction: 'prev' | 'next') => {
-    setSelectedWeek(prev => addWeeks(prev, direction === 'next' ? 1 : -1));
+  // Navigate by 2 weeks for bi-weekly
+  const navigatePeriod = (direction: 'prev' | 'next') => {
+    setSelectedPeriod(prev => addWeeks(prev, direction === 'next' ? 2 : -2));
   };
 
-  const goToCurrentWeek = () => {
-    setSelectedWeek(new Date());
+  const goToCurrentPeriod = () => {
+    setSelectedPeriod(new Date());
   };
 
   return (
@@ -107,10 +103,10 @@ export const WeeklyOutputsSection = ({
       <CardHeader className="space-y-4 pb-2 sm:pb-4">
         <div>
           <CardTitle className="text-base sm:text-lg">
-            <span className="truncate">Weekly Outputs</span>
+            <span className="truncate">Bi-Weekly Outputs</span>
           </CardTitle>
           <CardDescription className="text-xs sm:text-sm">
-            {isCurrentWeek ? 'This Week' : format(weekStart, 'MMM dd')} - {format(weekEnd, 'MMM dd, yyyy')}
+            {isCurrentPeriod ? 'This Period' : format(periodStart, 'MMM dd')} - {format(periodEnd, 'MMM dd, yyyy')}
           </CardDescription>
         </div>
         <div className="space-y-2">
@@ -138,19 +134,20 @@ export const WeeklyOutputsSection = ({
       </CardHeader>
       <CardContent>
         <WeekNavigator 
-          selectedWeek={selectedWeek} 
-          onNavigateWeek={navigateWeek} 
-          onGoToCurrentWeek={goToCurrentWeek} 
+          selectedWeek={selectedPeriod} 
+          onNavigateWeek={navigatePeriod} 
+          onGoToCurrentWeek={goToCurrentPeriod} 
+          biWeekly={true}
         />
 
         <div className="space-y-3 sm:space-y-6">
-          {/* Current week outputs */}
+          {/* Current period outputs */}
           <div>
-            {weekOutputs.length === 0 ? (
-              <p className="text-center text-gray-500 py-4 text-sm">No weekly outputs for this week</p>
+            {periodOutputs.length === 0 ? (
+              <p className="text-center text-muted-foreground py-4 text-sm">No bi-weekly outputs for this period</p>
             ) : (
               <div className="space-y-2 sm:space-y-4">
-                {weekOutputs.map(output => (
+                {periodOutputs.map(output => (
                   <WeeklyOutputCard 
                     key={output.id} 
                     output={output}
@@ -167,12 +164,12 @@ export const WeeklyOutputsSection = ({
             )}
           </div>
 
-          {/* Rolled over outputs section (only show in current week and only incomplete ones) */}
-          {isCurrentWeek && rolledOverOutputs.length > 0 && (
+          {/* Rolled over outputs section (only show in current period and only incomplete ones) */}
+          {isCurrentPeriod && rolledOverOutputs.length > 0 && (
             <div>
               <h3 className="text-sm font-semibold text-orange-600 mb-2 sm:mb-3 flex items-center gap-2">
                 <Target className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="text-xs sm:text-sm">Rolled Over from Previous Weeks</span>
+                <span className="text-xs sm:text-sm">Rolled Over from Previous Periods</span>
               </h3>
               <div className="space-y-2 sm:space-y-4">
                 {rolledOverOutputs.map(output => (
