@@ -12,19 +12,14 @@ export const getCurrentWeekInterval = () => {
   return { start: weekStart, end: weekEnd };
 };
 
-// Bi-weekly (2-week) interval utilities
+// Bi-weekly (2-week) rolling interval utilities
 export const getBiWeeklyInterval = (date: Date) => {
+  // Start from the beginning of the week containing the date
   const weekStart = startOfWeek(date, { weekStartsOn: 0 });
-  // Use a fixed epoch to ensure consistent bi-weekly periods across all users
-  const epochStart = new Date(2020, 0, 5); // A Sunday in 2020
-  const weeksSinceEpoch = differenceInWeeks(weekStart, epochStart);
-  const isEvenPeriod = Math.floor(weeksSinceEpoch / 2) % 2 === 0;
+  // End is the Saturday of the following week (14 days total)
+  const biWeekEnd = endOfWeek(addWeeks(weekStart, 1), { weekStartsOn: 0 });
   
-  // Bi-weekly period starts from the beginning of the even week
-  const biWeekStart = isEvenPeriod ? weekStart : subWeeks(weekStart, 1);
-  const biWeekEnd = endOfWeek(addWeeks(biWeekStart, 1), { weekStartsOn: 0 });
-  
-  return { start: biWeekStart, end: biWeekEnd };
+  return { start: weekStart, end: biWeekEnd };
 };
 
 export const getCurrentBiWeeklyInterval = () => {
@@ -37,9 +32,8 @@ export const isWithinBiWeek = (taskDate: Date, referenceDate: Date) => {
 };
 
 export const isSameBiWeek = (date1: Date, date2: Date) => {
-  const interval1 = getBiWeeklyInterval(date1);
-  const interval2 = getBiWeeklyInterval(date2);
-  return interval1.start.getTime() === interval2.start.getTime();
+  // Same bi-weekly period if both dates are in the same starting week
+  return isSameWeek(date1, date2, { weekStartsOn: 0 });
 };
 
 export const isSameDate = (date1: Date, date2: Date) => {
