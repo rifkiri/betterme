@@ -58,7 +58,8 @@ export const PeriodNavigator = ({
         onDateChange(addWeeks(selectedDate, multiplier));
         break;
       case 'biweek':
-        onDateChange(addWeeks(selectedDate, multiplier * 2));
+        // Rolling navigation - move by 1 week for smooth bi-weekly scrolling
+        onDateChange(addWeeks(selectedDate, multiplier));
         break;
       case 'month':
         onDateChange(addMonths(selectedDate, multiplier));

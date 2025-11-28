@@ -89,9 +89,9 @@ export const WeeklyOutputsSection = ({
     });
   }) : [];
 
-  // Navigate by 2 weeks for bi-weekly
+  // Navigate by 1 week for rolling bi-weekly
   const navigatePeriod = (direction: 'prev' | 'next') => {
-    setSelectedPeriod(prev => addWeeks(prev, direction === 'next' ? 2 : -2));
+    setSelectedPeriod(prev => addWeeks(prev, direction === 'next' ? 1 : -1));
   };
 
   const goToCurrentPeriod = () => {
