@@ -25,7 +25,7 @@ export const useWeeklyOutputsManager = ({
 
   const addWeeklyOutput = async (output: Omit<WeeklyOutput, 'id' | 'createdDate'>) => {
     if (!userId) {
-      toast.error('Please sign in to add weekly outputs');
+      toast.error('Please sign in to add bi-weekly outputs');
       return;
     }
 
@@ -42,10 +42,10 @@ export const useWeeklyOutputsManager = ({
     try {
       await supabaseWeeklyOutputsService.addWeeklyOutput({ ...newOutput, userId });
       await loadAllData();
-      toast.success('Weekly output added successfully');
+      toast.success('Bi-weekly output added successfully');
     } catch (error) {
-      console.error('Failed to add weekly output:', error);
-      toast.error('Failed to add weekly output: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      console.error('Failed to add bi-weekly output:', error);
+      toast.error('Failed to add bi-weekly output: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
@@ -55,7 +55,7 @@ export const useWeeklyOutputsManager = ({
       return;
     }
 
-    console.log('Editing weekly output:', { id, updates });
+    console.log('Editing bi-weekly output:', { id, updates });
 
     try {
       console.log('Attempting to update in Supabase...');
@@ -63,10 +63,10 @@ export const useWeeklyOutputsManager = ({
       
       console.log('Successfully updated in Supabase, reloading data...');
       await loadAllData();
-      toast.success('Weekly output updated successfully');
+      toast.success('Bi-weekly output updated successfully');
     } catch (error) {
-      console.error('Failed to update weekly output:', error);
-      toast.error('Failed to update weekly output: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      console.error('Failed to update bi-weekly output:', error);
+      toast.error('Failed to update bi-weekly output: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
@@ -113,10 +113,10 @@ export const useWeeklyOutputsManager = ({
     try {
       await supabaseWeeklyOutputsService.updateWeeklyOutput(id, userId, { isDeleted: true, deletedDate: new Date() });
       await loadAllData();
-      toast.success('Weekly output deleted');
+      toast.success('Bi-weekly output deleted');
     } catch (error) {
-      toast.error('Failed to delete weekly output');
-      console.error('Failed to delete weekly output:', error);
+      toast.error('Failed to delete bi-weekly output');
+      console.error('Failed to delete bi-weekly output:', error);
     }
   };
 
@@ -126,10 +126,10 @@ export const useWeeklyOutputsManager = ({
     try {
       await supabaseWeeklyOutputsService.updateWeeklyOutput(id, userId, { isDeleted: false, deletedDate: undefined });
       await loadAllData();
-      toast.success('Weekly output restored');
+      toast.success('Bi-weekly output restored');
     } catch (error) {
-      toast.error('Failed to restore weekly output');
-      console.error('Failed to restore weekly output:', error);
+      toast.error('Failed to restore bi-weekly output');
+      console.error('Failed to restore bi-weekly output:', error);
     }
   };
 
@@ -137,13 +137,13 @@ export const useWeeklyOutputsManager = ({
     if (!userId) return;
 
     try {
-      // Actually delete the weekly output permanently from the database
+      // Actually delete the bi-weekly output permanently from the database
       await supabaseWeeklyOutputsService.permanentlyDeleteWeeklyOutput(id, userId);
       await loadAllData();
-      toast.success('Weekly output permanently deleted');
+      toast.success('Bi-weekly output permanently deleted');
     } catch (error) {
-      toast.error('Failed to delete weekly output');
-      console.error('Failed to delete weekly output:', error);
+      toast.error('Failed to delete bi-weekly output');
+      console.error('Failed to delete bi-weekly output:', error);
     }
   };
 

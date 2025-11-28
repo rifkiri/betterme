@@ -349,7 +349,7 @@ export const PersonalGoalEditDialog = ({
                   )}
                 />
 
-              {/* Link Weekly Outputs */}
+              {/* Link Bi-Weekly Outputs */}
               <FormField
                 control={form.control}
                 name="selectedOutputIds"
@@ -357,7 +357,7 @@ export const PersonalGoalEditDialog = ({
                   <FormItem>
                     <FormLabel className="flex items-center gap-2">
                       <Target className="h-4 w-4" />
-                      Link to Weekly Outputs (Optional)
+                      Link to Bi-Weekly Outputs (Optional)
                     </FormLabel>
                     
                     <Popover open={isOutputDropdownOpen} onOpenChange={setIsOutputDropdownOpen}>
@@ -383,7 +383,7 @@ export const PersonalGoalEditDialog = ({
                             <CommandEmpty>No outputs found.</CommandEmpty>
                             <CommandGroup className="bg-background">
                               {availableOutputs.length === 0 ? (
-                                <CommandItem disabled className="p-3">No weekly outputs available</CommandItem>
+                                <CommandItem disabled className="p-3">No bi-weekly outputs available</CommandItem>
                               ) : (
                                 availableOutputs.map((output) => (
                                   <CommandItem

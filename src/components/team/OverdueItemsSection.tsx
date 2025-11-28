@@ -78,7 +78,7 @@ export const OverdueItemsSection = ({ teamData }: OverdueItemsSectionProps) => {
             Overdue Outputs
           </CardTitle>
           <CardDescription>
-            Weekly outputs that are past their due date - trend vs last week
+            Bi-weekly outputs that are past their due date - trend vs last week
           </CardDescription>
         </CardHeader>
         <CardContent>

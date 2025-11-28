@@ -657,7 +657,7 @@ export type Database = {
         Returns: undefined
       }
       get_all_users_for_admin: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           created_at: string
           email: string
@@ -672,7 +672,7 @@ export type Database = {
         }[]
       }
       get_filtered_users_for_role: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           created_at: string
           email: string
@@ -698,14 +698,8 @@ export type Database = {
           streak: number
         }[]
       }
-      get_user_role: {
-        Args: { user_id: string }
-        Returns: string
-      }
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      get_user_role: { Args: { user_id: string }; Returns: string }
+      is_admin: { Args: never; Returns: boolean }
       toggle_habit_completion: {
         Args: {
           habit_id_param: string

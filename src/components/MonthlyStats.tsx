@@ -68,7 +68,7 @@ export const MonthlyStats = ({ tasks, outputs, habits, monthDays }: MonthlyStats
 
         {/* Output Statistics */}
         <div className="space-y-3">
-          <h4 className="font-medium text-gray-900">Weekly Outputs</h4>
+          <h4 className="font-medium text-gray-900">Bi-Weekly Outputs</h4>
           
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
