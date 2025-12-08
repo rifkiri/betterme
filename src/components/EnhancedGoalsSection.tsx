@@ -13,8 +13,8 @@ import { GoalDetailsDialog } from './GoalDetailsDialog';
 import { MarketplaceGoalCard } from './MarketplaceGoalCard';
 import { MarketplaceFilters } from '@/components/ui/MarketplaceFilters';
 import { Goal, WeeklyOutput, Habit, GoalAssignment, Task } from '@/types/productivity';
-import { Target, Briefcase, User, Plus, CheckCircle, Minus, Edit, Trash2, Eye, Link2, Store, RotateCcw } from 'lucide-react';
-import { mapSubcategoryDatabaseToDisplay, WORK_SUBCATEGORY_DISPLAY_MAP } from '@/utils/goalCategoryUtils';
+import { Target, Briefcase, User, Plus, CheckCircle, Minus, Edit, Trash2, Eye, Link2, Store, RotateCcw, Filter, X, ArrowUpDown } from 'lucide-react';
+import { mapSubcategoryDatabaseToDisplay, WORK_SUBCATEGORY_DISPLAY_MAP, PERSONAL_SUBCATEGORY_DISPLAY_MAP } from '@/utils/goalCategoryUtils';
 import { PageContainer, PageHeader } from '@/components/ui/standardized';
 import { Label } from '@/components/ui/label';
 
@@ -76,10 +76,47 @@ export const EnhancedGoalsSection = ({
   const [marketplaceSortBy, setMarketplaceSortBy] = useState('newest');
   const [showDeletedGoals, setShowDeletedGoals] = useState(false);
   
+  // Active goals filter state
+  const [activeGoalTypeFilter, setActiveGoalTypeFilter] = useState<'all' | 'work' | 'personal'>('all');
+  const [activeGoalSubcategoryFilter, setActiveGoalSubcategoryFilter] = useState<string>('all');
+  const [activeGoalSortBy, setActiveGoalSortBy] = useState<string>('newest');
+  
   // Completed goals filter state - only work subcategories
   const [completedGoalSubcategoryFilter, setCompletedGoalSubcategoryFilter] = useState<string>('all');
   
   const isAdmin = userRole === 'admin';
+
+  // Reset active goal subcategory when type changes
+  useEffect(() => {
+    setActiveGoalSubcategoryFilter('all');
+  }, [activeGoalTypeFilter]);
+
+  // Dynamic subcategory options based on selected type for active goals
+  const activeSubcategoryOptions = useMemo(() => {
+    if (activeGoalTypeFilter === 'work') {
+      return Object.entries(WORK_SUBCATEGORY_DISPLAY_MAP).map(([value, label]) => ({
+        value,
+        label
+      }));
+    }
+    if (activeGoalTypeFilter === 'personal') {
+      return Object.entries(PERSONAL_SUBCATEGORY_DISPLAY_MAP).map(([value, label]) => ({
+        value,
+        label
+      }));
+    }
+    // When "All Types" is selected, show all subcategories from both categories
+    return [
+      ...Object.entries(WORK_SUBCATEGORY_DISPLAY_MAP).map(([value, label]) => ({
+        value,
+        label: `${label} (Work)`
+      })),
+      ...Object.entries(PERSONAL_SUBCATEGORY_DISPLAY_MAP).map(([value, label]) => ({
+        value,
+        label: `${label} (Personal)`
+      }))
+    ];
+  }, [activeGoalTypeFilter]);
 
   // Work subcategory options for completed goals filter
   const completedSubcategoryOptions = useMemo(() => {
@@ -134,12 +171,61 @@ export const EnhancedGoalsSection = ({
 
   // Filter goals by completion status - only show goals where user has an assignment
   const activeGoals = useMemo(() => {
-    return goals.filter(goal => 
+    let filtered = goals.filter(goal => 
       goal.progress < 100 && 
       !goal.archived && 
       isUserAssignedToGoal(goal.id)
     );
-  }, [goals, assignments, currentUserId]);
+
+    // Apply type filter
+    if (activeGoalTypeFilter !== 'all') {
+      filtered = filtered.filter(goal => goal.category === activeGoalTypeFilter);
+    }
+
+    // Apply subcategory filter
+    if (activeGoalSubcategoryFilter !== 'all') {
+      filtered = filtered.filter(goal => goal.subcategory === activeGoalSubcategoryFilter);
+    }
+
+    // Apply sorting
+    switch (activeGoalSortBy) {
+      case 'newest':
+        filtered.sort((a, b) => b.createdDate.getTime() - a.createdDate.getTime());
+        break;
+      case 'oldest':
+        filtered.sort((a, b) => a.createdDate.getTime() - b.createdDate.getTime());
+        break;
+      case 'deadline':
+        filtered.sort((a, b) => {
+          if (!a.deadline && !b.deadline) return 0;
+          if (!a.deadline) return 1;
+          if (!b.deadline) return -1;
+          return a.deadline.getTime() - b.deadline.getTime();
+        });
+        break;
+      case 'progress-asc':
+        filtered.sort((a, b) => a.progress - b.progress);
+        break;
+      case 'progress-desc':
+        filtered.sort((a, b) => b.progress - a.progress);
+        break;
+      default:
+        break;
+    }
+
+    return filtered;
+  }, [goals, assignments, currentUserId, activeGoalTypeFilter, activeGoalSubcategoryFilter, activeGoalSortBy]);
+
+  // Check if active goals have any filters applied
+  const hasActiveGoalFilters = activeGoalTypeFilter !== 'all' || 
+                               activeGoalSubcategoryFilter !== 'all' || 
+                               activeGoalSortBy !== 'newest';
+
+  const clearActiveGoalFilters = () => {
+    setActiveGoalTypeFilter('all');
+    setActiveGoalSubcategoryFilter('all');
+    setActiveGoalSortBy('newest');
+  };
 
   const completedGoals = useMemo(() => {
     // Use allGoals to show all completed goals the user can access
@@ -546,7 +632,7 @@ export const EnhancedGoalsSection = ({
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-lg font-medium">Active Goals</h3>
-                <p className="text-sm text-gray-600">Goals currently in progress</p>
+                <p className="text-sm text-muted-foreground">Goals currently in progress</p>
               </div>
               <div className="flex gap-3">
                 <SimpleAddGoalDialog 
@@ -560,6 +646,87 @@ export const EnhancedGoalsSection = ({
                   onPermanentlyDelete={onPermanentlyDeleteGoal}
                 />
               </div>
+            </div>
+
+            {/* Active Goals Filters */}
+            <div className="flex flex-wrap gap-3 items-center mb-6 p-3 bg-muted/30 rounded-lg border">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Filters:</span>
+              </div>
+
+              {/* Goal Type Filter */}
+              <Select 
+                value={activeGoalTypeFilter} 
+                onValueChange={(v) => setActiveGoalTypeFilter(v as 'all' | 'work' | 'personal')}
+              >
+                <SelectTrigger className="w-[140px] bg-background">
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="work">
+                    <div className="flex items-center gap-2">
+                      <Briefcase className="h-4 w-4" />
+                      <span>Work</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="personal">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      <span>Personal</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Subcategory Filter */}
+              <Select 
+                value={activeGoalSubcategoryFilter} 
+                onValueChange={setActiveGoalSubcategoryFilter}
+              >
+                <SelectTrigger className="w-[180px] bg-background">
+                  <SelectValue placeholder="All Subcategories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Subcategories</SelectItem>
+                  {activeSubcategoryOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Sort By */}
+              <div className="flex items-center gap-2">
+                <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                <Select value={activeGoalSortBy} onValueChange={setActiveGoalSortBy}>
+                  <SelectTrigger className="w-[160px] bg-background">
+                    <SelectValue placeholder="Sort by..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="oldest">Oldest First</SelectItem>
+                    <SelectItem value="deadline">Deadline (Urgent)</SelectItem>
+                    <SelectItem value="progress-asc">Progress (Low → High)</SelectItem>
+                    <SelectItem value="progress-desc">Progress (High → Low)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Clear Filters Button */}
+              {hasActiveGoalFilters && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearActiveGoalFilters}
+                  className="h-9 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Clear
+                </Button>
+              )}
             </div>
             
             {activeGoals.length === 0 ? (
