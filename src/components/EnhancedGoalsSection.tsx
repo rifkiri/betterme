@@ -14,7 +14,7 @@ import { MarketplaceGoalCard } from './MarketplaceGoalCard';
 import { MarketplaceFilters } from '@/components/ui/MarketplaceFilters';
 import { Goal, WeeklyOutput, Habit, GoalAssignment, Task } from '@/types/productivity';
 import { Target, Briefcase, User, Plus, CheckCircle, Minus, Edit, Trash2, Eye, Link2, Store, RotateCcw } from 'lucide-react';
-import { mapSubcategoryDatabaseToDisplay, PERSONAL_SUBCATEGORY_DISPLAY_MAP, WORK_SUBCATEGORY_DISPLAY_MAP } from '@/utils/goalCategoryUtils';
+import { mapSubcategoryDatabaseToDisplay, WORK_SUBCATEGORY_DISPLAY_MAP } from '@/utils/goalCategoryUtils';
 import { PageContainer, PageHeader } from '@/components/ui/standardized';
 import { Label } from '@/components/ui/label';
 
@@ -76,43 +76,18 @@ export const EnhancedGoalsSection = ({
   const [marketplaceSortBy, setMarketplaceSortBy] = useState('newest');
   const [showDeletedGoals, setShowDeletedGoals] = useState(false);
   
-  // Completed goals filter state
-  const [completedGoalTypeFilter, setCompletedGoalTypeFilter] = useState<'all' | 'work' | 'personal'>('all');
+  // Completed goals filter state - only work subcategories
   const [completedGoalSubcategoryFilter, setCompletedGoalSubcategoryFilter] = useState<string>('all');
   
   const isAdmin = userRole === 'admin';
 
-  // Reset subcategory filter when type filter changes
-  useEffect(() => {
-    setCompletedGoalSubcategoryFilter('all');
-  }, [completedGoalTypeFilter]);
-
-  // Dynamic subcategory options based on selected goal type
+  // Work subcategory options for completed goals filter
   const completedSubcategoryOptions = useMemo(() => {
-    if (completedGoalTypeFilter === 'work') {
-      return Object.entries(WORK_SUBCATEGORY_DISPLAY_MAP).map(([value, label]) => ({
-        value,
-        label
-      }));
-    }
-    if (completedGoalTypeFilter === 'personal') {
-      return Object.entries(PERSONAL_SUBCATEGORY_DISPLAY_MAP).map(([value, label]) => ({
-        value,
-        label
-      }));
-    }
-    // When "All Types" is selected, show all subcategories from both categories
-    return [
-      ...Object.entries(WORK_SUBCATEGORY_DISPLAY_MAP).map(([value, label]) => ({
-        value,
-        label: `${label} (Work)`
-      })),
-      ...Object.entries(PERSONAL_SUBCATEGORY_DISPLAY_MAP).map(([value, label]) => ({
-        value,
-        label: `${label} (Personal)`
-      }))
-    ];
-  }, [completedGoalTypeFilter]);
+    return Object.entries(WORK_SUBCATEGORY_DISPLAY_MAP).map(([value, label]) => ({
+      value,
+      label
+    }));
+  }, []);
 
   // Handle opening goal details with better error handling
   const handleViewGoalDetails = (goal: Goal) => {
@@ -172,12 +147,11 @@ export const EnhancedGoalsSection = ({
     return allGoals.filter(goal => {
       const isCompleted = goal.progress >= 100;
       const isNotArchived = !goal.archived;
-      const matchesType = completedGoalTypeFilter === 'all' || goal.category === completedGoalTypeFilter;
       const matchesSubcategory = completedGoalSubcategoryFilter === 'all' || goal.subcategory === completedGoalSubcategoryFilter;
       
-      return isCompleted && isNotArchived && matchesType && matchesSubcategory;
+      return isCompleted && isNotArchived && matchesSubcategory;
     });
-  }, [allGoals, completedGoalTypeFilter, completedGoalSubcategoryFilter]);
+  }, [allGoals, completedGoalSubcategoryFilter]);
 
   const isManager = userRole === 'manager' || userRole === 'admin';
 
@@ -610,48 +584,22 @@ export const EnhancedGoalsSection = ({
                 <p className="text-sm text-muted-foreground">Goals that have been accomplished</p>
               </div>
               
-              <div className="flex items-center gap-2">
-                <Select 
-                  value={completedGoalTypeFilter} 
-                  onValueChange={(v) => setCompletedGoalTypeFilter(v as 'all' | 'work' | 'personal')}
-                >
-                  <SelectTrigger className="w-[160px]">
-                    <SelectValue placeholder="All Types" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="work">
-                      <div className="flex items-center gap-2">
-                        <Briefcase className="h-4 w-4" />
-                        <span>Work Goals</span>
-                      </div>
+              <Select 
+                value={completedGoalSubcategoryFilter} 
+                onValueChange={setCompletedGoalSubcategoryFilter}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="All Subcategories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Subcategories</SelectItem>
+                  {completedSubcategoryOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
                     </SelectItem>
-                    <SelectItem value="personal">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4" />
-                        <span>Personal Goals</span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select 
-                  value={completedGoalSubcategoryFilter} 
-                  onValueChange={setCompletedGoalSubcategoryFilter}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="All Subcategories" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Subcategories</SelectItem>
-                    {completedSubcategoryOptions.map(option => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
             {completedGoals.length === 0 ? (
