@@ -130,15 +130,12 @@ export const EnhancedGoalsSection = ({
   }, [goals, assignments, currentUserId]);
 
   const completedGoals = useMemo(() => {
-    return goals.filter(goal => {
-      const isCompleted = goal.progress >= 100;
-      const isGoalOwner = goal.userId === currentUserId || goal.createdBy === currentUserId;
-      const isAssigned = isUserAssignedToGoal(goal.id);
-      
-      // Show completed goals where user is owner OR assigned
-      return isCompleted && (isGoalOwner || isAssigned);
-    });
-  }, [goals, assignments, currentUserId]);
+    // Use allGoals to show all completed goals the user can access
+    // RLS policies already filter what goals the user can see
+    return allGoals.filter(goal => 
+      goal.progress >= 100 && !goal.archived
+    );
+  }, [allGoals]);
 
   const isManager = userRole === 'manager' || userRole === 'admin';
 
