@@ -58,6 +58,7 @@ interface UserGoalAssignment {
     goalTitle: string;
     role: 'coach' | 'lead' | 'member';
     progress: number;
+    subcategory?: string;
   }>;
   totalGoals: number;
   roleBreakdown: {
@@ -208,7 +209,8 @@ export const TeamWorkloadMonitoring = ({
             goalId: goal.id,
             goalTitle: goal.title || '',
             role: assignment.role,
-            progress: goal.progress
+            progress: goal.progress,
+            subcategory: goal.subcategory
           });
           userAssignment.totalGoals++;
           userAssignment.roleBreakdown[assignment.role]++;

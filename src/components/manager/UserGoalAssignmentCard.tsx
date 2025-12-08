@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { Target, UserCog, UserCheck, Users } from 'lucide-react';
+import { mapSubcategoryDatabaseToDisplay } from '@/utils/goalCategoryUtils';
 
 interface UserGoalAssignment {
   userId: string;
@@ -14,6 +15,7 @@ interface UserGoalAssignment {
     goalTitle: string;
     role: 'coach' | 'lead' | 'member';
     progress: number;
+    subcategory?: string;
   }>;
   totalGoals: number;
   roleBreakdown: {
@@ -85,8 +87,8 @@ export const UserGoalAssignmentCard = ({
             </AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <h3 className="font-medium text-gray-900">{assignment.userName}</h3>
-            <p className="text-xs text-gray-500">{assignment.email}</p>
+            <h3 className="font-medium text-foreground">{assignment.userName}</h3>
+            <p className="text-xs text-muted-foreground">{assignment.email}</p>
           </div>
           <Badge variant="secondary" className="text-xs">
             <Target className="h-3 w-3 mr-1" />
@@ -121,21 +123,26 @@ export const UserGoalAssignmentCard = ({
         {/* Goals List */}
         <div className="space-y-2">
           {activeAssignments.length === 0 ? (
-            <p className="text-sm text-gray-500 italic">No goals assigned</p>
+            <p className="text-sm text-muted-foreground italic">No goals assigned</p>
           ) : (
             activeAssignments.map((goal) => (
-              <div key={goal.goalId} className="border-l-2 border-gray-200 pl-3 py-1">
+              <div key={goal.goalId} className="border-l-2 border-muted pl-3 py-1">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                    <p className="text-sm font-medium text-foreground truncate">
                       {goal.goalTitle}
                     </p>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <Badge variant={getRoleBadgeVariant(goal.role)} className="text-xs">
                         {getRoleIcon(goal.role)}
                         <span className="ml-1">{goal.role}</span>
                       </Badge>
-                      <span className="text-xs text-gray-500">
+                      {goal.subcategory && (
+                        <Badge variant="outline" className="text-xs capitalize">
+                          {mapSubcategoryDatabaseToDisplay(goal.subcategory)}
+                        </Badge>
+                      )}
+                      <span className="text-xs text-muted-foreground">
                         {goal.progress}% complete
                       </span>
                     </div>
