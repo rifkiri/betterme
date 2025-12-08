@@ -65,6 +65,15 @@ export const UserGoalAssignmentCard = ({
     .toUpperCase()
     .slice(0, 2);
 
+  // Defensive filter: only show active goals (progress < 100)
+  const activeAssignments = assignment.assignments.filter(g => g.progress < 100);
+  const activeGoalsCount = activeAssignments.length;
+  const activeRoleBreakdown = {
+    coach: activeAssignments.filter(g => g.role === 'coach').length,
+    lead: activeAssignments.filter(g => g.role === 'lead').length,
+    member: activeAssignments.filter(g => g.role === 'member').length
+  };
+
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardContent className="p-4">
@@ -81,29 +90,29 @@ export const UserGoalAssignmentCard = ({
           </div>
           <Badge variant="secondary" className="text-xs">
             <Target className="h-3 w-3 mr-1" />
-            {assignment.totalGoals} {assignment.totalGoals === 1 ? 'Goal' : 'Goals'}
+            {activeGoalsCount} {activeGoalsCount === 1 ? 'Goal' : 'Goals'}
           </Badge>
         </div>
 
         {/* Role Distribution */}
-        {assignment.totalGoals > 0 && (
+        {activeGoalsCount > 0 && (
           <div className="flex gap-2 mb-3">
-            {assignment.roleBreakdown.coach > 0 && (
+            {activeRoleBreakdown.coach > 0 && (
               <Badge variant="default" className="text-xs">
                 <UserCog className="h-3 w-3 mr-1" />
-                Coach ({assignment.roleBreakdown.coach})
+                Coach ({activeRoleBreakdown.coach})
               </Badge>
             )}
-            {assignment.roleBreakdown.lead > 0 && (
+            {activeRoleBreakdown.lead > 0 && (
               <Badge variant="secondary" className="text-xs">
                 <UserCheck className="h-3 w-3 mr-1" />
-                Lead ({assignment.roleBreakdown.lead})
+                Lead ({activeRoleBreakdown.lead})
               </Badge>
             )}
-            {assignment.roleBreakdown.member > 0 && (
+            {activeRoleBreakdown.member > 0 && (
               <Badge variant="outline" className="text-xs">
                 <Users className="h-3 w-3 mr-1" />
-                Member ({assignment.roleBreakdown.member})
+                Member ({activeRoleBreakdown.member})
               </Badge>
             )}
           </div>
@@ -111,10 +120,10 @@ export const UserGoalAssignmentCard = ({
 
         {/* Goals List */}
         <div className="space-y-2">
-          {assignment.assignments.length === 0 ? (
+          {activeAssignments.length === 0 ? (
             <p className="text-sm text-gray-500 italic">No goals assigned</p>
           ) : (
-            assignment.assignments.map((goal) => (
+            activeAssignments.map((goal) => (
               <div key={goal.goalId} className="border-l-2 border-gray-200 pl-3 py-1">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex-1 min-w-0">
