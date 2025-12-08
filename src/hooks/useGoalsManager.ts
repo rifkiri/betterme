@@ -7,6 +7,7 @@ interface UseGoalsManagerProps {
   userId: string | null;
   loadAllData: () => Promise<void>;
   goals: Goal[];
+  allGoals?: Goal[];  // Added for marketplace goals from other users
   setGoals: (goals: Goal[] | ((prev: Goal[]) => Goal[])) => void;
   deletedGoals: Goal[];
   setDeletedGoals: (goals: Goal[] | ((prev: Goal[]) => Goal[])) => void;
@@ -16,6 +17,7 @@ export const useGoalsManager = ({
   userId,
   loadAllData,
   goals,
+  allGoals = [],
   setGoals,
   deletedGoals,
   setDeletedGoals,
@@ -148,10 +150,10 @@ export const useGoalsManager = ({
     const isAdmin = profile?.role === 'admin';
     console.log('🗑️ [DELETE GOAL] User role check - isAdmin:', isAdmin);
 
-    // Find the goal to check ownership
-    const goalToDelete = goals.find(g => g.id === id);
+    // Find the goal to check ownership - check both user's goals and all goals (for marketplace)
+    const goalToDelete = goals.find(g => g.id === id) || allGoals.find(g => g.id === id);
     if (!goalToDelete) {
-      console.log('❌ [DELETE GOAL] Goal not found:', id);
+      console.log('❌ [DELETE GOAL] Goal not found in goals or allGoals:', id);
       toast.error('Goal not found');
       return;
     }
