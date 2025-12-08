@@ -133,10 +133,10 @@ export const TeamWorkloadMonitoring = ({
         // Get assigned goal IDs for this user
         const assignedGoalIds = userAssignedGoalIds.get(userProfile.id) || new Set<string>();
         
-        // Get accessible goals, then filter to ONLY goals where user has an assignment
+        // Get accessible goals, then filter to ONLY active goals where user has an assignment
         const accessibleGoals = await supabaseGoalsService.getUserAccessibleGoals(userProfile.id);
         const assignedGoals = accessibleGoals.filter(g => 
-          !g.archived && assignedGoalIds.has(g.id)
+          !g.archived && g.progress < 100 && assignedGoalIds.has(g.id)
         );
         const totalGoals = assignedGoals.length;
         
@@ -174,7 +174,7 @@ export const TeamWorkloadMonitoring = ({
       // Create user-centric goal assignment data
       const userAssignmentMap = new Map<string, UserGoalAssignment>();
       
-      for (const goal of allGoals.filter(g => g.category === 'work' && !g.archived)) {
+      for (const goal of allGoals.filter(g => g.category === 'work' && !g.archived && g.progress < 100)) {
         // Get goal assignments from goal_assignments table
         const assignments = await supabaseGoalAssignmentsService.getAssignmentsForGoal(goal.id);
         
