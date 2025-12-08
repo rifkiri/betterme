@@ -21,6 +21,7 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import { useHabits } from '@/hooks/useHabits';
 import { mapSubcategoryDatabaseToDisplay } from '@/utils/goalCategoryUtils';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserRole } from '@/hooks/useUserRole';
 
 // Lazy load heavy dialog components to reduce initial bundle size
 const EditGoalDialog = lazy(() => import('./EditGoalDialog').then(module => ({ default: module.EditGoalDialog })));
@@ -61,11 +62,12 @@ export const GoalDetailsDialog = ({
   const [loadingLinkedOutputs, setLoadingLinkedOutputs] = useState(false);
   const [loadingLinkedHabits, setLoadingLinkedHabits] = useState(false);
   const { user } = useAuth();
+  const { isAdmin } = useUserRole();
   
-  // Check if user can update progress
+  // Check if user can update progress - admins can update any goal
   const isGoalOwner = goal?.userId === user?.id;
   const isAssignedToGoal = assignments?.some(a => a.userId === user?.id && a.goalId === goal?.id);
-  const canUpdateProgress = isGoalOwner || isAssignedToGoal;
+  const canUpdateProgress = isGoalOwner || isAssignedToGoal || isAdmin;
   
   // Get habits data for personal goals
   const { habits: allHabits } = useHabits();
@@ -126,12 +128,12 @@ const getCategoryColor = (category: Goal['category']) => {
 
   const isOverdue = goal.deadline && isBefore(goal.deadline, new Date()) && goal.progress < 100;
   
-  // Check user permissions for different types of editing
+  // Check user permissions for different types of editing - admins can fully edit any goal
   const isGoalCreator = currentUserId && (goal.createdBy === currentUserId || goal.userId === currentUserId);
   const userAssignment = assignments.find(a => a.goalId === goal.id && a.userId === currentUserId);
   const hasAssignmentRole = userAssignment?.role;
-  const canFullEdit = isGoalCreator;
-  const canEditLinkagesAndRoles = hasAssignmentRole || isGoalCreator;
+  const canFullEdit = isGoalCreator || isAdmin;
+  const canEditLinkagesAndRoles = hasAssignmentRole || isGoalCreator || isAdmin;
 
   console.log('[GoalDetailsDialog] Rendering:', { 
     open, 

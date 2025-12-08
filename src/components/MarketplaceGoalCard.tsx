@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Goal, GoalAssignment } from '@/types/productivity';
-import { Briefcase, Users, User, Calendar, TrendingUp, UserPlus, CheckCircle, Trash2 } from 'lucide-react';
+import { Briefcase, Users, User, Calendar, TrendingUp, UserPlus, CheckCircle, Trash2, Plus, Minus } from 'lucide-react';
 import { mapSubcategoryDatabaseToDisplay } from '@/utils/goalCategoryUtils';
 import { format } from 'date-fns';
 
@@ -19,6 +19,7 @@ interface MarketplaceGoalCardProps {
   onViewDetails: (goal: Goal) => void;
   userRole?: string;
   onDeleteGoal?: (goalId: string) => void;
+  onUpdateProgress?: (goalId: string, progress: number) => void;
 }
 
 export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
@@ -30,7 +31,8 @@ export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
   onJoin,
   onViewDetails,
   userRole,
-  onDeleteGoal
+  onDeleteGoal,
+  onUpdateProgress
 }) => {
   const [selectedRole, setSelectedRole] = useState<'coach' | 'lead' | 'member'>('member');
   const [isJoining, setIsJoining] = useState(false);
@@ -231,6 +233,56 @@ export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
             </div>
           )}
         </div>
+
+        {/* Admin Progress Controls */}
+        {isAdmin && onUpdateProgress && (
+          <div className="flex items-center gap-2 pt-2 border-t">
+            <span className="text-xs text-muted-foreground">Update Progress:</span>
+            <div className="flex items-center gap-1 ml-auto">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUpdateProgress(goal.id, Math.max(0, goal.progress - 10));
+                }}
+                disabled={goal.progress <= 0}
+                title="Decrease Progress"
+              >
+                <Minus className="h-3 w-3" />
+              </Button>
+              <span className="text-xs font-medium w-8 text-center">{goal.progress}%</span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUpdateProgress(goal.id, Math.min(100, goal.progress + 10));
+                }}
+                disabled={goal.progress >= 100}
+                title="Increase Progress"
+              >
+                <Plus className="h-3 w-3" />
+              </Button>
+              {goal.progress !== 100 && (
+                <Button
+                  size="sm"
+                  className="h-7 px-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onUpdateProgress(goal.id, 100);
+                  }}
+                  title="Mark as Complete"
+                >
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  <span className="text-xs">Complete</span>
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="flex gap-2 pt-2 border-t">
