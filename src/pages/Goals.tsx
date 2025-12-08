@@ -37,6 +37,7 @@ const Goals = () => {
   const {
     assignments,
     notifications,
+    createAssignment,
     acknowledgeNotification,
     acknowledgeAllNotifications,
     joinWorkGoal,
@@ -87,6 +88,7 @@ const Goals = () => {
         userRole={profile?.role}
         assignments={assignments}
         onAddGoal={addGoal}
+        onCreateAssignment={createAssignment}
         onEditGoal={editGoal}
         onDeleteGoal={deleteGoal}
         onRestoreGoal={restoreGoal}

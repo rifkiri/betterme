@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { SimpleAddGoalDialog } from './SimpleAddGoalDialog';
+import { TwoStepAddGoalDialog } from './TwoStepAddGoalDialog';
 import { JoinGoalDialog } from './JoinGoalDialog';
 import { DeletedGoalsDialog } from './DeletedGoalsDialog';
 import { GoalDetailsDialog } from './GoalDetailsDialog';
@@ -30,7 +30,8 @@ interface EnhancedGoalsSectionProps {
   currentUserId?: string;
   userRole?: string;
   assignments: GoalAssignment[];
-  onAddGoal: (goal: Omit<Goal, 'id' | 'progress' | 'createdDate'>) => void;
+  onAddGoal: (goal: Omit<Goal, 'id' | 'progress' | 'createdDate'>) => Promise<string | undefined>;
+  onCreateAssignment?: (assignment: Omit<GoalAssignment, 'id' | 'assignedDate'>, goalCreatorId?: string) => Promise<void>;
   onEditGoal: (id: string, updates: Partial<Goal>) => void;
   onDeleteGoal: (id: string) => void;
   onRestoreGoal: (id: string) => void;
@@ -55,6 +56,7 @@ export const EnhancedGoalsSection = ({
   userRole,
   assignments,
   onAddGoal,
+  onCreateAssignment,
   onEditGoal,
   onDeleteGoal,
   onRestoreGoal,
@@ -635,8 +637,9 @@ export const EnhancedGoalsSection = ({
                 <p className="text-sm text-muted-foreground">Goals currently in progress</p>
               </div>
               <div className="flex gap-3">
-                <SimpleAddGoalDialog 
+                <TwoStepAddGoalDialog 
                   onAddGoal={onAddGoal} 
+                  onCreateAssignment={onCreateAssignment!}
                   availableUsers={availableUsers}
                   currentUserId={currentUserId}
                 />

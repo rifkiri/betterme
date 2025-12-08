@@ -23,11 +23,11 @@ export const useGoalsManager = ({
   setDeletedGoals,
 }: UseGoalsManagerProps) => {
   
-  const addGoal = async (goal: Omit<Goal, 'id' | 'progress'>) => {
+  const addGoal = async (goal: Omit<Goal, 'id' | 'progress'>): Promise<string | undefined> => {
     if (!userId) {
       console.log('No user ID for adding goal');
       toast.error('Please sign in to add goals');
-      return;
+      return undefined;
     }
 
     const newGoal: Goal = {
@@ -42,9 +42,11 @@ export const useGoalsManager = ({
       await supabaseDataService.addGoal({ ...newGoal, userId });
       await loadAllData();
       toast.success('Goal added successfully');
+      return newGoal.id; // Return the created goal ID
     } catch (error) {
       console.error('Failed to add goal for user', userId, ':', error);
       toast.error('Failed to add goal');
+      return undefined;
     }
   };
 
