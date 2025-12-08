@@ -51,6 +51,7 @@ export const useProductivity = () => {
     userId: productivityData.userId,
     loadAllData: productivityData.loadAllData,
     goals: productivityData.goals,
+    allGoals: productivityData.allGoals,
     setGoals: productivityData.setGoals,
     deletedGoals: productivityData.deletedGoals,
     setDeletedGoals: productivityData.setDeletedGoals,
