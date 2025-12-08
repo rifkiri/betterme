@@ -642,6 +642,7 @@ export const EnhancedGoalsSection = ({
                   onCreateAssignment={onCreateAssignment!}
                   availableUsers={availableUsers}
                   currentUserId={currentUserId}
+                  userRole={userRole}
                 />
                 <DeletedGoalsDialog
                   deletedGoals={deletedGoals}

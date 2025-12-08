@@ -20,7 +20,6 @@ import { z } from 'zod';
 import { Goal, GoalAssignment } from '@/types/productivity';
 import { getSubcategoryOptions, mapSubcategoryDisplayToDatabase } from '@/utils/goalCategoryUtils';
 import { GoalVisibilitySelector, GoalVisibility } from '@/components/ui/GoalVisibilitySelector';
-import { useUserRole } from '@/hooks/useUserRole';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -38,6 +37,7 @@ interface TwoStepAddGoalDialogProps {
   onCreateAssignment: (assignment: Omit<GoalAssignment, 'id' | 'assignedDate'>, goalCreatorId?: string) => Promise<void>;
   availableUsers?: Array<{ id: string; name: string; role: string }>;
   currentUserId?: string;
+  userRole?: string;
 }
 
 type Step = 'details' | 'members';
@@ -46,7 +46,8 @@ export const TwoStepAddGoalDialog = ({
   onAddGoal, 
   onCreateAssignment,
   availableUsers = [], 
-  currentUserId 
+  currentUserId,
+  userRole
 }: TwoStepAddGoalDialogProps) => {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>('details');
@@ -60,7 +61,9 @@ export const TwoStepAddGoalDialog = ({
   // Store goal data from step 1
   const [pendingGoalData, setPendingGoalData] = useState<FormData | null>(null);
   
-  const { isTeamMember, isManagerOrAdmin } = useUserRole();
+  // Derive role flags from prop
+  const isTeamMember = userRole === 'team-member';
+  const isManagerOrAdmin = userRole === 'manager' || userRole === 'admin';
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
