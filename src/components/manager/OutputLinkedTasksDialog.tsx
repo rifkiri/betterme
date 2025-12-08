@@ -6,6 +6,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Calendar, User, CheckSquare, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { User as UserType } from '@/types/userTypes';
+import { isTaskOverdue } from '@/utils/dateUtils';
+import { cn } from '@/lib/utils';
 
 interface LinkedTask {
   id: string;
@@ -60,34 +62,57 @@ export const OutputLinkedTasksDialog = ({
       <ScrollArea className="max-h-[60vh]">
         {tasks.length > 0 ? (
           <div className="space-y-3 pr-4">
-            {tasks.map((task) => (
-              <Card key={task.id} className="overflow-hidden">
-                <CardContent className="p-4">
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <CheckSquare className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                        <h4 className="font-medium text-sm leading-tight">{task.title}</h4>
+            {tasks.map((task) => {
+              const isOverdue = isTaskOverdue(task.dueDate);
+              
+              return (
+                <Card 
+                  key={task.id} 
+                  className={cn(
+                    "overflow-hidden",
+                    isOverdue && "border-destructive/50 bg-destructive/5"
+                  )}
+                >
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <CheckSquare className={cn(
+                            "h-4 w-4 flex-shrink-0",
+                            isOverdue ? "text-destructive" : "text-muted-foreground"
+                          )} />
+                          <h4 className="font-medium text-sm leading-tight">{task.title}</h4>
+                        </div>
+                        <Badge variant={getPriorityVariant(task.priority)} className="text-xs flex-shrink-0">
+                          {task.priority}
+                        </Badge>
                       </div>
-                      <Badge variant={getPriorityVariant(task.priority)} className="text-xs flex-shrink-0">
-                        {task.priority}
-                      </Badge>
+                      
+                      <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className={cn(
+                            "h-3.5 w-3.5",
+                            isOverdue && "text-destructive"
+                          )} />
+                          <span className={cn(isOverdue && "text-destructive font-medium")}>
+                            Due: {format(task.dueDate, 'MMM d, yyyy')}
+                          </span>
+                          {isOverdue && (
+                            <Badge variant="destructive" className="text-xs ml-1">
+                              Overdue
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <User className="h-3.5 w-3.5" />
+                          <span>Owner: {getOwnerName(task.userId)}</span>
+                        </div>
+                      </div>
                     </div>
-                    
-                    <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5" />
-                        <span>Due: {format(task.dueDate, 'MMM d, yyyy')}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <User className="h-3.5 w-3.5" />
-                        <span>Owner: {getOwnerName(task.userId)}</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-8 text-muted-foreground">
