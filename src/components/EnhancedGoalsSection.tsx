@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SimpleAddGoalDialog } from './SimpleAddGoalDialog';
 import { JoinGoalDialog } from './JoinGoalDialog';
 import { DeletedGoalsDialog } from './DeletedGoalsDialog';
@@ -75,6 +76,9 @@ export const EnhancedGoalsSection = ({
   const [marketplaceSortBy, setMarketplaceSortBy] = useState('newest');
   const [showDeletedGoals, setShowDeletedGoals] = useState(false);
   
+  // Completed goals filter state
+  const [completedGoalTypeFilter, setCompletedGoalTypeFilter] = useState<'all' | 'work' | 'personal'>('all');
+  
   const isAdmin = userRole === 'admin';
 
   // Handle opening goal details with better error handling
@@ -132,10 +136,14 @@ export const EnhancedGoalsSection = ({
   const completedGoals = useMemo(() => {
     // Use allGoals to show all completed goals the user can access
     // RLS policies already filter what goals the user can see
-    return allGoals.filter(goal => 
-      goal.progress >= 100 && !goal.archived
-    );
-  }, [allGoals]);
+    return allGoals.filter(goal => {
+      const isCompleted = goal.progress >= 100;
+      const isNotArchived = !goal.archived;
+      const matchesType = completedGoalTypeFilter === 'all' || goal.category === completedGoalTypeFilter;
+      
+      return isCompleted && isNotArchived && matchesType;
+    });
+  }, [allGoals, completedGoalTypeFilter]);
 
   const isManager = userRole === 'manager' || userRole === 'admin';
 
@@ -562,9 +570,35 @@ export const EnhancedGoalsSection = ({
 
         <TabsContent value="completed" className="space-y-4">
           <Card className="p-6">
-            <div className="mb-4">
-              <h3 className="text-lg font-medium">Completed Goals</h3>
-              <p className="text-sm text-gray-600">Goals that have been accomplished</p>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-medium">Completed Goals</h3>
+                <p className="text-sm text-muted-foreground">Goals that have been accomplished</p>
+              </div>
+              
+              <Select 
+                value={completedGoalTypeFilter} 
+                onValueChange={(v) => setCompletedGoalTypeFilter(v as 'all' | 'work' | 'personal')}
+              >
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="work">
+                    <div className="flex items-center gap-2">
+                      <Briefcase className="h-4 w-4" />
+                      <span>Work Goals</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="personal">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      <span>Personal Goals</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             {completedGoals.length === 0 ? (
