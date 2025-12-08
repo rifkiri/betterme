@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Goal, GoalAssignment } from '@/types/productivity';
-import { Briefcase, Users, User, Calendar, TrendingUp, UserPlus, CheckCircle } from 'lucide-react';
+import { Briefcase, Users, User, Calendar, TrendingUp, UserPlus, CheckCircle, Trash2 } from 'lucide-react';
 import { mapSubcategoryDatabaseToDisplay } from '@/utils/goalCategoryUtils';
 import { format } from 'date-fns';
 
@@ -17,6 +17,8 @@ interface MarketplaceGoalCardProps {
   isJoined: boolean;
   onJoin: (goalId: string, role?: 'coach' | 'lead' | 'member') => void;
   onViewDetails: (goal: Goal) => void;
+  userRole?: string;
+  onDeleteGoal?: (goalId: string) => void;
 }
 
 export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
@@ -26,7 +28,9 @@ export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
   currentUserId,
   isJoined,
   onJoin,
-  onViewDetails
+  onViewDetails,
+  userRole,
+  onDeleteGoal
 }) => {
   const [selectedRole, setSelectedRole] = useState<'coach' | 'lead' | 'member'>('member');
   const [isJoining, setIsJoining] = useState(false);
@@ -41,6 +45,8 @@ export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
   const isCoachAvailable = !coach;
   const isLeadAvailable = !lead;
   const isUserOwnGoal = goal.userId === currentUserId || goal.createdBy === currentUserId;
+  const isAdmin = userRole === 'admin';
+  const canDeleteGoal = isAdmin || isUserOwnGoal;
 
   const handleQuickJoin = async () => {
     if (!selectedRole) {
@@ -78,8 +84,23 @@ export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
 
   return (
     <Card className="hover:shadow-lg transition-all duration-300 relative overflow-hidden">
-      {/* Status Badges */}
-      <div className="absolute top-2 right-2 z-10 flex gap-2">
+      {/* Status Badges and Admin Delete */}
+      <div className="absolute top-2 right-2 z-10 flex gap-2 items-center">
+        {/* Admin/Owner Delete Button */}
+        {canDeleteGoal && onDeleteGoal && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0 text-destructive hover:bg-destructive/10"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDeleteGoal(goal.id);
+            }}
+            title="Delete Goal"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
         {isUserOwnGoal && (
           <Badge className="bg-primary text-primary-foreground">
             Your Goal
