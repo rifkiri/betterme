@@ -283,7 +283,7 @@ export const TwoStepAddGoalDialog = ({
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-1">
+        <ScrollArea className="flex-1 max-h-[60vh] overflow-auto px-1">
           {step === 'details' ? (
             // Step 1: Goal Details
             <div className="pb-4">
