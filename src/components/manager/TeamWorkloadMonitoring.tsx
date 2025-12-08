@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Target, BarChart3, TrendingUp, UserCog, UserCheck, Calendar, CheckCircle, FileText, Eye } from 'lucide-react';
+import { Users, Target, BarChart3, TrendingUp, UserCog, UserCheck, Calendar, CheckCircle, FileText, Eye, CheckSquare, User as UserIcon } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { supabaseGoalsService } from '@/services/SupabaseGoalsService';
@@ -13,9 +13,11 @@ import { User } from '@/types/userTypes';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { TeamWorkloadCharts } from './TeamWorkloadCharts';
 import { UserGoalAssignmentCard } from './UserGoalAssignmentCard';
+import { UserOutputOwnershipCard } from './UserOutputOwnershipCard';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { LayoutGrid, UserSquare } from 'lucide-react';
 import { GoalLinkedOutputsDialog } from './GoalLinkedOutputsDialog';
+import { OutputLinkedTasksDialog } from './OutputLinkedTasksDialog';
 
 interface TeamWorkloadMonitoringProps {
   teamData: any;
@@ -78,6 +80,37 @@ interface UserGoalAssignment {
   };
 }
 
+interface LinkedTask {
+  id: string;
+  title: string;
+  priority: 'Low' | 'Medium' | 'High';
+  dueDate: Date;
+  userId: string;
+}
+
+interface OutputOwnership {
+  id: string;
+  title: string;
+  progress: number;
+  dueDate: Date;
+  userId: string;
+  userName: string;
+  linkedTasks: LinkedTask[];
+}
+
+interface UserOutputOwnership {
+  userId: string;
+  userName: string;
+  email: string;
+  outputs: Array<{
+    outputId: string;
+    outputTitle: string;
+    progress: number;
+    linkedTasksCount: number;
+  }>;
+  totalOutputs: number;
+}
+
 export const TeamWorkloadMonitoring = ({ 
   teamData, 
   isLoading, 
@@ -88,12 +121,16 @@ export const TeamWorkloadMonitoring = ({
     memberWorkloads: MemberWorkload[];
     workGoals: WorkGoal[];
     userGoalAssignments: UserGoalAssignment[];
-  }>({ memberWorkloads: [], workGoals: [], userGoalAssignments: [] });
+    outputOwnerships: OutputOwnership[];
+    userOutputOwnerships: UserOutputOwnership[];
+  }>({ memberWorkloads: [], workGoals: [], userGoalAssignments: [], outputOwnerships: [], userOutputOwnerships: [] });
   const [loadingWorkload, setLoadingWorkload] = useState(false);
   const [sortBy, setSortBy] = useState<'goals' | 'outputs' | 'tasks' | 'name'>('goals');
   const [userProfiles, setUserProfiles] = useState<Map<string, User>>(new Map());
   const [goalViewType, setGoalViewType] = useState<'goal' | 'user'>('goal');
   const [selectedGoalForOutputs, setSelectedGoalForOutputs] = useState<WorkGoal | null>(null);
+  const [outputViewType, setOutputViewType] = useState<'output' | 'user'>('output');
+  const [selectedOutputForTasks, setSelectedOutputForTasks] = useState<OutputOwnership | null>(null);
 
   useEffect(() => {
     console.log('TeamWorkloadMonitoring useEffect - teamData:', teamData);
@@ -279,7 +316,65 @@ export const TeamWorkloadMonitoring = ({
       // Convert map to array for userGoalAssignments
       const userGoalAssignments = Array.from(userAssignmentMap.values());
 
-      setWorkloadData({ memberWorkloads, workGoals: workGoalsData, userGoalAssignments });
+      // Build output ownership data
+      const outputOwnerships: OutputOwnership[] = [];
+      const userOutputOwnershipMap = new Map<string, UserOutputOwnership>();
+      
+      // Collect all active outputs and their linked tasks
+      for (const userProfile of allUsers) {
+        const userOutputs = await supabaseDataService.getWeeklyOutputs(userProfile.id);
+        const userTasks = await supabaseDataService.getTasks(userProfile.id);
+        
+        // Filter to active outputs only
+        const activeOutputs = userOutputs.filter(o => !o.isDeleted && o.progress < 100);
+        
+        for (const output of activeOutputs) {
+          // Get active tasks linked to this output
+          const linkedTasks: LinkedTask[] = userTasks
+            .filter(t => t.weeklyOutputId === output.id && !t.completed && !t.isDeleted)
+            .map(t => ({
+              id: t.id,
+              title: t.title,
+              priority: t.priority as 'Low' | 'Medium' | 'High',
+              dueDate: t.dueDate,
+              userId: userProfile.id
+            }));
+          
+          outputOwnerships.push({
+            id: output.id,
+            title: output.title,
+            progress: output.progress,
+            dueDate: output.dueDate,
+            userId: userProfile.id,
+            userName: userProfile.name,
+            linkedTasks
+          });
+          
+          // Build user-centric output ownership data
+          if (!userOutputOwnershipMap.has(userProfile.id)) {
+            userOutputOwnershipMap.set(userProfile.id, {
+              userId: userProfile.id,
+              userName: userProfile.name,
+              email: userProfile.email,
+              outputs: [],
+              totalOutputs: 0
+            });
+          }
+          
+          const userOwnership = userOutputOwnershipMap.get(userProfile.id)!;
+          userOwnership.outputs.push({
+            outputId: output.id,
+            outputTitle: output.title,
+            progress: output.progress,
+            linkedTasksCount: linkedTasks.length
+          });
+          userOwnership.totalOutputs++;
+        }
+      }
+      
+      const userOutputOwnerships = Array.from(userOutputOwnershipMap.values());
+
+      setWorkloadData({ memberWorkloads, workGoals: workGoalsData, userGoalAssignments, outputOwnerships, userOutputOwnerships });
     } catch (error) {
       console.error('Error loading workload data:', error);
     } finally {
@@ -717,11 +812,111 @@ export const TeamWorkloadMonitoring = ({
               <p className="text-gray-500">Loading workload data...</p>
             </div>
           ) : (
-            <TeamWorkloadCharts 
-              chartData={chartData} 
-              chartType="outputs" 
-              onMemberClick={onSelectEmployee}
-            />
+            <div className="space-y-6">
+              <TeamWorkloadCharts 
+                chartData={chartData} 
+                chartType="outputs" 
+                onMemberClick={onSelectEmployee}
+              />
+              
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Output Ownership</CardTitle>
+                    <ToggleGroup type="single" value={outputViewType} onValueChange={(value) => value && setOutputViewType(value as 'output' | 'user')}>
+                      <ToggleGroupItem value="output" aria-label="Output view">
+                        <LayoutGrid className="h-4 w-4 mr-2" />
+                        Output View
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="user" aria-label="User view">
+                        <UserSquare className="h-4 w-4 mr-2" />
+                        User View
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+                  </div>
+                  <CardDescription>
+                    {outputViewType === 'output' 
+                      ? 'Active outputs with linked tasks' 
+                      : 'Team members and their active outputs'}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {outputViewType === 'output' ? (
+                    // Output View
+                    workloadData.outputOwnerships.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {workloadData.outputOwnerships.map((output) => (
+                          <Card key={output.id} className="p-4 hover:shadow-md transition-shadow">
+                            <div className="space-y-3">
+                              <div className="flex items-start justify-between">
+                                <h3 className="font-medium text-gray-900 leading-tight">{output.title}</h3>
+                                <Badge variant="outline" className="ml-2 flex-shrink-0">
+                                  {output.progress}%
+                                </Badge>
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <Progress value={output.progress} className="h-2" />
+                              </div>
+
+                              <div className="space-y-2 text-sm">
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="h-3 w-3 text-muted-foreground" />
+                                  <span className="text-gray-600">Due:</span>
+                                  <span className="font-medium">
+                                    {output.dueDate ? new Date(output.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No date'}
+                                  </span>
+                                </div>
+                                
+                                <div className="flex items-center gap-2">
+                                  <UserIcon className="h-3 w-3 text-muted-foreground" />
+                                  <span className="text-gray-600">Owner:</span>
+                                  <span className="font-medium">{output.userName}</span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2 pt-2 border-t">
+                                <Badge variant="secondary" className="text-xs">
+                                  <CheckSquare className="h-3 w-3 mr-1" />
+                                  {output.linkedTasks.length} {output.linkedTasks.length === 1 ? 'task' : 'tasks'}
+                                </Badge>
+                              </div>
+
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="w-full"
+                                onClick={() => setSelectedOutputForTasks(output)}
+                              >
+                                <Eye className="h-3.5 w-3.5 mr-2" />
+                                View Details
+                              </Button>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-center text-gray-500 py-8">No active outputs found</p>
+                    )
+                  ) : (
+                    // User View
+                    workloadData.userOutputOwnerships.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {workloadData.userOutputOwnerships.map((ownership) => (
+                          <UserOutputOwnershipCard
+                            key={ownership.userId}
+                            ownership={ownership}
+                            onViewDetails={onSelectEmployee}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-center text-gray-500 py-8">No output ownership data found</p>
+                    )
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           )}
         </TabsContent>
 
@@ -747,6 +942,15 @@ export const TeamWorkloadMonitoring = ({
         onOpenChange={(open) => !open && setSelectedGoalForOutputs(null)}
         goalTitle={selectedGoalForOutputs?.title || ''}
         outputs={selectedGoalForOutputs?.linkedOutputs || []}
+        userProfiles={userProfiles}
+      />
+
+      {/* Output Linked Tasks Dialog */}
+      <OutputLinkedTasksDialog
+        open={!!selectedOutputForTasks}
+        onOpenChange={(open) => !open && setSelectedOutputForTasks(null)}
+        outputTitle={selectedOutputForTasks?.title || ''}
+        tasks={selectedOutputForTasks?.linkedTasks || []}
         userProfiles={userProfiles}
       />
     </div>
