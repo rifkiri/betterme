@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CalendarIcon, Plus, Target, Users, UserCog, UserCheck, User, X, Info, ArrowRight, ArrowLeft, SkipForward } from 'lucide-react';
 import { format } from 'date-fns';
@@ -77,7 +77,8 @@ export const TwoStepAddGoalDialog = ({
     },
   });
 
-  const watchCategory = form.watch('category');
+  // Use useWatch for more reliable reactivity when category changes
+  const watchCategory = useWatch({ control: form.control, name: 'category' });
 
   const resetDialog = () => {
     form.reset();
