@@ -236,7 +236,7 @@ export const TeamWorkloadMonitoring = ({
         // Get tasks and outputs counts
         const tasks = await supabaseDataService.getTasks(userProfile.id);
         const outputs = await supabaseDataService.getWeeklyOutputs(userProfile.id);
-        const activeTasks = tasks.filter(t => !t.completed && !t.isDeleted).length;
+        const activeTasks = tasks.filter(t => !t.completed && !t.isDeleted && t.visibility === 'all').length;
         const activeOutputs = outputs.filter(o => !o.isDeleted && o.progress < 100).length;
 
         memberWorkloads.push({
@@ -367,7 +367,7 @@ export const TeamWorkloadMonitoring = ({
         for (const output of activeOutputs) {
           // Get active tasks linked to this output
           const linkedTasks: LinkedTask[] = userTasks
-            .filter(t => t.weeklyOutputId === output.id && !t.completed && !t.isDeleted)
+            .filter(t => t.weeklyOutputId === output.id && !t.completed && !t.isDeleted && t.visibility === 'all')
             .map(t => ({
               id: t.id,
               title: t.title,
@@ -424,7 +424,7 @@ export const TeamWorkloadMonitoring = ({
       // Collect all active tasks from all users
       for (const userProfile of allUsers) {
         const userTasks = await supabaseDataService.getTasks(userProfile.id);
-        const activeTasks = userTasks.filter(t => !t.completed && !t.isDeleted);
+        const activeTasks = userTasks.filter(t => !t.completed && !t.isDeleted && t.visibility === 'all');
         
         for (const task of activeTasks) {
           allActiveTasks.push({
