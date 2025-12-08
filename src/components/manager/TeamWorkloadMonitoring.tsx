@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Target, BarChart3, TrendingUp, UserCog, UserCheck, Calendar, CheckCircle } from 'lucide-react';
+import { Users, Target, BarChart3, TrendingUp, UserCog, UserCheck, Calendar, CheckCircle, FileText, Eye } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { supabaseGoalsService } from '@/services/SupabaseGoalsService';
@@ -15,11 +15,20 @@ import { TeamWorkloadCharts } from './TeamWorkloadCharts';
 import { UserGoalAssignmentCard } from './UserGoalAssignmentCard';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { LayoutGrid, UserSquare } from 'lucide-react';
+import { GoalLinkedOutputsDialog } from './GoalLinkedOutputsDialog';
 
 interface TeamWorkloadMonitoringProps {
   teamData: any;
   isLoading: boolean;
   onSelectEmployee: (employeeId: string) => void;
+}
+
+interface LinkedOutput {
+  id: string;
+  title: string;
+  progress: number;
+  dueDate: Date;
+  userId: string;
 }
 
 interface WorkGoal {
@@ -29,6 +38,7 @@ interface WorkGoal {
   coach?: string;
   leads: string[];
   members: string[];
+  linkedOutputs: LinkedOutput[];
   outputs: any[];
   tasks: any[];
 }
@@ -83,6 +93,7 @@ export const TeamWorkloadMonitoring = ({
   const [sortBy, setSortBy] = useState<'goals' | 'outputs' | 'tasks' | 'name'>('goals');
   const [userProfiles, setUserProfiles] = useState<Map<string, User>>(new Map());
   const [goalViewType, setGoalViewType] = useState<'goal' | 'user'>('goal');
+  const [selectedGoalForOutputs, setSelectedGoalForOutputs] = useState<WorkGoal | null>(null);
 
   useEffect(() => {
     console.log('TeamWorkloadMonitoring useEffect - teamData:', teamData);
@@ -172,6 +183,24 @@ export const TeamWorkloadMonitoring = ({
       const allGoals = await supabaseGoalsService.getAllGoals();
       // Note: allAssignments is already fetched above
       
+      // Fetch all outputs from all users to create a lookup by linked_goal_id
+      const allOutputsWithGoalLinks: Array<LinkedOutput & { linkedGoalId: string }> = [];
+      for (const userProfile of allUsers) {
+        const userOutputs = await supabaseDataService.getWeeklyOutputs(userProfile.id);
+        for (const output of userOutputs) {
+          if (output.linkedGoalId && !output.isDeleted) {
+            allOutputsWithGoalLinks.push({
+              id: output.id,
+              title: output.title,
+              progress: output.progress,
+              dueDate: output.dueDate,
+              userId: userProfile.id,
+              linkedGoalId: output.linkedGoalId
+            });
+          }
+        }
+      }
+      
       // Create user-centric goal assignment data
       const userAssignmentMap = new Map<string, UserGoalAssignment>();
       
@@ -216,6 +245,11 @@ export const TeamWorkloadMonitoring = ({
           userAssignment.roleBreakdown[assignment.role]++;
         }
         
+        // Get linked outputs for this goal from pre-fetched outputs (efficient lookup)
+        const linkedOutputsForGoal: LinkedOutput[] = allOutputsWithGoalLinks
+          .filter(o => o.linkedGoalId === goal.id)
+          .map(({ linkedGoalId, ...output }) => output);
+        
         // Get linked outputs and tasks - Note: will need to use ItemLinkageService in the future
         const outputs: any[] = [];
 
@@ -236,6 +270,7 @@ export const TeamWorkloadMonitoring = ({
           coach: coach ? userProfilesMap.get(coach.userId)?.name : undefined,
           leads: leads.map(l => userProfilesMap.get(l.userId)?.name).filter(Boolean),
           members: members.map(m => userProfilesMap.get(m.userId)?.name).filter(Boolean),
+          linkedOutputs: linkedOutputsForGoal,
           outputs: outputs.filter(Boolean),
           tasks
         });
@@ -628,6 +663,23 @@ export const TeamWorkloadMonitoring = ({
                                     )}
                                   </div>
                                 )}
+
+                                <div className="flex items-center gap-2 pt-2 border-t">
+                                  <Badge variant="secondary" className="text-xs">
+                                    <FileText className="h-3 w-3 mr-1" />
+                                    {goal.linkedOutputs.length} {goal.linkedOutputs.length === 1 ? 'output' : 'outputs'}
+                                  </Badge>
+                                </div>
+
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="w-full"
+                                  onClick={() => setSelectedGoalForOutputs(goal)}
+                                >
+                                  <Eye className="h-3.5 w-3.5 mr-2" />
+                                  View Details
+                                </Button>
                               </div>
                             </Card>
                           );
@@ -688,6 +740,15 @@ export const TeamWorkloadMonitoring = ({
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Goal Linked Outputs Dialog */}
+      <GoalLinkedOutputsDialog
+        open={!!selectedGoalForOutputs}
+        onOpenChange={(open) => !open && setSelectedGoalForOutputs(null)}
+        goalTitle={selectedGoalForOutputs?.title || ''}
+        outputs={selectedGoalForOutputs?.linkedOutputs || []}
+        userProfiles={userProfiles}
+      />
     </div>
   );
 };
