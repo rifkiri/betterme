@@ -4,6 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { FileText, CheckSquare } from 'lucide-react';
+import { isWeeklyOutputOverdue } from '@/utils/dateUtils';
+import { cn } from '@/lib/utils';
 
 interface UserOutputOwnership {
   userId: string;
@@ -14,6 +16,7 @@ interface UserOutputOwnership {
     outputTitle: string;
     progress: number;
     linkedTasksCount: number;
+    dueDate: Date;
   }>;
   totalOutputs: number;
 }
@@ -63,27 +66,49 @@ export const UserOutputOwnershipCard = ({
           {activeOutputs.length === 0 ? (
             <p className="text-sm text-muted-foreground italic">No active outputs</p>
           ) : (
-            activeOutputs.map((output) => (
-              <div key={output.outputId} className="border-l-2 border-muted pl-3 py-1">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {output.outputTitle}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <Badge variant="outline" className="text-xs">
-                        <CheckSquare className="h-3 w-3 mr-1" />
-                        {output.linkedTasksCount} {output.linkedTasksCount === 1 ? 'task' : 'tasks'}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {output.progress}% complete
-                      </span>
+            activeOutputs.map((output) => {
+              const isOverdue = isWeeklyOutputOverdue(output.dueDate, output.progress);
+              
+              return (
+                <div 
+                  key={output.outputId} 
+                  className={cn(
+                    "border-l-2 pl-3 py-1",
+                    isOverdue ? "border-destructive" : "border-muted"
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className={cn(
+                        "text-sm font-medium truncate",
+                        isOverdue ? "text-destructive" : "text-foreground"
+                      )}>
+                        {output.outputTitle}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <Badge variant="outline" className="text-xs">
+                          <CheckSquare className="h-3 w-3 mr-1" />
+                          {output.linkedTasksCount} {output.linkedTasksCount === 1 ? 'task' : 'tasks'}
+                        </Badge>
+                        <span className={cn(
+                          "text-xs",
+                          isOverdue ? "text-destructive font-medium" : "text-muted-foreground"
+                        )}>
+                          {output.progress}% complete{isOverdue && ' (Overdue)'}
+                        </span>
+                      </div>
                     </div>
+                    <Progress 
+                      value={output.progress} 
+                      className={cn(
+                        "w-16 h-2",
+                        isOverdue && "[&>div]:bg-destructive"
+                      )} 
+                    />
                   </div>
-                  <Progress value={output.progress} className="w-16 h-2" />
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 

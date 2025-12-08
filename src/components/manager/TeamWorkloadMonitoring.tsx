@@ -18,6 +18,8 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { LayoutGrid, UserSquare } from 'lucide-react';
 import { GoalLinkedOutputsDialog } from './GoalLinkedOutputsDialog';
 import { OutputLinkedTasksDialog } from './OutputLinkedTasksDialog';
+import { isWeeklyOutputOverdue } from '@/utils/dateUtils';
+import { cn } from '@/lib/utils';
 
 interface TeamWorkloadMonitoringProps {
   teamData: any;
@@ -107,6 +109,7 @@ interface UserOutputOwnership {
     outputTitle: string;
     progress: number;
     linkedTasksCount: number;
+    dueDate: Date;
   }>;
   totalOutputs: number;
 }
@@ -366,7 +369,8 @@ export const TeamWorkloadMonitoring = ({
             outputId: output.id,
             outputTitle: output.title,
             progress: output.progress,
-            linkedTasksCount: linkedTasks.length
+            linkedTasksCount: linkedTasks.length,
+            dueDate: output.dueDate
           });
           userOwnership.totalOutputs++;
         }
@@ -845,55 +849,92 @@ export const TeamWorkloadMonitoring = ({
                     // Output View
                     workloadData.outputOwnerships.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {workloadData.outputOwnerships.map((output) => (
-                          <Card key={output.id} className="p-4 hover:shadow-md transition-shadow">
-                            <div className="space-y-3">
-                              <div className="flex items-start justify-between">
-                                <h3 className="font-medium text-gray-900 leading-tight">{output.title}</h3>
-                                <Badge variant="outline" className="ml-2 flex-shrink-0">
-                                  {output.progress}%
-                                </Badge>
-                              </div>
-                              
-                              <div className="space-y-2">
-                                <Progress value={output.progress} className="h-2" />
-                              </div>
-
-                              <div className="space-y-2 text-sm">
-                                <div className="flex items-center gap-2">
-                                  <Calendar className="h-3 w-3 text-muted-foreground" />
-                                  <span className="text-gray-600">Due:</span>
-                                  <span className="font-medium">
-                                    {output.dueDate ? new Date(output.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No date'}
-                                  </span>
+                        {workloadData.outputOwnerships.map((output) => {
+                          const isOverdue = isWeeklyOutputOverdue(output.dueDate, output.progress);
+                          
+                          return (
+                            <Card 
+                              key={output.id} 
+                              className={cn(
+                                "p-4 hover:shadow-md transition-shadow",
+                                isOverdue && "border-destructive/50 bg-destructive/5"
+                              )}
+                            >
+                              <div className="space-y-3">
+                                <div className="flex items-start justify-between">
+                                  <h3 className={cn(
+                                    "font-medium leading-tight",
+                                    isOverdue ? "text-destructive" : "text-foreground"
+                                  )}>
+                                    {output.title}
+                                  </h3>
+                                  <Badge 
+                                    variant={isOverdue ? "destructive" : "outline"} 
+                                    className="ml-2 flex-shrink-0"
+                                  >
+                                    {output.progress}%
+                                  </Badge>
                                 </div>
                                 
-                                <div className="flex items-center gap-2">
-                                  <UserIcon className="h-3 w-3 text-muted-foreground" />
-                                  <span className="text-gray-600">Owner:</span>
-                                  <span className="font-medium">{output.userName}</span>
+                                <div className="space-y-2">
+                                  <Progress 
+                                    value={output.progress} 
+                                    className={cn(
+                                      "h-2",
+                                      isOverdue && "[&>div]:bg-destructive"
+                                    )} 
+                                  />
                                 </div>
-                              </div>
 
-                              <div className="flex items-center gap-2 pt-2 border-t">
-                                <Badge variant="secondary" className="text-xs">
-                                  <CheckSquare className="h-3 w-3 mr-1" />
-                                  {output.linkedTasks.length} {output.linkedTasks.length === 1 ? 'task' : 'tasks'}
-                                </Badge>
-                              </div>
+                                <div className="space-y-2 text-sm">
+                                  <div className="flex items-center gap-2">
+                                    <Calendar className={cn(
+                                      "h-3 w-3",
+                                      isOverdue ? "text-destructive" : "text-muted-foreground"
+                                    )} />
+                                    <span className={cn(
+                                      isOverdue ? "text-destructive" : "text-muted-foreground"
+                                    )}>Due:</span>
+                                    <span className={cn(
+                                      "font-medium",
+                                      isOverdue && "text-destructive"
+                                    )}>
+                                      {output.dueDate ? new Date(output.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No date'}
+                                    </span>
+                                    {isOverdue && (
+                                      <Badge variant="destructive" className="text-xs ml-1">
+                                        Overdue
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-2">
+                                    <UserIcon className="h-3 w-3 text-muted-foreground" />
+                                    <span className="text-muted-foreground">Owner:</span>
+                                    <span className="font-medium text-foreground">{output.userName}</span>
+                                  </div>
+                                </div>
 
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="w-full"
-                                onClick={() => setSelectedOutputForTasks(output)}
-                              >
-                                <Eye className="h-3.5 w-3.5 mr-2" />
-                                View Details
-                              </Button>
-                            </div>
-                          </Card>
-                        ))}
+                                <div className="flex items-center gap-2 pt-2 border-t">
+                                  <Badge variant="secondary" className="text-xs">
+                                    <CheckSquare className="h-3 w-3 mr-1" />
+                                    {output.linkedTasks.length} {output.linkedTasks.length === 1 ? 'task' : 'tasks'}
+                                  </Badge>
+                                </div>
+
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="w-full"
+                                  onClick={() => setSelectedOutputForTasks(output)}
+                                >
+                                  <Eye className="h-3.5 w-3.5 mr-2" />
+                                  View Details
+                                </Button>
+                              </div>
+                            </Card>
+                          );
+                        })}
                       </div>
                     ) : (
                       <p className="text-center text-gray-500 py-8">No active outputs found</p>
