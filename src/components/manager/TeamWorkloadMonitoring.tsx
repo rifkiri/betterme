@@ -322,7 +322,7 @@ export const TeamWorkloadMonitoring = ({
   ].filter(item => item.value > 0);
 
   const teamStats = {
-    totalGoals: workloadData.memberWorkloads.reduce((sum, m) => sum + m.goalsAssigned, 0),
+    totalGoals: workloadData.workGoals.length,
     totalOutputs: workloadData.memberWorkloads.reduce((sum, m) => sum + m.weeklyOutputs, 0),
     totalTasks: workloadData.memberWorkloads.reduce((sum, m) => sum + m.activeTasks, 0),
     highWorkloadCount: chartData.filter(m => m.workloadLevel === 'high').length
