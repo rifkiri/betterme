@@ -1,4 +1,5 @@
 import { supabaseDataService } from '@/services/SupabaseDataService';
+import { supabase } from '@/integrations/supabase/client';
 import { Goal } from '@/types/productivity';
 import { toast } from 'sonner';
 
@@ -137,6 +138,16 @@ export const useGoalsManager = ({
 
     console.log('🗑️ [DELETE GOAL] Starting delete - Goal:', id, 'User:', userId, 'IsAssigned:', isAssignedGoal);
 
+    // Check if current user is admin
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
+    
+    const isAdmin = profile?.role === 'admin';
+    console.log('🗑️ [DELETE GOAL] User role check - isAdmin:', isAdmin);
+
     // Find the goal to check ownership
     const goalToDelete = goals.find(g => g.id === id);
     if (!goalToDelete) {
@@ -150,9 +161,26 @@ export const useGoalsManager = ({
       goalUserId: goalToDelete.userId,
       currentUserId: userId,
       isOwner: goalToDelete.userId === userId,
-      category: goalToDelete.category
+      category: goalToDelete.category,
+      isAdmin
     });
 
+    // Admin can delete any goal
+    if (isAdmin) {
+      console.log('🗑️ [DELETE GOAL] Admin deleting goal:', id);
+      try {
+        await supabaseDataService.deleteGoalAsAdmin(id);
+        await loadAllData();
+        toast.success('Goal deleted by admin');
+        return;
+      } catch (error) {
+        console.error('[ADMIN] Failed to delete goal:', error);
+        toast.error('Failed to delete goal');
+        return;
+      }
+    }
+
+    // Non-admin: check if this is an assigned goal they cannot delete
     if (isAssignedGoal) {
       console.log('❌ [DELETE GOAL] User cannot delete assigned goal directly. Use leaveWorkGoal instead.');
       toast.error('You cannot delete this goal. You can only leave it if you are assigned to it.');

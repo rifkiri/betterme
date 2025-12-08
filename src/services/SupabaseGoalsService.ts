@@ -396,6 +396,10 @@ export class SupabaseGoalsService {
   async permanentlyDeleteGoal(id: string, userId: string): Promise<void> {
     console.log('Permanently deleting goal:', id, 'for user:', userId);
     
+    // Check if user is admin - admins can delete any goal
+    const userRole = await this.getUserRole(userId);
+    const isAdmin = userRole === 'admin';
+    
     // Step 1: Unlink weekly outputs that reference this goal
     const { error: weeklyOutputsError } = await supabase
       .from('weekly_outputs')
@@ -437,6 +441,45 @@ export class SupabaseGoalsService {
     }
     
     // Step 5: Soft delete the goal by setting both archived and is_deleted flags
+    // Admin can delete any goal, non-admin can only delete their own
+    let query = supabase
+      .from('goals')
+      .update({ 
+        archived: true,
+        is_deleted: true,
+        deleted_date: new Date().toISOString()
+      })
+      .eq('id', id);
+    
+    // Only filter by user_id if not admin
+    if (!isAdmin) {
+      query = query.eq('user_id', userId);
+    }
+
+    const { error } = await query;
+
+    if (error) {
+      console.error('Error permanently deleting goal:', error);
+      throw error;
+    }
+  }
+
+  // Admin-specific method to delete any goal without user_id restriction
+  async deleteGoalAsAdmin(id: string): Promise<void> {
+    console.log('[ADMIN] Soft deleting goal:', id);
+    
+    // First unlink related items
+    await supabase
+      .from('weekly_outputs')
+      .update({ linked_goal_id: null })
+      .eq('linked_goal_id', id);
+    
+    await supabase
+      .from('habits')
+      .update({ linked_goal_id: null })
+      .eq('linked_goal_id', id);
+    
+    // Soft delete the goal
     const { error } = await supabase
       .from('goals')
       .update({ 
@@ -444,11 +487,10 @@ export class SupabaseGoalsService {
         is_deleted: true,
         deleted_date: new Date().toISOString()
       })
-      .eq('id', id)
-      .eq('user_id', userId);
-
+      .eq('id', id);
+      
     if (error) {
-      console.error('Error permanently deleting goal:', error);
+      console.error('[ADMIN] Error deleting goal:', error);
       throw error;
     }
   }
