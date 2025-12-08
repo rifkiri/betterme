@@ -4,21 +4,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Target, BarChart3, TrendingUp, UserCog, UserCheck, Calendar, CheckCircle, FileText, Eye, CheckSquare, User as UserIcon } from 'lucide-react';
+import { Users, Target, BarChart3, TrendingUp, UserCog, UserCheck, Calendar, CheckCircle, FileText, Eye, CheckSquare, User as UserIcon, Clock, Timer } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { supabaseGoalsService } from '@/services/SupabaseGoalsService';
 import { supabaseGoalAssignmentsService } from '@/services/SupabaseGoalAssignmentsService';
+import { TaskPomodoroStatsService } from '@/services/TaskPomodoroStatsService';
 import { User } from '@/types/userTypes';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { TeamWorkloadCharts } from './TeamWorkloadCharts';
 import { UserGoalAssignmentCard } from './UserGoalAssignmentCard';
 import { UserOutputOwnershipCard } from './UserOutputOwnershipCard';
+import { UserTaskOwnershipCard } from './UserTaskOwnershipCard';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { LayoutGrid, UserSquare } from 'lucide-react';
 import { GoalLinkedOutputsDialog } from './GoalLinkedOutputsDialog';
 import { OutputLinkedTasksDialog } from './OutputLinkedTasksDialog';
-import { isWeeklyOutputOverdue } from '@/utils/dateUtils';
+import { TaskPomodoroDetailsDialog } from './TaskPomodoroDetailsDialog';
+import { isWeeklyOutputOverdue, isTaskOverdue } from '@/utils/dateUtils';
 import { cn } from '@/lib/utils';
 
 interface TeamWorkloadMonitoringProps {
@@ -114,6 +117,32 @@ interface UserOutputOwnership {
   totalOutputs: number;
 }
 
+interface TaskOwnership {
+  id: string;
+  title: string;
+  priority: 'Low' | 'Medium' | 'High';
+  dueDate: Date;
+  userId: string;
+  userName: string;
+  pomodoroSessions: number;
+  totalDuration: number;
+}
+
+interface UserTaskOwnership {
+  userId: string;
+  userName: string;
+  email: string;
+  tasks: Array<{
+    taskId: string;
+    taskTitle: string;
+    priority: 'Low' | 'Medium' | 'High';
+    dueDate: Date;
+    pomodoroSessions: number;
+    totalDuration: number;
+  }>;
+  totalTasks: number;
+}
+
 export const TeamWorkloadMonitoring = ({ 
   teamData, 
   isLoading, 
@@ -126,7 +155,9 @@ export const TeamWorkloadMonitoring = ({
     userGoalAssignments: UserGoalAssignment[];
     outputOwnerships: OutputOwnership[];
     userOutputOwnerships: UserOutputOwnership[];
-  }>({ memberWorkloads: [], workGoals: [], userGoalAssignments: [], outputOwnerships: [], userOutputOwnerships: [] });
+    taskOwnerships: TaskOwnership[];
+    userTaskOwnerships: UserTaskOwnership[];
+  }>({ memberWorkloads: [], workGoals: [], userGoalAssignments: [], outputOwnerships: [], userOutputOwnerships: [], taskOwnerships: [], userTaskOwnerships: [] });
   const [loadingWorkload, setLoadingWorkload] = useState(false);
   const [sortBy, setSortBy] = useState<'goals' | 'outputs' | 'tasks' | 'name'>('goals');
   const [userProfiles, setUserProfiles] = useState<Map<string, User>>(new Map());
@@ -134,6 +165,8 @@ export const TeamWorkloadMonitoring = ({
   const [selectedGoalForOutputs, setSelectedGoalForOutputs] = useState<WorkGoal | null>(null);
   const [outputViewType, setOutputViewType] = useState<'output' | 'user'>('output');
   const [selectedOutputForTasks, setSelectedOutputForTasks] = useState<OutputOwnership | null>(null);
+  const [taskViewType, setTaskViewType] = useState<'task' | 'user'>('task');
+  const [selectedTaskForDetails, setSelectedTaskForDetails] = useState<TaskOwnership | null>(null);
 
   useEffect(() => {
     console.log('TeamWorkloadMonitoring useEffect - teamData:', teamData);
@@ -378,7 +411,82 @@ export const TeamWorkloadMonitoring = ({
       
       const userOutputOwnerships = Array.from(userOutputOwnershipMap.values());
 
-      setWorkloadData({ memberWorkloads, workGoals: workGoalsData, userGoalAssignments, outputOwnerships, userOutputOwnerships });
+      // Build task ownership data with Pomodoro stats
+      const allActiveTasks: Array<{
+        id: string;
+        title: string;
+        priority: 'Low' | 'Medium' | 'High';
+        dueDate: Date;
+        userId: string;
+        userName: string;
+      }> = [];
+      
+      // Collect all active tasks from all users
+      for (const userProfile of allUsers) {
+        const userTasks = await supabaseDataService.getTasks(userProfile.id);
+        const activeTasks = userTasks.filter(t => !t.completed && !t.isDeleted);
+        
+        for (const task of activeTasks) {
+          allActiveTasks.push({
+            id: task.id,
+            title: task.title,
+            priority: task.priority as 'Low' | 'Medium' | 'High',
+            dueDate: task.dueDate,
+            userId: userProfile.id,
+            userName: userProfile.name
+          });
+        }
+      }
+      
+      // Batch fetch Pomodoro stats for all tasks
+      const taskIds = allActiveTasks.map(t => t.id);
+      const pomodoroStatsMap = await TaskPomodoroStatsService.getBatchTaskStats(taskIds);
+      
+      // Build task ownerships with Pomodoro data
+      const taskOwnerships: TaskOwnership[] = allActiveTasks.map(task => {
+        const stats = pomodoroStatsMap.get(task.id) || { workSessionCount: 0, totalDuration: 0 };
+        return {
+          id: task.id,
+          title: task.title,
+          priority: task.priority,
+          dueDate: task.dueDate,
+          userId: task.userId,
+          userName: task.userName,
+          pomodoroSessions: stats.workSessionCount,
+          totalDuration: stats.totalDuration
+        };
+      });
+      
+      // Build user-centric task ownership data
+      const userTaskOwnershipMap = new Map<string, UserTaskOwnership>();
+      
+      for (const task of taskOwnerships) {
+        if (!userTaskOwnershipMap.has(task.userId)) {
+          const userProfile = userProfilesMap.get(task.userId);
+          userTaskOwnershipMap.set(task.userId, {
+            userId: task.userId,
+            userName: task.userName,
+            email: userProfile?.email || '',
+            tasks: [],
+            totalTasks: 0
+          });
+        }
+        
+        const userOwnership = userTaskOwnershipMap.get(task.userId)!;
+        userOwnership.tasks.push({
+          taskId: task.id,
+          taskTitle: task.title,
+          priority: task.priority,
+          dueDate: task.dueDate,
+          pomodoroSessions: task.pomodoroSessions,
+          totalDuration: task.totalDuration
+        });
+        userOwnership.totalTasks++;
+      }
+      
+      const userTaskOwnerships = Array.from(userTaskOwnershipMap.values());
+
+      setWorkloadData({ memberWorkloads, workGoals: workGoalsData, userGoalAssignments, outputOwnerships, userOutputOwnerships, taskOwnerships, userTaskOwnerships });
     } catch (error) {
       console.error('Error loading workload data:', error);
     } finally {
@@ -968,11 +1076,145 @@ export const TeamWorkloadMonitoring = ({
               <p className="text-gray-500">Loading workload data...</p>
             </div>
           ) : (
-            <TeamWorkloadCharts 
-              chartData={chartData} 
-              chartType="tasks" 
-              onMemberClick={onSelectEmployee}
-            />
+            <div className="space-y-6">
+              <TeamWorkloadCharts 
+                chartData={chartData} 
+                chartType="tasks" 
+                onMemberClick={onSelectEmployee}
+              />
+              
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Task Ownership</CardTitle>
+                    <ToggleGroup type="single" value={taskViewType} onValueChange={(value) => value && setTaskViewType(value as 'task' | 'user')}>
+                      <ToggleGroupItem value="task" aria-label="Task view">
+                        <LayoutGrid className="h-4 w-4 mr-2" />
+                        Task View
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="user" aria-label="User view">
+                        <UserSquare className="h-4 w-4 mr-2" />
+                        User View
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+                  </div>
+                  <CardDescription>
+                    {taskViewType === 'task' 
+                      ? 'Active tasks with time tracking' 
+                      : 'Team members and their active tasks'}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {taskViewType === 'task' ? (
+                    // Task View
+                    workloadData.taskOwnerships.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {workloadData.taskOwnerships.map((task) => {
+                          const isOverdue = isTaskOverdue(task.dueDate);
+                          const formattedDuration = TaskPomodoroStatsService.formatDuration(task.totalDuration);
+                          
+                          return (
+                            <Card 
+                              key={task.id} 
+                              className={cn(
+                                "p-4 hover:shadow-md transition-shadow",
+                                isOverdue && "border-destructive/50 bg-destructive/5"
+                              )}
+                            >
+                              <div className="space-y-3">
+                                <div className="flex items-start justify-between">
+                                  <h3 className={cn(
+                                    "font-medium leading-tight",
+                                    isOverdue ? "text-destructive" : "text-foreground"
+                                  )}>
+                                    {task.title}
+                                  </h3>
+                                  <Badge 
+                                    variant={task.priority === 'High' ? 'destructive' : task.priority === 'Medium' ? 'secondary' : 'outline'} 
+                                    className="ml-2 flex-shrink-0 text-xs"
+                                  >
+                                    {task.priority}
+                                  </Badge>
+                                </div>
+
+                                <div className="space-y-2 text-sm">
+                                  <div className="flex items-center gap-2">
+                                    <Calendar className={cn(
+                                      "h-3 w-3",
+                                      isOverdue ? "text-destructive" : "text-muted-foreground"
+                                    )} />
+                                    <span className={cn(
+                                      isOverdue ? "text-destructive" : "text-muted-foreground"
+                                    )}>Due:</span>
+                                    <span className={cn(
+                                      "font-medium",
+                                      isOverdue && "text-destructive"
+                                    )}>
+                                      {task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No date'}
+                                    </span>
+                                    {isOverdue && (
+                                      <Badge variant="destructive" className="text-xs ml-1">
+                                        Overdue
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-2">
+                                    <UserIcon className="h-3 w-3 text-muted-foreground" />
+                                    <span className="text-muted-foreground">Owner:</span>
+                                    <span className="font-medium text-foreground">{task.userName}</span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 pt-2 border-t">
+                                  <Badge variant="secondary" className="text-xs">
+                                    <Clock className="h-3 w-3 mr-1" />
+                                    {formattedDuration || '0m'}
+                                  </Badge>
+                                  {task.pomodoroSessions > 0 && (
+                                    <Badge variant="outline" className="text-xs">
+                                      <Timer className="h-3 w-3 mr-1" />
+                                      {task.pomodoroSessions} {task.pomodoroSessions === 1 ? 'session' : 'sessions'}
+                                    </Badge>
+                                  )}
+                                </div>
+
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="w-full"
+                                  onClick={() => setSelectedTaskForDetails(task)}
+                                >
+                                  <Eye className="h-3.5 w-3.5 mr-2" />
+                                  View Details
+                                </Button>
+                              </div>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-center text-gray-500 py-8">No active tasks found</p>
+                    )
+                  ) : (
+                    // User View
+                    workloadData.userTaskOwnerships.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {workloadData.userTaskOwnerships.map((ownership) => (
+                          <UserTaskOwnershipCard
+                            key={ownership.userId}
+                            ownership={ownership}
+                            onViewDetails={onSelectEmployee}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-center text-gray-500 py-8">No task ownership data found</p>
+                    )
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           )}
         </TabsContent>
       </Tabs>
@@ -993,6 +1235,13 @@ export const TeamWorkloadMonitoring = ({
         outputTitle={selectedOutputForTasks?.title || ''}
         tasks={selectedOutputForTasks?.linkedTasks || []}
         userProfiles={userProfiles}
+      />
+
+      {/* Task Pomodoro Details Dialog */}
+      <TaskPomodoroDetailsDialog
+        open={!!selectedTaskForDetails}
+        onOpenChange={(open) => !open && setSelectedTaskForDetails(null)}
+        task={selectedTaskForDetails}
       />
     </div>
   );

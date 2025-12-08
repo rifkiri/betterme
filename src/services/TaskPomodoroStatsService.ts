@@ -75,6 +75,49 @@ export class TaskPomodoroStatsService {
   }
 
   /**
+   * Batch fetch Pomodoro stats for multiple tasks efficiently (single query)
+   */
+  static async getBatchTaskStats(taskIds: string[]): Promise<Map<string, PomodoroCountData>> {
+    const result = new Map<string, PomodoroCountData>();
+    
+    if (taskIds.length === 0) {
+      return result;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('task_pomodoro_stats')
+        .select('task_id, work_sessions_count, work_duration_total')
+        .in('task_id', taskIds);
+
+      if (error) {
+        console.error('Error batch fetching task Pomodoro stats:', error);
+        return result;
+      }
+
+      // Populate map with fetched data
+      for (const stat of data || []) {
+        result.set(stat.task_id, {
+          workSessionCount: stat.work_sessions_count || 0,
+          totalDuration: stat.work_duration_total || 0
+        });
+      }
+
+      // Fill in missing tasks with zero values
+      for (const taskId of taskIds) {
+        if (!result.has(taskId)) {
+          result.set(taskId, { workSessionCount: 0, totalDuration: 0 });
+        }
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Error in getBatchTaskStats:', error);
+      return result;
+    }
+  }
+
+  /**
    * Get work session count and total duration for a task (O(1) lookup)
    */
   static async getTaskCountData(taskId: string, userId: string): Promise<PomodoroCountData> {
