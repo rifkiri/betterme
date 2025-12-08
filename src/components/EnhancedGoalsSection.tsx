@@ -129,13 +129,12 @@ export const EnhancedGoalsSection = ({
 
   const isManager = userRole === 'manager' || userRole === 'admin';
 
-  // Filter marketplace goals - show work goals where user is NOT assigned
+  // Filter marketplace goals - show ALL active work goals (regardless of user assignment)
   const marketplaceGoals = useMemo(() => {
     let filtered = allGoals.filter(goal => 
       goal.category === 'work' && 
       !goal.archived && 
-      goal.progress < 100 &&
-      !isUserAssignedToGoal(goal.id)  // Exclude goals user is already assigned to
+      goal.progress < 100
     );
 
     // Apply search filter
