@@ -107,8 +107,20 @@ export const TeamWorkloadMonitoring = ({
       
       setUserProfiles(userProfilesMap);
 
+      // Fetch all goal assignments FIRST to create lookup map
+      const allAssignments = await supabaseGoalAssignmentsService.getAllGoalAssignments();
+      
+      // Create lookup map: userId -> Set of assigned goalIds
+      const userAssignedGoalIds = new Map<string, Set<string>>();
+      allAssignments.forEach(assignment => {
+        if (!userAssignedGoalIds.has(assignment.userId)) {
+          userAssignedGoalIds.set(assignment.userId, new Set());
+        }
+        userAssignedGoalIds.get(assignment.userId)!.add(assignment.goalId);
+      });
+
       const memberWorkloads: MemberWorkload[] = [];
-      const workGoals: WorkGoal[] = [];
+      const workGoalsData: WorkGoal[] = [];
 
       // Process all users (not just those in membersSummary)
       for (const userProfile of allUsers) {
@@ -118,16 +130,22 @@ export const TeamWorkloadMonitoring = ({
           ? userProfile.name.substring(0, 3).toUpperCase()
           : userProfile.name.toUpperCase();
         
-        // Get member's goals
-        const goals = await supabaseGoalsService.getUserAccessibleGoals(userProfile.id);
-        const totalGoals = goals.filter(g => !g.archived).length;
+        // Get assigned goal IDs for this user
+        const assignedGoalIds = userAssignedGoalIds.get(userProfile.id) || new Set<string>();
         
-        // Count work goal subcategories
-        const workGoals = goals.filter(g => g.category === 'work' && !g.archived);
+        // Get accessible goals, then filter to ONLY goals where user has an assignment
+        const accessibleGoals = await supabaseGoalsService.getUserAccessibleGoals(userProfile.id);
+        const assignedGoals = accessibleGoals.filter(g => 
+          !g.archived && assignedGoalIds.has(g.id)
+        );
+        const totalGoals = assignedGoals.length;
+        
+        // Count work goal subcategories from ASSIGNED goals only
+        const assignedWorkGoals = assignedGoals.filter(g => g.category === 'work');
         const workGoalSubcategories = {
-          project: workGoals.filter(g => g.subcategory === 'project').length,
-          sales: workGoals.filter(g => g.subcategory === 'sales').length,
-          internal: workGoals.filter(g => g.subcategory === 'internal').length,
+          project: assignedWorkGoals.filter(g => g.subcategory === 'project').length,
+          sales: assignedWorkGoals.filter(g => g.subcategory === 'sales').length,
+          internal: assignedWorkGoals.filter(g => g.subcategory === 'internal').length,
         };
         
         // Get tasks and outputs counts
@@ -151,7 +169,7 @@ export const TeamWorkloadMonitoring = ({
 
       // Get all work goals for goals view
       const allGoals = await supabaseGoalsService.getAllGoals();
-      const allAssignments = await supabaseGoalAssignmentsService.getAllGoalAssignments();
+      // Note: allAssignments is already fetched above
       
       // Create user-centric goal assignment data
       const userAssignmentMap = new Map<string, UserGoalAssignment>();
@@ -209,7 +227,7 @@ export const TeamWorkloadMonitoring = ({
           }
         }
 
-        workGoals.push({
+        workGoalsData.push({
           id: goal.id,
           title: goal.title,
           progress: goal.progress,
@@ -224,7 +242,7 @@ export const TeamWorkloadMonitoring = ({
       // Convert map to array for userGoalAssignments
       const userGoalAssignments = Array.from(userAssignmentMap.values());
 
-      setWorkloadData({ memberWorkloads, workGoals, userGoalAssignments });
+      setWorkloadData({ memberWorkloads, workGoals: workGoalsData, userGoalAssignments });
     } catch (error) {
       console.error('Error loading workload data:', error);
     } finally {
