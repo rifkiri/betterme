@@ -188,7 +188,7 @@ export const TeamWorkloadMonitoring = ({
       for (const userProfile of allUsers) {
         const userOutputs = await supabaseDataService.getWeeklyOutputs(userProfile.id);
         for (const output of userOutputs) {
-          if (output.linkedGoalId && !output.isDeleted) {
+          if (output.linkedGoalId && !output.isDeleted && output.progress < 100) {
             allOutputsWithGoalLinks.push({
               id: output.id,
               title: output.title,
