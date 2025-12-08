@@ -238,6 +238,7 @@ export class SupabaseGoalsService {
     const { error } = await supabase
       .from('goals')
       .insert({
+        id: goal.id, // Use client-generated UUID for consistent ID across goal creation and assignments
         user_id: goal.userId,
         title: goal.title,
         description: goal.description,
