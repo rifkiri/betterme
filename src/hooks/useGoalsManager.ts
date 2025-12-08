@@ -235,6 +235,22 @@ export const useGoalsManager = ({
     }
   };
 
+  // Admin-only: Restore a deleted goal from marketplace
+  const restoreDeletedGoal = async (id: string) => {
+    if (!userId) return;
+
+    console.log('[Admin] Restoring deleted goal:', id);
+
+    try {
+      await supabaseDataService.restoreDeletedGoal(id);
+      await loadAllData();
+      toast.success('Goal restored successfully');
+    } catch (error) {
+      console.error('Failed to restore deleted goal:', error);
+      toast.error('Failed to restore goal');
+    }
+  };
+
   const getOverdueGoals = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -254,6 +270,7 @@ export const useGoalsManager = ({
     deleteGoal,
     restoreGoal,
     permanentlyDeleteGoal,
+    restoreDeletedGoal,
     getOverdueGoals,
   };
 };

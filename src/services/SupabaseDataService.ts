@@ -119,6 +119,14 @@ export class SupabaseDataService {
     return await supabaseGoalsService.deleteGoalAsAdmin(id);
   }
 
+  async getDeletedGoalsForAdmin() {
+    return await supabaseGoalsService.getDeletedGoalsForAdmin();
+  }
+
+  async restoreDeletedGoal(id: string) {
+    return await supabaseGoalsService.restoreDeletedGoal(id);
+  }
+
   // Goal-output linkages handled directly through weekly_outputs.linked_goal_id column
 
   // Mood tracking

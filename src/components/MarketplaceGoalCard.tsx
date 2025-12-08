@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Goal, GoalAssignment } from '@/types/productivity';
-import { Briefcase, Users, User, Calendar, TrendingUp, UserPlus, CheckCircle, Trash2, Plus, Minus } from 'lucide-react';
+import { Briefcase, Users, User, Calendar, TrendingUp, UserPlus, CheckCircle, Trash2, Plus, Minus, RotateCcw } from 'lucide-react';
 import { mapSubcategoryDatabaseToDisplay } from '@/utils/goalCategoryUtils';
 import { format } from 'date-fns';
 
@@ -20,6 +20,8 @@ interface MarketplaceGoalCardProps {
   userRole?: string;
   onDeleteGoal?: (goalId: string) => void;
   onUpdateProgress?: (goalId: string, progress: number) => void;
+  isDeleted?: boolean;
+  onRestoreGoal?: (goalId: string) => Promise<void>;
 }
 
 export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
@@ -32,10 +34,13 @@ export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
   onViewDetails,
   userRole,
   onDeleteGoal,
-  onUpdateProgress
+  onUpdateProgress,
+  isDeleted = false,
+  onRestoreGoal
 }) => {
   const [selectedRole, setSelectedRole] = useState<'coach' | 'lead' | 'member'>('member');
   const [isJoining, setIsJoining] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   const goalAssignments = assignments.filter(a => a.goalId === goal.id);
   const coach = goalAssignments.find(a => a.role === 'coach');
@@ -67,6 +72,20 @@ export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
     }
   };
 
+  const handleRestore = async () => {
+    if (!onRestoreGoal) return;
+    
+    console.log('[MarketplaceGoalCard] Restoring deleted goal:', goal.id);
+    setIsRestoring(true);
+    try {
+      await onRestoreGoal(goal.id);
+    } catch (error) {
+      console.error('[MarketplaceGoalCard] Error restoring goal:', error);
+    } finally {
+      setIsRestoring(false);
+    }
+  };
+
   const handleViewDetails = () => {
     console.log('[MarketplaceGoalCard] Opening details for goal:', {
       id: goal.id,
@@ -85,11 +104,18 @@ export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
   };
 
   return (
-    <Card className="hover:shadow-lg transition-all duration-300 relative overflow-hidden">
-      {/* Status Badges and Admin Delete */}
+    <Card className={`hover:shadow-lg transition-all duration-300 relative overflow-hidden ${isDeleted ? 'opacity-75 border-destructive/50 bg-destructive/5' : ''}`}>
+      {/* Status Badges and Admin Delete/Restore */}
       <div className="absolute top-2 right-2 z-10 flex gap-2 items-center">
-        {/* Admin/Owner Delete Button */}
-        {canDeleteGoal && onDeleteGoal && (
+        {/* Deleted Badge */}
+        {isDeleted && (
+          <Badge className="bg-destructive text-destructive-foreground">
+            <Trash2 className="h-3 w-3 mr-1" />
+            Deleted
+          </Badge>
+        )}
+        {/* Admin/Owner Delete Button - Only for non-deleted goals */}
+        {!isDeleted && canDeleteGoal && onDeleteGoal && (
           <Button
             variant="ghost"
             size="sm"
@@ -103,12 +129,12 @@ export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
             <Trash2 className="h-4 w-4" />
           </Button>
         )}
-        {isUserOwnGoal && (
+        {!isDeleted && isUserOwnGoal && (
           <Badge className="bg-primary text-primary-foreground">
             Your Goal
           </Badge>
         )}
-        {isJoined && !isUserOwnGoal && (
+        {!isDeleted && isJoined && !isUserOwnGoal && (
           <Badge className="bg-green-100 text-green-800">
             <CheckCircle className="h-3 w-3 mr-1" />
             Joined
@@ -221,8 +247,8 @@ export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
             )}
           </div>
 
-          {/* Available Roles */}
-          {(isCoachAvailable || isLeadAvailable) && !isJoined && !isUserOwnGoal && (
+          {/* Available Roles - Only for non-deleted goals */}
+          {!isDeleted && (isCoachAvailable || isLeadAvailable) && !isJoined && !isUserOwnGoal && (
             <div className="flex items-center gap-2 pt-1">
               <span className="text-xs text-green-600 font-medium">Open roles:</span>
               <div className="flex gap-1">
@@ -234,8 +260,8 @@ export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
           )}
         </div>
 
-        {/* Admin Progress Controls */}
-        {isAdmin && onUpdateProgress && (
+        {/* Admin Progress Controls - Only for non-deleted goals */}
+        {!isDeleted && isAdmin && onUpdateProgress && (
           <div className="flex items-center gap-2 pt-2 border-t">
             <span className="text-xs text-muted-foreground">Update Progress:</span>
             <div className="flex items-center gap-1 ml-auto">
@@ -286,62 +312,77 @@ export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
 
         {/* Action Buttons */}
         <div className="flex gap-2 pt-2 border-t">
-          <Button 
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={handleViewDetails}
-          >
-            View Details
-          </Button>
-          
-          {!isJoined && !isUserOwnGoal && (
+          {/* Deleted Goal - Show Restore Button */}
+          {isDeleted ? (
+            <Button 
+              size="sm"
+              className="flex-1 bg-green-600 hover:bg-green-700"
+              onClick={handleRestore}
+              disabled={isRestoring}
+            >
+              <RotateCcw className={`h-4 w-4 mr-1 ${isRestoring ? 'animate-spin' : ''}`} />
+              {isRestoring ? 'Restoring...' : 'Restore Goal'}
+            </Button>
+          ) : (
             <>
-              <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as 'coach' | 'lead' | 'member')}>
-                <SelectTrigger className="w-[120px] h-9">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {isCoachAvailable && <SelectItem value="coach">Coach</SelectItem>}
-                  {isLeadAvailable && <SelectItem value="lead">Lead</SelectItem>}
-                  <SelectItem value="member">Member</SelectItem>
-                </SelectContent>
-              </Select>
-              
               <Button 
+                variant="outline"
                 size="sm"
-                className="bg-blue-600 hover:bg-blue-700"
-                onClick={handleQuickJoin}
-                disabled={isJoining}
+                className="flex-1"
+                onClick={handleViewDetails}
               >
-                <UserPlus className="h-4 w-4 mr-1" />
-                Join
+                View Details
               </Button>
+              
+              {!isJoined && !isUserOwnGoal && (
+                <>
+                  <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as 'coach' | 'lead' | 'member')}>
+                    <SelectTrigger className="w-[120px] h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {isCoachAvailable && <SelectItem value="coach">Coach</SelectItem>}
+                      {isLeadAvailable && <SelectItem value="lead">Lead</SelectItem>}
+                      <SelectItem value="member">Member</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <Button 
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700"
+                    onClick={handleQuickJoin}
+                    disabled={isJoining}
+                  >
+                    <UserPlus className="h-4 w-4 mr-1" />
+                    Join
+                  </Button>
+                </>
+              )}
+              
+              {isJoined && !isUserOwnGoal && (
+                <Button 
+                  size="sm"
+                  variant="outline"
+                  className="flex-1"
+                  disabled
+                >
+                  <CheckCircle className="h-4 w-4 mr-1" />
+                  Already Joined
+                </Button>
+              )}
+              
+              {isUserOwnGoal && (
+                <Button 
+                  size="sm"
+                  variant="secondary"
+                  className="flex-1"
+                  disabled
+                >
+                  <User className="h-4 w-4 mr-1" />
+                  Your Goal
+                </Button>
+              )}
             </>
-          )}
-          
-          {isJoined && !isUserOwnGoal && (
-            <Button 
-              size="sm"
-              variant="outline"
-              className="flex-1"
-              disabled
-            >
-              <CheckCircle className="h-4 w-4 mr-1" />
-              Already Joined
-            </Button>
-          )}
-          
-          {isUserOwnGoal && (
-            <Button 
-              size="sm"
-              variant="secondary"
-              className="flex-1"
-              disabled
-            >
-              <User className="h-4 w-4 mr-1" />
-              Your Goal
-            </Button>
           )}
         </div>
       </CardContent>
