@@ -603,6 +603,8 @@ export const EnhancedGoalsSection = ({
                       isJoined={!!userAssignment}
                       onJoin={onJoinWorkGoal}
                       onViewDetails={handleViewGoalDetails}
+                      userRole={userRole}
+                      onDeleteGoal={onDeleteGoal}
                     />
                   );
                 })}
