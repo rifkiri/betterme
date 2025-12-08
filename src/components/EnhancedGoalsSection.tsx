@@ -106,18 +106,36 @@ export const EnhancedGoalsSection = ({
     }
   }, [goals, allGoals, viewingGoal]);
 
-  // Filter goals by completion status instead of category
-  const activeGoals = goals.filter(goal => goal.progress < 100 && !goal.archived);
-  const completedGoals = goals.filter(goal => goal.progress >= 100);
+  // Helper function to check if user is assigned to a goal
+  const isUserAssignedToGoal = (goalId: string) => {
+    return assignments.some(a => a.goalId === goalId && a.userId === currentUserId);
+  };
+
+  // Filter goals by completion status - only show goals where user has an assignment
+  const activeGoals = useMemo(() => {
+    return goals.filter(goal => 
+      goal.progress < 100 && 
+      !goal.archived && 
+      isUserAssignedToGoal(goal.id)
+    );
+  }, [goals, assignments, currentUserId]);
+
+  const completedGoals = useMemo(() => {
+    return goals.filter(goal => 
+      goal.progress >= 100 && 
+      isUserAssignedToGoal(goal.id)
+    );
+  }, [goals, assignments, currentUserId]);
 
   const isManager = userRole === 'manager' || userRole === 'admin';
 
-  // Filter marketplace goals (including user's own goals)
+  // Filter marketplace goals - show work goals where user is NOT assigned
   const marketplaceGoals = useMemo(() => {
     let filtered = allGoals.filter(goal => 
       goal.category === 'work' && 
       !goal.archived && 
-      goal.progress < 100
+      goal.progress < 100 &&
+      !isUserAssignedToGoal(goal.id)  // Exclude goals user is already assigned to
     );
 
     // Apply search filter
