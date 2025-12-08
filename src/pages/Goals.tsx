@@ -20,6 +20,7 @@ const Goals = () => {
     goals,
     allGoals,
     deletedGoals,
+    marketplaceDeletedGoals,
     habits,
     tasks,
     weeklyOutputs,
@@ -29,7 +30,8 @@ const Goals = () => {
     updateGoalProgress,
     deleteGoal,
     restoreGoal,
-    permanentlyDeleteGoal
+    permanentlyDeleteGoal,
+    restoreDeletedGoal
   } = useProductivity();
 
   const {
@@ -76,6 +78,7 @@ const Goals = () => {
         goals={goals}
         allGoals={allGoals}
         deletedGoals={deletedGoals}
+        marketplaceDeletedGoals={marketplaceDeletedGoals}
         habits={habits}
         tasks={tasks}
         weeklyOutputs={weeklyOutputs}
@@ -91,6 +94,7 @@ const Goals = () => {
         onUpdateGoalProgress={updateGoalProgress}
         onJoinWorkGoal={joinWorkGoal}
         onLeaveWorkGoal={leaveWorkGoal}
+        onRestoreDeletedGoal={restoreDeletedGoal}
         onRefresh={loadAllData}
       />
 

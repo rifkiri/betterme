@@ -4,6 +4,7 @@ import { Habit, Task, WeeklyOutput, Goal } from '@/types/productivity';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserRole } from '@/hooks/useUserRole';
 
 export const useProductivityData = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -15,11 +16,13 @@ export const useProductivityData = () => {
   const [deletedTasks, setDeletedTasks] = useState<Task[]>([]);
   const [deletedWeeklyOutputs, setDeletedWeeklyOutputs] = useState<WeeklyOutput[]>([]);
   const [deletedGoals, setDeletedGoals] = useState<Goal[]>([]);
+  const [marketplaceDeletedGoals, setMarketplaceDeletedGoals] = useState<Goal[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   const { user } = useAuth();
   const userId = user?.id || null;
+  const { role: userRole } = useUserRole();
 
   // Check if Supabase is available
   const isSupabaseAvailable = () => {
@@ -43,12 +46,13 @@ export const useProductivityData = () => {
         console.log('Loading data from Supabase for authenticated user...');
         
         // Load habits for the specific date and user
-        const [habitsData, tasksData, weeklyOutputsData, goalsData, allGoalsData] = await Promise.all([
+        const [habitsData, tasksData, weeklyOutputsData, goalsData, allGoalsData, deletedGoalsForAdmin] = await Promise.all([
           supabaseDataService.getHabitsForDate(userId, targetDate),
           supabaseDataService.getTasks(userId),
           supabaseDataService.getWeeklyOutputs(userId),
           supabaseDataService.getGoals(userId),
-          supabaseDataService.getAllGoals()
+          supabaseDataService.getAllGoals(),
+          userRole === 'admin' ? supabaseDataService.getDeletedGoalsForAdmin() : Promise.resolve([])
         ]);
 
         console.log('Loaded habits for user', userId, 'date:', format(targetDate, 'yyyy-MM-dd'), habitsData);
@@ -67,8 +71,10 @@ export const useProductivityData = () => {
         setGoals(goalsData.filter(g => !g.archived && !g.isDeleted));
         setDeletedGoals(goalsData.filter(g => g.archived && !g.isDeleted));
         setAllGoals(allGoalsData.filter(g => !g.archived && !g.isDeleted));
+        setMarketplaceDeletedGoals(deletedGoalsForAdmin);
         
         console.log('Data loaded successfully for user:', userId);
+        console.log('Marketplace deleted goals:', deletedGoalsForAdmin.length);
       } else {
         console.log('Supabase not available or user not authenticated');
         toast.error('Please sign in to access your data');
@@ -86,7 +92,7 @@ export const useProductivityData = () => {
       console.log('User ID or date changed, reloading data for user:', userId, format(selectedDate, 'yyyy-MM-dd'));
       loadAllData(selectedDate);
     }
-  }, [userId, selectedDate]);
+  }, [userId, selectedDate, userRole]);
 
   const handleDateChange = (date: Date) => {
     console.log('Date changed to:', format(date, 'yyyy-MM-dd'), 'for user:', userId);
@@ -113,6 +119,8 @@ export const useProductivityData = () => {
     setDeletedWeeklyOutputs,
     deletedGoals,
     setDeletedGoals,
+    marketplaceDeletedGoals,
+    setMarketplaceDeletedGoals,
     isLoading,
     selectedDate,
     

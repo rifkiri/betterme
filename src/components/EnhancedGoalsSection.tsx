@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { SimpleAddGoalDialog } from './SimpleAddGoalDialog';
 import { JoinGoalDialog } from './JoinGoalDialog';
 import { DeletedGoalsDialog } from './DeletedGoalsDialog';
@@ -11,14 +12,16 @@ import { GoalDetailsDialog } from './GoalDetailsDialog';
 import { MarketplaceGoalCard } from './MarketplaceGoalCard';
 import { MarketplaceFilters } from '@/components/ui/MarketplaceFilters';
 import { Goal, WeeklyOutput, Habit, GoalAssignment, Task } from '@/types/productivity';
-import { Target, Briefcase, User, Plus, CheckCircle, Minus, Edit, Trash2, Eye, Link2, Store } from 'lucide-react';
+import { Target, Briefcase, User, Plus, CheckCircle, Minus, Edit, Trash2, Eye, Link2, Store, RotateCcw } from 'lucide-react';
 import { mapSubcategoryDatabaseToDisplay } from '@/utils/goalCategoryUtils';
 import { PageContainer, PageHeader } from '@/components/ui/standardized';
+import { Label } from '@/components/ui/label';
 
 interface EnhancedGoalsSectionProps {
   goals: Goal[];
   allGoals: Goal[];
   deletedGoals: Goal[];
+  marketplaceDeletedGoals: Goal[];
   habits: Habit[];
   tasks: Task[];
   weeklyOutputs: WeeklyOutput[];
@@ -34,6 +37,7 @@ interface EnhancedGoalsSectionProps {
   onUpdateGoalProgress: (goalId: string, progress: number) => void;
   onJoinWorkGoal: (goalId: string, role?: 'coach' | 'lead' | 'member') => void;
   onLeaveWorkGoal: (goalId: string) => void;
+  onRestoreDeletedGoal?: (goalId: string) => Promise<void>;
   onRefresh?: (date?: Date) => Promise<void>;
 }
 
@@ -41,6 +45,7 @@ export const EnhancedGoalsSection = ({
   goals,
   allGoals,
   deletedGoals,
+  marketplaceDeletedGoals,
   habits,
   tasks,
   weeklyOutputs,
@@ -56,6 +61,7 @@ export const EnhancedGoalsSection = ({
   onUpdateGoalProgress,
   onJoinWorkGoal,
   onLeaveWorkGoal,
+  onRestoreDeletedGoal,
   onRefresh
 }: EnhancedGoalsSectionProps) => {
   const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'marketplace'>('active');
@@ -67,6 +73,9 @@ export const EnhancedGoalsSection = ({
   const [marketplaceSubcategory, setMarketplaceSubcategory] = useState('all');
   const [marketplaceRole, setMarketplaceRole] = useState('all');
   const [marketplaceSortBy, setMarketplaceSortBy] = useState('newest');
+  const [showDeletedGoals, setShowDeletedGoals] = useState(false);
+  
+  const isAdmin = userRole === 'admin';
 
   // Handle opening goal details with better error handling
   const handleViewGoalDetails = (goal: Goal) => {
@@ -573,60 +582,123 @@ export const EnhancedGoalsSection = ({
 
         <TabsContent value="marketplace" className="space-y-4">
           <Card className="p-6">
-            <div className="mb-4">
-              <h3 className="text-lg font-medium">Goal Marketplace</h3>
-              <p className="text-sm text-gray-600">Discover and join work goals from across the organization</p>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-medium">Goal Marketplace</h3>
+                <p className="text-sm text-muted-foreground">Discover and join work goals from across the organization</p>
+              </div>
+              
+              {/* Admin Toggle for Deleted Goals */}
+              {isAdmin && (
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 border">
+                  <Switch
+                    id="show-deleted"
+                    checked={showDeletedGoals}
+                    onCheckedChange={setShowDeletedGoals}
+                  />
+                  <Label htmlFor="show-deleted" className="text-sm font-medium cursor-pointer">
+                    Show Deleted Goals ({marketplaceDeletedGoals.length})
+                  </Label>
+                </div>
+              )}
             </div>
 
-            {/* Marketplace Filters */}
-            <MarketplaceFilters
-              searchTerm={marketplaceSearch}
-              onSearchChange={setMarketplaceSearch}
-              selectedSubcategory={marketplaceSubcategory}
-              onSubcategoryChange={setMarketplaceSubcategory}
-              selectedRole={marketplaceRole}
-              onRoleChange={setMarketplaceRole}
-              sortBy={marketplaceSortBy}
-              onSortChange={setMarketplaceSortBy}
-              onClearFilters={clearMarketplaceFilters}
-              hasActiveFilters={hasActiveMarketplaceFilters}
-            />
+            {/* Marketplace Filters - Hidden when showing deleted goals */}
+            {!showDeletedGoals && (
+              <MarketplaceFilters
+                searchTerm={marketplaceSearch}
+                onSearchChange={setMarketplaceSearch}
+                selectedSubcategory={marketplaceSubcategory}
+                onSubcategoryChange={setMarketplaceSubcategory}
+                selectedRole={marketplaceRole}
+                onRoleChange={setMarketplaceRole}
+                sortBy={marketplaceSortBy}
+                onSortChange={setMarketplaceSortBy}
+                onClearFilters={clearMarketplaceFilters}
+                hasActiveFilters={hasActiveMarketplaceFilters}
+              />
+            )}
             
             {/* Results Count */}
-            {marketplaceGoals.length > 0 && (
-              <div className="text-sm text-gray-600 mb-4">
+            {!showDeletedGoals && marketplaceGoals.length > 0 && (
+              <div className="text-sm text-muted-foreground mb-4">
                 Found {marketplaceGoals.length} {marketplaceGoals.length === 1 ? 'goal' : 'goals'}
               </div>
             )}
             
-            {/* Marketplace Goals Grid */}
-            {marketplaceGoals.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <Store className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>No goals available in the marketplace</p>
-                <p className="text-sm mt-1">Check back later for new opportunities to collaborate.</p>
+            {/* Deleted Goals Info Banner */}
+            {showDeletedGoals && (
+              <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 mb-4">
+                <div className="flex items-center gap-2">
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                  <span className="text-sm font-medium text-destructive">
+                    Viewing {marketplaceDeletedGoals.length} deleted {marketplaceDeletedGoals.length === 1 ? 'goal' : 'goals'}
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  These goals have been soft-deleted and can be restored by clicking the restore button.
+                </p>
               </div>
+            )}
+            
+            {/* Marketplace Goals Grid - Active or Deleted based on toggle */}
+            {!showDeletedGoals ? (
+              marketplaceGoals.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Store className="h-12 w-12 mx-auto mb-4 opacity-30" />
+                  <p>No goals available in the marketplace</p>
+                  <p className="text-sm mt-1">Check back later for new opportunities to collaborate.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {marketplaceGoals.map(goal => {
+                    const userAssignment = assignments.find(a => a.goalId === goal.id && a.userId === currentUserId);
+                    return (
+                      <MarketplaceGoalCard
+                        key={goal.id}
+                        goal={goal}
+                        assignments={assignments}
+                        availableUsers={availableUsers}
+                        currentUserId={currentUserId}
+                        isJoined={!!userAssignment}
+                        onJoin={onJoinWorkGoal}
+                        onViewDetails={handleViewGoalDetails}
+                        userRole={userRole}
+                        onDeleteGoal={onDeleteGoal}
+                        onUpdateProgress={onUpdateGoalProgress}
+                      />
+                    );
+                  })}
+                </div>
+              )
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {marketplaceGoals.map(goal => {
-                  const userAssignment = assignments.find(a => a.goalId === goal.id && a.userId === currentUserId);
-                  return (
+              marketplaceDeletedGoals.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Trash2 className="h-12 w-12 mx-auto mb-4 opacity-30" />
+                  <p>No deleted goals found</p>
+                  <p className="text-sm mt-1">All work goals are currently active.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {marketplaceDeletedGoals.map(goal => (
                     <MarketplaceGoalCard
                       key={goal.id}
                       goal={goal}
                       assignments={assignments}
                       availableUsers={availableUsers}
                       currentUserId={currentUserId}
-                      isJoined={!!userAssignment}
+                      isJoined={false}
                       onJoin={onJoinWorkGoal}
                       onViewDetails={handleViewGoalDetails}
                       userRole={userRole}
                       onDeleteGoal={onDeleteGoal}
                       onUpdateProgress={onUpdateGoalProgress}
+                      isDeleted={true}
+                      onRestoreGoal={onRestoreDeletedGoal}
                     />
-                  );
-                })}
-              </div>
+                  ))}
+                </div>
+              )
             )}
           </Card>
         </TabsContent>

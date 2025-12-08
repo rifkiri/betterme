@@ -495,8 +495,96 @@ export class SupabaseGoalsService {
     }
   }
 
-  // Remove deprecated database function methods
-  // These were removed when dropping the item_linkages table
+  // Admin-only method to fetch deleted work goals for marketplace
+  async getDeletedGoalsForAdmin(): Promise<Goal[]> {
+    console.log('[Admin] Getting deleted work goals for marketplace');
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.error('No authenticated user found');
+        return [];
+      }
+
+      const userRole = await this.getUserRole(user.id);
+      if (userRole !== 'admin') {
+        console.log('User is not admin, skipping deleted goals fetch');
+        return [];
+      }
+      
+      // Fetch work goals that are deleted (soft deleted)
+      const { data, error } = await supabase
+        .from('goals')
+        .select('*')
+        .eq('category', 'work')
+        .eq('is_deleted', true)
+        .order('deleted_date', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching deleted goals for admin:', error);
+        return [];
+      }
+
+      if (!data) {
+        return [];
+      }
+
+      console.log('[Admin] Found deleted goals:', data.length);
+
+      return data.map(goal => ({
+        id: goal.id,
+        userId: goal.user_id,
+        title: goal.title,
+        description: goal.description,
+        category: goal.category as 'work' | 'personal',
+        subcategory: goal.subcategory,
+        deadline: goal.deadline ? new Date(goal.deadline) : undefined,
+        createdDate: new Date(goal.created_date),
+        completed: goal.completed,
+        archived: goal.archived,
+        progress: goal.progress || 0,
+        createdBy: goal.created_by,
+        assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined,
+        visibility: (goal.visibility || 'all') as 'all' | 'managers' | 'self',
+        isDeleted: goal.is_deleted,
+        deletedDate: goal.deleted_date ? new Date(goal.deleted_date) : undefined
+      }));
+    } catch (error) {
+      console.error('Error in getDeletedGoalsForAdmin:', error);
+      return [];
+    }
+  }
+
+  // Admin-only method to restore a deleted goal
+  async restoreDeletedGoal(id: string): Promise<void> {
+    console.log('[Admin] Restoring deleted goal:', id);
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('No authenticated user');
+    }
+
+    const userRole = await this.getUserRole(user.id);
+    if (userRole !== 'admin') {
+      throw new Error('Only admins can restore deleted goals');
+    }
+
+    const { error } = await supabase
+      .from('goals')
+      .update({ 
+        is_deleted: false,
+        archived: false,
+        deleted_date: null
+      })
+      .eq('id', id);
+
+    if (error) {
+      console.error('[Admin] Error restoring goal:', error);
+      throw error;
+    }
+
+    console.log('[Admin] Goal restored successfully');
+  }
 }
 
 export const supabaseGoalsService = new SupabaseGoalsService();
