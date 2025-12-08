@@ -423,8 +423,8 @@ export const EnhancedGoalsSection = ({
               </Button>
             )}
             
-            {/* Progress Controls - for all assigned users and owners */}
-            {(goalUserRole || isGoalOwner) && (
+            {/* Progress Controls - for all assigned users, owners, and admins */}
+            {(goalUserRole || isGoalOwner || userRole === 'admin') && (
               <div className="flex items-center space-x-2">
                 <Button 
                   size="sm" 
@@ -605,6 +605,7 @@ export const EnhancedGoalsSection = ({
                       onViewDetails={handleViewGoalDetails}
                       userRole={userRole}
                       onDeleteGoal={onDeleteGoal}
+                      onUpdateProgress={onUpdateGoalProgress}
                     />
                   );
                 })}
