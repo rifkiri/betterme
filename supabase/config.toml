@@ -23,3 +23,12 @@ verify_jwt = true
 
 [functions.delete-auth-users]
 verify_jwt = true
+
+[functions.update-user-email]
+verify_jwt = true
+
+[functions.update-user-password]
+verify_jwt = true
+
+[functions.zatzet-sync]
+verify_jwt = true

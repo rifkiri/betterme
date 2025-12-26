@@ -310,6 +310,92 @@ export type Database = {
           },
         ]
       }
+      integration_connections: {
+        Row: {
+          api_endpoint: string
+          api_key_encrypted: string | null
+          created_at: string | null
+          id: string
+          integration_type: string
+          is_connected: boolean | null
+          last_sync_at: string | null
+          sync_settings: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          api_endpoint: string
+          api_key_encrypted?: string | null
+          created_at?: string | null
+          id?: string
+          integration_type?: string
+          is_connected?: boolean | null
+          last_sync_at?: string | null
+          sync_settings?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          api_endpoint?: string
+          api_key_encrypted?: string | null
+          created_at?: string | null
+          id?: string
+          integration_type?: string
+          is_connected?: boolean | null
+          last_sync_at?: string | null
+          sync_settings?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      integration_sync_logs: {
+        Row: {
+          connection_id: string | null
+          created_at: string | null
+          error_message: string | null
+          external_id: string
+          id: string
+          internal_id: string | null
+          sync_direction: string | null
+          sync_status: string | null
+          sync_type: string
+          synced_at: string | null
+        }
+        Insert: {
+          connection_id?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          external_id: string
+          id?: string
+          internal_id?: string | null
+          sync_direction?: string | null
+          sync_status?: string | null
+          sync_type: string
+          synced_at?: string | null
+        }
+        Update: {
+          connection_id?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          external_id?: string
+          id?: string
+          internal_id?: string | null
+          sync_direction?: string | null
+          sync_status?: string | null
+          sync_type?: string
+          synced_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_sync_logs_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "integration_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mood_entries: {
         Row: {
           created_at: string
