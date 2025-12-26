@@ -1,12 +1,13 @@
 import React from "react";
 import { AppNavigation } from "@/components/AppNavigation";
-import { Loader2, Users, Database, Settings as SettingsIcon } from "lucide-react";
+import { Loader2, Users, Database, Settings as SettingsIcon, Link2 } from "lucide-react";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useProductivity } from "@/hooks/useProductivity";
 import { useMoodTracking } from "@/hooks/useMoodTracking";
 import { UserManagementSection } from "@/components/settings/UserManagementSection";
 import { DataManagementSection } from "@/components/settings/DataManagementSection";
 import { PreferencesSection } from "@/components/settings/PreferencesSection";
+import { IntegrationsSection } from "@/components/settings/IntegrationsSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Settings = () => {
@@ -43,7 +44,7 @@ const Settings = () => {
           </p>
         </div>
       
-        <Tabs defaultValue={profile?.role === 'admin' ? 'users' : 'data'} className="w-full">
+        <Tabs defaultValue={profile?.role === 'admin' ? 'users' : (profile?.role === 'manager' ? 'integrations' : 'data')} className="w-full">
         <TabsList className="flex w-full h-auto p-1 bg-gray-100 rounded-lg overflow-x-auto">
           {profile?.role === 'admin' && (
             <TabsTrigger 
@@ -53,6 +54,16 @@ const Settings = () => {
               <Users className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">User Management</span>
               <span className="sm:hidden">Users</span>
+            </TabsTrigger>
+          )}
+          {(profile?.role === 'admin' || profile?.role === 'manager') && (
+            <TabsTrigger 
+              value="integrations" 
+              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm whitespace-nowrap flex-shrink-0"
+            >
+              <Link2 className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Integrations</span>
+              <span className="sm:hidden">Integrate</span>
             </TabsTrigger>
           )}
           <TabsTrigger 
@@ -76,6 +87,12 @@ const Settings = () => {
         {profile?.role === 'admin' && (
           <TabsContent value="users" className="mt-4 sm:mt-6">
             <UserManagementSection userRole={profile?.role} />
+          </TabsContent>
+        )}
+
+        {(profile?.role === 'admin' || profile?.role === 'manager') && (
+          <TabsContent value="integrations" className="mt-4 sm:mt-6">
+            <IntegrationsSection />
           </TabsContent>
         )}
 
