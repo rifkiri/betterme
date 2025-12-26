@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
           const response = await fetch(`${apiEndpoint}/v1/initiatives`, {
             method: 'GET',
             headers: {
-              'Authorization': `Bearer ${apiKey}`,
+              'x-api-key': apiKey,
               'Content-Type': 'application/json',
             },
           });
@@ -119,7 +119,7 @@ Deno.serve(async (req) => {
           const response = await fetch(`${apiEndpoint}/v1/initiatives`, {
             method: 'GET',
             headers: {
-              'Authorization': `Bearer ${apiKey}`,
+              'x-api-key': apiKey,
               'Content-Type': 'application/json',
             },
           });
@@ -176,7 +176,7 @@ Deno.serve(async (req) => {
               const response = await fetch(`${apiEndpoint}/v1/initiatives/${initiativeId}?include=supporters`, {
                 method: 'GET',
                 headers: {
-                  'Authorization': `Bearer ${apiKey}`,
+                  'x-api-key': apiKey,
                   'Content-Type': 'application/json',
                 },
               });
