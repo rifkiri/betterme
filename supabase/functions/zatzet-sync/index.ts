@@ -226,55 +226,78 @@ Deno.serve(async (req) => {
                 .eq('sync_status', 'success')
                 .maybeSingle();
 
+              let goalId: string;
+              let isUpdate = false;
+
               if (existingLog?.internal_id) {
-                importResults.push({ 
-                  initiativeId: initiative.id, 
-                  goalId: existingLog.internal_id,
-                  success: true, 
-                  error: 'Already imported' 
-                });
-                continue;
+                // Update existing goal instead of skipping
+                goalId = existingLog.internal_id;
+                isUpdate = true;
+
+                const { error: updateError } = await supabase
+                  .from('goals')
+                  .update({
+                    title: initiative.title,
+                    description: initiative.description || `Imported from Zatzet OKR Initiative: ${initiative.id}`,
+                    deadline: initiative.due_date || initiative.target_date || null,
+                    progress: initiative.progress || 0,
+                    completed: initiative.status === 'completed',
+                    subcategory: 'okr', // Ensure OKR subcategory is set
+                    archived: false, // Unarchive to make visible in marketplace
+                    is_deleted: false,
+                  })
+                  .eq('id', goalId);
+
+                if (updateError) {
+                  console.error('Failed to update existing goal:', updateError);
+                  importResults.push({ initiativeId: initiative.id, success: false, error: updateError.message });
+                  continue;
+                }
+
+                console.log(`Updated existing goal ${goalId} from initiative ${initiative.id}`);
+              } else {
+                // Create new goal from initiative with OKR subcategory
+                const { data: newGoal, error: goalError } = await supabase
+                  .from('goals')
+                  .insert({
+                    user_id: user.id,
+                    created_by: user.id,
+                    title: initiative.title,
+                    description: initiative.description || `Imported from Zatzet OKR Initiative: ${initiative.id}`,
+                    deadline: initiative.due_date || initiative.target_date || null,
+                    progress: initiative.progress || 0,
+                    completed: initiative.status === 'completed',
+                    category: 'work',
+                    subcategory: 'okr', // OKR subcategory for Zatzet initiatives
+                    visibility: 'all', // Visible in marketplace
+                    archived: false,
+                    is_deleted: false,
+                  })
+                  .select('id')
+                  .single();
+
+                if (goalError) {
+                  console.error('Failed to create goal:', goalError);
+                  importResults.push({ initiativeId: initiative.id, success: false, error: goalError.message });
+                  continue;
+                }
+
+                goalId = newGoal.id;
+
+                // Log the sync for new imports only
+                await supabase
+                  .from('integration_sync_logs')
+                  .insert({
+                    connection_id: connection?.id,
+                    sync_type: 'initiative',
+                    external_id: initiative.id,
+                    internal_id: goalId,
+                    sync_status: 'success',
+                    sync_direction: 'import',
+                  });
+
+                console.log(`Imported initiative ${initiative.id} as new goal ${goalId}`);
               }
-
-              // Create goal from initiative with OKR subcategory
-              const { data: newGoal, error: goalError } = await supabase
-                .from('goals')
-                .insert({
-                  user_id: user.id,
-                  created_by: user.id,
-                  title: initiative.title,
-                  description: initiative.description || `Imported from Zatzet OKR Initiative: ${initiative.id}`,
-                  deadline: initiative.due_date || initiative.target_date || null,
-                  progress: initiative.progress || 0,
-                  completed: initiative.status === 'completed',
-                  category: 'work',
-                  subcategory: 'okr', // OKR subcategory for Zatzet initiatives
-                  visibility: 'all', // Visible in marketplace
-                  archived: false,
-                  is_deleted: false,
-                })
-                .select('id')
-                .single();
-
-              if (goalError) {
-                console.error('Failed to create goal:', goalError);
-                importResults.push({ initiativeId: initiative.id, success: false, error: goalError.message });
-                continue;
-              }
-
-              // Log the sync
-              await supabase
-                .from('integration_sync_logs')
-                .insert({
-                  connection_id: connection?.id,
-                  sync_type: 'initiative',
-                  external_id: initiative.id,
-                  internal_id: newGoal.id,
-                  sync_status: 'success',
-                  sync_direction: 'import',
-                });
-
-              console.log(`Imported initiative ${initiative.id} as goal ${newGoal.id}`);
 
               // Create goal assignments for owner and supporters
               let ownerAssigned = false;
@@ -290,7 +313,7 @@ Deno.serve(async (req) => {
 
                 if (ownerProfile) {
                   const { error: ownerAssignError } = await supabase.rpc('create_goal_assignment', {
-                    p_goal_id: newGoal.id,
+                    p_goal_id: goalId,
                     p_user_id: ownerProfile.id,
                     p_role: 'lead',
                     p_assigned_by: user.id,
@@ -301,7 +324,7 @@ Deno.serve(async (req) => {
                     console.error(`Failed to assign owner ${initiative.owner.email}:`, ownerAssignError);
                   } else {
                     ownerAssigned = true;
-                    console.log(`Assigned owner ${initiative.owner.email} as lead for goal ${newGoal.id}`);
+                    console.log(`Assigned owner ${initiative.owner.email} as lead for goal ${goalId}`);
                   }
                 } else {
                   console.log(`Owner email ${initiative.owner.email} not found in profiles`);
@@ -322,7 +345,7 @@ Deno.serve(async (req) => {
 
                   if (supporterProfile) {
                     const { error: supporterAssignError } = await supabase.rpc('create_goal_assignment', {
-                      p_goal_id: newGoal.id,
+                      p_goal_id: goalId,
                       p_user_id: supporterProfile.id,
                       p_role: 'member',
                       p_assigned_by: user.id,
@@ -333,7 +356,7 @@ Deno.serve(async (req) => {
                       console.error(`Failed to assign supporter ${supporterEmail}:`, supporterAssignError);
                     } else {
                       supportersAssigned++;
-                      console.log(`Assigned supporter ${supporterEmail} as member for goal ${newGoal.id}`);
+                      console.log(`Assigned supporter ${supporterEmail} as member for goal ${goalId}`);
                     }
                   } else {
                     console.log(`Supporter email ${supporterEmail} not found in profiles`);
@@ -341,9 +364,9 @@ Deno.serve(async (req) => {
                 }
               }
 
-              console.log(`Goal ${newGoal.id}: Owner assigned: ${ownerAssigned}, Supporters assigned: ${supportersAssigned}`);
+              console.log(`Goal ${goalId}: Owner assigned: ${ownerAssigned}, Supporters assigned: ${supportersAssigned}${isUpdate ? ' (updated)' : ' (new)'}`);
 
-              importResults.push({ initiativeId: initiative.id, goalId: newGoal.id, success: true });
+              importResults.push({ initiativeId: initiative.id, goalId: goalId, success: true });
 
             } catch (error) {
               console.error(`Error importing initiative ${initiativeId}:`, error);
