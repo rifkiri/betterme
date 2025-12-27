@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { CalendarIcon, Trash2, Link, Eye, Minus, Plus, CheckCircle } from 'lucide-react';
+import { CalendarIcon, Trash2, Link, Eye, Minus, Plus, CheckCircle, Target } from 'lucide-react';
 import { Goal, Task, WeeklyOutput, GoalAssignment } from '@/types/productivity';
 import { format, isToday, isTomorrow } from 'date-fns';
 import { EditGoalDialog } from './EditGoalDialog';
@@ -77,11 +77,16 @@ export const GoalCard = ({
             <div className="cursor-pointer hover:bg-blue-100 rounded p-1 -m-1 transition-colors" onClick={() => setShowDetailsDialog(true)}>
               <div className="flex items-center gap-2 mb-2">
                 <p className="text-sm text-gray-700 leading-relaxed flex-1">{goal.title}</p>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 flex-wrap">
                   <Badge className={`text-xs ${getCategoryColor(goal.category)}`}>
                     {goal.category}
                   </Badge>
-                  {goal.subcategory && (
+                  {goal.subcategory === 'okr' ? (
+                    <Badge className="text-xs bg-purple-100 text-purple-800 border border-purple-300">
+                      <Target className="w-3 h-3 mr-1" />
+                      OKR
+                    </Badge>
+                  ) : goal.subcategory && (
                     <Badge variant="outline" className="text-xs bg-white border-gray-300">
                       {mapSubcategoryDatabaseToDisplay(goal.subcategory)}
                     </Badge>
