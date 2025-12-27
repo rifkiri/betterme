@@ -12,11 +12,13 @@ import { DeletedGoalsDialog } from './DeletedGoalsDialog';
 import { GoalDetailsDialog } from './GoalDetailsDialog';
 import { MarketplaceGoalCard } from './MarketplaceGoalCard';
 import { MarketplaceFilters } from '@/components/ui/MarketplaceFilters';
+import { ZatzetSyncPreviewDialog } from './integration/ZatzetSyncPreviewDialog';
 import { Goal, WeeklyOutput, Habit, GoalAssignment, Task } from '@/types/productivity';
-import { Target, Briefcase, User, Plus, CheckCircle, Minus, Edit, Trash2, Eye, Link2, Store, RotateCcw, Filter, X, ArrowUpDown } from 'lucide-react';
+import { Target, Briefcase, User, Plus, CheckCircle, Minus, Edit, Trash2, Eye, Link2, Store, RotateCcw, Filter, X, ArrowUpDown, RefreshCw } from 'lucide-react';
 import { mapSubcategoryDatabaseToDisplay, WORK_SUBCATEGORY_DISPLAY_MAP, PERSONAL_SUBCATEGORY_DISPLAY_MAP } from '@/utils/goalCategoryUtils';
 import { PageContainer, PageHeader } from '@/components/ui/standardized';
 import { Label } from '@/components/ui/label';
+import { useZatzetIntegration } from '@/hooks/useZatzetIntegration';
 
 interface EnhancedGoalsSectionProps {
   goals: Goal[];
@@ -71,6 +73,16 @@ export const EnhancedGoalsSection = ({
   const [viewingGoal, setViewingGoal] = useState<Goal | null>(null);
   const [isLoadingGoalDetails, setIsLoadingGoalDetails] = useState(false);
   
+  // Zatzet OKR Integration
+  const { 
+    isConnected: isZatzetConnected, 
+    initiatives, 
+    isSyncing, 
+    fetchInitiatives, 
+    importInitiatives 
+  } = useZatzetIntegration();
+  const [showSyncPreview, setShowSyncPreview] = useState(false);
+  
   // Marketplace filters state
   const [marketplaceSearch, setMarketplaceSearch] = useState('');
   const [marketplaceSubcategory, setMarketplaceSubcategory] = useState('all');
@@ -87,6 +99,27 @@ export const EnhancedGoalsSection = ({
   const [completedGoalSubcategoryFilter, setCompletedGoalSubcategoryFilter] = useState<string>('all');
   
   const isAdmin = userRole === 'admin';
+  const isManager = userRole === 'manager' || userRole === 'admin';
+
+  // Handle Zatzet sync button click
+  const handleZatzetSync = async () => {
+    const result = await fetchInitiatives();
+    if (result.success) {
+      setShowSyncPreview(true);
+    }
+  };
+
+  // Handle import from Zatzet
+  const handleZatzetImport = async (initiativeIds: string[]) => {
+    const result = await importInitiatives(initiativeIds);
+    if (result.success) {
+      setShowSyncPreview(false);
+      // Refresh the goals list
+      if (onRefresh) {
+        await onRefresh();
+      }
+    }
+  };
 
   // Reset active goal subcategory when type changes
   useEffect(() => {
@@ -241,7 +274,6 @@ export const EnhancedGoalsSection = ({
     });
   }, [allGoals, completedGoalSubcategoryFilter]);
 
-  const isManager = userRole === 'manager' || userRole === 'admin';
 
   // Filter marketplace goals - show ALL active work goals (regardless of user assignment)
   const marketplaceGoals = useMemo(() => {
@@ -795,19 +827,36 @@ export const EnhancedGoalsSection = ({
                 <p className="text-sm text-muted-foreground">Discover and join work goals from across the organization</p>
               </div>
               
-              {/* Admin Toggle for Deleted Goals */}
-              {isAdmin && (
-                <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 border">
-                  <Switch
-                    id="show-deleted"
-                    checked={showDeletedGoals}
-                    onCheckedChange={setShowDeletedGoals}
-                  />
-                  <Label htmlFor="show-deleted" className="text-sm font-medium cursor-pointer">
-                    Show Deleted Goals ({marketplaceDeletedGoals.length})
-                  </Label>
-                </div>
-              )}
+              <div className="flex items-center gap-3">
+                {/* Zatzet OKR Sync Button - Only show for managers/admins when connected */}
+                {isManager && isZatzetConnected && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleZatzetSync}
+                    disabled={isSyncing}
+                    className="flex items-center gap-2 border-purple-300 text-purple-700 hover:bg-purple-50"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                    <Target className="h-4 w-4" />
+                    {isSyncing ? 'Syncing...' : 'Sync OKR'}
+                  </Button>
+                )}
+                
+                {/* Admin Toggle for Deleted Goals */}
+                {isAdmin && (
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 border">
+                    <Switch
+                      id="show-deleted"
+                      checked={showDeletedGoals}
+                      onCheckedChange={setShowDeletedGoals}
+                    />
+                    <Label htmlFor="show-deleted" className="text-sm font-medium cursor-pointer">
+                      Show Deleted Goals ({marketplaceDeletedGoals.length})
+                    </Label>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Marketplace Filters - Hidden when showing deleted goals */}
@@ -930,6 +979,15 @@ export const EnhancedGoalsSection = ({
         onRefresh={onRefresh}
         assignments={assignments}
         availableUsers={availableUsers}
+      />
+
+      {/* Zatzet OKR Sync Preview Dialog */}
+      <ZatzetSyncPreviewDialog
+        open={showSyncPreview}
+        onOpenChange={setShowSyncPreview}
+        initiatives={initiatives}
+        onImport={handleZatzetImport}
+        isImporting={isSyncing}
       />
     </PageContainer>
   );
