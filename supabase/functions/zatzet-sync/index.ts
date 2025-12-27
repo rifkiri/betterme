@@ -5,20 +5,48 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+interface ZatzetInitiativeOwner {
+  id: string;
+  full_name: string;
+  email: string;
+  avatar_url?: string;
+}
+
+interface ZatzetInitiativeKeyResult {
+  id: string;
+  title: string;
+  progress: number;
+  status: string;
+}
+
+interface ZatzetInitiativeSupporterProfile {
+  id?: string;
+  full_name: string;
+  email: string;
+  avatar_url?: string;
+}
+
+interface ZatzetInitiativeSupporter {
+  id: string;
+  user_id: string;
+  profile: ZatzetInitiativeSupporterProfile;
+}
+
 interface ZatzetInitiative {
   id: string;
   title: string;
   description?: string;
-  target_date?: string;
   status?: string;
   progress?: number;
+  priority?: string;
+  start_date?: string;
+  due_date?: string;
+  owner?: ZatzetInitiativeOwner;
+  key_result?: ZatzetInitiativeKeyResult;
+  supporters?: ZatzetInitiativeSupporter[];
+  // Legacy fields
+  target_date?: string;
   key_result_id?: string;
-  supporters?: Array<{
-    id: string;
-    name: string;
-    email?: string;
-    role?: string;
-  }>;
 }
 
 interface RequestBody {
@@ -208,7 +236,7 @@ Deno.serve(async (req) => {
                 continue;
               }
 
-              // Create goal from initiative
+              // Create goal from initiative with OKR subcategory
               const { data: newGoal, error: goalError } = await supabase
                 .from('goals')
                 .insert({
@@ -216,10 +244,11 @@ Deno.serve(async (req) => {
                   created_by: user.id,
                   title: initiative.title,
                   description: initiative.description || `Imported from Zatzet OKR Initiative: ${initiative.id}`,
-                  deadline: initiative.target_date || null,
+                  deadline: initiative.due_date || initiative.target_date || null,
                   progress: initiative.progress || 0,
                   completed: initiative.status === 'completed',
                   category: 'work',
+                  subcategory: 'okr', // OKR subcategory for Zatzet initiatives
                   visibility: 'all', // Visible in marketplace
                   archived: false,
                   is_deleted: false,
@@ -245,8 +274,76 @@ Deno.serve(async (req) => {
                   sync_direction: 'import',
                 });
 
-              importResults.push({ initiativeId: initiative.id, goalId: newGoal.id, success: true });
               console.log(`Imported initiative ${initiative.id} as goal ${newGoal.id}`);
+
+              // Create goal assignments for owner and supporters
+              let ownerAssigned = false;
+              let supportersAssigned = 0;
+
+              // Assign owner as lead if email matches a profile
+              if (initiative.owner?.email) {
+                const { data: ownerProfile } = await supabase
+                  .from('profiles')
+                  .select('id')
+                  .eq('email', initiative.owner.email)
+                  .maybeSingle();
+
+                if (ownerProfile) {
+                  const { error: ownerAssignError } = await supabase.rpc('create_goal_assignment', {
+                    p_goal_id: newGoal.id,
+                    p_user_id: ownerProfile.id,
+                    p_role: 'lead',
+                    p_assigned_by: user.id,
+                    p_self_assigned: false,
+                  });
+
+                  if (ownerAssignError) {
+                    console.error(`Failed to assign owner ${initiative.owner.email}:`, ownerAssignError);
+                  } else {
+                    ownerAssigned = true;
+                    console.log(`Assigned owner ${initiative.owner.email} as lead for goal ${newGoal.id}`);
+                  }
+                } else {
+                  console.log(`Owner email ${initiative.owner.email} not found in profiles`);
+                }
+              }
+
+              // Assign supporters as members
+              if (initiative.supporters && initiative.supporters.length > 0) {
+                for (const supporter of initiative.supporters) {
+                  const supporterEmail = supporter.profile?.email;
+                  if (!supporterEmail) continue;
+
+                  const { data: supporterProfile } = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('email', supporterEmail)
+                    .maybeSingle();
+
+                  if (supporterProfile) {
+                    const { error: supporterAssignError } = await supabase.rpc('create_goal_assignment', {
+                      p_goal_id: newGoal.id,
+                      p_user_id: supporterProfile.id,
+                      p_role: 'member',
+                      p_assigned_by: user.id,
+                      p_self_assigned: false,
+                    });
+
+                    if (supporterAssignError) {
+                      console.error(`Failed to assign supporter ${supporterEmail}:`, supporterAssignError);
+                    } else {
+                      supportersAssigned++;
+                      console.log(`Assigned supporter ${supporterEmail} as member for goal ${newGoal.id}`);
+                    }
+                  } else {
+                    console.log(`Supporter email ${supporterEmail} not found in profiles`);
+                  }
+                }
+              }
+
+              console.log(`Goal ${newGoal.id}: Owner assigned: ${ownerAssigned}, Supporters assigned: ${supportersAssigned}`);
+
+              importResults.push({ initiativeId: initiative.id, goalId: newGoal.id, success: true });
 
             } catch (error) {
               console.error(`Error importing initiative ${initiativeId}:`, error);

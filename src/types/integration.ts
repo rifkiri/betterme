@@ -1,13 +1,46 @@
 // Zatzet OKR data types
+export interface ZatzetInitiativeOwner {
+  id: string;
+  full_name: string;
+  email: string;
+  avatar_url?: string;
+}
+
+export interface ZatzetInitiativeKeyResult {
+  id: string;
+  title: string;
+  progress: number;
+  status: string;
+}
+
+export interface ZatzetInitiativeSupporterProfile {
+  id?: string;
+  full_name: string;
+  email: string;
+  avatar_url?: string;
+}
+
+export interface ZatzetInitiativeSupporter {
+  id: string;
+  user_id: string;
+  profile: ZatzetInitiativeSupporterProfile;
+}
+
 export interface ZatzetInitiative {
   id: string;
   title: string;
   description?: string;
-  target_date?: string;
-  status?: 'active' | 'completed' | 'on_hold';
+  status?: string;
   progress?: number;
+  priority?: string;
+  start_date?: string;
+  due_date?: string;
+  owner?: ZatzetInitiativeOwner;
+  key_result?: ZatzetInitiativeKeyResult;
+  supporters?: ZatzetInitiativeSupporter[];
+  // Legacy fields for backward compatibility
+  target_date?: string;
   key_result_id?: string;
-  supporters?: ZatzetSupporter[];
 }
 
 export interface ZatzetSupporter {

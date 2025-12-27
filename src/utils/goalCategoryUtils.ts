@@ -17,7 +17,8 @@ export const PERSONAL_SUBCATEGORIES = [
 export const WORK_SUBCATEGORIES = [
   'project',
   'sales', 
-  'internal'
+  'internal',
+  'okr'
 ] as const;
 
 // User-friendly display names for personal subcategories
@@ -36,7 +37,8 @@ export const PERSONAL_SUBCATEGORY_DISPLAY_MAP = {
 export const WORK_SUBCATEGORY_DISPLAY_MAP = {
   project: 'Project',
   sales: 'Sales',
-  internal: 'Internal'
+  internal: 'Internal',
+  okr: 'OKR'
 } as const;
 
 // Type definitions
