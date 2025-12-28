@@ -37,7 +37,7 @@ export const useGoalsManager = ({
         .from('integration_connections')
         .select('api_endpoint, api_key_encrypted')
         .eq('user_id', userId)
-        .eq('integration_type', 'zatzet')
+        .eq('integration_type', 'zatzet_okr')
         .eq('is_connected', true)
         .maybeSingle();
 
