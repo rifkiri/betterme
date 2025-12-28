@@ -2,6 +2,7 @@ import { supabaseDataService } from '@/services/SupabaseDataService';
 import { supabase } from '@/integrations/supabase/client';
 import { Goal } from '@/types/productivity';
 import { toast } from 'sonner';
+import { ZatzetSyncService } from '@/services/ZatzetSyncService';
 
 interface UseGoalsManagerProps {
   userId: string | null;
@@ -13,6 +14,9 @@ interface UseGoalsManagerProps {
   setDeletedGoals: (goals: Goal[] | ((prev: Goal[]) => Goal[])) => void;
 }
 
+// Debounce timer for Zatzet sync
+let zatzetSyncTimeout: ReturnType<typeof setTimeout> | null = null;
+
 export const useGoalsManager = ({
   userId,
   loadAllData,
@@ -22,6 +26,45 @@ export const useGoalsManager = ({
   deletedGoals,
   setDeletedGoals,
 }: UseGoalsManagerProps) => {
+
+  // Background sync to Zatzet OKR (non-blocking, debounced)
+  const syncProgressToZatzet = async (goalId: string, progress: number) => {
+    if (!userId) return;
+
+    try {
+      // Get connection info
+      const { data: connection } = await supabase
+        .from('integration_connections')
+        .select('api_endpoint, api_key_encrypted')
+        .eq('user_id', userId)
+        .eq('integration_type', 'zatzet')
+        .eq('is_connected', true)
+        .maybeSingle();
+
+      if (!connection?.api_endpoint || !connection?.api_key_encrypted) {
+        console.log('🔄 [ZATZET SYNC] No active connection found');
+        return;
+      }
+
+      console.log('🔄 [ZATZET SYNC] Exporting progress to Zatzet - Goal:', goalId, 'Progress:', progress);
+      
+      const result = await ZatzetSyncService.exportGoalProgress(
+        connection.api_endpoint,
+        connection.api_key_encrypted,
+        goalId,
+        progress
+      );
+
+      if (result.success) {
+        console.log('✅ [ZATZET SYNC] Progress synced successfully');
+      } else {
+        console.warn('⚠️ [ZATZET SYNC] Sync failed:', result.error);
+      }
+    } catch (error) {
+      console.error('❌ [ZATZET SYNC] Error syncing to Zatzet:', error);
+      // Don't show error toast - this is background sync, shouldn't interrupt user
+    }
+  };
   
   const addGoal = async (goal: Omit<Goal, 'id' | 'progress'>): Promise<string | undefined> => {
     if (!userId) {
@@ -81,6 +124,10 @@ export const useGoalsManager = ({
 
     console.log('🎯 [PROGRESS UPDATE] Starting - Goal:', goalId, 'Progress:', clampedProgress, 'User:', userId);
 
+    // Find the goal to check if it's an OKR goal
+    const goal = goals.find(g => g.id === goalId);
+    const isOkrGoal = goal?.subcategory === 'okr';
+
     // Optimistic UI update - immediately update local state
     const optimisticUpdates = { 
       progress: clampedProgress,
@@ -88,10 +135,10 @@ export const useGoalsManager = ({
     };
     
     setGoals(prevGoals => 
-      prevGoals.map(goal => 
-        goal.id === goalId 
-          ? { ...goal, ...optimisticUpdates }
-          : goal
+      prevGoals.map(g => 
+        g.id === goalId 
+          ? { ...g, ...optimisticUpdates }
+          : g
       )
     );
     
@@ -107,6 +154,21 @@ export const useGoalsManager = ({
       console.log('🎯 [PROGRESS UPDATE] Data refresh completed');
       
       toast.success('Goal progress updated');
+
+      // If this is an OKR goal, sync to Zatzet in background (debounced)
+      if (isOkrGoal) {
+        console.log('🎯 [PROGRESS UPDATE] OKR goal detected, scheduling Zatzet sync...');
+        
+        // Clear any pending sync for this goal
+        if (zatzetSyncTimeout) {
+          clearTimeout(zatzetSyncTimeout);
+        }
+        
+        // Debounce: wait 2 seconds before syncing to avoid rapid-fire updates
+        zatzetSyncTimeout = setTimeout(() => {
+          syncProgressToZatzet(goalId, clampedProgress);
+        }, 2000);
+      }
     } catch (error) {
       console.error('🎯 [PROGRESS UPDATE] Failed to update goal progress:', error);
       
