@@ -180,6 +180,7 @@ export type Database = {
           description: string | null
           id: string
           is_deleted: boolean
+          last_external_sync_at: string | null
           progress: number
           subcategory: string | null
           title: string
@@ -200,6 +201,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_deleted?: boolean
+          last_external_sync_at?: string | null
           progress?: number
           subcategory?: string | null
           title: string
@@ -220,6 +222,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_deleted?: boolean
+          last_external_sync_at?: string | null
           progress?: number
           subcategory?: string | null
           title?: string

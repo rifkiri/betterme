@@ -1,6 +1,20 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ZatzetInitiative, ImportResult, ImportSummary } from '@/types/integration';
 
+export interface ExportProgressResult {
+  success: boolean;
+  error?: string;
+  synced?: boolean;
+  previousProgress?: number;
+  newProgress?: number;
+}
+
+export interface RefreshGoalResult {
+  success: boolean;
+  error?: string;
+  latestProgress?: number;
+}
+
 class ZatzetSyncServiceClass {
   /**
    * Test connection to Zatzet OKR API
@@ -100,6 +114,68 @@ class ZatzetSyncServiceClass {
   }
 
   /**
+   * Export goal progress to Zatzet OKR
+   */
+  async exportGoalProgress(
+    apiEndpoint: string,
+    apiKey: string,
+    goalId: string,
+    progress: number
+  ): Promise<ExportProgressResult> {
+    try {
+      const { data, error } = await supabase.functions.invoke('zatzet-sync', {
+        body: {
+          action: 'export-progress',
+          apiEndpoint,
+          apiKey,
+          goalId,
+          progress,
+        },
+      });
+
+      if (error) {
+        console.error('Edge function error:', error);
+        return { success: false, error: error.message };
+      }
+
+      return data;
+    } catch (error: any) {
+      console.error('Export progress error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Refresh goal from Zatzet OKR (fetch latest data)
+   */
+  async refreshGoalFromZatzet(
+    apiEndpoint: string,
+    apiKey: string,
+    goalId: string
+  ): Promise<RefreshGoalResult> {
+    try {
+      const { data, error } = await supabase.functions.invoke('zatzet-sync', {
+        body: {
+          action: 'refresh-goal',
+          apiEndpoint,
+          apiKey,
+          goalId,
+        },
+      });
+
+      if (error) {
+        console.error('Edge function error:', error);
+        return { success: false, error: error.message };
+      }
+
+      return data;
+    } catch (error: any) {
+      console.error('Refresh goal error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
    * Check if an initiative has already been imported
    */
   async isInitiativeImported(externalId: string): Promise<boolean> {
@@ -127,6 +203,21 @@ class ZatzetSyncServiceClass {
       .maybeSingle();
 
     return data?.internal_id || null;
+  }
+
+  /**
+   * Check if a goal is linked to Zatzet OKR
+   */
+  async isGoalLinkedToZatzet(goalId: string): Promise<boolean> {
+    const { data } = await supabase
+      .from('integration_sync_logs')
+      .select('id')
+      .eq('internal_id', goalId)
+      .eq('sync_type', 'initiative')
+      .eq('sync_status', 'success')
+      .maybeSingle();
+
+    return !!data;
   }
 }
 

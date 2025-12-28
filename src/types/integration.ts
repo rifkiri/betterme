@@ -128,12 +128,20 @@ export interface ImportSummary {
   results: ImportResult[];
 }
 
+export interface ExportResult {
+  success: boolean;
+  synced?: boolean;
+  previousProgress?: number;
+  newProgress?: number;
+  error?: string;
+}
+
 // Default configuration
 export const DEFAULT_ZATZET_ENDPOINT = 'https://ftetzacrjcfeevfczinb.supabase.co/functions/v1/public-api';
 
 export const DEFAULT_SYNC_SETTINGS: SyncSettings = {
   autoSync: false,
-  direction: 'import',
+  direction: 'bidirectional',
   mappings: [
     { zatzetEntity: 'initiatives', bettermeEntity: 'goal', enabled: true },
   ],

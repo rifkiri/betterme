@@ -50,10 +50,12 @@ interface ZatzetInitiative {
 }
 
 interface RequestBody {
-  action: 'test-connection' | 'fetch-initiatives' | 'import-initiatives';
+  action: 'test-connection' | 'fetch-initiatives' | 'import-initiatives' | 'export-progress' | 'refresh-goal';
   apiEndpoint: string;
   apiKey: string;
   initiativeIds?: string[];
+  goalId?: string;
+  progress?: number;
 }
 
 Deno.serve(async (req) => {
@@ -177,6 +179,243 @@ Deno.serve(async (req) => {
         }
       }
 
+      case 'export-progress': {
+        const { goalId, progress } = body;
+        
+        if (!goalId || progress === undefined) {
+          return new Response(
+            JSON.stringify({ success: false, error: 'Missing goalId or progress' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        try {
+          console.log(`Exporting progress for goal ${goalId}: ${progress}%`);
+
+          // Get external ID from sync logs
+          const { data: syncLog } = await supabase
+            .from('integration_sync_logs')
+            .select('external_id, connection_id')
+            .eq('internal_id', goalId)
+            .eq('sync_type', 'initiative')
+            .eq('sync_status', 'success')
+            .order('synced_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (!syncLog?.external_id) {
+            console.log(`Goal ${goalId} not linked to Zatzet initiative`);
+            return new Response(
+              JSON.stringify({ success: false, error: 'Goal not linked to Zatzet initiative' }),
+              { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+
+          const externalId = syncLog.external_id;
+          console.log(`Found external ID: ${externalId}`);
+
+          // Fetch latest from Zatzet first
+          const fetchResponse = await fetch(`${apiEndpoint}/v1/initiatives/${externalId}`, {
+            method: 'GET',
+            headers: {
+              'x-api-key': apiKey,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (!fetchResponse.ok) {
+            const errorText = await fetchResponse.text();
+            console.error('Failed to fetch initiative from Zatzet:', errorText);
+            return new Response(
+              JSON.stringify({ success: false, error: `Failed to fetch initiative: ${errorText}` }),
+              { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+
+          const initiativeData = await fetchResponse.json();
+          const latestInitiative = initiativeData.data || initiativeData;
+          const zatzetProgress = latestInitiative.progress ?? 0;
+
+          console.log(`Zatzet current progress: ${zatzetProgress}%, BetterMe progress: ${progress}%`);
+
+          // Only update if progress differs
+          if (zatzetProgress === progress) {
+            console.log('Progress already in sync, no update needed');
+            
+            // Update last_external_sync_at
+            await supabase
+              .from('goals')
+              .update({ last_external_sync_at: new Date().toISOString() })
+              .eq('id', goalId);
+
+            return new Response(
+              JSON.stringify({ success: true, message: 'Already in sync', synced: false }),
+              { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+
+          // Update progress in Zatzet
+          const updateResponse = await fetch(`${apiEndpoint}/v1/initiatives/${externalId}`, {
+            method: 'PATCH',
+            headers: {
+              'x-api-key': apiKey,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ progress }),
+          });
+
+          if (!updateResponse.ok) {
+            const errorText = await updateResponse.text();
+            console.error('Failed to update initiative in Zatzet:', errorText);
+            
+            // Log failed export
+            await supabase.from('integration_sync_logs').insert({
+              connection_id: syncLog.connection_id,
+              sync_type: 'initiative',
+              external_id: externalId,
+              internal_id: goalId,
+              sync_status: 'failed',
+              sync_direction: 'export',
+              error_message: errorText,
+            });
+
+            return new Response(
+              JSON.stringify({ success: false, error: `Failed to update: ${errorText}` }),
+              { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+
+          console.log(`Successfully exported progress ${progress}% to Zatzet initiative ${externalId}`);
+
+          // Log successful export
+          await supabase.from('integration_sync_logs').insert({
+            connection_id: syncLog.connection_id,
+            sync_type: 'initiative',
+            external_id: externalId,
+            internal_id: goalId,
+            sync_status: 'success',
+            sync_direction: 'export',
+          });
+
+          // Update last_external_sync_at on goal
+          await supabase
+            .from('goals')
+            .update({ last_external_sync_at: new Date().toISOString() })
+            .eq('id', goalId);
+
+          return new Response(
+            JSON.stringify({ 
+              success: true, 
+              message: 'Progress exported to Zatzet',
+              synced: true,
+              previousProgress: zatzetProgress,
+              newProgress: progress
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+
+        } catch (error) {
+          console.error('Export progress failed:', error);
+          return new Response(
+            JSON.stringify({ success: false, error: error.message }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+
+      case 'refresh-goal': {
+        const { goalId } = body;
+        
+        if (!goalId) {
+          return new Response(
+            JSON.stringify({ success: false, error: 'Missing goalId' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        try {
+          console.log(`Refreshing goal ${goalId} from Zatzet`);
+
+          // Get external ID from sync logs
+          const { data: syncLog } = await supabase
+            .from('integration_sync_logs')
+            .select('external_id')
+            .eq('internal_id', goalId)
+            .eq('sync_type', 'initiative')
+            .eq('sync_status', 'success')
+            .order('synced_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (!syncLog?.external_id) {
+            return new Response(
+              JSON.stringify({ success: false, error: 'Goal not linked to Zatzet initiative' }),
+              { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+
+          // Fetch latest from Zatzet
+          const response = await fetch(`${apiEndpoint}/v1/initiatives/${syncLog.external_id}`, {
+            method: 'GET',
+            headers: {
+              'x-api-key': apiKey,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Failed to fetch initiative:', errorText);
+            return new Response(
+              JSON.stringify({ success: false, error: `Failed to fetch: ${errorText}` }),
+              { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+
+          const initiativeData = await response.json();
+          const initiative: ZatzetInitiative = initiativeData.data || initiativeData;
+
+          // Update goal with latest Zatzet data
+          const { error: updateError } = await supabase
+            .from('goals')
+            .update({
+              title: initiative.title,
+              description: initiative.description,
+              deadline: initiative.due_date || initiative.target_date || null,
+              progress: initiative.progress || 0,
+              completed: initiative.status === 'completed',
+              last_external_sync_at: new Date().toISOString(),
+            })
+            .eq('id', goalId);
+
+          if (updateError) {
+            console.error('Failed to update goal:', updateError);
+            return new Response(
+              JSON.stringify({ success: false, error: updateError.message }),
+              { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+
+          console.log(`Goal ${goalId} refreshed from Zatzet initiative ${syncLog.external_id}`);
+
+          return new Response(
+            JSON.stringify({ 
+              success: true, 
+              message: 'Goal refreshed from Zatzet',
+              latestProgress: initiative.progress || 0
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+
+        } catch (error) {
+          console.error('Refresh goal failed:', error);
+          return new Response(
+            JSON.stringify({ success: false, error: error.message }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+
       case 'import-initiatives': {
         const { initiativeIds } = body;
         
@@ -245,6 +484,7 @@ Deno.serve(async (req) => {
                     subcategory: 'okr', // Ensure OKR subcategory is set
                     archived: false, // Unarchive to make visible in marketplace
                     is_deleted: false,
+                    last_external_sync_at: new Date().toISOString(),
                   })
                   .eq('id', goalId);
 
@@ -272,6 +512,7 @@ Deno.serve(async (req) => {
                     visibility: 'all', // Visible in marketplace
                     archived: false,
                     is_deleted: false,
+                    last_external_sync_at: new Date().toISOString(),
                   })
                   .select('id')
                   .single();

@@ -52,7 +52,8 @@ export class SupabaseGoalsService {
       progress: goal.progress || 0,
       userId: goal.user_id,
       createdBy: goal.created_by,
-      assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined
+      assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined,
+      lastExternalSyncAt: goal.last_external_sync_at ? new Date(goal.last_external_sync_at) : undefined
     }));
   }
 
@@ -127,7 +128,8 @@ export class SupabaseGoalsService {
         userId: goal.user_id,
         createdBy: goal.created_by,
         assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined,
-        visibility: goal.visibility || 'all'
+        visibility: goal.visibility || 'all',
+        lastExternalSyncAt: goal.last_external_sync_at ? new Date(goal.last_external_sync_at) : undefined
       }));
 
       // Debug: Check subcategory data after transformation
@@ -205,7 +207,8 @@ export class SupabaseGoalsService {
         progress: goal.progress || 0,
         createdBy: goal.created_by,
         assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined,
-        visibility: (goal.visibility || 'all') as 'all' | 'managers' | 'self'
+        visibility: (goal.visibility || 'all') as 'all' | 'managers' | 'self',
+        lastExternalSyncAt: goal.last_external_sync_at ? new Date(goal.last_external_sync_at) : undefined
       }));
 
       console.log('Transformed goals for frontend:', {
