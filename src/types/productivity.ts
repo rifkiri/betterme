@@ -81,6 +81,7 @@ export interface Goal {
   createdBy?: string; // Manager who created the work goal
   assignmentDate?: Date;
   visibility?: 'all' | 'managers' | 'self'; // Who can view the work goal
+  lastExternalSyncAt?: Date; // Last sync time with external system (e.g., Zatzet OKR)
 }
 
 export interface GoalAssignment {

@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { CalendarIcon, Trash2, Link, Eye, Minus, Plus, CheckCircle, Target } from 'lucide-react';
+import { CalendarIcon, Trash2, Link, Eye, Minus, Plus, CheckCircle, Target, RefreshCw, Cloud, CloudOff } from 'lucide-react';
 import { Goal, Task, WeeklyOutput, GoalAssignment } from '@/types/productivity';
-import { format, isToday, isTomorrow } from 'date-fns';
+import { format, isToday, isTomorrow, formatDistanceToNow } from 'date-fns';
 import { EditGoalDialog } from './EditGoalDialog';
 import { PersonalGoalEditDialog } from './PersonalGoalEditDialog';
 import { MoveGoalDialog } from './MoveGoalDialog';
@@ -19,6 +19,7 @@ import { ActionButtonGroup } from '@/components/ui/action-button-group';
 import { DateDisplay } from '@/components/ui/date-display';
 import { getContentCardVariant, getStatusBadgeStatus, formatCountDisplay } from '@/utils/standardizedHelpers';
 import { useAuth } from '@/contexts/AuthContext';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface GoalCardProps {
   goal: Goal;
@@ -33,6 +34,8 @@ interface GoalCardProps {
   onRefresh?: () => Promise<void>;
   assignments?: GoalAssignment[];
   availableUsers?: any[];
+  onSyncToZatzet?: (goalId: string, progress: number) => Promise<void>;
+  isSyncing?: boolean;
 }
 
 export const GoalCard = ({
@@ -47,7 +50,9 @@ export const GoalCard = ({
   isCompleted = false,
   onRefresh,
   assignments = [],
-  availableUsers = []
+  availableUsers = [],
+  onSyncToZatzet,
+  isSyncing = false
 }: GoalCardProps) => {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const { user } = useAuth();
@@ -56,6 +61,9 @@ export const GoalCard = ({
   const isGoalOwner = goal.userId === user?.id;
   const isAssignedToGoal = assignments?.some(a => a.userId === user?.id && a.goalId === goal.id);
   const canUpdateProgress = isGoalOwner || isAssignedToGoal;
+  
+  // Check if this is an OKR goal from Zatzet
+  const isOkrGoal = goal.subcategory === 'okr';
   
   const getCategoryColor = (category: Goal['category']) => {
     switch (category) {
@@ -69,6 +77,18 @@ export const GoalCard = ({
   const linkedOutputs = weeklyOutputs?.filter(output => output.linkedGoalId === goal.id) || [];
   const linkedOutputsCount = linkedOutputs.length;
 
+  // Format last sync time
+  const getLastSyncDisplay = () => {
+    if (!goal.lastExternalSyncAt) return null;
+    try {
+      return formatDistanceToNow(new Date(goal.lastExternalSyncAt), { addSuffix: true });
+    } catch {
+      return null;
+    }
+  };
+
+  const lastSyncDisplay = getLastSyncDisplay();
+
   return (
     <>
       <ContentCard variant={getContentCardVariant(isOverdue, isCompleted)}>
@@ -81,11 +101,33 @@ export const GoalCard = ({
                   <Badge className={`text-xs ${getCategoryColor(goal.category)}`}>
                     {goal.category}
                   </Badge>
-                  {goal.subcategory === 'okr' ? (
-                    <Badge className="text-xs bg-purple-100 text-purple-800 border border-purple-300">
-                      <Target className="w-3 h-3 mr-1" />
-                      OKR
-                    </Badge>
+                  {isOkrGoal ? (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge className="text-xs bg-purple-100 text-purple-800 border border-purple-300 cursor-help">
+                            <Target className="w-3 h-3 mr-1" />
+                            OKR
+                            {isSyncing ? (
+                              <RefreshCw className="w-3 h-3 ml-1 animate-spin" />
+                            ) : lastSyncDisplay ? (
+                              <Cloud className="w-3 h-3 ml-1 text-green-600" />
+                            ) : (
+                              <CloudOff className="w-3 h-3 ml-1 text-gray-400" />
+                            )}
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs">
+                            {isSyncing 
+                              ? 'Syncing with Zatzet OKR...' 
+                              : lastSyncDisplay 
+                                ? `Last synced ${lastSyncDisplay}` 
+                                : 'Not synced yet'}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   ) : goal.subcategory && (
                     <Badge variant="outline" className="text-xs bg-white border-gray-300">
                       {mapSubcategoryDatabaseToDisplay(goal.subcategory)}

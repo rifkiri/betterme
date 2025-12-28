@@ -10,6 +10,7 @@ export const useZatzetIntegration = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Load existing connection on mount
   const loadConnection = useCallback(async () => {
@@ -168,18 +169,95 @@ export const useZatzetIntegration = () => {
     }
   };
 
+  // Export goal progress to Zatzet
+  const exportGoalProgress = async (goalId: string, progress: number, showToast = true) => {
+    if (!connection?.api_key_encrypted) {
+      console.log('No Zatzet connection configured, skipping export');
+      return { success: false, error: 'Not connected' };
+    }
+
+    setIsExporting(true);
+    try {
+      const result = await ZatzetSyncService.exportGoalProgress(
+        connection.api_endpoint,
+        connection.api_key_encrypted,
+        goalId,
+        progress
+      );
+      
+      if (result.success && result.synced && showToast) {
+        toast({
+          title: "Progress Synced",
+          description: `Progress exported to Zatzet OKR (${result.previousProgress}% → ${result.newProgress}%)`,
+        });
+      } else if (!result.success && showToast) {
+        // Only show error if it's not "not linked" (silent fail for non-OKR goals)
+        if (result.error !== 'Goal not linked to Zatzet initiative') {
+          toast({
+            title: "Sync Failed",
+            description: result.error || "Failed to export progress",
+            variant: "destructive",
+          });
+        }
+      }
+      return result;
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Refresh goal from Zatzet (fetch latest data)
+  const refreshGoalFromZatzet = async (goalId: string) => {
+    if (!connection?.api_key_encrypted) {
+      toast({
+        title: "Not Connected",
+        description: "Please configure your Zatzet OKR connection first",
+        variant: "destructive",
+      });
+      return { success: false };
+    }
+
+    setIsSyncing(true);
+    try {
+      const result = await ZatzetSyncService.refreshGoalFromZatzet(
+        connection.api_endpoint,
+        connection.api_key_encrypted,
+        goalId
+      );
+      
+      if (result.success) {
+        toast({
+          title: "Goal Refreshed",
+          description: `Updated from Zatzet OKR (Progress: ${result.latestProgress}%)`,
+        });
+      } else {
+        toast({
+          title: "Refresh Failed",
+          description: result.error || "Failed to refresh from Zatzet",
+          variant: "destructive",
+        });
+      }
+      return result;
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   return {
     connection,
     initiatives,
     isLoading,
     isTesting,
     isSyncing,
+    isExporting,
     isConnected: connection?.is_connected ?? false,
     testConnection,
     saveConnection,
     deleteConnection,
     fetchInitiatives,
     importInitiatives,
+    exportGoalProgress,
+    refreshGoalFromZatzet,
     refreshConnection: loadConnection,
   };
 };
