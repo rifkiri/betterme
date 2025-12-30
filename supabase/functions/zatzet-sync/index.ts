@@ -12,11 +12,20 @@ interface ZatzetInitiativeOwner {
   avatar_url?: string;
 }
 
+interface ZatzetObjectiveInfo {
+  id: string;
+  title: string;
+  level?: string;
+  status?: string;
+}
+
 interface ZatzetInitiativeKeyResult {
   id: string;
   title: string;
   progress: number;
   status: string;
+  objective_id?: string;
+  objective?: ZatzetObjectiveInfo;
 }
 
 interface ZatzetInitiativeSupporterProfile {
@@ -375,7 +384,7 @@ Deno.serve(async (req) => {
           const initiativeData = await response.json();
           const initiative: ZatzetInitiative = initiativeData.data || initiativeData;
 
-          // Update goal with latest Zatzet data
+          // Update goal with latest Zatzet data including OKR hierarchy
           const { error: updateError } = await supabase
             .from('goals')
             .update({
@@ -385,6 +394,11 @@ Deno.serve(async (req) => {
               progress: initiative.progress || 0,
               completed: initiative.status === 'completed',
               last_external_sync_at: new Date().toISOString(),
+              // Update OKR hierarchy fields
+              external_key_result_id: initiative.key_result?.id || null,
+              external_key_result_title: initiative.key_result?.title || null,
+              external_objective_id: initiative.key_result?.objective?.id || initiative.key_result?.objective_id || null,
+              external_objective_title: initiative.key_result?.objective?.title || null,
             })
             .eq('id', goalId);
 
@@ -485,6 +499,11 @@ Deno.serve(async (req) => {
                     archived: false, // Unarchive to make visible in marketplace
                     is_deleted: false,
                     last_external_sync_at: new Date().toISOString(),
+                    // Update OKR hierarchy fields
+                    external_key_result_id: initiative.key_result?.id || null,
+                    external_key_result_title: initiative.key_result?.title || null,
+                    external_objective_id: initiative.key_result?.objective?.id || initiative.key_result?.objective_id || null,
+                    external_objective_title: initiative.key_result?.objective?.title || null,
                   })
                   .eq('id', goalId);
 
@@ -513,6 +532,11 @@ Deno.serve(async (req) => {
                     archived: false,
                     is_deleted: false,
                     last_external_sync_at: new Date().toISOString(),
+                    // OKR hierarchy fields
+                    external_key_result_id: initiative.key_result?.id || null,
+                    external_key_result_title: initiative.key_result?.title || null,
+                    external_objective_id: initiative.key_result?.objective?.id || initiative.key_result?.objective_id || null,
+                    external_objective_title: initiative.key_result?.objective?.title || null,
                   })
                   .select('id')
                   .single();

@@ -6,11 +6,20 @@ export interface ZatzetInitiativeOwner {
   avatar_url?: string;
 }
 
+export interface ZatzetObjectiveInfo {
+  id: string;
+  title: string;
+  level?: string;
+  status?: string;
+}
+
 export interface ZatzetInitiativeKeyResult {
   id: string;
   title: string;
   progress: number;
   status: string;
+  objective_id?: string;
+  objective?: ZatzetObjectiveInfo;
 }
 
 export interface ZatzetInitiativeSupporterProfile {

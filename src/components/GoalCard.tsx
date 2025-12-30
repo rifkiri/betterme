@@ -138,6 +138,23 @@ export const GoalCard = ({
               {goal.description && (
                 <p className="text-xs text-gray-600 mb-2">{goal.description}</p>
               )}
+              {/* OKR Hierarchy Display */}
+              {isOkrGoal && (goal.externalObjectiveTitle || goal.externalKeyResultTitle) && (
+                <div className="space-y-0.5 mb-2 text-xs">
+                  {goal.externalObjectiveTitle && (
+                    <div className="flex items-center gap-1 text-purple-600">
+                      <span className="font-medium">OBJ:</span>
+                      <span className="truncate">{goal.externalObjectiveTitle}</span>
+                    </div>
+                  )}
+                  {goal.externalKeyResultTitle && (
+                    <div className="flex items-center gap-1 text-blue-600">
+                      <span className="font-medium">KR:</span>
+                      <span className="truncate">{goal.externalKeyResultTitle}</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-2 mb-2">
               {linkedOutputsCount > 0 && (

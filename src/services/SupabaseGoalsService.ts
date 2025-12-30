@@ -53,7 +53,11 @@ export class SupabaseGoalsService {
       userId: goal.user_id,
       createdBy: goal.created_by,
       assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined,
-      lastExternalSyncAt: goal.last_external_sync_at ? new Date(goal.last_external_sync_at) : undefined
+      lastExternalSyncAt: goal.last_external_sync_at ? new Date(goal.last_external_sync_at) : undefined,
+      externalKeyResultId: goal.external_key_result_id,
+      externalKeyResultTitle: goal.external_key_result_title,
+      externalObjectiveId: goal.external_objective_id,
+      externalObjectiveTitle: goal.external_objective_title,
     }));
   }
 
@@ -129,7 +133,11 @@ export class SupabaseGoalsService {
         createdBy: goal.created_by,
         assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined,
         visibility: goal.visibility || 'all',
-        lastExternalSyncAt: goal.last_external_sync_at ? new Date(goal.last_external_sync_at) : undefined
+        lastExternalSyncAt: goal.last_external_sync_at ? new Date(goal.last_external_sync_at) : undefined,
+        externalKeyResultId: goal.external_key_result_id,
+        externalKeyResultTitle: goal.external_key_result_title,
+        externalObjectiveId: goal.external_objective_id,
+        externalObjectiveTitle: goal.external_objective_title,
       }));
 
       // Debug: Check subcategory data after transformation
@@ -208,7 +216,11 @@ export class SupabaseGoalsService {
         createdBy: goal.created_by,
         assignmentDate: goal.assignment_date ? new Date(goal.assignment_date) : undefined,
         visibility: (goal.visibility || 'all') as 'all' | 'managers' | 'self',
-        lastExternalSyncAt: goal.last_external_sync_at ? new Date(goal.last_external_sync_at) : undefined
+        lastExternalSyncAt: goal.last_external_sync_at ? new Date(goal.last_external_sync_at) : undefined,
+        externalKeyResultId: goal.external_key_result_id,
+        externalKeyResultTitle: goal.external_key_result_title,
+        externalObjectiveId: goal.external_objective_id,
+        externalObjectiveTitle: goal.external_objective_title,
       }));
 
       console.log('Transformed goals for frontend:', {

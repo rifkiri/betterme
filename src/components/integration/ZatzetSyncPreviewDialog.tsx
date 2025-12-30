@@ -60,6 +60,12 @@ export const ZatzetSyncPreviewDialog: React.FC<ZatzetSyncPreviewDialogProps> = (
         return 'bg-green-100 text-green-800';
       case 'on_hold':
         return 'bg-yellow-100 text-yellow-800';
+      case 'on-track':
+        return 'bg-emerald-100 text-emerald-800';
+      case 'at-risk':
+        return 'bg-orange-100 text-orange-800';
+      case 'off-track':
+        return 'bg-red-100 text-red-800';
       default:
         return 'bg-blue-100 text-blue-800';
     }
@@ -125,6 +131,30 @@ export const ZatzetSyncPreviewDialog: React.FC<ZatzetSyncPreviewDialogProps> = (
                           {initiative.description}
                         </p>
                       )}
+                      {/* OKR Hierarchy Display */}
+                      {initiative.key_result && (
+                        <div className="mt-2 space-y-1 text-xs">
+                          {initiative.key_result.objective && (
+                            <div className="flex items-center gap-1.5 text-purple-700">
+                              <span className="font-medium">OBJ:</span>
+                              <span className="truncate">{initiative.key_result.objective.title}</span>
+                              {initiative.key_result.objective.status && (
+                                <Badge variant="outline" className={`text-xs ${getStatusColor(initiative.key_result.objective.status)}`}>
+                                  {initiative.key_result.objective.status}
+                                </Badge>
+                              )}
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1.5 text-blue-700">
+                            <span className="font-medium">KR:</span>
+                            <span className="truncate">{initiative.key_result.title}</span>
+                            <Badge variant="outline" className={`text-xs ${getStatusColor(initiative.key_result.status)}`}>
+                              {initiative.key_result.status}
+                            </Badge>
+                            <span className="text-muted-foreground">({initiative.key_result.progress}%)</span>
+                          </div>
+                        </div>
+                      )}
                       <div className="flex items-center gap-2 mt-2">
                         {initiative.status && (
                           <Badge 
@@ -139,9 +169,9 @@ export const ZatzetSyncPreviewDialog: React.FC<ZatzetSyncPreviewDialogProps> = (
                             Progress: {initiative.progress}%
                           </span>
                         )}
-                        {initiative.target_date && (
+                        {(initiative.due_date || initiative.target_date) && (
                           <span className="text-xs text-muted-foreground">
-                            Due: {initiative.target_date}
+                            Due: {initiative.due_date || initiative.target_date}
                           </span>
                         )}
                       </div>
