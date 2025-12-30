@@ -13,7 +13,8 @@ import {
   Clock,
   ArrowRight,
   Users,
-  Settings
+  Settings,
+  BarChart3
 } from 'lucide-react';
 import { Goal, Task, WeeklyOutput, Habit, GoalAssignment } from '@/types/productivity';
 import { format, isBefore } from 'date-fns';
@@ -201,6 +202,25 @@ const getCategoryColor = (category: Goal['category']) => {
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Calendar className="h-4 w-4" />
                   <span>Deadline: {format(goal.deadline, 'PPP')}</span>
+                </div>
+              )}
+
+              {/* OKR Hierarchy Info - for imported OKR goals */}
+              {goal.subcategory === 'okr' && (goal.externalObjectiveTitle || goal.externalKeyResultTitle) && (
+                <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg space-y-1.5">
+                  <p className="text-xs font-medium text-blue-800">OKR Hierarchy</p>
+                  {goal.externalObjectiveTitle && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Target className="h-3.5 w-3.5 text-blue-600" />
+                      <span className="text-gray-700">OBJ: {goal.externalObjectiveTitle}</span>
+                    </div>
+                  )}
+                  {goal.externalKeyResultTitle && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <BarChart3 className="h-3.5 w-3.5 text-purple-600" />
+                      <span className="text-gray-700">KR: {goal.externalKeyResultTitle}</span>
+                    </div>
+                  )}
                 </div>
               )}
 

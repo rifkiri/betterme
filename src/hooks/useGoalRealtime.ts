@@ -43,17 +43,12 @@ export const useGoalRealtime = ({
           console.log('Real-time goal update:', payload);
           
           // Show toast for relevant updates (not for initial load)
+          // Note: Progress updates toast is handled by useGoalsManager to avoid duplicates
           if (!isInitialLoad.current) {
             if (payload.eventType === 'INSERT') {
               toast.success('New goal created');
-            } else if (payload.eventType === 'UPDATE') {
-              // Only show toast for significant updates like progress changes
-              const oldRecord = payload.old;
-              const newRecord = payload.new;
-              if (oldRecord?.progress !== newRecord?.progress) {
-                toast.info('Goal progress updated');
-              }
             }
+            // Removed UPDATE toast - already handled by the action that triggered it
           }
 
           // Trigger callback
