@@ -515,44 +515,24 @@ Deno.serve(async (req) => {
 
                 console.log(`Updated existing goal ${goalId} from initiative ${initiative.id}`);
               } else {
-                // Create new goal from initiative with OKR subcategory
-                const { data: newGoal, error: goalError } = await supabase
+                // Secondary check: Look for goals with matching external initiative ID in description
+                // This catches legacy imports that weren't logged properly
+                const { data: existingGoal } = await supabase
                   .from('goals')
-                  .insert({
-                    user_id: user.id,
-                    created_by: user.id,
-                    title: initiative.title,
-                    description: initiative.description || `Imported from Zatzet OKR Initiative: ${initiative.id}`,
-                    deadline: initiative.due_date || initiative.target_date || null,
-                    progress: initiative.progress || 0,
-                    completed: initiative.status === 'completed',
-                    category: 'work',
-                    subcategory: 'okr', // OKR subcategory for Zatzet initiatives
-                    visibility: 'all', // Visible in marketplace
-                    archived: false,
-                    is_deleted: false,
-                    last_external_sync_at: new Date().toISOString(),
-                    // OKR hierarchy fields
-                    external_key_result_id: initiative.key_result?.id || null,
-                    external_key_result_title: initiative.key_result?.title || null,
-                    external_objective_id: initiative.key_result?.objective?.id || initiative.key_result?.objective_id || null,
-                    external_objective_title: initiative.key_result?.objective?.title || null,
-                  })
                   .select('id')
-                  .single();
-
-                if (goalError) {
-                  console.error('Failed to create goal:', goalError);
-                  importResults.push({ initiativeId: initiative.id, success: false, error: goalError.message });
-                  continue;
-                }
-
-                goalId = newGoal.id;
-
-                // Log the sync for new imports only
-                await supabase
-                  .from('integration_sync_logs')
-                  .insert({
+                  .eq('subcategory', 'okr')
+                  .ilike('description', `%${initiative.id}%`)
+                  .maybeSingle();
+                
+                if (existingGoal?.id) {
+                  // Found a goal that was imported but missing sync log - update it
+                  goalId = existingGoal.id;
+                  isUpdate = true;
+                  
+                  console.log(`Found legacy imported goal ${goalId} without sync log, updating...`);
+                  
+                  // Create the missing sync log
+                  await supabase.from('integration_sync_logs').insert({
                     connection_id: connection?.id,
                     sync_type: 'initiative',
                     external_id: initiative.id,
@@ -560,8 +540,83 @@ Deno.serve(async (req) => {
                     sync_status: 'success',
                     sync_direction: 'import',
                   });
+                  
+                  // Update the existing goal
+                  const { error: updateError } = await supabase
+                    .from('goals')
+                    .update({
+                      title: initiative.title,
+                      description: initiative.description || `Imported from Zatzet OKR Initiative: ${initiative.id}`,
+                      deadline: initiative.due_date || initiative.target_date || null,
+                      progress: initiative.progress || 0,
+                      completed: initiative.status === 'completed',
+                      subcategory: 'okr',
+                      archived: false,
+                      is_deleted: false,
+                      last_external_sync_at: new Date().toISOString(),
+                      external_key_result_id: initiative.key_result?.id || null,
+                      external_key_result_title: initiative.key_result?.title || null,
+                      external_objective_id: initiative.key_result?.objective?.id || initiative.key_result?.objective_id || null,
+                      external_objective_title: initiative.key_result?.objective?.title || null,
+                    })
+                    .eq('id', goalId);
 
-                console.log(`Imported initiative ${initiative.id} as new goal ${goalId}`);
+                  if (updateError) {
+                    console.error('Failed to update legacy goal:', updateError);
+                    importResults.push({ initiativeId: initiative.id, success: false, error: updateError.message });
+                    continue;
+                  }
+                  
+                  console.log(`Updated legacy goal ${goalId} from initiative ${initiative.id}`);
+                } else {
+                  // Create new goal from initiative with OKR subcategory
+                  const { data: newGoal, error: goalError } = await supabase
+                    .from('goals')
+                    .insert({
+                      user_id: user.id,
+                      created_by: user.id,
+                      title: initiative.title,
+                      description: initiative.description || `Imported from Zatzet OKR Initiative: ${initiative.id}`,
+                      deadline: initiative.due_date || initiative.target_date || null,
+                      progress: initiative.progress || 0,
+                      completed: initiative.status === 'completed',
+                      category: 'work',
+                      subcategory: 'okr', // OKR subcategory for Zatzet initiatives
+                      visibility: 'all', // Visible in marketplace
+                      archived: false,
+                      is_deleted: false,
+                      last_external_sync_at: new Date().toISOString(),
+                      // OKR hierarchy fields
+                      external_key_result_id: initiative.key_result?.id || null,
+                      external_key_result_title: initiative.key_result?.title || null,
+                      external_objective_id: initiative.key_result?.objective?.id || initiative.key_result?.objective_id || null,
+                      external_objective_title: initiative.key_result?.objective?.title || null,
+                    })
+                    .select('id')
+                    .single();
+
+                  if (goalError) {
+                    console.error('Failed to create goal:', goalError);
+                    importResults.push({ initiativeId: initiative.id, success: false, error: goalError.message });
+                    continue;
+                  }
+
+                  goalId = newGoal.id;
+
+                  // Log the sync for new imports only
+                  await supabase
+                    .from('integration_sync_logs')
+                    .insert({
+                      connection_id: connection?.id,
+                      sync_type: 'initiative',
+                      external_id: initiative.id,
+                      internal_id: goalId,
+                      sync_status: 'success',
+                      sync_direction: 'import',
+                    });
+
+                  console.log(`Imported initiative ${initiative.id} as new goal ${goalId}`);
+                }
               }
 
               // Create goal assignments for owner and supporters
