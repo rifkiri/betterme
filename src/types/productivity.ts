@@ -82,6 +82,11 @@ export interface Goal {
   assignmentDate?: Date;
   visibility?: 'all' | 'managers' | 'self'; // Who can view the work goal
   lastExternalSyncAt?: Date; // Last sync time with external system (e.g., Zatzet OKR)
+  // OKR hierarchy fields from Zatzet
+  externalKeyResultId?: string;
+  externalKeyResultTitle?: string;
+  externalObjectiveId?: string;
+  externalObjectiveTitle?: string;
 }
 
 export interface GoalAssignment {

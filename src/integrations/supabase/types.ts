@@ -178,6 +178,10 @@ export type Database = {
           deadline: string | null
           deleted_date: string | null
           description: string | null
+          external_key_result_id: string | null
+          external_key_result_title: string | null
+          external_objective_id: string | null
+          external_objective_title: string | null
           id: string
           is_deleted: boolean
           last_external_sync_at: string | null
@@ -199,6 +203,10 @@ export type Database = {
           deadline?: string | null
           deleted_date?: string | null
           description?: string | null
+          external_key_result_id?: string | null
+          external_key_result_title?: string | null
+          external_objective_id?: string | null
+          external_objective_title?: string | null
           id?: string
           is_deleted?: boolean
           last_external_sync_at?: string | null
@@ -220,6 +228,10 @@ export type Database = {
           deadline?: string | null
           deleted_date?: string | null
           description?: string | null
+          external_key_result_id?: string | null
+          external_key_result_title?: string | null
+          external_objective_id?: string | null
+          external_objective_title?: string | null
           id?: string
           is_deleted?: boolean
           last_external_sync_at?: string | null
