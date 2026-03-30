@@ -76,7 +76,7 @@ export class PomodoroSessionManager {
   private settings: PomodoroSessionSettings = DEFAULT_SETTINGS;
   private isRunning: boolean = false;
   private timeRemaining: number = 0;
-  private intervalRef: NodeJS.Timeout | null = null;
+  private intervalRef: ReturnType<typeof setInterval> | null = null;
   private audioRef: HTMLAudioElement | null = null;
   private globalState: PomodoroGlobalState;
   private isInitialized: boolean = false;

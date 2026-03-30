@@ -58,7 +58,7 @@ export const useRouteContext = () => {
       };
 
       // Debounce scroll events for performance
-      let scrollTimer: NodeJS.Timeout;
+      let scrollTimer: ReturnType<typeof setTimeout>;
       const debouncedScroll = () => {
         clearTimeout(scrollTimer);
         scrollTimer = setTimeout(handleScroll, 100);
