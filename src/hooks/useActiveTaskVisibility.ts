@@ -47,7 +47,7 @@ export const useActiveTaskVisibility = (activeSession: ActivePomodoroSession | n
     const handleResize = () => checkTaskVisibility();
     
     // Debounce for performance
-    let scrollTimer: NodeJS.Timeout;
+    let scrollTimer: ReturnType<typeof setTimeout>;
     const debouncedCheck = () => {
       clearTimeout(scrollTimer);
       scrollTimer = setTimeout(checkTaskVisibility, 100);
