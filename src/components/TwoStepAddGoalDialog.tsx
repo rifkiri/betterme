@@ -138,7 +138,7 @@ export const TwoStepAddGoalDialog = ({
         completed: false,
         archived: false,
         createdBy: data.category === 'work' ? currentUserId : undefined,
-        visibility: data.category === 'work' ? (isTeamMember ? 'all' : (data.visibility || 'all')) : undefined,
+        visibility: data.category === 'work' ? (data.visibility || 'all') : undefined,
       });
 
       // Create assignments if this is a work goal and we have a goal ID
@@ -409,8 +409,8 @@ export const TwoStepAddGoalDialog = ({
                     )}
                   />
 
-                  {/* Visibility Selector for Work Goals - Managers/Admins Only */}
-                  {watchCategory === 'work' && isManagerOrAdmin && (
+                  {/* Visibility Selector for Work Goals */}
+                  {watchCategory === 'work' && (
                     <FormField
                       control={form.control}
                       name="visibility"
@@ -424,14 +424,6 @@ export const TwoStepAddGoalDialog = ({
                         </FormItem>
                       )}
                     />
-                  )}
-
-                  {/* Transparency notice for team members */}
-                  {watchCategory === 'work' && isTeamMember && (
-                    <div className="text-sm text-muted-foreground bg-blue-50 dark:bg-blue-950/20 p-3 rounded-md flex items-start gap-2">
-                      <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                      <span>Goal visibility is managed by your managers</span>
-                    </div>
                   )}
 
                   {/* Work goal info about next step */}

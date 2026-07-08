@@ -18,15 +18,9 @@ const visibilityOptions = [
     icon: Globe,
   },
   {
-    value: 'managers' as GoalVisibility,
-    label: 'Managers Only',
-    description: 'Only managers and admins can see this goal',
-    icon: Shield,
-  },
-  {
     value: 'self' as GoalVisibility,
     label: 'Private',
-    description: 'Only you and assigned members can see this goal',
+    description: 'Visible only to you, assigned members, and managers',
     icon: User,
   },
 ];

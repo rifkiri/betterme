@@ -191,12 +191,21 @@ export class SupabaseGoalsService {
 
       // Frontend privacy filter
       const filteredData = data.filter(goal => {
-        if (goal.visibility !== 'self') return true;
+        // Owners always see their goals
         if (goal.user_id === user.id) return true;
         
-        // Check if user is in assignments
+        // Collaborators always see the goal
         const assignments = goal.goal_assignments as any[] | undefined;
-        return assignments?.some(a => a.user_id === user.id);
+        if (assignments?.some(a => a.user_id === user.id)) return true;
+
+        // Admins and Managers see everything
+        if (userRole === 'admin' || userRole === 'manager') return true;
+
+        // Team members see public goals
+        if (userRole === 'team-member' && goal.visibility === 'all') return true;
+
+        // Interns (or anyone else) who are not collaborators cannot see
+        return false;
       });
 
       console.log('Raw goals from database (filtered):', {

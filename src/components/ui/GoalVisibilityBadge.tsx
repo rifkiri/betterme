@@ -13,12 +13,13 @@ const visibilityConfig = {
     icon: Globe,
     variant: 'secondary' as const,
   },
-  managers: {
-    label: 'Managers',
-    icon: Shield,
+  self: {
+    label: 'Private',
+    icon: User,
     variant: 'outline' as const,
   },
-  self: {
+  // Fallback for any legacy data
+  managers: {
     label: 'Private',
     icon: User,
     variant: 'outline' as const,

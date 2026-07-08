@@ -4811,3 +4811,103 @@ USING (
 );
 
 
+-- Source: 20260708000001_add_intern_role.sql
+-- Add 'intern' role to public.profiles
+
+-- 1. Drop existing role check constraint if it exists
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
+
+-- 2. Add the new constraint including 'intern'
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_role_check 
+  CHECK (role IN ('admin', 'manager', 'team-member', 'intern'));
+
+-- 3. Update the get_filtered_users_for_role function to include logic for 'intern'
+CREATE OR REPLACE FUNCTION public.get_filtered_users_for_role()
+RETURNS TABLE (
+  id uuid,
+  name text,
+  email text,
+  role text,
+  position text,
+  user_status text,
+  created_at timestamp with time zone
+) 
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  requesting_user_role text;
+BEGIN
+  -- Get the requesting user's role
+  SELECT p.role INTO requesting_user_role
+  FROM public.profiles p
+  WHERE p.id = auth.uid();
+
+  -- Return users based on requesting user's role
+  IF requesting_user_role = 'admin' THEN
+    -- Admins can see all active/pending users
+    RETURN QUERY
+    SELECT p.id, p.name, p.email, p.role::text, p.position, p.user_status::text, p.created_at
+    FROM public.profiles p
+    ORDER BY p.name ASC;
+    
+  ELSIF requesting_user_role = 'manager' THEN
+    -- Managers can see team-members, interns, and other managers
+    RETURN QUERY
+    SELECT p.id, p.name, p.email, p.role::text, p.position, p.user_status::text, p.created_at
+    FROM public.profiles p
+    WHERE p.user_status = 'active' 
+      AND p.role IN ('team-member', 'manager', 'intern')
+    ORDER BY p.name ASC;
+    
+  ELSE
+    -- Team members and interns can only see active team members, managers, and interns
+    RETURN QUERY
+    SELECT p.id, p.name, p.email, p.role::text, p.position, p.user_status::text, p.created_at
+    FROM public.profiles p
+    WHERE p.user_status = 'active'
+      AND p.role IN ('team-member', 'manager', 'intern')
+    ORDER BY p.name ASC;
+  END IF;
+END;
+$$;
+
+
+-- Source: 20260708000002_update_goals_rls.sql
+-- Update Goals RLS for strict role-based access
+
+-- Drop previous overlapping policies
+DROP POLICY IF EXISTS "Visibility-based goal access" ON public.goals;
+DROP POLICY IF EXISTS "Users can view goals based on visibility" ON public.goals;
+DROP POLICY IF EXISTS "Authenticated users can view active goals" ON public.goals;
+
+-- Unified Role-Based and Visibility-Based SELECT Policy
+CREATE POLICY "Role and Visibility based goal access"
+ON public.goals FOR SELECT
+TO authenticated
+USING (
+  is_deleted = false
+  AND (
+    -- 1. Owner always sees
+    user_id = auth.uid()
+    OR
+    -- 2. Collaborators always see
+    EXISTS (
+      SELECT 1 FROM public.goal_assignments
+      WHERE goal_assignments.goal_id = goals.id
+        AND goal_assignments.user_id = auth.uid()
+    )
+    OR
+    -- 3. Admins and Managers see EVERYTHING (Public and Private)
+    get_user_role(auth.uid()) IN ('admin', 'manager')
+    OR
+    -- 4. Team-Members see ONLY 'all' (Public) goals
+    -- (Interns fall through this check and only see via Owner or Collaborator rules above)
+    (
+      get_user_role(auth.uid()) = 'team-member'
+      AND visibility = 'all'
+    )
+  )
+);
+
+
