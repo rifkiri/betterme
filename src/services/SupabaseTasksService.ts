@@ -8,7 +8,7 @@ export class SupabaseTasksService {
     const { data, error } = await supabase
       .from('tasks')
       .select('*')
-      .eq('user_id', userId)
+      .or(`user_id.eq.${userId},tagged_users.cs.{${userId}}`)
       .order('created_date', { ascending: false });
 
     if (error) {
@@ -18,6 +18,7 @@ export class SupabaseTasksService {
 
     return data.map(task => ({
       id: task.id,
+      userId: task.user_id,
       title: task.title,
       description: task.description,
       completed: task.completed,
