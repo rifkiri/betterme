@@ -186,11 +186,22 @@ export const TeamWorkloadMonitoring = ({
   const loadWorkloadData = async () => {
     setLoadingWorkload(true);
     try {
-      // First, fetch all user profiles to create a proper user lookup
-      const allUsers = await supabaseDataService.getUsers();
+      // Fetch ALL active users via the org-dashboard RPC so admins are included
+      const { data: dashUsersRaw } = await supabase.rpc('get_all_active_users_for_dashboard');
+      const allUsers: User[] = (dashUsersRaw || []).map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        email: p.email,
+        role: p.role,
+        position: p.user_position,
+        temporaryPassword: undefined,
+        hasChangedPassword: true,
+        userStatus: p.user_status,
+        createdAt: p.created_at,
+        lastLogin: undefined,
+        managerId: undefined,
+      }));
       const userProfilesMap = new Map<string, User>();
-      
-      // Include all users (not just those in membersSummary)
       allUsers.forEach(user => {
         userProfilesMap.set(user.id, user);
       });
