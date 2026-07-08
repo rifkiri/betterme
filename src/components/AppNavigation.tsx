@@ -67,12 +67,12 @@ export const AppNavigation = () => {
       description: 'Team overview'
     }];
 
-    if (currentUser?.role === 'manager' || currentUser?.role === 'admin') {
+    if (currentUser?.role !== 'intern') {
       baseItems.push({
-        name: 'Manager Dashboard',
+        name: 'Organizational Dashboard',
         href: '/manager',
         icon: Settings,
-        description: 'Team workload and goal management'
+        description: 'Organization-wide workload and goals'
       });
     }
 
