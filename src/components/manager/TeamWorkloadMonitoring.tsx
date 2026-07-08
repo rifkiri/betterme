@@ -383,7 +383,7 @@ export const TeamWorkloadMonitoring = ({
         for (const output of activeOutputs) {
           // Get active tasks linked to this output
           const linkedTasks: LinkedTask[] = userTasks
-            .filter(t => t.weeklyOutputId === output.id && !t.completed && !t.isDeleted && t.visibility === 'all')
+            .filter(t => t.weeklyOutputId === output.id && !t.completed && !t.isDeleted)
             .map(t => ({
               id: t.id,
               title: t.title,
