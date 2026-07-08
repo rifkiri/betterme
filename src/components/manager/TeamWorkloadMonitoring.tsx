@@ -173,6 +173,52 @@ export const TeamWorkloadMonitoring = ({
   const [taskViewType, setTaskViewType] = useState<'task' | 'user'>('task');
   const [selectedTaskForDetails, setSelectedTaskForDetails] = useState<TaskOwnership | null>(null);
 
+  // Task tab filters
+  const [taskFilterUser, setTaskFilterUser] = useState<string>('all');
+  const [taskFilterPriority, setTaskFilterPriority] = useState<string>('all');
+  const [taskFilterVisibility, setTaskFilterVisibility] = useState<string>('all');
+  const [taskFilterDeadline, setTaskFilterDeadline] = useState<string>('all');
+  const [taskFilterSearch, setTaskFilterSearch] = useState<string>('');
+
+  const filteredTaskOwnerships = React.useMemo(() => {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const endOfWeek = new Date(startOfToday); endOfWeek.setDate(endOfWeek.getDate() + 7);
+    const endOfTwoWeeks = new Date(startOfToday); endOfTwoWeeks.setDate(endOfTwoWeeks.getDate() + 14);
+
+    return workloadData.taskOwnerships.filter(t => {
+      if (taskFilterUser !== 'all' && t.userId !== taskFilterUser) return false;
+      if (taskFilterPriority !== 'all' && t.priority !== taskFilterPriority) return false;
+      if (taskFilterVisibility === 'public' && t.visibility !== 'all') return false;
+      if (taskFilterVisibility === 'private' && t.visibility === 'all') return false;
+      if (taskFilterSearch && !t.title.toLowerCase().includes(taskFilterSearch.toLowerCase())) return false;
+      if (taskFilterDeadline !== 'all') {
+        const d = t.dueDate ? new Date(t.dueDate) : null;
+        if (!d) return false;
+        if (taskFilterDeadline === 'overdue' && d >= startOfToday) return false;
+        if (taskFilterDeadline === 'week' && (d < startOfToday || d > endOfWeek)) return false;
+        if (taskFilterDeadline === 'twoweeks' && (d < startOfToday || d > endOfTwoWeeks)) return false;
+      }
+      return true;
+    });
+  }, [workloadData.taskOwnerships, taskFilterUser, taskFilterPriority, taskFilterVisibility, taskFilterDeadline, taskFilterSearch]);
+
+  const hasActiveTaskFilters = taskFilterUser !== 'all' || taskFilterPriority !== 'all' || taskFilterVisibility !== 'all' || taskFilterDeadline !== 'all' || taskFilterSearch !== '';
+
+  const resetTaskFilters = () => {
+    setTaskFilterUser('all');
+    setTaskFilterPriority('all');
+    setTaskFilterVisibility('all');
+    setTaskFilterDeadline('all');
+    setTaskFilterSearch('');
+  };
+
+  const uniqueTaskOwners = React.useMemo(() => {
+    const map = new Map<string, string>();
+    workloadData.taskOwnerships.forEach(t => map.set(t.userId, t.userName));
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [workloadData.taskOwnerships]);
+
   useEffect(() => {
     console.log('TeamWorkloadMonitoring useEffect - teamData:', teamData);
     if (teamData?.membersSummary?.length > 0) {
