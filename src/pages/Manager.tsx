@@ -17,6 +17,7 @@ const Manager = () => {
   const { profile: currentUser, isLoading: profileLoading } = useUserProfile();
   const { teamData, isLoading } = useTeamDataRealtime();
 
+  const hasAccess = currentUser?.role !== 'intern';
   const isManager = currentUser?.role === 'manager' || currentUser?.role === 'admin';
 
   console.log('Manager page - Profile loading state:', {
