@@ -106,8 +106,8 @@ const Manager = () => {
       
       <div className="max-w-full mx-auto p-1 sm:p-2 lg:p-4">
         <PageHeader 
-          title="Manager Dashboard" 
-          subtitle="Monitor team performance and individual progress"
+         title="Organizational Dashboard" 
+         subtitle="Monitor organization-wide performance and individual progress"
         />
       
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'workload' | 'individual')} className="w-full">
