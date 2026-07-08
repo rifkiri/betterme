@@ -221,6 +221,37 @@ export const TaskForm = ({
           )}
         />
 
+        {canDelegate && (
+          <FormField
+            control={form.control}
+            name="assignedUserId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium">Delegate to (Optional)</FormLabel>
+                <Select
+                  onValueChange={(v) => field.onChange(v === 'self' ? undefined : v)}
+                  value={field.value || 'self'}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Assign to a user" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="self">Assign to me</SelectItem>
+                    {delegatableUsers.map((u) => (
+                      <SelectItem key={u.id} value={u.id}>
+                        {u.name} {u.role ? `(${u.role})` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
         <FormField
           control={form.control}
           name="visibility"
