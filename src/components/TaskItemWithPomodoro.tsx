@@ -56,6 +56,7 @@ export const TaskItemWithPomodoro = ({
 }: TaskItemProps) => {
   // Component state
   const [taggedUsers, setTaggedUsers] = useState<TaggedUser[]>([]);
+  const [ownerName, setOwnerName] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   
   // Hooks
@@ -81,6 +82,7 @@ export const TaskItemWithPomodoro = ({
     isLoading: pomodoroStatsLoading 
   } = usePomodoroCounterRealtime(task.id);
   const linkedOutput = task.weeklyOutputId ? weeklyOutputs.find(output => output.id === task.weeklyOutputId) : null;
+  const isCollaboratorView = !!(currentUser?.id && task.userId && task.userId !== currentUser.id);
 
   useEffect(() => {
     if (task.taggedUsers && task.taggedUsers.length > 0) {
@@ -89,6 +91,22 @@ export const TaskItemWithPomodoro = ({
       setTaggedUsers([]);
     }
   }, [task.taggedUsers]);
+
+  useEffect(() => {
+    const fetchOwner = async () => {
+      if (!isCollaboratorView || !task.userId) {
+        setOwnerName(null);
+        return;
+      }
+      const { data } = await supabase
+        .from('profiles')
+        .select('name')
+        .eq('id', task.userId)
+        .maybeSingle();
+      setOwnerName(data?.name || 'Unknown');
+    };
+    fetchOwner();
+  }, [isCollaboratorView, task.userId]);
 
 
   const fetchTaggedUsers = async () => {
