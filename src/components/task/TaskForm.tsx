@@ -16,7 +16,7 @@ import { taskFormSchema, TaskFormValues } from './taskFormSchema';
 import { UserSelector } from './UserSelector';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { GoalVisibilitySelector } from '@/components/ui/GoalVisibilitySelector';
-import { useUserRole } from '@/hooks/useUserRole';
+
 
 interface TaskFormProps {
   onSubmit: (values: TaskFormValues) => void;
