@@ -1,5 +1,5 @@
 
-export type UserRole = 'admin' | 'manager' | 'team-member';
+export type UserRole = 'admin' | 'manager' | 'team-member' | 'intern';
 export type UserStatus = 'pending' | 'active';
 
 export interface User {
