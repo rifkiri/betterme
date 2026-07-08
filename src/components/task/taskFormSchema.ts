@@ -9,7 +9,8 @@ export const taskFormSchema = z.object({
   dueDate: z.date().optional(),
   weeklyOutputId: z.string().optional(),
   taggedUsers: z.array(z.string()).optional(),
-  visibility: z.enum(['all', 'managers', 'self']).optional()
+  visibility: z.enum(['all', 'managers', 'self']).optional(),
+  assignedUserId: z.string().optional()
 });
 
 export type TaskFormValues = z.infer<typeof taskFormSchema>;
