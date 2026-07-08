@@ -127,6 +127,8 @@ interface TaskOwnership {
   dueDate: Date;
   userId: string;
   userName: string;
+  userRole: string;
+  visibility: 'all' | 'managers' | 'self';
   pomodoroSessions: number;
   totalDuration: number;
 }
