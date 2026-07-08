@@ -8,7 +8,7 @@ interface UserProfile {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'manager' | 'team-member';
+  role: 'admin' | 'manager' | 'team-member' | 'intern';
   position?: string;
   hasChangedPassword: boolean;
   lastLogin?: string;
