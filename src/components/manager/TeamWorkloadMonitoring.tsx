@@ -1328,7 +1328,9 @@ export const TeamWorkloadMonitoring = ({
                         })}
                       </div>
                     ) : (
-                      <p className="text-center text-gray-500 py-8">No active tasks found</p>
+                      <p className="text-center text-gray-500 py-8">
+                        {hasActiveTaskFilters ? 'No tasks match your filters' : 'No active tasks found'}
+                      </p>
                     )
                   ) : (
                     // User View
