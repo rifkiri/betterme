@@ -16,6 +16,7 @@ import { taskFormSchema, TaskFormValues } from './taskFormSchema';
 import { UserSelector } from './UserSelector';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { GoalVisibilitySelector } from '@/components/ui/GoalVisibilitySelector';
+import { useUserSelector } from '@/hooks/useUserSelector';
 
 
 interface TaskFormProps {
@@ -32,6 +33,8 @@ export const TaskForm = ({
   initialValues
 }: TaskFormProps) => {
   const { profile } = useUserProfile();
+  const canDelegate = profile?.role === 'admin' || profile?.role === 'manager';
+  const { users: delegatableUsers } = useUserSelector({ currentUserId: profile?.id });
   
   
   const form = useForm<TaskFormValues>({
@@ -44,7 +47,8 @@ export const TaskForm = ({
       dueDate: new Date(),
       weeklyOutputId: undefined,
       taggedUsers: [],
-      visibility: 'all'
+      visibility: 'all',
+      assignedUserId: undefined
     }
   });
 
