@@ -69,8 +69,8 @@ const Manager = () => {
     );
   }
 
-  // Restrict access to managers and admins only (only after profile is loaded)
-  if (!isManager) {
+  // Interns cannot access the organizational dashboard
+  if (!hasAccess) {
     return (
       <div className="min-h-screen bg-gray-50">
         <AppNavigation />
@@ -84,7 +84,7 @@ const Manager = () => {
               </div>
               <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Restricted</h2>
               <p className="text-gray-600">
-                You need manager or admin permissions to access this page.
+                The Organizational Dashboard is not available for interns.
               </p>
             </div>
           </CardContent>
