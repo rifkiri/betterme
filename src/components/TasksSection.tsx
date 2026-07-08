@@ -14,7 +14,7 @@ interface TasksSectionProps {
   tasks: Task[];
   deletedTasks: Task[];
   overdueTasks: Task[];
-  onAddTask: (task: Omit<Task, 'id' | 'completed' | 'createdDate' | 'isMoved'>) => void;
+  onAddTask: (task: Omit<Task, 'id' | 'completed' | 'createdDate' | 'isMoved'> & { assignedUserId?: string }) => void;
   onEditTask: (id: string, updates: Partial<Task>) => Promise<void>;
   onToggleTask: (id: string) => void;
   onMoveTask: (taskId: string, targetDate: Date) => void;
