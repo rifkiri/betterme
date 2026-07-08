@@ -46,7 +46,7 @@ export const useUserProfile = () => {
           id: data.id,
           name: data.name,
           email: data.email,
-          role: data.role as 'admin' | 'manager' | 'team-member',
+          role: data.role as 'admin' | 'manager' | 'team-member' | 'intern',
           position: data.position,
           hasChangedPassword: data.has_changed_password,
           lastLogin: data.last_login,
