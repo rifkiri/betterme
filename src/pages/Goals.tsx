@@ -19,6 +19,7 @@ const Goals = () => {
   const {
     goals,
     allGoals,
+    completedGoals,
     deletedGoals,
     marketplaceDeletedGoals,
     habits,
@@ -78,6 +79,7 @@ const Goals = () => {
       <EnhancedGoalsSection 
         goals={goals}
         allGoals={allGoals}
+        completedGoals={completedGoals}
         deletedGoals={deletedGoals}
         marketplaceDeletedGoals={marketplaceDeletedGoals}
         habits={habits}

@@ -94,9 +94,9 @@ export const GoalCard = ({
       <ContentCard variant={getContentCardVariant(isOverdue, isCompleted)}>
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
-            <div className="cursor-pointer hover:bg-blue-100 rounded p-1 -m-1 transition-colors" onClick={() => setShowDetailsDialog(true)}>
+            <div className="cursor-pointer hover:bg-primary/5 rounded-md p-2 -m-2 transition-all duration-200" onClick={() => setShowDetailsDialog(true)}>
               <div className="flex items-center gap-2 mb-2">
-                <p className="text-sm text-gray-700 leading-relaxed flex-1">{goal.title}</p>
+                <p className="text-base font-semibold text-foreground leading-relaxed flex-1 tracking-tight">{goal.title}</p>
                 <div className="flex items-center gap-1 flex-wrap">
                   <Badge className={`text-xs ${getCategoryColor(goal.category)}`}>
                     {goal.category}

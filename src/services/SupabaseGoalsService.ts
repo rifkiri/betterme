@@ -169,10 +169,13 @@ export class SupabaseGoalsService {
       console.log('Current user role:', userRole);
       
       // The RLS policy will handle the filtering based on visibility
-      // We just need to fetch all non-deleted goals and let RLS do its job
+      // We also do a frontend filter for extra security on "Private" goals
       const { data, error } = await supabase
         .from('goals')
-        .select('*')
+        .select(`
+          *,
+          goal_assignments(user_id)
+        `)
         .eq('is_deleted', false)
         .order('created_date', { ascending: false });
 
@@ -182,26 +185,26 @@ export class SupabaseGoalsService {
         return [];
       }
 
-      console.log('Raw goals from database:', {
-        count: data?.length || 0,
-        userRole: userRole,
-        data: data?.map(goal => ({
-          id: goal.id,
-          title: goal.title,
-          category: goal.category,
-          visibility: goal.visibility,
-          user_id: goal.user_id,
-          progress: goal.progress,
-          archived: goal.archived,
-          is_deleted: goal.is_deleted
-        })) || []
-      });
-
       if (!data) {
         return [];
       }
 
-      const transformedGoals = data.map(goal => ({
+      // Frontend privacy filter
+      const filteredData = data.filter(goal => {
+        if (goal.visibility !== 'self') return true;
+        if (goal.user_id === user.id) return true;
+        
+        // Check if user is in assignments
+        const assignments = goal.goal_assignments as any[] | undefined;
+        return assignments?.some(a => a.user_id === user.id);
+      });
+
+      console.log('Raw goals from database (filtered):', {
+        count: filteredData.length,
+        userRole: userRole,
+      });
+
+      const transformedGoals = filteredData.map(goal => ({
         id: goal.id,
         userId: goal.user_id,
         title: goal.title,

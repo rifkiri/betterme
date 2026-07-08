@@ -13,7 +13,7 @@ interface GoalVisibilitySelectorProps {
 const visibilityOptions = [
   {
     value: 'all' as GoalVisibility,
-    label: 'Visible to All',
+    label: 'Public',
     description: 'Everyone in the team can see this goal',
     icon: Globe,
   },
@@ -26,7 +26,7 @@ const visibilityOptions = [
   {
     value: 'self' as GoalVisibility,
     label: 'Private',
-    description: 'Only you can see this goal',
+    description: 'Only you and assigned members can see this goal',
     icon: User,
   },
 ];

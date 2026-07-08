@@ -9,7 +9,7 @@ interface GoalVisibilityBadgeProps {
 
 const visibilityConfig = {
   all: {
-    label: 'All',
+    label: 'Public',
     icon: Globe,
     variant: 'secondary' as const,
   },

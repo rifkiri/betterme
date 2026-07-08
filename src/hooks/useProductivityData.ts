@@ -12,6 +12,7 @@ export const useProductivityData = () => {
   const [weeklyOutputs, setWeeklyOutputs] = useState<WeeklyOutput[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [allGoals, setAllGoals] = useState<Goal[]>([]);
+  const [completedGoals, setCompletedGoals] = useState<Goal[]>([]);
   const [archivedHabits, setArchivedHabits] = useState<Habit[]>([]);
   const [deletedTasks, setDeletedTasks] = useState<Task[]>([]);
   const [deletedWeeklyOutputs, setDeletedWeeklyOutputs] = useState<WeeklyOutput[]>([]);
@@ -68,9 +69,10 @@ export const useProductivityData = () => {
         setDeletedTasks(tasksData.filter(t => t.isDeleted));
         setWeeklyOutputs(weeklyOutputsData.filter(w => !w.isDeleted));
         setDeletedWeeklyOutputs(weeklyOutputsData.filter(w => w.isDeleted));
-        setGoals(goalsData.filter(g => !g.archived && !g.isDeleted));
+        setGoals(goalsData.filter(g => !g.archived && !g.isDeleted && !g.completed && g.progress < 100));
         setDeletedGoals(goalsData.filter(g => g.archived && !g.isDeleted));
-        setAllGoals(allGoalsData.filter(g => !g.archived && !g.isDeleted));
+        setAllGoals(allGoalsData.filter(g => !g.archived && !g.isDeleted && !g.completed && g.progress < 100));
+        setCompletedGoals(allGoalsData.filter(g => !g.archived && !g.isDeleted && (g.completed || g.progress >= 100)));
         setMarketplaceDeletedGoals(deletedGoalsForAdmin);
         
         console.log('Data loaded successfully for user:', userId);
@@ -111,6 +113,8 @@ export const useProductivityData = () => {
     setGoals,
     allGoals,
     setAllGoals,
+    completedGoals,
+    setCompletedGoals,
     archivedHabits,
     setArchivedHabits,
     deletedTasks,

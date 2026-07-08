@@ -23,6 +23,7 @@ import { useZatzetIntegration } from '@/hooks/useZatzetIntegration';
 interface EnhancedGoalsSectionProps {
   goals: Goal[];
   allGoals: Goal[];
+  completedGoals: Goal[];
   deletedGoals: Goal[];
   marketplaceDeletedGoals: Goal[];
   habits: Habit[];
@@ -48,6 +49,7 @@ interface EnhancedGoalsSectionProps {
 export const EnhancedGoalsSection = ({
   goals,
   allGoals,
+  completedGoals,
   deletedGoals,
   marketplaceDeletedGoals,
   habits,
@@ -262,17 +264,13 @@ export const EnhancedGoalsSection = ({
     setActiveGoalSortBy('newest');
   };
 
-  const completedGoals = useMemo(() => {
-    // Use allGoals to show all completed goals the user can access
-    // RLS policies already filter what goals the user can see
-    return allGoals.filter(goal => {
-      const isCompleted = goal.progress >= 100;
-      const isNotArchived = !goal.archived;
+  const filteredCompletedGoals = useMemo(() => {
+    // Use completedGoals prop which is fetched specifically for completed/100% goals
+    return completedGoals.filter(goal => {
       const matchesSubcategory = completedGoalSubcategoryFilter === 'all' || goal.subcategory === completedGoalSubcategoryFilter;
-      
-      return isCompleted && isNotArchived && matchesSubcategory;
+      return matchesSubcategory;
     });
-  }, [allGoals, completedGoalSubcategoryFilter]);
+  }, [completedGoals, completedGoalSubcategoryFilter]);
 
 
   // Filter marketplace goals - show ALL active work goals (regardless of user assignment)
@@ -396,7 +394,7 @@ export const EnhancedGoalsSection = ({
     const showDeleteOption = canManageGoal;
 
     return (
-      <Card key={goal.id} className="hover:shadow-md transition-shadow">
+      <Card key={goal.id} className="glass-card animate-fade-in-up relative overflow-hidden">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="mb-2">
@@ -637,24 +635,24 @@ export const EnhancedGoalsSection = ({
 
       {/* Tabs positioned below header subtitle like TeamDashboard */}
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'completed' | 'marketplace')}>
-        <TabsList className="flex w-full h-auto p-1 bg-gray-100 rounded-lg overflow-x-auto mb-6">
+        <TabsList className="flex w-full h-auto p-1.5 bg-muted/30 backdrop-blur-md border border-border/50 rounded-xl overflow-x-auto mb-6">
           <TabsTrigger 
             value="active" 
-            className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 py-2 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-4 py-2.5 rounded-lg whitespace-nowrap flex-shrink-0 transition-all data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm"
           >
             <Target className="h-3 w-3 sm:h-4 sm:w-4" />
             Active ({activeGoals.length})
           </TabsTrigger>
           <TabsTrigger 
             value="completed" 
-            className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 py-2 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-4 py-2.5 rounded-lg whitespace-nowrap flex-shrink-0 transition-all data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm"
           >
             <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
-            Completed ({completedGoals.length})
+            Completed ({filteredCompletedGoals.length})
           </TabsTrigger>
           <TabsTrigger 
             value="marketplace" 
-            className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 py-2 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-4 py-2.5 rounded-lg whitespace-nowrap flex-shrink-0 transition-all data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm"
           >
             <Store className="h-3 w-3 sm:h-4 sm:w-4" />
             Goal Marketplace ({marketplaceGoals.length})
@@ -805,15 +803,15 @@ export const EnhancedGoalsSection = ({
               </Select>
             </div>
             
-            {completedGoals.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <CheckCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>No completed goals yet</p>
-                <p className="text-sm mt-1">Complete some goals to see them here.</p>
+            {filteredCompletedGoals.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
+                <CheckCircle className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                <p>No completed goals found matching your filters.</p>
+                <p className="text-sm mt-1">Keep pushing! Your completed goals will appear here.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {completedGoals.map(renderGoalCard)}
+                {filteredCompletedGoals.map(renderGoalCard)}
               </div>
             )}
           </Card>

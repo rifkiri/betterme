@@ -112,7 +112,7 @@ export const SimpleEmployeeDashboard = () => {
       </div>
 
       {/* 3-Column Grid Layout */}
-      <div className="space-y-2 sm:space-y-4 lg:grid lg:grid-cols-3 lg:gap-3 xl:gap-6 lg:space-y-0">
+      <div className="space-y-2 sm:space-y-4 lg:grid lg:grid-cols-3 lg:gap-3 xl:gap-6 lg:space-y-0 animate-fade-in-up delay-100">
         <div className="lg:col-span-1">
           <HabitsSection 
             habits={habits}

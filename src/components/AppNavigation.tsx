@@ -92,12 +92,12 @@ export const AppNavigation = () => {
 
   return (
     <>
-      <div className="bg-white border-b border-gray-200 shadow-sm">
+      <div className="glass-panel sticky top-0 z-40 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-8">
               <div className="flex items-center">
-                <h1 className="text-xl font-bold text-gray-900">BetterMe</h1>
+                <h1 className="text-2xl font-extrabold gradient-text tracking-tight animate-fade-in-right">BetterMe</h1>
               </div>
               {/* Desktop Navigation */}
               <nav className="hidden md:flex space-x-8">
@@ -107,10 +107,10 @@ export const AppNavigation = () => {
                     <Link 
                       key={item.name} 
                       to={item.href} 
-                      className={`inline-flex items-center px-1 pt-1 text-sm font-medium ${
+                      className={`inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
                         isActive 
-                          ? 'text-blue-600 border-b-2 border-blue-600' 
-                          : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                          ? 'bg-primary/10 text-primary shadow-sm scale-in' 
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                       }`}
                     >
                       <item.icon className="h-4 w-4 mr-2" />
@@ -146,7 +146,7 @@ export const AppNavigation = () => {
                 variant="ghost" 
                 size="sm" 
                 onClick={handleSignOut}
-                className="hidden md:flex text-gray-500 hover:text-gray-700"
+                className="hidden md:flex text-muted-foreground hover:text-destructive transition-colors"
               >
                 <LogOut className="h-4 w-4" />
               </Button>
@@ -175,10 +175,10 @@ export const AppNavigation = () => {
                       key={item.name}
                       to={item.href}
                       onClick={closeMobileMenu}
-                      className={`flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+                      className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                         isActive
-                          ? 'bg-blue-100 text-blue-600'
-                          : 'text-gray-700 hover:bg-gray-100'
+                          ? 'bg-primary/10 text-primary'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                       }`}
                     >
                       <item.icon className="h-5 w-5 mr-3" />

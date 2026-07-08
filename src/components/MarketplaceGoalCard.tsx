@@ -104,7 +104,7 @@ export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
   };
 
   return (
-    <Card className={`hover:shadow-lg transition-all duration-300 relative overflow-hidden ${isDeleted ? 'opacity-75 border-destructive/50 bg-destructive/5' : ''}`}>
+    <Card className={`glass-card relative overflow-hidden ${isDeleted ? 'opacity-75 border-destructive/50 bg-destructive/5' : ''}`}>
       {/* Status Badges and Admin Delete/Restore */}
       <div className="absolute top-2 right-2 z-10 flex gap-2 items-center">
         {/* Deleted Badge */}
@@ -142,7 +142,7 @@ export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
         )}
       </div>
       
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-3 border-b border-border/50 bg-background/40">
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">

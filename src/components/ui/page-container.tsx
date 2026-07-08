@@ -10,10 +10,10 @@ export interface PageContainerProps {
 }
 
 const gradientClasses = {
-  default: "bg-gradient-to-br from-background via-background to-background",
-  "blue-green": "bg-gradient-to-br from-blue-50 via-white to-green-50",
-  "purple-pink": "bg-gradient-to-br from-purple-50 via-white to-pink-50",
-  "orange-yellow": "bg-gradient-to-br from-orange-50 via-white to-yellow-50",
+  default: "bg-background",
+  "blue-green": "gradient-hero",
+  "purple-pink": "bg-gradient-to-br from-purple-500/10 via-pink-500/5 to-background",
+  "orange-yellow": "bg-gradient-to-br from-orange-500/10 via-yellow-500/5 to-background",
   none: "bg-background"
 };
 

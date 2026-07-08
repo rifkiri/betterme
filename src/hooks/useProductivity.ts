@@ -72,6 +72,7 @@ export const useProductivity = () => {
     deletedWeeklyOutputs: productivityData.deletedWeeklyOutputs,
     goals: productivityData.goals,
     allGoals: productivityData.allGoals,
+    completedGoals: productivityData.completedGoals,
     deletedGoals: productivityData.deletedGoals,
     marketplaceDeletedGoals: productivityData.marketplaceDeletedGoals,
     isLoading: productivityData.isLoading,

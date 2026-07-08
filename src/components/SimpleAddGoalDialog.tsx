@@ -275,6 +275,9 @@ export const SimpleAddGoalDialog = ({
                       value={field.value as GoalVisibility || 'all'}
                       onChange={field.onChange}
                     />
+                    <FormDescription>
+                      Goal is visible to all team members by default. Change to Private to restrict access.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
