@@ -19,11 +19,14 @@ export const useTasksManager = ({
   deletedTasks,
   setDeletedTasks,
 }: UseTasksManagerProps) => {
-  const addTask = async (task: Omit<Task, 'id' | 'completed' | 'createdDate'>) => {
+  const addTask = async (task: Omit<Task, 'id' | 'completed' | 'createdDate'> & { assignedUserId?: string }) => {
     if (!userId) return;
 
+    const { assignedUserId, ...taskFields } = task as any;
+    const ownerId = assignedUserId || userId;
+
     const newTask: Task = {
-      ...task,
+      ...taskFields,
       id: crypto.randomUUID(),
       completed: false,
       createdDate: new Date(),
@@ -33,9 +36,9 @@ export const useTasksManager = ({
     };
 
     try {
-      await supabaseDataService.addTask({ ...newTask, userId });
+      await supabaseDataService.addTask({ ...newTask, userId: ownerId });
       await loadAllData();
-      toast.success('Task added successfully');
+      toast.success(ownerId !== userId ? 'Task delegated successfully' : 'Task added successfully');
     } catch (error) {
       toast.error('Failed to add task');
       console.error('Failed to add task:', error);
