@@ -435,12 +435,14 @@ export const TeamWorkloadMonitoring = ({
         dueDate: Date;
         userId: string;
         userName: string;
+        userRole: string;
+        visibility: 'all' | 'managers' | 'self';
       }> = [];
       
       // Collect all active tasks from all users
       for (const userProfile of allUsers) {
         const userTasks = await supabaseDataService.getTasks(userProfile.id);
-        const activeTasks = userTasks.filter(t => !t.completed && !t.isDeleted && t.visibility === 'all');
+        const activeTasks = userTasks.filter(t => !t.completed && !t.isDeleted);
         
         for (const task of activeTasks) {
           allActiveTasks.push({
@@ -449,7 +451,9 @@ export const TeamWorkloadMonitoring = ({
             priority: task.priority as 'Low' | 'Medium' | 'High',
             dueDate: task.dueDate,
             userId: userProfile.id,
-            userName: userProfile.name
+            userName: userProfile.name,
+            userRole: userProfile.role,
+            visibility: (task.visibility || 'all') as 'all' | 'managers' | 'self',
           });
         }
       }
@@ -468,10 +472,13 @@ export const TeamWorkloadMonitoring = ({
           dueDate: task.dueDate,
           userId: task.userId,
           userName: task.userName,
+          userRole: task.userRole,
+          visibility: task.visibility,
           pomodoroSessions: stats.workSessionCount,
           totalDuration: stats.totalDuration
         };
       });
+      
       
       // Build user-centric task ownership data
       const userTaskOwnershipMap = new Map<string, UserTaskOwnership>();
