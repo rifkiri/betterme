@@ -1263,12 +1263,17 @@ export const TeamWorkloadMonitoring = ({
                                   )}>
                                     {task.title}
                                   </h3>
-                                  <Badge 
-                                    variant={task.priority === 'High' ? 'destructive' : task.priority === 'Medium' ? 'secondary' : 'outline'} 
-                                    className="ml-2 flex-shrink-0 text-xs"
-                                  >
-                                    {task.priority}
-                                  </Badge>
+                                  <div className="flex flex-col gap-1 items-end ml-2 flex-shrink-0">
+                                    <Badge 
+                                      variant={task.priority === 'High' ? 'destructive' : task.priority === 'Medium' ? 'secondary' : 'outline'} 
+                                      className="text-xs"
+                                    >
+                                      {task.priority}
+                                    </Badge>
+                                    {task.visibility !== 'all' && (
+                                      <Badge variant="outline" className="text-xs">Private</Badge>
+                                    )}
+                                  </div>
                                 </div>
 
                                 <div className="space-y-2 text-sm">
