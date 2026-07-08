@@ -26,7 +26,26 @@ interface TaggedUser {
 
 export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteTask, onViewDetails, weeklyOutputs = [] }: TaskItemProps) => {
   const [taggedUsers, setTaggedUsers] = useState<TaggedUser[]>([]);
+  const [ownerName, setOwnerName] = useState<string | null>(null);
+  const { currentUser } = useCurrentUser();
   const linkedOutput = task.weeklyOutputId ? weeklyOutputs.find(output => output.id === task.weeklyOutputId) : null;
+  const isCollaboratorView = !!(currentUser?.id && task.userId && task.userId !== currentUser.id);
+
+  useEffect(() => {
+    const fetchOwner = async () => {
+      if (!isCollaboratorView || !task.userId) {
+        setOwnerName(null);
+        return;
+      }
+      const { data } = await supabase
+        .from('profiles')
+        .select('name')
+        .eq('id', task.userId)
+        .maybeSingle();
+      setOwnerName(data?.name || 'Unknown');
+    };
+    fetchOwner();
+  }, [isCollaboratorView, task.userId]);
 
   useEffect(() => {
     if (task.taggedUsers && task.taggedUsers.length > 0) {
