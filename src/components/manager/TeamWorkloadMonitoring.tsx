@@ -23,6 +23,9 @@ import { OutputLinkedTasksDialog } from './OutputLinkedTasksDialog';
 import { TaskPomodoroDetailsDialog } from './TaskPomodoroDetailsDialog';
 import { isWeeklyOutputOverdue, isTaskOverdue } from '@/utils/dateUtils';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { Input } from '@/components/ui/input';
+import { Filter, X } from 'lucide-react';
 
 interface TeamWorkloadMonitoringProps {
   teamData: any;
