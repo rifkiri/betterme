@@ -1174,11 +1174,76 @@ export const TeamWorkloadMonitoring = ({
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {/* Filter bar (Task View only) */}
+                  {taskViewType === 'task' && (
+                    <div className="mb-4 p-3 rounded-lg border bg-muted/40 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm font-medium">
+                          <Filter className="h-4 w-4" />
+                          Filters
+                          {hasActiveTaskFilters && (
+                            <Badge variant="secondary" className="text-xs">
+                              {filteredTaskOwnerships.length} of {workloadData.taskOwnerships.length}
+                            </Badge>
+                          )}
+                        </div>
+                        {hasActiveTaskFilters && (
+                          <Button variant="ghost" size="sm" onClick={resetTaskFilters}>
+                            <X className="h-3.5 w-3.5 mr-1" /> Clear
+                          </Button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+                        <Input
+                          placeholder="Search title..."
+                          value={taskFilterSearch}
+                          onChange={(e) => setTaskFilterSearch(e.target.value)}
+                          className="h-9"
+                        />
+                        <Select value={taskFilterUser} onValueChange={setTaskFilterUser}>
+                          <SelectTrigger className="h-9"><SelectValue placeholder="User" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All users</SelectItem>
+                            {uniqueTaskOwners.map(u => (
+                              <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select value={taskFilterPriority} onValueChange={setTaskFilterPriority}>
+                          <SelectTrigger className="h-9"><SelectValue placeholder="Priority" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All priorities</SelectItem>
+                            <SelectItem value="High">High</SelectItem>
+                            <SelectItem value="Medium">Medium</SelectItem>
+                            <SelectItem value="Low">Low</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Select value={taskFilterVisibility} onValueChange={setTaskFilterVisibility}>
+                          <SelectTrigger className="h-9"><SelectValue placeholder="Visibility" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All visibility</SelectItem>
+                            <SelectItem value="public">Public</SelectItem>
+                            <SelectItem value="private">Private</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Select value={taskFilterDeadline} onValueChange={setTaskFilterDeadline}>
+                          <SelectTrigger className="h-9"><SelectValue placeholder="Deadline" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Any deadline</SelectItem>
+                            <SelectItem value="overdue">Overdue</SelectItem>
+                            <SelectItem value="week">Due within 1 week</SelectItem>
+                            <SelectItem value="twoweeks">Due within 2 weeks</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
+
                   {taskViewType === 'task' ? (
                     // Task View
-                    workloadData.taskOwnerships.length > 0 ? (
+                    filteredTaskOwnerships.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {workloadData.taskOwnerships.map((task) => {
+                        {filteredTaskOwnerships.map((task) => {
                           const isOverdue = isTaskOverdue(task.dueDate);
                           const formattedDuration = TaskPomodoroStatsService.formatDuration(task.totalDuration);
                           
