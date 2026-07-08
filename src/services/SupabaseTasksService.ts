@@ -114,8 +114,7 @@ export class SupabaseTasksService {
     const { error } = await supabase
       .from('tasks')
       .update(supabaseUpdates)
-      .eq('id', id)
-      .eq('user_id', userId);
+      .eq('id', id);
 
     if (error) {
       console.error('SupabaseTasksService - Error updating task:', error);
@@ -129,8 +128,7 @@ export class SupabaseTasksService {
     const { error } = await supabase
       .from('tasks')
       .delete()
-      .eq('id', id)
-      .eq('user_id', userId);
+      .eq('id', id);
 
     if (error) {
       console.error('Error permanently deleting task:', error);
