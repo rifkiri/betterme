@@ -32,7 +32,7 @@ export const TaskForm = ({
   initialValues
 }: TaskFormProps) => {
   const { profile } = useUserProfile();
-  const { isManagerOrAdmin } = useUserRole();
+  
   
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
