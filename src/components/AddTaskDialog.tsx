@@ -9,7 +9,7 @@ import { TaskForm } from './task/TaskForm';
 import { TaskFormValues } from './task/taskFormSchema';
 
 interface AddTaskDialogProps {
-  onAddTask: (task: Omit<Task, 'id' | 'completed' | 'createdDate' | 'isMoved'>) => void;
+  onAddTask: (task: Omit<Task, 'id' | 'completed' | 'createdDate' | 'isMoved'> & { assignedUserId?: string }) => void;
   weeklyOutputs: WeeklyOutput[];
 }
 
@@ -29,7 +29,8 @@ export const AddTaskDialog = ({
       originalDueDate: values.dueDate || new Date(),
       weeklyOutputId: values.weeklyOutputId || undefined,
       taggedUsers: values.taggedUsers || [],
-      visibility: values.visibility || 'all'
+      visibility: values.visibility || 'all',
+      assignedUserId: values.assignedUserId || undefined
     });
     setOpen(false);
   };
