@@ -162,6 +162,12 @@ export const GoalCard = ({
                 </div>
               )}
             </div>
+            <CardMetaStrip
+              ownerId={goal.userId}
+              role={currentUserRole}
+              visibility={goal.visibility}
+              className="mb-2"
+            />
             <div className="flex items-center gap-2 mb-2">
               {linkedOutputsCount > 0 && (
                 <LinkBadge variant="success">
