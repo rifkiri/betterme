@@ -18,7 +18,18 @@ export class SupabaseTasksService {
     const requestedIds = Array.from(new Set((selectedSupporterIds || []).filter(Boolean)));
     const acceptedIds = Array.from(new Set((acceptedSupporterIds || []).filter(Boolean)));
     const acceptedToKeep = acceptedIds.filter((id) => requestedIds.includes(id));
-    const idsToInvite = requestedIds.filter((id) => !acceptedIds.includes(id));
+    const { data: existingInvitations, error: existingInvitationsError } = await (supabase as any)
+      .from('task_invitations')
+      .select('invitee_id')
+      .eq('task_id', taskId);
+
+    if (existingInvitationsError) {
+      console.error('Error loading existing task invitations:', existingInvitationsError);
+      throw existingInvitationsError;
+    }
+
+    const existingInvitationIds = (existingInvitations || []).map((row: any) => row.invitee_id);
+    const idsToInvite = requestedIds.filter((id) => !acceptedIds.includes(id) && !existingInvitationIds.includes(id));
 
     if (idsToInvite.length > 0 && currentUserId) {
       const { error } = await (supabase as any)
@@ -40,7 +51,8 @@ export class SupabaseTasksService {
       }
     }
 
-    const idsNoLongerSelected = acceptedIds.filter((id) => !requestedIds.includes(id));
+    const idsNoLongerSelected = Array.from(new Set([...acceptedIds, ...existingInvitationIds]))
+      .filter((id) => !requestedIds.includes(id));
     if (idsNoLongerSelected.length > 0) {
       const { error } = await (supabase as any)
         .from('task_invitations')
