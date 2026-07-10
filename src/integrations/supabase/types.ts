@@ -449,6 +449,47 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          notify_deadline_1hr: boolean
+          notify_new_task: boolean
+          notify_role_updates: boolean
+          notify_team_added: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notify_deadline_1hr?: boolean
+          notify_new_task?: boolean
+          notify_role_updates?: boolean
+          notify_team_added?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notify_deadline_1hr?: boolean
+          notify_new_task?: boolean
+          notify_role_updates?: boolean
+          notify_team_added?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pomodoro_sessions: {
         Row: {
           break_number: number | null
