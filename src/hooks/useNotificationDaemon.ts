@@ -16,7 +16,7 @@ const ONE_HOUR_MS = 60 * 60 * 1000;
 export const useNotificationDaemon = () => {
   const { user } = useAuth();
   const { isManagerOrAdmin } = useUserRole();
-  const { notify, permission } = useBrowserNotifications(false);
+  const { notify } = useBrowserNotifications(false);
   const { prefsRef } = useNotificationPreferences();
   const notifiedDeadlinesRef = useRef<Set<string>>(new Set());
   const notifiedUpdatesRef = useRef<Set<string>>(new Set());
@@ -64,7 +64,6 @@ export const useNotificationDaemon = () => {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'goals' },
         (payload: any) => {
-          if (permission !== 'granted') return;
           if (!prefsRef.current.notify_new_task) return;
           const row = payload.new;
           if (row?.user_id === user.id) return;
@@ -76,7 +75,6 @@ export const useNotificationDaemon = () => {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'goals' },
         (payload: any) => {
-          if (permission !== 'granted') return;
           if (!prefsRef.current.notify_goal_updates) return;
           const row = payload.new;
           const old = payload.old || {};
@@ -112,7 +110,6 @@ export const useNotificationDaemon = () => {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'tasks' },
         (payload: any) => {
-          if (permission !== 'granted') return;
           const row = payload.new;
           if (!row) return;
           const isMine = row.user_id === user.id;
@@ -131,7 +128,6 @@ export const useNotificationDaemon = () => {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'tasks' },
         (payload: any) => {
-          if (permission !== 'granted') return;
           if (!prefsRef.current.notify_task_updates) return;
           const row = payload.new;
           const old = payload.old || {};
@@ -158,7 +154,6 @@ export const useNotificationDaemon = () => {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'weekly_outputs', filter: `user_id=eq.${user.id}` },
         (payload: any) => {
-          if (permission !== 'granted') return;
           if (!prefsRef.current.notify_output_updates) return;
           const row = payload.new;
           const old = payload.old || {};
@@ -180,7 +175,6 @@ export const useNotificationDaemon = () => {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'goal_assignments', filter: `user_id=eq.${user.id}` },
         (payload: any) => {
-          if (permission !== 'granted') return;
           if (!prefsRef.current.notify_team_added) return;
           const row = payload.new;
           if (row?.self_assigned) return;
@@ -191,7 +185,6 @@ export const useNotificationDaemon = () => {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'goal_assignments' },
         async (payload: any) => {
-          if (permission !== 'granted') return;
           const row = payload.new;
           const old = payload.old || {};
           if (!row) return;
@@ -212,7 +205,6 @@ export const useNotificationDaemon = () => {
         'postgres_changes',
         { event: 'DELETE', schema: 'public', table: 'goal_assignments' },
         (payload: any) => {
-          if (permission !== 'granted') return;
           if (!prefsRef.current.notify_assignment_response) return;
           const row = payload.old;
           if (!row) return;
@@ -223,20 +215,64 @@ export const useNotificationDaemon = () => {
       )
       .subscribe();
 
+    const taskInvitationsChannel = supabase
+      .channel('notif-daemon-task-invitations')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'task_invitations', filter: `invitee_id=eq.${user.id}` },
+        async (payload: any) => {
+          if (!prefsRef.current.notify_team_added) return;
+          const row = payload.new;
+          if (!row || row.status !== 'pending') return;
+
+          const { data: task } = await supabase
+            .from('tasks')
+            .select('title')
+            .eq('id', row.task_id)
+            .maybeSingle();
+
+          notify("You've been invited to support a task", {
+            body: (task as any)?.title || 'Open notifications to accept or decline.',
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'task_invitations' },
+        async (payload: any) => {
+          if (!prefsRef.current.notify_assignment_response) return;
+          const row = payload.new;
+          const old = payload.old || {};
+          if (!row || row.invited_by !== user.id || old.status === row.status) return;
+          if (row.status !== 'accepted' && row.status !== 'declined') return;
+
+          const { data: task } = await supabase
+            .from('tasks')
+            .select('title')
+            .eq('id', row.task_id)
+            .maybeSingle();
+
+          notify(row.status === 'accepted' ? 'Task invitation accepted' : 'Task invitation declined', {
+            body: (task as any)?.title || 'Someone responded to your task invitation.',
+          });
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(goalsChannel);
       supabase.removeChannel(tasksChannel);
       supabase.removeChannel(outputsChannel);
       supabase.removeChannel(assignmentsChannel);
+      supabase.removeChannel(taskInvitationsChannel);
     };
-  }, [user?.id, isManagerOrAdmin, notify, permission, prefsRef]);
+  }, [user?.id, isManagerOrAdmin, notify, prefsRef]);
 
   // Deadline check every 5 minutes
   useEffect(() => {
     if (!user?.id) return;
 
     const checkDeadlines = async () => {
-      if (permission !== 'granted') return;
       if (!prefsRef.current.notify_deadline_1hr) return;
 
       const now = new Date();
@@ -279,5 +315,5 @@ export const useNotificationDaemon = () => {
     checkDeadlines();
     const interval = setInterval(checkDeadlines, DEADLINE_CHECK_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [user?.id, notify, permission, prefsRef]);
+  }, [user?.id, notify, prefsRef]);
 };
