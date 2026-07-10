@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.4"
+    PostgrestVersion: "13.0.5"
   }
   public: {
     Tables: {
@@ -85,49 +85,39 @@ export type Database = {
       }
       goal_assignments: {
         Row: {
-          acknowledged: boolean
-          assigned_by: string
-          assigned_date: string
-          created_at: string
+          acknowledged: boolean | null
+          assigned_by: string | null
+          assigned_date: string | null
           goal_id: string
           id: string
           role: string
-          self_assigned: boolean
-          updated_at: string
+          self_assigned: boolean | null
+          updated_at: string | null
           user_id: string
         }
         Insert: {
-          acknowledged?: boolean
-          assigned_by: string
-          assigned_date?: string
-          created_at?: string
+          acknowledged?: boolean | null
+          assigned_by?: string | null
+          assigned_date?: string | null
           goal_id: string
           id?: string
           role: string
-          self_assigned?: boolean
-          updated_at?: string
+          self_assigned?: boolean | null
+          updated_at?: string | null
           user_id: string
         }
         Update: {
-          acknowledged?: boolean
-          assigned_by?: string
-          assigned_date?: string
-          created_at?: string
+          acknowledged?: boolean | null
+          assigned_by?: string | null
+          assigned_date?: string | null
           goal_id?: string
           id?: string
           role?: string
-          self_assigned?: boolean
-          updated_at?: string
+          self_assigned?: boolean | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "goal_assignments_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "goal_assignments_goal_id_fkey"
             columns: ["goal_id"]
@@ -146,58 +136,42 @@ export type Database = {
       }
       goal_notifications: {
         Row: {
-          acknowledged: boolean
-          created_date: string
+          acknowledged: boolean | null
+          created_date: string | null
           goal_id: string
           id: string
           notification_type: string
-          role: string
-          updated_at: string
+          role: string | null
+          updated_at: string | null
           user_id: string
         }
         Insert: {
-          acknowledged?: boolean
-          created_date?: string
+          acknowledged?: boolean | null
+          created_date?: string | null
           goal_id: string
           id?: string
           notification_type: string
-          role: string
-          updated_at?: string
+          role?: string | null
+          updated_at?: string | null
           user_id: string
         }
         Update: {
-          acknowledged?: boolean
-          created_date?: string
+          acknowledged?: boolean | null
+          created_date?: string | null
           goal_id?: string
           id?: string
           notification_type?: string
-          role?: string
-          updated_at?: string
+          role?: string | null
+          updated_at?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "goal_notifications_goal_id_fkey"
-            columns: ["goal_id"]
-            isOneToOne: false
-            referencedRelation: "goals"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "goal_notifications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       goals: {
         Row: {
           archived: boolean
           assignment_date: string | null
           category: string
-          coach_id: string | null
           completed: boolean
           created_by: string | null
           created_date: string
@@ -211,8 +185,6 @@ export type Database = {
           id: string
           is_deleted: boolean
           last_external_sync_at: string | null
-          lead_ids: string[] | null
-          member_ids: string[] | null
           progress: number
           subcategory: string | null
           title: string
@@ -225,7 +197,6 @@ export type Database = {
           archived?: boolean
           assignment_date?: string | null
           category?: string
-          coach_id?: string | null
           completed?: boolean
           created_by?: string | null
           created_date?: string
@@ -239,8 +210,6 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           last_external_sync_at?: string | null
-          lead_ids?: string[] | null
-          member_ids?: string[] | null
           progress?: number
           subcategory?: string | null
           title: string
@@ -253,7 +222,6 @@ export type Database = {
           archived?: boolean
           assignment_date?: string | null
           category?: string
-          coach_id?: string | null
           completed?: boolean
           created_by?: string | null
           created_date?: string
@@ -267,8 +235,6 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           last_external_sync_at?: string | null
-          lead_ids?: string[] | null
-          member_ids?: string[] | null
           progress?: number
           subcategory?: string | null
           title?: string
@@ -301,68 +267,60 @@ export type Database = {
           id?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "habit_completions_habit_id_fkey"
-            columns: ["habit_id"]
-            isOneToOne: false
-            referencedRelation: "habits"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       habits: {
         Row: {
-          archived: boolean | null
+          archived: boolean
           category: Database["public"]["Enums"]["habit_category"] | null
-          completed: boolean | null
+          completed: boolean
           created_at: string
           description: string | null
           id: string
-          is_deleted: boolean | null
+          is_deleted: boolean
           last_completed_date: string | null
           linked_goal_id: string | null
           name: string
-          streak: number | null
+          streak: number
           updated_at: string
           user_id: string
         }
         Insert: {
-          archived?: boolean | null
+          archived?: boolean
           category?: Database["public"]["Enums"]["habit_category"] | null
-          completed?: boolean | null
+          completed?: boolean
           created_at?: string
           description?: string | null
           id?: string
-          is_deleted?: boolean | null
+          is_deleted?: boolean
           last_completed_date?: string | null
           linked_goal_id?: string | null
           name: string
-          streak?: number | null
+          streak?: number
           updated_at?: string
           user_id: string
         }
         Update: {
-          archived?: boolean | null
+          archived?: boolean
           category?: Database["public"]["Enums"]["habit_category"] | null
-          completed?: boolean | null
+          completed?: boolean
           created_at?: string
           description?: string | null
           id?: string
-          is_deleted?: boolean | null
+          is_deleted?: boolean
           last_completed_date?: string | null
           linked_goal_id?: string | null
           name?: string
-          streak?: number | null
+          streak?: number
           updated_at?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "habits_linked_goal_id_fkey"
-            columns: ["linked_goal_id"]
+            foreignKeyName: "habits_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "goals"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -481,7 +439,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "mood_entries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pomodoro_sessions: {
         Row: {
@@ -540,44 +506,41 @@ export type Database = {
         Row: {
           created_at: string
           email: string
-          has_changed_password: boolean | null
+          has_changed_password: boolean
           id: string
           last_login: string | null
-          manager_id: string | null
           name: string
           position: string | null
-          role: string
+          role: Database["public"]["Enums"]["user_role"]
           temporary_password: string | null
           updated_at: string
-          user_status: string | null
+          user_status: Database["public"]["Enums"]["user_status"] | null
         }
         Insert: {
           created_at?: string
           email: string
-          has_changed_password?: boolean | null
+          has_changed_password?: boolean
           id: string
           last_login?: string | null
-          manager_id?: string | null
           name: string
           position?: string | null
-          role?: string
+          role?: Database["public"]["Enums"]["user_role"]
           temporary_password?: string | null
           updated_at?: string
-          user_status?: string | null
+          user_status?: Database["public"]["Enums"]["user_status"] | null
         }
         Update: {
           created_at?: string
           email?: string
-          has_changed_password?: boolean | null
+          has_changed_password?: boolean
           id?: string
           last_login?: string | null
-          manager_id?: string | null
           name?: string
           position?: string | null
-          role?: string
+          role?: Database["public"]["Enums"]["user_role"]
           temporary_password?: string | null
           updated_at?: string
-          user_status?: string | null
+          user_status?: Database["public"]["Enums"]["user_status"] | null
         }
         Relationships: []
       }
@@ -622,17 +585,18 @@ export type Database = {
       }
       tasks: {
         Row: {
-          completed: boolean | null
+          completed: boolean
           completed_date: string | null
           created_date: string
           deleted_date: string | null
           description: string | null
-          due_date: string | null
+          due_date: string
           id: string
-          is_deleted: boolean | null
-          is_moved: boolean | null
+          is_deleted: boolean
+          is_moved: boolean
           original_due_date: string | null
-          priority: string | null
+          priority: Database["public"]["Enums"]["task_priority"] | null
+          project_id: string | null
           tagged_users: string[] | null
           title: string
           updated_at: string
@@ -641,17 +605,18 @@ export type Database = {
           weekly_output_id: string | null
         }
         Insert: {
-          completed?: boolean | null
+          completed?: boolean
           completed_date?: string | null
           created_date?: string
           deleted_date?: string | null
           description?: string | null
-          due_date?: string | null
+          due_date: string
           id?: string
-          is_deleted?: boolean | null
-          is_moved?: boolean | null
+          is_deleted?: boolean
+          is_moved?: boolean
           original_due_date?: string | null
-          priority?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"] | null
+          project_id?: string | null
           tagged_users?: string[] | null
           title: string
           updated_at?: string
@@ -660,17 +625,18 @@ export type Database = {
           weekly_output_id?: string | null
         }
         Update: {
-          completed?: boolean | null
+          completed?: boolean
           completed_date?: string | null
           created_date?: string
           deleted_date?: string | null
           description?: string | null
-          due_date?: string | null
+          due_date?: string
           id?: string
-          is_deleted?: boolean | null
-          is_moved?: boolean | null
+          is_deleted?: boolean
+          is_moved?: boolean
           original_due_date?: string | null
-          priority?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"] | null
+          project_id?: string | null
           tagged_users?: string[] | null
           title?: string
           updated_at?: string
@@ -678,7 +644,22 @@ export type Database = {
           visibility?: string | null
           weekly_output_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tasks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_weekly_output_id_fkey"
+            columns: ["weekly_output_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_outputs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       weekly_outputs: {
         Row: {
@@ -686,13 +667,14 @@ export type Database = {
           created_date: string
           deleted_date: string | null
           description: string | null
-          due_date: string | null
+          due_date: string
           id: string
-          is_deleted: boolean | null
-          is_moved: boolean | null
+          is_deleted: boolean
+          is_moved: boolean
           linked_goal_id: string | null
           original_due_date: string | null
-          progress: number | null
+          progress: number
+          project_id: string | null
           title: string
           updated_at: string
           user_id: string
@@ -703,13 +685,14 @@ export type Database = {
           created_date?: string
           deleted_date?: string | null
           description?: string | null
-          due_date?: string | null
+          due_date: string
           id?: string
-          is_deleted?: boolean | null
-          is_moved?: boolean | null
+          is_deleted?: boolean
+          is_moved?: boolean
           linked_goal_id?: string | null
           original_due_date?: string | null
-          progress?: number | null
+          progress?: number
+          project_id?: string | null
           title: string
           updated_at?: string
           user_id: string
@@ -720,13 +703,14 @@ export type Database = {
           created_date?: string
           deleted_date?: string | null
           description?: string | null
-          due_date?: string | null
+          due_date?: string
           id?: string
-          is_deleted?: boolean | null
-          is_moved?: boolean | null
+          is_deleted?: boolean
+          is_moved?: boolean
           linked_goal_id?: string | null
           original_due_date?: string | null
-          progress?: number | null
+          progress?: number
+          project_id?: string | null
           title?: string
           updated_at?: string
           user_id?: string
@@ -738,6 +722,13 @@ export type Database = {
             columns: ["linked_goal_id"]
             isOneToOne: false
             referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weekly_outputs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -761,7 +752,7 @@ export type Database = {
         Args: {
           p_goal_id: string
           p_notification_type: string
-          p_role: string
+          p_role?: string
           p_user_id: string
         }
         Returns: undefined
@@ -809,6 +800,7 @@ export type Database = {
         }[]
       }
       get_user_role: { Args: { user_id: string }; Returns: string }
+      is_admin: { Args: never; Returns: boolean }
       toggle_habit_completion: {
         Args: {
           habit_id_param: string
@@ -817,6 +809,10 @@ export type Database = {
           user_id_param: string
         }
         Returns: undefined
+      }
+      validate_password_strength: {
+        Args: { password: string }
+        Returns: boolean
       }
     }
     Enums: {
@@ -832,6 +828,9 @@ export type Database = {
         | "social"
         | "spiritual"
         | "wealth"
+      task_priority: "low" | "medium" | "high" | "urgent"
+      user_role: "admin" | "manager" | "team-member"
+      user_status: "pending" | "active"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -972,6 +971,9 @@ export const Constants = {
         "spiritual",
         "wealth",
       ],
+      task_priority: ["low", "medium", "high", "urgent"],
+      user_role: ["admin", "manager", "team-member"],
+      user_status: ["pending", "active"],
     },
   },
 } as const
