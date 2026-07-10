@@ -453,9 +453,15 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          notify_assignment_response: boolean
+          notify_daily_digest: boolean
           notify_deadline_1hr: boolean
+          notify_goal_updates: boolean
+          notify_mention: boolean
           notify_new_task: boolean
+          notify_output_updates: boolean
           notify_role_updates: boolean
+          notify_task_updates: boolean
           notify_team_added: boolean
           updated_at: string
           user_id: string
@@ -463,9 +469,15 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          notify_assignment_response?: boolean
+          notify_daily_digest?: boolean
           notify_deadline_1hr?: boolean
+          notify_goal_updates?: boolean
+          notify_mention?: boolean
           notify_new_task?: boolean
+          notify_output_updates?: boolean
           notify_role_updates?: boolean
+          notify_task_updates?: boolean
           notify_team_added?: boolean
           updated_at?: string
           user_id: string
@@ -473,9 +485,15 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          notify_assignment_response?: boolean
+          notify_daily_digest?: boolean
           notify_deadline_1hr?: boolean
+          notify_goal_updates?: boolean
+          notify_mention?: boolean
           notify_new_task?: boolean
+          notify_output_updates?: boolean
           notify_role_updates?: boolean
+          notify_task_updates?: boolean
           notify_team_added?: boolean
           updated_at?: string
           user_id?: string
