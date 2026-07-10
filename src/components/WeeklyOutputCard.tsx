@@ -12,6 +12,8 @@ import { MoveWeeklyOutputDialog } from './MoveWeeklyOutputDialog';
 import { OutputDetailsDialog } from './OutputDetailsDialog';
 import { ContentCard, StatusBadge, LinkBadge, ProgressControls, ActionButtonGroup, DateDisplay } from '@/components/ui/standardized';
 import { getContentCardVariant, getStatusBadgeStatus, formatCountDisplay } from '@/utils/standardizedHelpers';
+import { CardMetaStrip } from '@/components/ui/card-meta-strip';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface WeeklyOutputCardProps {
   output: WeeklyOutput;
