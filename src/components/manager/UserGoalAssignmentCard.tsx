@@ -37,29 +37,20 @@ interface UserGoalAssignmentCardProps {
   onViewDetails?: (userId: string) => void;
 }
 
-const getRoleBadgeVariant = (role: 'coach' | 'lead' | 'member') => {
-  switch (role) {
-    case 'coach':
-      return 'default';
-    case 'lead':
-      return 'secondary';
-    case 'member':
-      return 'outline';
-    default:
-      return 'outline';
-  }
-};
+const getRoleBadgeClass = (role: 'coach' | 'lead' | 'member') =>
+  cn('text-xs gap-1 border', ROLE_STYLES[role]?.badge ?? '');
 
 const getRoleIcon = (role: 'coach' | 'lead' | 'member') => {
+  const iconClass = cn('h-3 w-3', ROLE_STYLES[role]?.icon ?? '');
   switch (role) {
     case 'coach':
-      return <UserCog className="h-3 w-3" />;
+      return <UserCog className={iconClass} />;
     case 'lead':
-      return <UserCheck className="h-3 w-3" />;
+      return <UserCheck className={iconClass} />;
     case 'member':
-      return <Users className="h-3 w-3" />;
+      return <Users className={iconClass} />;
     default:
-      return <Users className="h-3 w-3" />;
+      return <Users className={iconClass} />;
   }
 };
 
