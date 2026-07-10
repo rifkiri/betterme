@@ -81,6 +81,27 @@ export class SupabaseTasksService {
       throw error;
     }
 
+    const taskIds = (data || []).map((task) => task.id);
+    let pendingInvitationsByTask: Record<string, string[]> = {};
+
+    if (taskIds.length > 0) {
+      const { data: pendingInvitations, error: invitationsError } = await (supabase as any)
+        .from('task_invitations')
+        .select('task_id, invitee_id')
+        .in('task_id', taskIds)
+        .eq('status', 'pending');
+
+      if (invitationsError) {
+        console.error('Error fetching pending task invitations:', invitationsError);
+        throw invitationsError;
+      }
+
+      pendingInvitationsByTask = (pendingInvitations || []).reduce((acc: Record<string, string[]>, row: any) => {
+        acc[row.task_id] = [...(acc[row.task_id] || []), row.invitee_id];
+        return acc;
+      }, {});
+    }
+
     return data.map(task => ({
       id: task.id,
       userId: task.user_id,
@@ -97,6 +118,7 @@ export class SupabaseTasksService {
       createdDate: new Date(task.created_date),
       weeklyOutputId: task.weekly_output_id,
       taggedUsers: (task as any).tagged_users || [],
+      pendingTaggedUsers: pendingInvitationsByTask[task.id] || [],
       visibility: (task as any).visibility || 'all'
     }));
   }
