@@ -15,6 +15,25 @@ export const AppNavigation = () => {
   const { currentUser } = useCurrentUser();
   const { signOut } = useUserProfile();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    const load = async () => {
+      const { count } = await supabase
+        .from('goal_assignments')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', currentUser.id)
+        .eq('acknowledged', false);
+      setPendingCount(count || 0);
+    };
+    load();
+    const channel = supabase
+      .channel('nav-invitations')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'goal_assignments', filter: `user_id=eq.${currentUser.id}` }, load)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [currentUser?.id]);
 
   const handleSignOut = async () => {
     try {
