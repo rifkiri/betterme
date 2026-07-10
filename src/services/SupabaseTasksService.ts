@@ -4,6 +4,74 @@ import { Task } from '@/types/productivity';
 import { formatDateForDatabase, parseLocalDate } from '@/lib/utils';
 
 export class SupabaseTasksService {
+  private async getCurrentUserId(): Promise<string | null> {
+    const { data } = await supabase.auth.getUser();
+    return data.user?.id || null;
+  }
+
+  private async syncTaskInvitations(
+    taskId: string,
+    selectedSupporterIds: string[] | undefined,
+    acceptedSupporterIds: string[] = []
+  ): Promise<string[]> {
+    const currentUserId = await this.getCurrentUserId();
+    const requestedIds = Array.from(new Set((selectedSupporterIds || []).filter(Boolean)));
+    const acceptedIds = Array.from(new Set((acceptedSupporterIds || []).filter(Boolean)));
+    const acceptedToKeep = acceptedIds.filter((id) => requestedIds.includes(id));
+    const { data: existingInvitations, error: existingInvitationsError } = await (supabase as any)
+      .from('task_invitations')
+      .select('invitee_id, status')
+      .eq('task_id', taskId);
+
+    if (existingInvitationsError) {
+      console.error('Error loading existing task invitations:', existingInvitationsError);
+      throw existingInvitationsError;
+    }
+
+    const activeInvitationIds = (existingInvitations || [])
+      .filter((row: any) => row.status === 'pending' || row.status === 'accepted')
+      .map((row: any) => row.invitee_id);
+    const existingInvitationIds = (existingInvitations || []).map((row: any) => row.invitee_id);
+    const idsToInvite = requestedIds.filter((id) => !acceptedIds.includes(id) && !activeInvitationIds.includes(id));
+
+    if (idsToInvite.length > 0 && currentUserId) {
+      const { error } = await (supabase as any)
+        .from('task_invitations')
+        .upsert(
+          idsToInvite.map((inviteeId) => ({
+            task_id: taskId,
+            invitee_id: inviteeId,
+            invited_by: currentUserId,
+            status: 'pending',
+            responded_at: null,
+          })),
+          { onConflict: 'task_id,invitee_id' }
+        );
+
+      if (error) {
+        console.error('Error creating task invitations:', error);
+        throw error;
+      }
+    }
+
+    const idsNoLongerSelected = Array.from(new Set([...acceptedIds, ...existingInvitationIds]))
+      .filter((id) => !requestedIds.includes(id));
+    if (idsNoLongerSelected.length > 0) {
+      const { error } = await (supabase as any)
+        .from('task_invitations')
+        .delete()
+        .eq('task_id', taskId)
+        .in('invitee_id', idsNoLongerSelected);
+
+      if (error) {
+        console.error('Error removing task invitations:', error);
+        throw error;
+      }
+    }
+
+    return acceptedToKeep;
+  }
+
   async getTasks(userId: string): Promise<Task[]> {
     const { data, error } = await supabase
       .from('tasks')
@@ -14,6 +82,27 @@ export class SupabaseTasksService {
     if (error) {
       console.error('Error fetching tasks:', error);
       throw error;
+    }
+
+    const taskIds = (data || []).map((task) => task.id);
+    let pendingInvitationsByTask: Record<string, string[]> = {};
+
+    if (taskIds.length > 0) {
+      const { data: pendingInvitations, error: invitationsError } = await (supabase as any)
+        .from('task_invitations')
+        .select('task_id, invitee_id')
+        .in('task_id', taskIds)
+        .eq('status', 'pending');
+
+      if (invitationsError) {
+        console.error('Error fetching pending task invitations:', invitationsError);
+        throw invitationsError;
+      }
+
+      pendingInvitationsByTask = (pendingInvitations || []).reduce((acc: Record<string, string[]>, row: any) => {
+        acc[row.task_id] = [...(acc[row.task_id] || []), row.invitee_id];
+        return acc;
+      }, {});
     }
 
     return data.map(task => ({
@@ -32,6 +121,7 @@ export class SupabaseTasksService {
       createdDate: new Date(task.created_date),
       weeklyOutputId: task.weekly_output_id,
       taggedUsers: (task as any).tagged_users || [],
+      pendingTaggedUsers: pendingInvitationsByTask[task.id] || [],
       visibility: (task as any).visibility || 'all'
     }));
   }
@@ -56,9 +146,13 @@ export class SupabaseTasksService {
   }
 
   async addTask(task: Task & { userId: string }): Promise<void> {
+    const acceptedSupporters: string[] = [];
+    const pendingSupporters = task.taggedUsers || [];
+
     const { error } = await supabase
       .from('tasks')
       .insert({
+        id: task.id,
         user_id: task.userId,
         title: task.title,
         description: task.description,
@@ -72,7 +166,7 @@ export class SupabaseTasksService {
         deleted_date: task.deletedDate?.toISOString(),
         created_date: task.createdDate.toISOString(),
         weekly_output_id: task.weeklyOutputId || null,
-        tagged_users: task.taggedUsers || null,
+        tagged_users: acceptedSupporters,
         visibility: task.visibility || 'all'
       });
 
@@ -80,12 +174,15 @@ export class SupabaseTasksService {
       console.error('Error adding task:', error);
       throw error;
     }
+
+    await this.syncTaskInvitations(task.id, pendingSupporters, acceptedSupporters);
   }
 
   async updateTask(id: string, userId: string, updates: Partial<Task>): Promise<void> {
     console.log('SupabaseTasksService - Updating task:', id, 'for user:', userId, 'with updates:', updates);
     
     const supabaseUpdates: any = {};
+    let acceptedSupporters: string[] | undefined;
     
     if (updates.title) supabaseUpdates.title = updates.title;
     if (updates.description !== undefined) supabaseUpdates.description = updates.description;
@@ -106,7 +203,25 @@ export class SupabaseTasksService {
         console.log('🗑️ Unlinking task from output:', id);
       }
     }
-    if (updates.taggedUsers !== undefined) supabaseUpdates.tagged_users = updates.taggedUsers || null;
+    if (updates.taggedUsers !== undefined) {
+      const { data: currentTask, error: currentTaskError } = await supabase
+        .from('tasks')
+        .select('tagged_users')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (currentTaskError) {
+        console.error('SupabaseTasksService - Error loading current task supporters:', currentTaskError);
+        throw currentTaskError;
+      }
+
+      acceptedSupporters = await this.syncTaskInvitations(
+        id,
+        updates.taggedUsers,
+        (currentTask as any)?.tagged_users || []
+      );
+      supabaseUpdates.tagged_users = acceptedSupporters;
+    }
     if (updates.visibility !== undefined) supabaseUpdates.visibility = updates.visibility || 'all';
 
     console.log('SupabaseTasksService - Final supabase updates object:', supabaseUpdates);

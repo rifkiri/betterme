@@ -62,7 +62,7 @@ export const EditTaskDialog = ({
     estimatedTime: task.estimatedTime || '',
     dueDate: task.dueDate || new Date(),
     weeklyOutputId: task.weeklyOutputId || undefined,
-    taggedUsers: task.taggedUsers || [],
+    taggedUsers: Array.from(new Set([...(task.taggedUsers || []), ...(task.pendingTaggedUsers || [])])),
     visibility: task.visibility || 'all'
   };
 

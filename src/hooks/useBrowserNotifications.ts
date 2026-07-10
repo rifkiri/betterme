@@ -10,16 +10,32 @@ export const useBrowserNotifications = (autoRequest = true) => {
     isSupported() ? Notification.permission : 'unsupported'
   );
 
+  const refreshPermission = useCallback(() => {
+    const next = isSupported() ? Notification.permission : 'unsupported';
+    setPermission(next);
+    return next;
+  }, []);
+
   const requestPermission = useCallback(async () => {
     if (!isSupported()) return 'unsupported' as PermissionState;
+    refreshPermission();
     if (Notification.permission === 'default') {
       const res = await Notification.requestPermission();
       setPermission(res);
       return res;
     }
-    setPermission(Notification.permission);
-    return Notification.permission;
-  }, []);
+    return refreshPermission();
+  }, [refreshPermission]);
+
+  useEffect(() => {
+    refreshPermission();
+    window.addEventListener('focus', refreshPermission);
+    document.addEventListener('visibilitychange', refreshPermission);
+    return () => {
+      window.removeEventListener('focus', refreshPermission);
+      document.removeEventListener('visibilitychange', refreshPermission);
+    };
+  }, [refreshPermission]);
 
   useEffect(() => {
     if (autoRequest && isSupported() && Notification.permission === 'default') {
@@ -49,5 +65,5 @@ export const useBrowserNotifications = (autoRequest = true) => {
     []
   );
 
-  return { permission, requestPermission, notify, isSupported: isSupported() };
+  return { permission, requestPermission, notify, isSupported: isSupported(), refreshPermission };
 };

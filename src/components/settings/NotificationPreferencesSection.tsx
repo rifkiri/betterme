@@ -127,7 +127,7 @@ export const NotificationPreferencesSection: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             {group.toggles.map(({ key, label, description, Icon }, idx) => (
-              <React.Fragment key={key}>
+              <div key={key} className="space-y-4">
                 {idx > 0 && <Separator />}
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-start gap-3 min-w-0">
@@ -144,7 +144,7 @@ export const NotificationPreferencesSection: React.FC = () => {
                     onCheckedChange={(v) => updatePreference(key, v)}
                   />
                 </div>
-              </React.Fragment>
+              </div>
             ))}
           </CardContent>
         </Card>
