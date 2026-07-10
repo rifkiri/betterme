@@ -42,7 +42,10 @@ export const useTeamDataRealtime = () => {
       console.log('Loading team data...');
       const data = await teamDataService.getCurrentManagerTeamData({ userId: user.id });
       setTeamData(data);
-      setLastUpdated(new Date());
+      cachedTeamData = data;
+      cachedForUserId = user.id;
+      cachedAt = Date.now();
+      setLastUpdated(new Date(cachedAt));
       
       if (showToast && !isInitialLoad.current) {
         toast.success('Team data updated');
