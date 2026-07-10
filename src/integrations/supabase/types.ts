@@ -930,6 +930,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      user_has_pending_task_invitation: {
+        Args: { _task_id: string; _user_id: string }
+        Returns: boolean
+      }
       validate_password_strength: {
         Args: { password: string }
         Returns: boolean
