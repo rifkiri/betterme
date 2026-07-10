@@ -98,20 +98,20 @@ export const UserGoalAssignmentCard = ({
         {activeGoalsCount > 0 && (
           <div className="flex gap-2 mb-3">
             {activeRoleBreakdown.coach > 0 && (
-              <Badge variant="default" className="text-xs">
-                <UserCog className="h-3 w-3 mr-1" />
+              <Badge className={cn('text-xs gap-1 border', ROLE_STYLES.coach.badge)}>
+                <UserCog className={cn('h-3 w-3', ROLE_STYLES.coach.icon)} />
                 Coach ({activeRoleBreakdown.coach})
               </Badge>
             )}
             {activeRoleBreakdown.lead > 0 && (
-              <Badge variant="secondary" className="text-xs">
-                <UserCheck className="h-3 w-3 mr-1" />
+              <Badge className={cn('text-xs gap-1 border', ROLE_STYLES.lead.badge)}>
+                <UserCheck className={cn('h-3 w-3', ROLE_STYLES.lead.icon)} />
                 Lead ({activeRoleBreakdown.lead})
               </Badge>
             )}
             {activeRoleBreakdown.member > 0 && (
-              <Badge variant="outline" className="text-xs">
-                <Users className="h-3 w-3 mr-1" />
+              <Badge className={cn('text-xs gap-1 border', ROLE_STYLES.member.badge)}>
+                <Users className={cn('h-3 w-3', ROLE_STYLES.member.icon)} />
                 Member ({activeRoleBreakdown.member})
               </Badge>
             )}
@@ -131,9 +131,9 @@ export const UserGoalAssignmentCard = ({
                       {goal.goalTitle}
                     </p>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <Badge variant={getRoleBadgeVariant(goal.role)} className="text-xs">
+                      <Badge className={getRoleBadgeClass(goal.role)}>
                         {getRoleIcon(goal.role)}
-                        <span className="ml-1">{goal.role}</span>
+                        <span className="capitalize">{goal.role}</span>
                       </Badge>
                       {goal.subcategory && (
                         <Badge variant="outline" className="text-xs capitalize">
