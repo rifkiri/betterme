@@ -29,6 +29,7 @@ export interface Task {
   deletedDate?: Date;
   weeklyOutputId?: string;
   taggedUsers?: string[]; // Array of user IDs who are tagged for support
+  pendingTaggedUsers?: string[]; // Supporter invitation user IDs awaiting acceptance
   visibility?: 'all' | 'managers' | 'self'; // Who can view this task
 }
 
