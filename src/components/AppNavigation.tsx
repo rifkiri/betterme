@@ -1,12 +1,13 @@
 
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Home, Calendar, Settings, Users, LogOut, Menu, X, Target } from 'lucide-react';
+import { Home, Calendar, Settings, Users, LogOut, Menu, X, Target, Bell } from 'lucide-react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { supabase } from '@/integrations/supabase/client';
 
 export const AppNavigation = () => {
   const location = useLocation();
