@@ -7,6 +7,7 @@ import { EditTaskDialog } from './EditTaskDialog';
 import { format, isToday, isTomorrow, isPast } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { ItemCard, StatusBadge, LinkBadge, DateDisplay } from '@/components/ui/standardized';
+import { VisibilityBadge } from '@/components/ui/visibility-badge';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface TaskItemProps {
