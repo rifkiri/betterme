@@ -105,14 +105,23 @@ export const useTeamDataRealtime = () => {
 
   useEffect(() => {
     if (!user?.id) return;
-    
-    // Initial data load
-    loadTeamData();
-    
-    // Set up real-time subscriptions
+
+    const cacheFresh =
+      cachedForUserId === user.id &&
+      cachedTeamData !== null &&
+      Date.now() - cachedAt < CACHE_TTL_MS;
+
+    if (cacheFresh) {
+      // Hydrate from cache; realtime will keep it fresh.
+      setTeamData(cachedTeamData);
+      setIsLoading(false);
+      isInitialLoad.current = false;
+    } else {
+      loadTeamData();
+    }
+
     setupRealtimeSubscriptions();
-    
-    // Cleanup on unmount
+
     return () => {
       subscriptionsRef.current.forEach(channel => {
         supabase.removeChannel(channel);
