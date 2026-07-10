@@ -21,6 +21,7 @@ const TeamPage = lazy(() => import("@/pages/TeamPage"));
 const Manager = lazy(() => import("@/pages/Manager"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const Settings = lazy(() => import("@/pages/Settings"));
+const Notifications = lazy(() => import("@/pages/Notifications"));
 
 // Loading skeleton component
 const PageSkeleton = () => (
@@ -158,8 +159,17 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
-            
-            {/* 404 Route */}
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <Suspense fallback={<PageSkeleton />}>
+                    <Notifications />
+                  </Suspense>
+                </ProtectedRoute>
+              }
+            />
+            {/* Catch all route - must be last */}
             <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>
