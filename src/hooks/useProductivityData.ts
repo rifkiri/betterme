@@ -1,10 +1,67 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { Habit, Task, WeeklyOutput, Goal } from '@/types/productivity';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
+
+// ---- Module-level cache ---------------------------------------------------
+// Every page mounts its own useProductivityData() and used to refetch
+// everything on every navigation. We cache the last snapshot per (user,date)
+// and reuse it within CACHE_TTL_MS, then quietly refresh in the background.
+const CACHE_TTL_MS = 30_000;
+
+type Snapshot = {
+  habitsData: Habit[];
+  tasksData: Task[];
+  weeklyOutputsData: WeeklyOutput[];
+  goalsData: Goal[];
+  allGoalsData: Goal[];
+  deletedGoalsForAdmin: Goal[];
+  fetchedAt: number;
+};
+
+const snapshotCache = new Map<string, Snapshot>();
+const inflightFetches = new Map<string, Promise<Snapshot>>();
+
+const cacheKey = (userId: string, dateStr: string, role: string | null) =>
+  `${userId}|${dateStr}|${role ?? ''}`;
+
+const fetchSnapshot = async (
+  userId: string,
+  date: Date,
+  role: string | null
+): Promise<Snapshot> => {
+  const [habitsData, tasksData, weeklyOutputsData, goalsData, allGoalsData, deletedGoalsForAdmin] =
+    await Promise.all([
+      supabaseDataService.getHabitsForDate(userId, date),
+      supabaseDataService.getTasks(userId),
+      supabaseDataService.getWeeklyOutputs(userId),
+      supabaseDataService.getGoals(userId),
+      supabaseDataService.getAllGoals(),
+      role === 'admin' ? supabaseDataService.getDeletedGoalsForAdmin() : Promise.resolve([] as Goal[]),
+    ]);
+  return {
+    habitsData,
+    tasksData,
+    weeklyOutputsData,
+    goalsData,
+    allGoalsData,
+    deletedGoalsForAdmin,
+    fetchedAt: Date.now(),
+  };
+};
+
+export const invalidateProductivityCache = (userId?: string) => {
+  if (!userId) {
+    snapshotCache.clear();
+    return;
+  }
+  for (const key of Array.from(snapshotCache.keys())) {
+    if (key.startsWith(`${userId}|`)) snapshotCache.delete(key);
+  }
+};
 
 export const useProductivityData = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -20,89 +77,102 @@ export const useProductivityData = () => {
   const [marketplaceDeletedGoals, setMarketplaceDeletedGoals] = useState<Goal[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const mountedRef = useRef(true);
 
   const { user } = useAuth();
   const userId = user?.id || null;
   const { role: userRole } = useUserRole();
 
-  // Check if Supabase is available
-  const isSupabaseAvailable = () => {
-    const available = supabaseDataService.isConfigured() && userId !== null;
-    console.log('Supabase available for user:', userId, 'available:', available);
-    return available;
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  const applySnapshot = (snap: Snapshot) => {
+    if (!mountedRef.current) return;
+    setHabits(snap.habitsData.filter((h) => !h.archived && !h.isDeleted));
+    setArchivedHabits(snap.habitsData.filter((h) => h.archived));
+    setTasks(snap.tasksData.filter((t) => !t.isDeleted));
+    setDeletedTasks(snap.tasksData.filter((t) => t.isDeleted));
+    setWeeklyOutputs(snap.weeklyOutputsData.filter((w) => !w.isDeleted));
+    setDeletedWeeklyOutputs(snap.weeklyOutputsData.filter((w) => w.isDeleted));
+    setGoals(
+      snap.goalsData.filter(
+        (g) => !g.archived && !g.isDeleted && !g.completed && g.progress < 100
+      )
+    );
+    setDeletedGoals(snap.goalsData.filter((g) => g.archived && !g.isDeleted));
+    setAllGoals(
+      snap.allGoalsData.filter(
+        (g) => !g.archived && !g.isDeleted && !g.completed && g.progress < 100
+      )
+    );
+    setCompletedGoals(
+      snap.allGoalsData.filter(
+        (g) => !g.archived && !g.isDeleted && (g.completed || g.progress >= 100)
+      )
+    );
+    setMarketplaceDeletedGoals(snap.deletedGoalsForAdmin);
   };
 
-  // Load all data from Supabase
-  const loadAllData = async (date?: Date) => {
-    if (!userId) {
-      console.log('No user ID found, cannot load data');
+  const isSupabaseAvailable = () =>
+    supabaseDataService.isConfigured() && userId !== null;
+
+  const loadAllData = async (date?: Date, opts?: { force?: boolean }) => {
+    if (!userId) return;
+    if (!isSupabaseAvailable()) {
+      toast.error('Please sign in to access your data');
       return;
     }
-
     const targetDate = date || selectedDate;
-    console.log('Loading productivity data for user:', userId, 'date:', format(targetDate, 'yyyy-MM-dd'));
-    setIsLoading(true);
+    const dateStr = format(targetDate, 'yyyy-MM-dd');
+    const key = cacheKey(userId, dateStr, userRole);
+
+    const cached = snapshotCache.get(key);
+    const fresh = cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS;
+
+    // Fast path: hydrate from cache instantly, then only revalidate in the
+    // background if the snapshot is stale or the caller asked to force.
+    if (cached) {
+      applySnapshot(cached);
+      if (fresh && !opts?.force) return;
+    } else {
+      setIsLoading(true);
+    }
+
     try {
-      if (isSupabaseAvailable()) {
-        console.log('Loading data from Supabase for authenticated user...');
-        
-        // Load habits for the specific date and user
-        const [habitsData, tasksData, weeklyOutputsData, goalsData, allGoalsData, deletedGoalsForAdmin] = await Promise.all([
-          supabaseDataService.getHabitsForDate(userId, targetDate),
-          supabaseDataService.getTasks(userId),
-          supabaseDataService.getWeeklyOutputs(userId),
-          supabaseDataService.getGoals(userId),
-          supabaseDataService.getAllGoals(),
-          userRole === 'admin' ? supabaseDataService.getDeletedGoalsForAdmin() : Promise.resolve([])
-        ]);
-
-        console.log('Loaded habits for user', userId, 'date:', format(targetDate, 'yyyy-MM-dd'), habitsData);
-        console.log('Loaded tasks for user', userId, ':', tasksData);
-        console.log('Loaded weekly outputs for user', userId, ':', weeklyOutputsData);
-        console.log('Loaded goals for user', userId, ':', goalsData);
-        console.log('Loaded all goals:', allGoalsData);
-
-        // Filter and set data ensuring user isolation
-        setHabits(habitsData.filter(h => !h.archived && !h.isDeleted));
-        setArchivedHabits(habitsData.filter(h => h.archived));
-        setTasks(tasksData.filter(t => !t.isDeleted));
-        setDeletedTasks(tasksData.filter(t => t.isDeleted));
-        setWeeklyOutputs(weeklyOutputsData.filter(w => !w.isDeleted));
-        setDeletedWeeklyOutputs(weeklyOutputsData.filter(w => w.isDeleted));
-        setGoals(goalsData.filter(g => !g.archived && !g.isDeleted && !g.completed && g.progress < 100));
-        setDeletedGoals(goalsData.filter(g => g.archived && !g.isDeleted));
-        setAllGoals(allGoalsData.filter(g => !g.archived && !g.isDeleted && !g.completed && g.progress < 100));
-        setCompletedGoals(allGoalsData.filter(g => !g.archived && !g.isDeleted && (g.completed || g.progress >= 100)));
-        setMarketplaceDeletedGoals(deletedGoalsForAdmin);
-        
-        console.log('Data loaded successfully for user:', userId);
-        console.log('Marketplace deleted goals:', deletedGoalsForAdmin.length);
-      } else {
-        console.log('Supabase not available or user not authenticated');
-        toast.error('Please sign in to access your data');
+      let inflight = inflightFetches.get(key);
+      if (!inflight || opts?.force) {
+        inflight = fetchSnapshot(userId, targetDate, userRole);
+        inflightFetches.set(key, inflight);
       }
+      const snap = await inflight;
+      snapshotCache.set(key, snap);
+      applySnapshot(snap);
     } catch (error) {
-      console.error('Failed to load data from Supabase for user', userId, ':', error);
-      toast.error('Failed to load data from Supabase');
+      console.error('Failed to load productivity data:', error);
+      if (!cached) toast.error('Failed to load data from Supabase');
     } finally {
-      setIsLoading(false);
+      inflightFetches.delete(key);
+      if (mountedRef.current) setIsLoading(false);
     }
   };
 
   useEffect(() => {
     if (userId) {
-      console.log('User ID or date changed, reloading data for user:', userId, format(selectedDate, 'yyyy-MM-dd'));
       loadAllData(selectedDate);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, selectedDate, userRole]);
 
-  const handleDateChange = (date: Date) => {
-    console.log('Date changed to:', format(date, 'yyyy-MM-dd'), 'for user:', userId);
-    setSelectedDate(date);
-  };
+  const handleDateChange = (date: Date) => setSelectedDate(date);
+
+  // Public loadAllData always forces (mutations use it to refresh after write).
+  const loadAllDataForced = (date?: Date) => loadAllData(date, { force: true });
 
   return {
-    // State
     habits,
     setHabits,
     tasks,
@@ -127,10 +197,8 @@ export const useProductivityData = () => {
     setMarketplaceDeletedGoals,
     isLoading,
     selectedDate,
-    
-    // Utils
     userId,
-    loadAllData,
+    loadAllData: loadAllDataForced,
     handleDateChange,
   };
 };
