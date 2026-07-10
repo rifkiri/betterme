@@ -22,6 +22,7 @@ import { EditTaskDialog } from './EditTaskDialog';
 import { format, isToday, isTomorrow, isPast } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { ItemCard, StatusBadge, LinkBadge, DateDisplay } from '@/components/ui/standardized';
+import { CardMetaStrip } from '@/components/ui/card-meta-strip';
 import { IconButton } from '@/components/ui/icon-button';
 import { usePomodoroSessionManager } from '@/hooks/usePomodoroSessionManager';
 import { usePomodoroCounterRealtime } from '@/hooks/usePomodoroCounterRealtime';
@@ -250,11 +251,11 @@ export const TaskItemWithPomodoro = ({
       }
       badges={
         <>
-          {isCollaboratorView && ownerName && (
-            <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
-              Task Owner: {ownerName}
-            </Badge>
-          )}
+          <CardMetaStrip
+            ownerId={task.userId}
+            hideOwnerIfSelf={currentUser?.id}
+            visibility={task.visibility}
+          />
           {task.isMoved && (
             <Badge variant="outline" className="text-xs flex items-center gap-1">
               <ArrowRight className="h-2 w-2" />

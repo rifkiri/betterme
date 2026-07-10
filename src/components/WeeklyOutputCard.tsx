@@ -12,6 +12,8 @@ import { MoveWeeklyOutputDialog } from './MoveWeeklyOutputDialog';
 import { OutputDetailsDialog } from './OutputDetailsDialog';
 import { ContentCard, StatusBadge, LinkBadge, ProgressControls, ActionButtonGroup, DateDisplay } from '@/components/ui/standardized';
 import { getContentCardVariant, getStatusBadgeStatus, formatCountDisplay } from '@/utils/standardizedHelpers';
+import { CardMetaStrip } from '@/components/ui/card-meta-strip';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface WeeklyOutputCardProps {
   output: WeeklyOutput;
@@ -35,6 +37,7 @@ export const WeeklyOutputCard = ({
   onRefresh
 }: WeeklyOutputCardProps) => {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const { currentUser } = useCurrentUser();
   // Find the linked goal using the simple linkedGoalId field
   const linkedGoal = output.linkedGoalId ? goals.find(g => g.id === output.linkedGoalId) : null;
   
@@ -72,6 +75,12 @@ export const WeeklyOutputCard = ({
                 </LinkBadge>
               )}
             </div>
+            <CardMetaStrip
+              ownerId={output.userId}
+              hideOwnerIfSelf={currentUser?.id}
+              visibility={output.visibility}
+              className="mb-2"
+            />
             {output.dueDate && (
               <DateDisplay 
                 date={output.dueDate}

@@ -6,13 +6,21 @@ import { teamDataService } from '@/services/TeamDataService';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 
+// Module-level cache so navigating away from /manager and back doesn't refetch
+// from scratch. Realtime subscriptions keep this fresh in the background.
+let cachedTeamData: TeamData | null = null;
+let cachedForUserId: string | null = null;
+let cachedAt = 0;
+const CACHE_TTL_MS = 60_000;
+
 export const useTeamDataRealtime = () => {
   const { user } = useAuth();
-  const [teamData, setTeamData] = useState<TeamData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const hasCache = !!user?.id && cachedForUserId === user.id && cachedTeamData !== null;
+  const [teamData, setTeamData] = useState<TeamData | null>(hasCache ? cachedTeamData : null);
+  const [isLoading, setIsLoading] = useState(!hasCache);
   const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const isInitialLoad = useRef(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(hasCache ? new Date(cachedAt) : null);
+  const isInitialLoad = useRef(!hasCache);
   const subscriptionsRef = useRef<any[]>([]);
 
   const loadTeamData = async (showToast = false) => {
@@ -34,7 +42,10 @@ export const useTeamDataRealtime = () => {
       console.log('Loading team data...');
       const data = await teamDataService.getCurrentManagerTeamData({ userId: user.id });
       setTeamData(data);
-      setLastUpdated(new Date());
+      cachedTeamData = data;
+      cachedForUserId = user.id;
+      cachedAt = Date.now();
+      setLastUpdated(new Date(cachedAt));
       
       if (showToast && !isInitialLoad.current) {
         toast.success('Team data updated');
@@ -94,14 +105,23 @@ export const useTeamDataRealtime = () => {
 
   useEffect(() => {
     if (!user?.id) return;
-    
-    // Initial data load
-    loadTeamData();
-    
-    // Set up real-time subscriptions
+
+    const cacheFresh =
+      cachedForUserId === user.id &&
+      cachedTeamData !== null &&
+      Date.now() - cachedAt < CACHE_TTL_MS;
+
+    if (cacheFresh) {
+      // Hydrate from cache; realtime will keep it fresh.
+      setTeamData(cachedTeamData);
+      setIsLoading(false);
+      isInitialLoad.current = false;
+    } else {
+      loadTeamData();
+    }
+
     setupRealtimeSubscriptions();
-    
-    // Cleanup on unmount
+
     return () => {
       subscriptionsRef.current.forEach(channel => {
         supabase.removeChannel(channel);

@@ -20,6 +20,8 @@ import { DateDisplay } from '@/components/ui/date-display';
 import { getContentCardVariant, getStatusBadgeStatus, formatCountDisplay } from '@/utils/standardizedHelpers';
 import { useAuth } from '@/contexts/AuthContext';
 import { VisibilityBadge } from '@/components/ui/visibility-badge';
+import { CardMetaStrip } from '@/components/ui/card-meta-strip';
+import { AssignmentRole } from '@/components/ui/role-styles';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface GoalCardProps {
@@ -60,8 +62,10 @@ export const GoalCard = ({
   
   // Check if user can update progress
   const isGoalOwner = goal.userId === user?.id;
-  const isAssignedToGoal = assignments?.some(a => a.userId === user?.id && a.goalId === goal.id);
+  const currentUserAssignment = assignments?.find(a => a.userId === user?.id && a.goalId === goal.id);
+  const isAssignedToGoal = !!currentUserAssignment;
   const canUpdateProgress = isGoalOwner || isAssignedToGoal;
+  const currentUserRole = currentUserAssignment?.role as AssignmentRole | undefined;
   
   // Check if this is an OKR goal from Zatzet
   const isOkrGoal = goal.subcategory === 'okr';
@@ -102,7 +106,7 @@ export const GoalCard = ({
                   <Badge className={`text-xs ${getCategoryColor(goal.category)}`}>
                     {goal.category}
                   </Badge>
-                  <VisibilityBadge visibility={goal.visibility} />
+                  
                   {isOkrGoal ? (
                     <TooltipProvider>
                       <Tooltip>
@@ -158,6 +162,12 @@ export const GoalCard = ({
                 </div>
               )}
             </div>
+            <CardMetaStrip
+              ownerId={goal.userId}
+              role={currentUserRole}
+              visibility={goal.visibility}
+              className="mb-2"
+            />
             <div className="flex items-center gap-2 mb-2">
               {linkedOutputsCount > 0 && (
                 <LinkBadge variant="success">
