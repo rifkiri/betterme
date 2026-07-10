@@ -149,6 +149,7 @@ export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteT
           <StatusBadge status={task.priority === 'High' ? 'high' : task.priority === 'Medium' ? 'medium' : 'low'}>
             {task.priority}
           </StatusBadge>
+          <VisibilityBadge visibility={task.visibility} />
           {taggedUsers.length > 0 && taggedUsers.map((user) => (
             <Badge key={user.id} variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
               {user.name}
