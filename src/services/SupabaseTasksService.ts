@@ -20,7 +20,7 @@ export class SupabaseTasksService {
     const acceptedToKeep = acceptedIds.filter((id) => requestedIds.includes(id));
     const { data: existingInvitations, error: existingInvitationsError } = await (supabase as any)
       .from('task_invitations')
-      .select('invitee_id')
+      .select('invitee_id, status')
       .eq('task_id', taskId);
 
     if (existingInvitationsError) {
@@ -28,8 +28,11 @@ export class SupabaseTasksService {
       throw existingInvitationsError;
     }
 
+    const activeInvitationIds = (existingInvitations || [])
+      .filter((row: any) => row.status === 'pending' || row.status === 'accepted')
+      .map((row: any) => row.invitee_id);
     const existingInvitationIds = (existingInvitations || []).map((row: any) => row.invitee_id);
-    const idsToInvite = requestedIds.filter((id) => !acceptedIds.includes(id) && !existingInvitationIds.includes(id));
+    const idsToInvite = requestedIds.filter((id) => !acceptedIds.includes(id) && !activeInvitationIds.includes(id));
 
     if (idsToInvite.length > 0 && currentUserId) {
       const { error } = await (supabase as any)
