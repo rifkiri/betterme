@@ -8,6 +8,7 @@ import { Goal, GoalAssignment } from '@/types/productivity';
 import { Briefcase, Users, User, Calendar, TrendingUp, UserPlus, CheckCircle, Trash2, Plus, Minus, RotateCcw, Target } from 'lucide-react';
 import { mapSubcategoryDatabaseToDisplay } from '@/utils/goalCategoryUtils';
 import { format } from 'date-fns';
+import { VisibilityBadge } from '@/components/ui/visibility-badge';
 
 interface MarketplaceGoalCardProps {
   goal: Goal;
