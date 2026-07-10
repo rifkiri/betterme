@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { Check, X, Bell } from 'lucide-react';
+import { invalidateProductivityCache } from '@/hooks/useProductivityData';
 
 export default function Notifications() {
   const { user } = useAuth();
@@ -57,10 +58,64 @@ export default function Notifications() {
       }
 
       const enriched = (assignmentsData || []).map((a: any) => ({
+        type: 'goal',
         ...a,
+        title: a.goals?.title || 'Unknown Goal',
+        description: a.goals?.description || 'No description provided.',
+        date: a.assigned_date,
+        badge: a.role || 'member',
         inviter: inviterMap[a.assigned_by] || inviterMap[a.goals?.user_id] || null,
       }));
-      setInvitations(enriched);
+
+      const { data: taskInvitationsData, error: taskInvitationsError } = await (supabase as any)
+        .from('task_invitations')
+        .select(`
+          id,
+          task_id,
+          invited_by,
+          status,
+          created_at,
+          tasks:task_id ( id, title, description, user_id, due_date, priority )
+        `)
+        .eq('invitee_id', user.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (taskInvitationsError) throw taskInvitationsError;
+
+      const taskInviterIds = Array.from(
+        new Set(
+          (taskInvitationsData || [])
+            .map((inv: any) => inv.invited_by || inv.tasks?.user_id)
+            .filter(Boolean)
+        )
+      );
+      if (taskInviterIds.length > 0) {
+        const missingInviterIds = taskInviterIds.filter((id) => !inviterMap[id]);
+        if (missingInviterIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, name, email')
+            .in('id', missingInviterIds);
+          (profiles || []).forEach((p: any) => {
+            inviterMap[p.id] = { name: p.name, email: p.email };
+          });
+        }
+      }
+
+      const enrichedTaskInvitations = (taskInvitationsData || []).map((inv: any) => ({
+        type: 'task',
+        ...inv,
+        title: inv.tasks?.title || 'Unknown Task',
+        description: inv.tasks?.description || 'No description provided.',
+        date: inv.created_at,
+        badge: 'supporter',
+        inviter: inviterMap[inv.invited_by] || inviterMap[inv.tasks?.user_id] || null,
+      }));
+
+      setInvitations([...enriched, ...enrichedTaskInvitations].sort((a, b) => {
+        return new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime();
+      }));
 
       // 2. General notifications
       const { data: notifData, error: notifError } = await supabase
@@ -100,6 +155,22 @@ export default function Notifications() {
     }
   };
 
+  const handleAcceptTaskInvitation = async (invitationId: string, taskTitle: string) => {
+    try {
+      const { error } = await (supabase as any).rpc('accept_task_invitation', {
+        p_invitation_id: invitationId,
+      });
+
+      if (error) throw error;
+      invalidateProductivityCache(user?.id);
+      toast.success(`Accepted invitation to "${taskTitle}"`);
+      loadData();
+    } catch (err) {
+      console.error('Error accepting task invitation:', err);
+      toast.error('Failed to accept task invitation');
+    }
+  };
+
   const handleDecline = async (assignmentId: string, goalTitle: string) => {
     try {
       const { error } = await supabase
@@ -113,6 +184,22 @@ export default function Notifications() {
     } catch (err) {
       console.error('Error declining assignment:', err);
       toast.error('Failed to decline invitation');
+    }
+  };
+
+  const handleDeclineTaskInvitation = async (invitationId: string, taskTitle: string) => {
+    try {
+      const { error } = await (supabase as any).rpc('decline_task_invitation', {
+        p_invitation_id: invitationId,
+      });
+
+      if (error) throw error;
+      invalidateProductivityCache(user?.id);
+      toast.info(`Declined invitation to "${taskTitle}"`);
+      loadData();
+    } catch (err) {
+      console.error('Error declining task invitation:', err);
+      toast.error('Failed to decline task invitation');
     }
   };
 
@@ -168,27 +255,30 @@ export default function Notifications() {
                   {invitations.map((inv) => (
                     <Card key={inv.id} className="overflow-hidden border-l-4 border-l-primary">
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-lg">{inv.goals?.title || 'Unknown Goal'}</CardTitle>
+                        <CardTitle className="text-lg">{inv.title}</CardTitle>
                         <CardDescription className="flex flex-wrap items-center gap-2">
-                          <Badge variant="secondary" className="capitalize">{inv.role || 'member'}</Badge>
+                          <Badge variant="secondary" className="capitalize">{inv.type} {inv.badge}</Badge>
                           {inv.inviter && (
                             <span className="text-xs">
                               Invited by <span className="font-medium">{inv.inviter.name}</span>
                             </span>
                           )}
-                          <span className="text-xs">• {formatDate(inv.assigned_date)}</span>
+                          <span className="text-xs">• {formatDate(inv.date)}</span>
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
                         <p className="text-sm text-muted-foreground line-clamp-2">
-                          {inv.goals?.description || 'No description provided.'}
+                          {inv.description}
                         </p>
                       </CardContent>
                       <CardFooter className="bg-muted/30 flex justify-end space-x-2 pt-3 pb-3">
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleDecline(inv.id, inv.goals?.title || 'invitation')}
+                          onClick={() => inv.type === 'task'
+                            ? handleDeclineTaskInvitation(inv.id, inv.title || 'invitation')
+                            : handleDecline(inv.id, inv.title || 'invitation')
+                          }
                           className="text-destructive hover:text-destructive"
                         >
                           <X className="w-4 h-4 mr-1" />
@@ -196,7 +286,10 @@ export default function Notifications() {
                         </Button>
                         <Button
                           size="sm"
-                          onClick={() => handleAccept(inv.id, inv.goals?.title || 'invitation')}
+                          onClick={() => inv.type === 'task'
+                            ? handleAcceptTaskInvitation(inv.id, inv.title || 'invitation')
+                            : handleAccept(inv.id, inv.title || 'invitation')
+                          }
                         >
                           <Check className="w-4 h-4 mr-1" />
                           Accept
