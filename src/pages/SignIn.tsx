@@ -52,7 +52,7 @@ const SignIn = () => {
         />
 
         <div className="flex items-center gap-3 text-white">
-          <Wordmark />
+          <span className="text-xl font-semibold tracking-tight">BetterMe</span>
         </div>
 
         <div className="space-y-8 max-w-md">
@@ -90,9 +90,9 @@ const SignIn = () => {
       {/* Form panel */}
       <main className="flex flex-col items-center justify-center p-6 sm:p-10">
         <div className="w-full max-w-md">
-          {/* Mobile wordmark */}
+          {/* Mobile logo */}
           <div className="lg:hidden flex justify-center mb-8 text-foreground">
-            <Wordmark />
+            <span className="text-xl font-semibold tracking-tight">BetterMe</span>
           </div>
 
           <div className="space-y-2 mb-8">
