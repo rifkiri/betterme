@@ -62,8 +62,8 @@ const SignIn = () => {
           }}
         />
 
-        <div className="flex items-center gap-3">
-          <img src={logo} alt="BetterMe" className="h-10 w-auto brightness-0 invert" />
+        <div className="flex items-center gap-3 text-white">
+          <Wordmark />
         </div>
 
         <div className="space-y-8 max-w-md">
