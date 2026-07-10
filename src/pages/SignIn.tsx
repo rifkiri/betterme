@@ -2,8 +2,18 @@ import React from 'react';
 import { SignInForm } from '@/components/auth/SignInForm';
 import { useSignIn } from '@/hooks/useSignIn';
 import { useAuthCheck } from '@/hooks/useAuthCheck';
-import { Target, TrendingUp, Users, ShieldCheck } from 'lucide-react';
-import logo from '@/assets/betterme-logo.png';
+import { Target, TrendingUp, Users, ShieldCheck, Sparkles } from 'lucide-react';
+
+const Wordmark = ({ className = '' }: { className?: string }) => (
+  <div className={`inline-flex items-center gap-2 ${className}`}>
+    <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 backdrop-blur border border-white/15 shadow-sm">
+      <Sparkles className="h-4 w-4" />
+    </span>
+    <span className="text-xl font-semibold tracking-tight">
+      Better<span className="font-black">Me</span>
+    </span>
+  </div>
+);
 
 const HIGHLIGHTS = [
   { Icon: Target, title: 'Goals that ship', body: 'OKRs, key results, and progress \u2014 in one place.' },
@@ -52,8 +62,8 @@ const SignIn = () => {
           }}
         />
 
-        <div className="flex items-center gap-3">
-          <img src={logo} alt="BetterMe" className="h-10 w-auto brightness-0 invert" />
+        <div className="flex items-center gap-3 text-white">
+          <Wordmark />
         </div>
 
         <div className="space-y-8 max-w-md">
@@ -91,9 +101,9 @@ const SignIn = () => {
       {/* Form panel */}
       <main className="flex flex-col items-center justify-center p-6 sm:p-10">
         <div className="w-full max-w-md">
-          {/* Mobile logo */}
-          <div className="lg:hidden flex justify-center mb-8">
-            <img src={logo} alt="BetterMe" className="h-10 w-auto" />
+          {/* Mobile wordmark */}
+          <div className="lg:hidden flex justify-center mb-8 text-foreground">
+            <Wordmark />
           </div>
 
           <div className="space-y-2 mb-8">
