@@ -233,8 +233,8 @@ export const TeamWorkloadMonitoring = ({
     setLoadingWorkload(true);
     try {
       // Fetch ALL active users via the org-dashboard RPC so admins are included
-      const { data: dashUsersRaw } = await supabase.rpc('get_all_active_users_for_dashboard');
-      const allUsers: User[] = (dashUsersRaw || []).map((p: any) => ({
+      const { data: dashUsersRaw } = await (supabase.rpc as any)('get_all_active_users_for_dashboard');
+      const allUsers: User[] = ((dashUsersRaw as any[]) || []).map((p: any) => ({
         id: p.id,
         name: p.name,
         email: p.email,
