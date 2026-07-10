@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import Navigation from '@/components/Navigation';
+import { AppNavigation } from '@/components/AppNavigation';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
