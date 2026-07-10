@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Filter, X } from 'lucide-react';
+import { ROLE_STYLES } from '@/components/ui/role-styles';
 
 interface TeamWorkloadMonitoringProps {
   teamData: any;
