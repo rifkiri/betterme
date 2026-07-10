@@ -95,7 +95,7 @@ export default function Notifications() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Navigation />
+      <AppNavigation />
       
       <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 lg:p-8">
         <div className="mb-8 flex items-center space-x-3">
