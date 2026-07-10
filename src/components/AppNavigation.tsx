@@ -1,13 +1,36 @@
-
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Home, Calendar, Settings, Users, LogOut, Menu, X, Target, Bell } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Home,
+  Calendar,
+  Settings as SettingsIcon,
+  Users,
+  LogOut,
+  Menu,
+  X,
+  Target,
+  Bell,
+  Building2,
+  User as UserIcon,
+  ChevronDown,
+} from 'lucide-react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { supabase } from '@/integrations/supabase/client';
+import logo from '@/assets/betterme-logo.png';
+
+type NavItem = { name: string; href: string; icon: React.ComponentType<{ className?: string }> };
 
 export const AppNavigation = () => {
   const location = useLocation();
@@ -30,9 +53,15 @@ export const AppNavigation = () => {
     load();
     const channel = supabase
       .channel('nav-invitations')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'goal_assignments', filter: `user_id=eq.${currentUser.id}` }, load)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'goal_assignments', filter: `user_id=eq.${currentUser.id}` },
+        load
+      )
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [currentUser?.id]);
 
   const handleSignOut = async () => {
@@ -45,193 +74,234 @@ export const AppNavigation = () => {
     }
   };
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
+  const getUserInitials = (name: string) =>
+    name.split(' ').map((w) => w.charAt(0)).join('').toUpperCase().substring(0, 2);
 
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false);
-  };
+  // 4 primary items in the top bar; anything else goes into "More"
+  const primary: NavItem[] = [
+    { name: 'Productivity', href: '/', icon: Home },
+    { name: 'Goals', href: '/goals', icon: Target },
+    { name: 'Progress', href: '/monthly', icon: Calendar },
+    { name: 'Team', href: '/team', icon: Users },
+  ];
 
-  // Get user initials
-  const getUserInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(word => word.charAt(0))
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
-  };
+  const overflow: NavItem[] = [];
+  if (currentUser?.role !== 'intern') {
+    overflow.push({ name: 'Organizational Dashboard', href: '/manager', icon: Building2 });
+  }
 
-// Define navigation items based on user role
-  const getNavigationItems = () => {
-    const baseItems = [{
-      name: 'My Productivity',
-      href: '/',
-      icon: Home,
-      description: 'Daily productivity tracking'
-    }, {
-      name: 'My Goals',
-      href: '/goals',
-      icon: Target,
-      description: 'Track your goals'
-    }, {
-      name: 'My Progress',
-      href: '/monthly',
-      icon: Calendar,
-      description: 'Monthly analytics'
-    }, {
-      name: 'Our Team',
-      href: '/team',
-      icon: Users,
-      description: 'Team overview'
-    }];
-
-    if (currentUser?.role !== 'intern') {
-      baseItems.push({
-        name: 'Organizational Dashboard',
-        href: '/manager',
-        icon: Settings,
-        description: 'Organization-wide workload and goals'
-      });
-    }
-
-    if (currentUser?.role === 'admin') {
-      return [...baseItems, {
-        name: 'Settings',
-        href: '/settings',
-        icon: Settings,
-        description: 'App preferences'
-      }];
-    } else {
-      return baseItems;
-    }
-  };
-
-  const navigationItems = getNavigationItems();
+  const allItems = [...primary, ...overflow];
+  const isActive = (href: string) => location.pathname === href;
 
   return (
     <>
-      <div className="glass-panel sticky top-0 z-40 transition-all duration-300">
+      <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/70 border-b border-border/60 supports-[backdrop-filter]:bg-background/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-8">
-              <div className="flex items-center">
-                <h1 className="text-2xl font-extrabold gradient-text tracking-tight animate-fade-in-right">BetterMe</h1>
-              </div>
-              {/* Desktop Navigation */}
-              <nav className="hidden md:flex space-x-8">
-                {navigationItems.map(item => {
-                  const isActive = location.pathname === item.href;
-                  return (
-                    <Link 
-                      key={item.name} 
-                      to={item.href} 
-                      className={`inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
-                        isActive 
-                          ? 'bg-primary/10 text-primary shadow-sm scale-in' 
-                          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+          <div className="flex items-center justify-between h-16 gap-4">
+            {/* Brand */}
+            <Link to="/" className="flex items-center gap-2 shrink-0" aria-label="BetterMe">
+              <img
+                src={logo}
+                alt="BetterMe"
+                className="h-8 w-auto object-contain"
+                loading="eager"
+                width={140}
+                height={32}
+              />
+            </Link>
+
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center gap-1 flex-1 justify-center">
+              {primary.map((item) => (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                    isActive(item.href)
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                  }`}
+                >
+                  <item.icon className="h-4 w-4 mr-1.5" />
+                  {item.name}
+                </Link>
+              ))}
+
+              {overflow.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={`rounded-full px-3 ${
+                        overflow.some((o) => isActive(o.href))
+                          ? 'bg-primary/10 text-primary hover:bg-primary/15'
+                          : 'text-muted-foreground'
                       }`}
                     >
-                      <item.icon className="h-4 w-4 mr-2" />
-                      {item.name}
-                    </Link>
-                  );
-                })}
-              </nav>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              {/* Notifications bell */}
-              <Link to="/notifications" className="relative inline-flex items-center p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors" aria-label="Notifications">
+                      More
+                      <ChevronDown className="h-4 w-4 ml-1" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    {overflow.map((item) => (
+                      <DropdownMenuItem key={item.href} asChild>
+                        <Link to={item.href} className="flex items-center cursor-pointer">
+                          <item.icon className="h-4 w-4 mr-2" />
+                          {item.name}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </nav>
+
+            {/* Right cluster */}
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+              <Link
+                to="/notifications"
+                aria-label="Notifications"
+                className="relative inline-flex items-center p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+              >
                 <Bell className="h-5 w-5" />
                 {pendingCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-semibold flex items-center justify-center">
+                  <span className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-semibold flex items-center justify-center ring-2 ring-background">
                     {pendingCount > 9 ? '9+' : pendingCount}
                   </span>
                 )}
               </Link>
 
-              {/* Mobile menu button */}
+              {/* Avatar menu (desktop) */}
+              <div className="hidden md:block">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="rounded-full ring-offset-background transition-shadow hover:ring-2 hover:ring-primary/40 hover:ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/40 text-primary text-sm font-semibold">
+                          {currentUser?.name ? getUserInitials(currentUser.name) : 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-0.5">
+                        <p className="text-sm font-medium truncate">{currentUser?.name || 'You'}</p>
+                        <p className="text-xs text-muted-foreground truncate">{currentUser?.email || ''}</p>
+                        {currentUser?.role && (
+                          <p className="text-[10px] uppercase tracking-wide text-primary font-semibold mt-1">
+                            {currentUser.role}
+                          </p>
+                        )}
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile" className="cursor-pointer">
+                        <UserIcon className="h-4 w-4 mr-2" />
+                        Profile
+                      </Link>
+                    </DropdownMenuItem>
+                    {currentUser?.role === 'admin' && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/settings" className="cursor-pointer">
+                          <SettingsIcon className="h-4 w-4 mr-2" />
+                          Settings
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive focus:text-destructive">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              {/* Mobile menu trigger */}
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={toggleMobileMenu}
+                onClick={() => setIsMobileMenuOpen(true)}
                 className="md:hidden"
+                aria-label="Open menu"
               >
                 <Menu className="h-5 w-5" />
-              </Button>
-              
-              
-              {/* User Avatar */}
-              <Link to="/profile" className="flex items-center">
-                <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-blue-500 hover:ring-offset-2 transition-all">
-                  <AvatarFallback className="bg-blue-100 text-blue-600 text-sm font-medium">
-                    {currentUser?.name ? getUserInitials(currentUser.name) : 'U'}
-                  </AvatarFallback>
-                </Avatar>
-              </Link>
-              
-              {/* Desktop Sign Out Button */}
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleSignOut}
-                className="hidden md:flex text-muted-foreground hover:text-destructive transition-colors"
-              >
-                <LogOut className="h-4 w-4" />
               </Button>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile drawer */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={closeMobileMenu} />
-          <div className="fixed top-0 right-0 h-full w-64 bg-white shadow-lg">
+          <div className="fixed inset-0 bg-black/50" onClick={() => setIsMobileMenuOpen(false)} />
+          <div className="fixed top-0 right-0 h-full w-72 bg-background shadow-xl flex flex-col">
             <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold">Menu</h2>
-              <Button variant="ghost" size="sm" onClick={closeMobileMenu}>
+              <img src={logo} alt="BetterMe" className="h-7 w-auto" />
+              <Button variant="ghost" size="sm" onClick={() => setIsMobileMenuOpen(false)}>
                 <X className="h-5 w-5" />
               </Button>
             </div>
-            <nav className="p-4">
-              <div className="space-y-2">
-                {navigationItems.map(item => {
-                  const isActive = location.pathname === item.href;
-                  return (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      onClick={closeMobileMenu}
-                      className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                        isActive
-                          ? 'bg-primary/10 text-primary'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                      }`}
-                    >
-                      <item.icon className="h-5 w-5 mr-3" />
-                      {item.name}
-                    </Link>
-                  );
-                })}
-              </div>
-              <div className="mt-6 pt-6 border-t">
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    handleSignOut();
-                    closeMobileMenu();
-                  }}
-                  className="flex items-center w-full justify-start px-3 py-2 text-gray-700 hover:bg-gray-100"
+            <div className="px-4 py-3 border-b">
+              <p className="text-sm font-medium truncate">{currentUser?.name || 'You'}</p>
+              <p className="text-xs text-muted-foreground truncate">{currentUser?.email || ''}</p>
+            </div>
+            <nav className="p-3 flex-1 overflow-y-auto space-y-1">
+              {allItems.map((item) => (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isActive(item.href)
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                  }`}
                 >
-                  <LogOut className="h-5 w-5 mr-3" />
-                  Sign Out
-                </Button>
-              </div>
+                  <item.icon className="h-5 w-5 mr-3" />
+                  {item.name}
+                </Link>
+              ))}
+              <Link
+                to="/profile"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium ${
+                  isActive('/profile') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted/60'
+                }`}
+              >
+                <UserIcon className="h-5 w-5 mr-3" />
+                Profile
+              </Link>
+              {currentUser?.role === 'admin' && (
+                <Link
+                  to="/settings"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium ${
+                    isActive('/settings') ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted/60'
+                  }`}
+                >
+                  <SettingsIcon className="h-5 w-5 mr-3" />
+                  Settings
+                </Link>
+              )}
             </nav>
+            <div className="p-3 border-t">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  handleSignOut();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full justify-start text-destructive hover:text-destructive"
+              >
+                <LogOut className="h-5 w-5 mr-3" />
+                Sign out
+              </Button>
+            </div>
           </div>
         </div>
       )}
