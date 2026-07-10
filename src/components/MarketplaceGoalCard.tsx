@@ -150,16 +150,19 @@ export const MarketplaceGoalCard: React.FC<MarketplaceGoalCardProps> = ({
               <Briefcase className="h-4 w-4 text-blue-600" />
               <CardTitle className="text-lg line-clamp-1">{goal.title}</CardTitle>
             </div>
-            {goal.subcategory === 'okr' ? (
-              <Badge className="text-xs bg-purple-100 text-purple-800 border border-purple-300">
-                <Target className="h-3 w-3 mr-1" />
-                OKR
-              </Badge>
-            ) : goal.subcategory && (
-              <Badge variant="outline" className="text-xs bg-white border-blue-200 text-blue-700">
-                {mapSubcategoryDatabaseToDisplay(goal.subcategory)}
-              </Badge>
-            )}
+            <div className="flex items-center gap-1 flex-wrap">
+              {goal.subcategory === 'okr' ? (
+                <Badge className="text-xs bg-purple-100 text-purple-800 border border-purple-300">
+                  <Target className="h-3 w-3 mr-1" />
+                  OKR
+                </Badge>
+              ) : goal.subcategory && (
+                <Badge variant="outline" className="text-xs bg-white border-blue-200 text-blue-700">
+                  {mapSubcategoryDatabaseToDisplay(goal.subcategory)}
+                </Badge>
+              )}
+              <VisibilityBadge visibility={goal.visibility} />
+            </div>
           </div>
         </div>
         {goal.description && (
