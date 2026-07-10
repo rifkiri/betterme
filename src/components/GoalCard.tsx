@@ -62,8 +62,10 @@ export const GoalCard = ({
   
   // Check if user can update progress
   const isGoalOwner = goal.userId === user?.id;
-  const isAssignedToGoal = assignments?.some(a => a.userId === user?.id && a.goalId === goal.id);
+  const currentUserAssignment = assignments?.find(a => a.userId === user?.id && a.goalId === goal.id);
+  const isAssignedToGoal = !!currentUserAssignment;
   const canUpdateProgress = isGoalOwner || isAssignedToGoal;
+  const currentUserRole = currentUserAssignment?.role as AssignmentRole | undefined;
   
   // Check if this is an OKR goal from Zatzet
   const isOkrGoal = goal.subcategory === 'okr';
