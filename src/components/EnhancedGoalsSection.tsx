@@ -211,7 +211,8 @@ export const EnhancedGoalsSection = ({
     let filtered = goals.filter(goal => 
       goal.progress < 100 && 
       !goal.archived && 
-      isUserAssignedToGoal(goal.id)
+      // Owners/creators always see their goals (incl. private), collaborators must have an assignment
+      (goal.userId === currentUserId || goal.createdBy === currentUserId || isUserAssignedToGoal(goal.id))
     );
 
     // Apply type filter
