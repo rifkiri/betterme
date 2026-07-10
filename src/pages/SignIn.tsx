@@ -101,9 +101,9 @@ const SignIn = () => {
       {/* Form panel */}
       <main className="flex flex-col items-center justify-center p-6 sm:p-10">
         <div className="w-full max-w-md">
-          {/* Mobile logo */}
-          <div className="lg:hidden flex justify-center mb-8">
-            <img src={logo} alt="BetterMe" className="h-10 w-auto" />
+          {/* Mobile wordmark */}
+          <div className="lg:hidden flex justify-center mb-8 text-foreground">
+            <Wordmark />
           </div>
 
           <div className="space-y-2 mb-8">
