@@ -251,11 +251,11 @@ export const TaskItemWithPomodoro = ({
       }
       badges={
         <>
-          {isCollaboratorView && ownerName && (
-            <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
-              Task Owner: {ownerName}
-            </Badge>
-          )}
+          <CardMetaStrip
+            ownerId={task.userId}
+            hideOwnerIfSelf={currentUser?.id}
+            visibility={task.visibility}
+          />
           {task.isMoved && (
             <Badge variant="outline" className="text-xs flex items-center gap-1">
               <ArrowRight className="h-2 w-2" />
