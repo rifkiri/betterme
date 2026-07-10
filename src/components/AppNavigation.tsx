@@ -20,7 +20,6 @@ import {
   Bell,
   Building2,
   User as UserIcon,
-  ChevronDown,
 } from 'lucide-react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
@@ -28,7 +27,6 @@ import { toast } from 'sonner';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { supabase } from '@/integrations/supabase/client';
-import logo from '@/assets/betterme-logo.png';
 
 type NavItem = { name: string; href: string; icon: React.ComponentType<{ className?: string }> };
 
@@ -39,6 +37,8 @@ export const AppNavigation = () => {
   const { signOut } = useUserProfile();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+
+  const isPrivileged = currentUser?.role === 'admin' || currentUser?.role === 'manager';
 
   useEffect(() => {
     if (!currentUser?.id) return;
@@ -77,20 +77,17 @@ export const AppNavigation = () => {
   const getUserInitials = (name: string) =>
     name.split(' ').map((w) => w.charAt(0)).join('').toUpperCase().substring(0, 2);
 
-  // 4 primary items in the top bar; anything else goes into "More"
-  const primary: NavItem[] = [
+  const navItems: NavItem[] = [
     { name: 'Productivity', href: '/', icon: Home },
     { name: 'Goals', href: '/goals', icon: Target },
     { name: 'Progress', href: '/monthly', icon: Calendar },
     { name: 'Team', href: '/team', icon: Users },
   ];
-
-  const overflow: NavItem[] = [];
-  if (currentUser?.role !== 'intern') {
-    overflow.push({ name: 'Organizational Dashboard', href: '/manager', icon: Building2 });
+  if (isPrivileged) {
+    navItems.push({ name: 'Organization', href: '/manager', icon: Building2 });
+    navItems.push({ name: 'Settings', href: '/settings', icon: SettingsIcon });
   }
 
-  const allItems = [...primary, ...overflow];
   const isActive = (href: string) => location.pathname === href;
 
   return (
@@ -98,21 +95,14 @@ export const AppNavigation = () => {
       <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/70 border-b border-border/60 supports-[backdrop-filter]:bg-background/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 gap-4">
-            {/* Brand */}
-            <Link to="/" className="flex items-center gap-2 shrink-0" aria-label="BetterMe">
-              <img
-                src={logo}
-                alt="BetterMe"
-                className="h-8 w-auto object-contain"
-                loading="eager"
-                width={140}
-                height={32}
-              />
+            <Link to="/" className="flex items-center shrink-0" aria-label="BetterMe">
+              <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                BetterMe
+              </span>
             </Link>
 
-            {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-1 flex-1 justify-center">
-              {primary.map((item) => (
+              {navItems.map((item) => (
                 <Link
                   key={item.href}
                   to={item.href}
@@ -126,38 +116,8 @@ export const AppNavigation = () => {
                   {item.name}
                 </Link>
               ))}
-
-              {overflow.length > 0 && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={`rounded-full px-3 ${
-                        overflow.some((o) => isActive(o.href))
-                          ? 'bg-primary/10 text-primary hover:bg-primary/15'
-                          : 'text-muted-foreground'
-                      }`}
-                    >
-                      More
-                      <ChevronDown className="h-4 w-4 ml-1" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    {overflow.map((item) => (
-                      <DropdownMenuItem key={item.href} asChild>
-                        <Link to={item.href} className="flex items-center cursor-pointer">
-                          <item.icon className="h-4 w-4 mr-2" />
-                          {item.name}
-                        </Link>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
             </nav>
 
-            {/* Right cluster */}
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               <Link
                 to="/notifications"
@@ -172,7 +132,6 @@ export const AppNavigation = () => {
                 )}
               </Link>
 
-              {/* Avatar menu (desktop) */}
               <div className="hidden md:block">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -203,7 +162,7 @@ export const AppNavigation = () => {
                         Profile
                       </Link>
                     </DropdownMenuItem>
-                    {currentUser?.role === 'admin' && (
+                    {!isPrivileged && (
                       <DropdownMenuItem asChild>
                         <Link to="/settings" className="cursor-pointer">
                           <SettingsIcon className="h-4 w-4 mr-2" />
@@ -220,7 +179,6 @@ export const AppNavigation = () => {
                 </DropdownMenu>
               </div>
 
-              {/* Mobile menu trigger */}
               <Button
                 variant="ghost"
                 size="sm"
@@ -235,13 +193,14 @@ export const AppNavigation = () => {
         </div>
       </header>
 
-      {/* Mobile drawer */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div className="fixed inset-0 bg-black/50" onClick={() => setIsMobileMenuOpen(false)} />
           <div className="fixed top-0 right-0 h-full w-72 bg-background shadow-xl flex flex-col">
             <div className="flex items-center justify-between p-4 border-b">
-              <img src={logo} alt="BetterMe" className="h-7 w-auto" />
+              <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                BetterMe
+              </span>
               <Button variant="ghost" size="sm" onClick={() => setIsMobileMenuOpen(false)}>
                 <X className="h-5 w-5" />
               </Button>
@@ -251,7 +210,7 @@ export const AppNavigation = () => {
               <p className="text-xs text-muted-foreground truncate">{currentUser?.email || ''}</p>
             </div>
             <nav className="p-3 flex-1 overflow-y-auto space-y-1">
-              {allItems.map((item) => (
+              {navItems.map((item) => (
                 <Link
                   key={item.href}
                   to={item.href}
@@ -276,7 +235,7 @@ export const AppNavigation = () => {
                 <UserIcon className="h-5 w-5 mr-3" />
                 Profile
               </Link>
-              {currentUser?.role === 'admin' && (
+              {!isPrivileged && (
                 <Link
                   to="/settings"
                   onClick={() => setIsMobileMenuOpen(false)}

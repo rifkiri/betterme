@@ -1,0 +1,1 @@
+UPDATE public.profiles SET has_changed_password = true, temporary_password = NULL WHERE email = 'admin@betternco.com';
