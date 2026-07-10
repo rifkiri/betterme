@@ -8,6 +8,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { PublicRoute } from '@/components/auth/PublicRoute';
 import { cleanupPomodoroGlobalState } from '@/hooks/usePomodoroGlobalState';
+import { NotificationDaemon } from '@/components/NotificationDaemon';
 
 import SignIn from "./pages/SignIn";
 import NotFound from "./pages/NotFound";
@@ -74,6 +75,7 @@ const App = () => {
       <TooltipProvider>
         <BrowserRouter>
           <AuthProvider>
+            <NotificationDaemon />
             <Routes>
             {/* Public Routes */}
             <Route 
