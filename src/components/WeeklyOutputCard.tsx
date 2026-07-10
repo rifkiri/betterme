@@ -75,6 +75,12 @@ export const WeeklyOutputCard = ({
                 </LinkBadge>
               )}
             </div>
+            <CardMetaStrip
+              ownerId={output.userId}
+              hideOwnerIfSelf={currentUser?.id}
+              visibility={output.visibility}
+              className="mb-2"
+            />
             {output.dueDate && (
               <DateDisplay 
                 date={output.dueDate}
