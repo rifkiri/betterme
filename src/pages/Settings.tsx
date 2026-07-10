@@ -1,6 +1,6 @@
 import React from "react";
 import { AppNavigation } from "@/components/AppNavigation";
-import { Loader2, Users, Database, Settings as SettingsIcon, Link2 } from "lucide-react";
+import { Loader2, Users, Database, Settings as SettingsIcon, Link2, Bell } from "lucide-react";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useProductivity } from "@/hooks/useProductivity";
 import { useMoodTracking } from "@/hooks/useMoodTracking";
@@ -8,6 +8,7 @@ import { UserManagementSection } from "@/components/settings/UserManagementSecti
 import { DataManagementSection } from "@/components/settings/DataManagementSection";
 import { PreferencesSection } from "@/components/settings/PreferencesSection";
 import { IntegrationsSection } from "@/components/settings/IntegrationsSection";
+import { NotificationPreferencesSection } from "@/components/settings/NotificationPreferencesSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Settings = () => {
@@ -82,6 +83,14 @@ const Settings = () => {
             <span className="hidden sm:inline">Preferences</span>
             <span className="sm:hidden">Prefs</span>
           </TabsTrigger>
+          <TabsTrigger
+            value="notifications"
+            className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm whitespace-nowrap flex-shrink-0"
+          >
+            <Bell className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Notifications</span>
+            <span className="sm:hidden">Notify</span>
+          </TabsTrigger>
         </TabsList>
 
         {profile?.role === 'admin' && (
@@ -109,6 +118,10 @@ const Settings = () => {
 
         <TabsContent value="preferences" className="mt-4 sm:mt-6">
           <PreferencesSection />
+        </TabsContent>
+
+        <TabsContent value="notifications" className="mt-4 sm:mt-6">
+          <NotificationPreferencesSection />
         </TabsContent>
       </Tabs>
       </div>
