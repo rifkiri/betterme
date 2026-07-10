@@ -669,17 +669,10 @@ export const TeamWorkloadMonitoring = ({
     );
   }
 
-  if (!teamData || !teamData.membersSummary) {
-    console.log('No team data or membersSummary available:', teamData);
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Team Workload Monitoring</CardTitle>
-          <CardDescription>No team data available</CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
+  // Note: we intentionally do NOT early-return when teamData.membersSummary is
+  // empty — the workload loader fetches users directly via RPC, and each tab
+  // renders its own "No … found" empty state.
+
 
   return (
     <div className="space-y-6">
