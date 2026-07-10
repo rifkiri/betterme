@@ -142,6 +142,16 @@ export const AppNavigation = () => {
             </div>
             
             <div className="flex items-center space-x-4">
+              {/* Notifications bell */}
+              <Link to="/notifications" className="relative inline-flex items-center p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors" aria-label="Notifications">
+                <Bell className="h-5 w-5" />
+                {pendingCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-semibold flex items-center justify-center">
+                    {pendingCount > 9 ? '9+' : pendingCount}
+                  </span>
+                )}
+              </Link>
+
               {/* Mobile menu button */}
               <Button
                 variant="ghost"
@@ -151,6 +161,7 @@ export const AppNavigation = () => {
               >
                 <Menu className="h-5 w-5" />
               </Button>
+              
               
               {/* User Avatar */}
               <Link to="/profile" className="flex items-center">
