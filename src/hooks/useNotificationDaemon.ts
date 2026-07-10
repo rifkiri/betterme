@@ -75,19 +75,25 @@ export const useNotificationDaemon = () => {
       if (!prefsRef.current.notify_deadline_1hr) return;
 
       const now = new Date();
-      const inOneHour = new Date(now.getTime() + ONE_HOUR_MS);
+      // Deadlines in this project are stored as DATE (day precision). We treat
+      // items whose deadline is today AND within the final hour of the day as
+      // "less than an hour away" to satisfy the 1-hour warning contract.
+      const endOfToday = new Date(now);
+      endOfToday.setHours(23, 59, 59, 999);
+      const msUntilEndOfDay = endOfToday.getTime() - now.getTime();
+      const todayStr = now.toISOString().slice(0, 10);
 
-      // Goals with a deadline (target_date) in the next hour
+      if (msUntilEndOfDay > ONE_HOUR_MS) return;
+
       const { data: goals } = await supabase
         .from('goals')
-        .select('id,title,target_date,progress,is_deleted,user_id')
+        .select('id,title,deadline,progress,is_deleted,user_id')
         .eq('user_id', user.id)
-        .gte('target_date', now.toISOString())
-        .lte('target_date', inOneHour.toISOString());
+        .eq('deadline', todayStr);
 
       (goals || []).forEach((g: any) => {
         if (g.is_deleted || (g.progress ?? 0) >= 100) return;
-        const key = `goal:${g.id}`;
+        const key = `goal:${g.id}:${todayStr}`;
         if (notifiedDeadlinesRef.current.has(key)) return;
         notifiedDeadlinesRef.current.add(key);
         notify('Deadline approaching', {
@@ -95,17 +101,15 @@ export const useNotificationDaemon = () => {
         });
       });
 
-      // Tasks with a due_date in the next hour
       const { data: tasks } = await supabase
         .from('tasks')
         .select('id,title,due_date,completed,user_id')
         .eq('user_id', user.id)
-        .gte('due_date', now.toISOString())
-        .lte('due_date', inOneHour.toISOString());
+        .eq('due_date', todayStr);
 
       (tasks || []).forEach((t: any) => {
         if (t.completed) return;
-        const key = `task:${t.id}`;
+        const key = `task:${t.id}:${todayStr}`;
         if (notifiedDeadlinesRef.current.has(key)) return;
         notifiedDeadlinesRef.current.add(key);
         notify('Deadline approaching', {
