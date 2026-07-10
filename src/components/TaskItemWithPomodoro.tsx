@@ -22,6 +22,7 @@ import { EditTaskDialog } from './EditTaskDialog';
 import { format, isToday, isTomorrow, isPast } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { ItemCard, StatusBadge, LinkBadge, DateDisplay } from '@/components/ui/standardized';
+import { CardMetaStrip } from '@/components/ui/card-meta-strip';
 import { IconButton } from '@/components/ui/icon-button';
 import { usePomodoroSessionManager } from '@/hooks/usePomodoroSessionManager';
 import { usePomodoroCounterRealtime } from '@/hooks/usePomodoroCounterRealtime';
