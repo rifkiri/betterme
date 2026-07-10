@@ -219,14 +219,20 @@ export const TeamWorkloadMonitoring = ({
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
   }, [workloadData.taskOwnerships]);
 
+  // Load workload data on mount via the RPC-backed loader — do NOT gate on
+  // teamData.membersSummary, which can be empty when RLS hides admins/interns
+  // from a manager's profiles view. The loader fetches its own user list.
   useEffect(() => {
-    console.log('TeamWorkloadMonitoring useEffect - teamData:', teamData);
-    if (teamData?.membersSummary?.length > 0) {
-      console.log('Loading workload data for members:', teamData.membersSummary);
+    loadWorkloadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Refresh when teamData changes (realtime updates) so counts stay fresh.
+  useEffect(() => {
+    if (teamData) {
       loadWorkloadData();
-    } else {
-      console.log('No members found in teamData:', teamData);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamData]);
 
   const loadWorkloadData = async () => {
