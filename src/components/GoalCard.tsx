@@ -20,6 +20,8 @@ import { DateDisplay } from '@/components/ui/date-display';
 import { getContentCardVariant, getStatusBadgeStatus, formatCountDisplay } from '@/utils/standardizedHelpers';
 import { useAuth } from '@/contexts/AuthContext';
 import { VisibilityBadge } from '@/components/ui/visibility-badge';
+import { CardMetaStrip } from '@/components/ui/card-meta-strip';
+import { AssignmentRole } from '@/components/ui/role-styles';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface GoalCardProps {
