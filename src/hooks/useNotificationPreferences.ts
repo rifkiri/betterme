@@ -7,6 +7,12 @@ export interface NotificationPreferences {
   notify_deadline_1hr: boolean;
   notify_team_added: boolean;
   notify_role_updates: boolean;
+  notify_goal_updates: boolean;
+  notify_task_updates: boolean;
+  notify_output_updates: boolean;
+  notify_assignment_response: boolean;
+  notify_daily_digest: boolean;
+  notify_mention: boolean;
 }
 
 const DEFAULTS: NotificationPreferences = {
@@ -14,7 +20,16 @@ const DEFAULTS: NotificationPreferences = {
   notify_deadline_1hr: true,
   notify_team_added: true,
   notify_role_updates: true,
+  notify_goal_updates: true,
+  notify_task_updates: true,
+  notify_output_updates: true,
+  notify_assignment_response: true,
+  notify_daily_digest: false,
+  notify_mention: true,
 };
+
+const COLUMNS =
+  'notify_new_task,notify_deadline_1hr,notify_team_added,notify_role_updates,notify_goal_updates,notify_task_updates,notify_output_updates,notify_assignment_response,notify_daily_digest,notify_mention';
 
 export const useNotificationPreferences = () => {
   const { user } = useAuth();
@@ -27,23 +42,24 @@ export const useNotificationPreferences = () => {
     setIsLoading(true);
     const { data, error } = await supabase
       .from('notification_preferences')
-      .select('notify_new_task,notify_deadline_1hr,notify_team_added,notify_role_updates')
+      .select(COLUMNS)
       .eq('user_id', user.id)
       .maybeSingle();
 
     if (!error && data) {
-      setPreferences(data);
-      prefsRef.current = data;
+      const merged = { ...DEFAULTS, ...(data as any) } as NotificationPreferences;
+      setPreferences(merged);
+      prefsRef.current = merged;
     } else if (!data && user.id) {
-      // seed row if missing (trigger should have done it, but be safe)
       const { data: inserted } = await supabase
         .from('notification_preferences')
         .insert({ user_id: user.id, ...DEFAULTS })
-        .select('notify_new_task,notify_deadline_1hr,notify_team_added,notify_role_updates')
+        .select(COLUMNS)
         .maybeSingle();
       if (inserted) {
-        setPreferences(inserted);
-        prefsRef.current = inserted;
+        const merged = { ...DEFAULTS, ...(inserted as any) } as NotificationPreferences;
+        setPreferences(merged);
+        prefsRef.current = merged;
       }
     }
     setIsLoading(false);
@@ -64,7 +80,6 @@ export const useNotificationPreferences = () => {
         .update({ [key]: value })
         .eq('user_id', user.id);
       if (error) {
-        // revert
         const reverted = { ...prefsRef.current, [key]: !value };
         setPreferences(reverted);
         prefsRef.current = reverted;
