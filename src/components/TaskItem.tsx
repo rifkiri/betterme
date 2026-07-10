@@ -7,6 +7,7 @@ import { EditTaskDialog } from './EditTaskDialog';
 import { format, isToday, isTomorrow, isPast } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { ItemCard, StatusBadge, LinkBadge, DateDisplay } from '@/components/ui/standardized';
+import { VisibilityBadge } from '@/components/ui/visibility-badge';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface TaskItemProps {
@@ -148,6 +149,7 @@ export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteT
           <StatusBadge status={task.priority === 'High' ? 'high' : task.priority === 'Medium' ? 'medium' : 'low'}>
             {task.priority}
           </StatusBadge>
+          <VisibilityBadge visibility={task.visibility} />
           {taggedUsers.length > 0 && taggedUsers.map((user) => (
             <Badge key={user.id} variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
               {user.name}

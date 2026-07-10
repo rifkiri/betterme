@@ -19,6 +19,7 @@ import { ActionButtonGroup } from '@/components/ui/action-button-group';
 import { DateDisplay } from '@/components/ui/date-display';
 import { getContentCardVariant, getStatusBadgeStatus, formatCountDisplay } from '@/utils/standardizedHelpers';
 import { useAuth } from '@/contexts/AuthContext';
+import { VisibilityBadge } from '@/components/ui/visibility-badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface GoalCardProps {
@@ -101,6 +102,7 @@ export const GoalCard = ({
                   <Badge className={`text-xs ${getCategoryColor(goal.category)}`}>
                     {goal.category}
                   </Badge>
+                  <VisibilityBadge visibility={goal.visibility} />
                   {isOkrGoal ? (
                     <TooltipProvider>
                       <Tooltip>
