@@ -37,6 +37,7 @@ export const WeeklyOutputCard = ({
   onRefresh
 }: WeeklyOutputCardProps) => {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const { currentUser } = useCurrentUser();
   // Find the linked goal using the simple linkedGoalId field
   const linkedGoal = output.linkedGoalId ? goals.find(g => g.id === output.linkedGoalId) : null;
   
