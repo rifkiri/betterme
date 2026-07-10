@@ -219,14 +219,20 @@ export const TeamWorkloadMonitoring = ({
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
   }, [workloadData.taskOwnerships]);
 
+  // Load workload data on mount via the RPC-backed loader — do NOT gate on
+  // teamData.membersSummary, which can be empty when RLS hides admins/interns
+  // from a manager's profiles view. The loader fetches its own user list.
   useEffect(() => {
-    console.log('TeamWorkloadMonitoring useEffect - teamData:', teamData);
-    if (teamData?.membersSummary?.length > 0) {
-      console.log('Loading workload data for members:', teamData.membersSummary);
+    loadWorkloadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Refresh when teamData changes (realtime updates) so counts stay fresh.
+  useEffect(() => {
+    if (teamData) {
       loadWorkloadData();
-    } else {
-      console.log('No members found in teamData:', teamData);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamData]);
 
   const loadWorkloadData = async () => {
@@ -594,6 +600,12 @@ export const TeamWorkloadMonitoring = ({
     internal: '#8B5CF6'
   };
 
+  const ROLE_STYLES = {
+    coach:  { badge: 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100',       icon: 'text-blue-600'    },
+    lead:   { badge: 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100', icon: 'text-emerald-600' },
+    member: { badge: 'bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-100', icon: 'text-purple-600'  },
+  } as const;
+
   const sortedMembers = [...workloadData.memberWorkloads].sort((a, b) => {
     switch (sortBy) {
       case 'goals':
@@ -663,17 +675,10 @@ export const TeamWorkloadMonitoring = ({
     );
   }
 
-  if (!teamData || !teamData.membersSummary) {
-    console.log('No team data or membersSummary available:', teamData);
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Team Workload Monitoring</CardTitle>
-          <CardDescription>No team data available</CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
+  // Note: we intentionally do NOT early-return when teamData.membersSummary is
+  // empty — the workload loader fetches users directly via RPC, and each tab
+  // renders its own "No … found" empty state.
+
 
   return (
     <div className="space-y-6">
@@ -925,25 +930,31 @@ export const TeamWorkloadMonitoring = ({
                                 {totalAssigned > 0 && (
                                   <div className="space-y-2 text-sm">
                                     {goal.coach && (
-                                      <div className="flex items-center gap-2">
-                                        <UserCog className="h-3 w-3 text-blue-600" />
-                                        <span className="text-gray-600">Coach:</span>
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <Badge className={cn('text-xs gap-1 border', ROLE_STYLES.coach.badge)}>
+                                          <UserCog className={cn('h-3 w-3', ROLE_STYLES.coach.icon)} />
+                                          Coach
+                                        </Badge>
                                         <span className="font-medium">{goal.coach}</span>
                                       </div>
                                     )}
                                     
                                     {goal.leads.length > 0 && (
-                                      <div className="flex items-center gap-2">
-                                        <UserCheck className="h-3 w-3 text-green-600" />
-                                        <span className="text-gray-600">Leads:</span>
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <Badge className={cn('text-xs gap-1 border', ROLE_STYLES.lead.badge)}>
+                                          <UserCheck className={cn('h-3 w-3', ROLE_STYLES.lead.icon)} />
+                                          Lead{goal.leads.length > 1 ? 's' : ''}
+                                        </Badge>
                                         <span className="font-medium">{goal.leads.join(', ')}</span>
                                       </div>
                                     )}
                                     
                                     {goal.members.length > 0 && (
-                                      <div className="flex items-center gap-2">
-                                        <Users className="h-3 w-3 text-purple-600" />
-                                        <span className="text-gray-600">Members:</span>
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <Badge className={cn('text-xs gap-1 border', ROLE_STYLES.member.badge)}>
+                                          <Users className={cn('h-3 w-3', ROLE_STYLES.member.icon)} />
+                                          Member{goal.members.length > 1 ? 's' : ''}
+                                        </Badge>
                                         <span className="font-medium">{goal.members.join(', ')}</span>
                                       </div>
                                     )}

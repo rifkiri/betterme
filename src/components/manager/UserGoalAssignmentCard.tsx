@@ -5,6 +5,13 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { Target, UserCog, UserCheck, Users } from 'lucide-react';
 import { mapSubcategoryDatabaseToDisplay } from '@/utils/goalCategoryUtils';
+import { cn } from '@/lib/utils';
+
+const ROLE_STYLES = {
+  coach:  { badge: 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100',             icon: 'text-blue-600'    },
+  lead:   { badge: 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100', icon: 'text-emerald-600' },
+  member: { badge: 'bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-100',     icon: 'text-purple-600'  },
+} as const;
 
 interface UserGoalAssignment {
   userId: string;
@@ -30,29 +37,20 @@ interface UserGoalAssignmentCardProps {
   onViewDetails?: (userId: string) => void;
 }
 
-const getRoleBadgeVariant = (role: 'coach' | 'lead' | 'member') => {
-  switch (role) {
-    case 'coach':
-      return 'default';
-    case 'lead':
-      return 'secondary';
-    case 'member':
-      return 'outline';
-    default:
-      return 'outline';
-  }
-};
+const getRoleBadgeClass = (role: 'coach' | 'lead' | 'member') =>
+  cn('text-xs gap-1 border', ROLE_STYLES[role]?.badge ?? '');
 
 const getRoleIcon = (role: 'coach' | 'lead' | 'member') => {
+  const iconClass = cn('h-3 w-3', ROLE_STYLES[role]?.icon ?? '');
   switch (role) {
     case 'coach':
-      return <UserCog className="h-3 w-3" />;
+      return <UserCog className={iconClass} />;
     case 'lead':
-      return <UserCheck className="h-3 w-3" />;
+      return <UserCheck className={iconClass} />;
     case 'member':
-      return <Users className="h-3 w-3" />;
+      return <Users className={iconClass} />;
     default:
-      return <Users className="h-3 w-3" />;
+      return <Users className={iconClass} />;
   }
 };
 
@@ -100,20 +98,20 @@ export const UserGoalAssignmentCard = ({
         {activeGoalsCount > 0 && (
           <div className="flex gap-2 mb-3">
             {activeRoleBreakdown.coach > 0 && (
-              <Badge variant="default" className="text-xs">
-                <UserCog className="h-3 w-3 mr-1" />
+              <Badge className={cn('text-xs gap-1 border', ROLE_STYLES.coach.badge)}>
+                <UserCog className={cn('h-3 w-3', ROLE_STYLES.coach.icon)} />
                 Coach ({activeRoleBreakdown.coach})
               </Badge>
             )}
             {activeRoleBreakdown.lead > 0 && (
-              <Badge variant="secondary" className="text-xs">
-                <UserCheck className="h-3 w-3 mr-1" />
+              <Badge className={cn('text-xs gap-1 border', ROLE_STYLES.lead.badge)}>
+                <UserCheck className={cn('h-3 w-3', ROLE_STYLES.lead.icon)} />
                 Lead ({activeRoleBreakdown.lead})
               </Badge>
             )}
             {activeRoleBreakdown.member > 0 && (
-              <Badge variant="outline" className="text-xs">
-                <Users className="h-3 w-3 mr-1" />
+              <Badge className={cn('text-xs gap-1 border', ROLE_STYLES.member.badge)}>
+                <Users className={cn('h-3 w-3', ROLE_STYLES.member.icon)} />
                 Member ({activeRoleBreakdown.member})
               </Badge>
             )}
@@ -133,9 +131,9 @@ export const UserGoalAssignmentCard = ({
                       {goal.goalTitle}
                     </p>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <Badge variant={getRoleBadgeVariant(goal.role)} className="text-xs">
+                      <Badge className={getRoleBadgeClass(goal.role)}>
                         {getRoleIcon(goal.role)}
-                        <span className="ml-1">{goal.role}</span>
+                        <span className="capitalize">{goal.role}</span>
                       </Badge>
                       {goal.subcategory && (
                         <Badge variant="outline" className="text-xs capitalize">
