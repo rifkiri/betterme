@@ -798,18 +798,6 @@ export type Database = {
         }
         Returns: undefined
       }
-      get_all_active_users_for_dashboard: {
-        Args: never
-        Returns: {
-          created_at: string
-          email: string
-          id: string
-          name: string
-          role: string
-          user_position: string
-          user_status: string
-        }[]
-      }
       get_all_users_for_admin: {
         Args: never
         Returns: {
