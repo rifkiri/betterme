@@ -131,11 +131,11 @@ export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteT
       }
       badges={
         <>
-          {isCollaboratorView && ownerName && (
-            <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
-              Task Owner: {ownerName}
-            </Badge>
-          )}
+          <CardMetaStrip
+            ownerId={task.userId}
+            hideOwnerIfSelf={currentUser?.id}
+            visibility={task.visibility}
+          />
           {task.isMoved && (
             <Badge variant="outline" className="text-xs flex items-center gap-1">
               <ArrowRight className="h-2 w-2" />
@@ -150,7 +150,6 @@ export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteT
           <StatusBadge status={task.priority === 'High' ? 'high' : task.priority === 'Medium' ? 'medium' : 'low'}>
             {task.priority}
           </StatusBadge>
-          <VisibilityBadge visibility={task.visibility} />
           {taggedUsers.length > 0 && taggedUsers.map((user) => (
             <Badge key={user.id} variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
               {user.name}
