@@ -930,25 +930,31 @@ export const TeamWorkloadMonitoring = ({
                                 {totalAssigned > 0 && (
                                   <div className="space-y-2 text-sm">
                                     {goal.coach && (
-                                      <div className="flex items-center gap-2">
-                                        <UserCog className="h-3 w-3 text-blue-600" />
-                                        <span className="text-gray-600">Coach:</span>
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <Badge className={cn('text-xs gap-1 border', ROLE_STYLES.coach.badge)}>
+                                          <UserCog className={cn('h-3 w-3', ROLE_STYLES.coach.icon)} />
+                                          Coach
+                                        </Badge>
                                         <span className="font-medium">{goal.coach}</span>
                                       </div>
                                     )}
                                     
                                     {goal.leads.length > 0 && (
-                                      <div className="flex items-center gap-2">
-                                        <UserCheck className="h-3 w-3 text-green-600" />
-                                        <span className="text-gray-600">Leads:</span>
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <Badge className={cn('text-xs gap-1 border', ROLE_STYLES.lead.badge)}>
+                                          <UserCheck className={cn('h-3 w-3', ROLE_STYLES.lead.icon)} />
+                                          Lead{goal.leads.length > 1 ? 's' : ''}
+                                        </Badge>
                                         <span className="font-medium">{goal.leads.join(', ')}</span>
                                       </div>
                                     )}
                                     
                                     {goal.members.length > 0 && (
-                                      <div className="flex items-center gap-2">
-                                        <Users className="h-3 w-3 text-purple-600" />
-                                        <span className="text-gray-600">Members:</span>
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <Badge className={cn('text-xs gap-1 border', ROLE_STYLES.member.badge)}>
+                                          <Users className={cn('h-3 w-3', ROLE_STYLES.member.icon)} />
+                                          Member{goal.members.length > 1 ? 's' : ''}
+                                        </Badge>
                                         <span className="font-medium">{goal.members.join(', ')}</span>
                                       </div>
                                     )}
