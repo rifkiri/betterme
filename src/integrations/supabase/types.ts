@@ -603,6 +603,47 @@ export type Database = {
         }
         Relationships: []
       }
+      task_invitations: {
+        Row: {
+          created_at: string
+          id: string
+          invited_by: string
+          invitee_id: string
+          responded_at: string | null
+          status: string
+          task_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invited_by: string
+          invitee_id: string
+          responded_at?: string | null
+          status?: string
+          task_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invited_by?: string
+          invitee_id?: string
+          responded_at?: string | null
+          status?: string
+          task_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_invitations_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_pomodoro_stats: {
         Row: {
           break_duration_total: number
@@ -797,6 +838,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_task_invitation: {
+        Args: { p_invitation_id: string }
+        Returns: undefined
+      }
       create_goal_assignment: {
         Args: {
           p_assigned_by: string
@@ -814,6 +859,10 @@ export type Database = {
           p_role?: string
           p_user_id: string
         }
+        Returns: undefined
+      }
+      decline_task_invitation: {
+        Args: { p_invitation_id: string }
         Returns: undefined
       }
       get_all_active_users_for_dashboard: {
