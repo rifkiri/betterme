@@ -1,70 +1,27 @@
-# Plan: Notifications, UI Polish & Caching
+## Findings
 
-## 1. Notification Settings — more granular control
+- The database has real active data: 15 active users, 80 active goals, 36 active outputs, and 39 active tasks.
+- Table access grants are now present for authenticated users, so this is no longer mainly a missing-GRANT problem.
+- The likely blocker is frontend/runtime data loading:
+  - `TeamWorkloadMonitoring` depends on `get_all_active_users_for_dashboard()`, but the live database currently does not have that RPC function.
+  - Because the RPC failure happens at the start of `loadWorkloadData`, the workload arrays stay empty and the UI shows no team workload data.
+  - The component also ignores the RPC error object, making the failure hard to see.
 
-Extend `notification_preferences` (migration) with new opt-in toggles:
+## Plan
 
-- `notify_goal_updates` (bool, default true) — a goal I'm a member/owner of changed (progress, deadline, title, completion)
-- `notify_task_updates` (bool, default true) — a task I'm tagged on or own changed
-- `notify_output_updates` (bool, default true) — a weekly/bi-weekly output I own changed
-- `notify_assignment_accepted` (bool, default true) — someone accepted/declined my invitation
-- `notify_daily_digest` (bool, default false) — end-of-day summary of what's due tomorrow
-- `notify_mention` (bool, default true) — I was @tagged on a task
+1. Restore the missing dashboard RPC in Supabase.
+   - Add/recreate `public.get_all_active_users_for_dashboard()`.
+   - Grant execute access to authenticated users.
+   - Keep interns blocked from organizational dashboard data.
 
-Rebuild `NotificationPreferencesSection` with grouped cards (Tasks / Goals / Outputs / Digests) and toggle rows.
+2. Harden the Team Workload data loader.
+   - Check and throw/log RPC errors instead of silently mapping an empty result.
+   - Add a fallback to `get_filtered_users_for_role()` so workload can still load if the dashboard RPC is unavailable.
 
-Extend `useNotificationDaemon` to subscribe to `UPDATE` events on `goals`, `tasks`, `weekly_outputs` and fire browser notifications gated by the matching preference, only for rows where the current user is owner or in `goal_assignments`/`tagged_users`.
+3. Keep workload counts aligned with existing visibility rules.
+   - Continue using RLS-filtered tasks, weekly outputs, goals, and assignments.
+   - Do not make private data public.
 
-## 2. Header (AppNavigation) fix for admin/manager
-
-Problem: too many nav items overflow the top bar on mid-width screens for admin/manager (Productivity, Goals, Progress, Team, Org Dashboard, Settings + bell + avatar + signout).
-
-Fix:
-
-- Collapse desktop nav at `< lg` into a compact "More" dropdown (shadcn `DropdownMenu`) after 4 primary items.
-- Move Settings under the avatar menu (avatar becomes a dropdown: Profile, Settings, Sign out) — frees a slot and matches modern SaaS patterns.
-- Give the bar a subtle glass gradient, tighter spacing, active-tab pill with animated underline.
-- Truncate/ellipsize on overflow; use icons only under `md`.
-
-## 3. SignIn page redesign
-
-Currently barebones. Rebuild as split layout:
-
-- Left (desktop): brand panel — BetterMe wordmark logo, tagline, animated gradient background, testimonial or feature bullets.
-- Right: clean card with sign-in form, "Forgot password", subtle motion on mount.
-- Mobile: single column, logo on top.
-- Add a generated `BetterMe` wordmark SVG asset (via imagegen, transparent PNG or inline SVG) used here and in `AppNavigation`.
-
-## 4. Caching / performance
-
-Root cause: hooks call Supabase on every mount and route change; there's no shared cache. React Query is already installed (`@tanstack/react-query`) and a `QueryClient` exists in `App.tsx`, but data hooks (`useGoals`, `useTasks`, `useWeeklyOutputs`, `useHabits`, `useCurrentUser`, `useUserProfile`) use `useState + useEffect` and refetch every time.
-
-Plan:
-
-- Introduce a thin React Query wrapper for the hottest queries:
-  - `useGoalsQuery(userId)` → `['goals', userId]`, staleTime 60s
-  - `useTasksQuery(userId)` → `['tasks', userId]`, staleTime 30s
-  - `useWeeklyOutputsQuery(userId)` → staleTime 60s
-  - `useProfilesQuery()` → staleTime 5 min
-  - `useCurrentUserQuery()` → staleTime 5 min
-- Keep the existing imperative hooks but back them with the query cache (read via `queryClient.getQueryData`, invalidate on mutations).
-- Realtime subscriptions call `queryClient.invalidateQueries` instead of re-running full fetches manually — one source of truth.
-- Configure `QueryClient` defaults: `staleTime: 30_000`, `gcTime: 5 * 60_000`, `refetchOnWindowFocus: false`, `retry: 1`.
-- Add a small `usePrefetchOnHover` helper on nav links so hovering "My Goals" warms the cache.
-
-Scope note: I'll migrate the highest-traffic hooks first (goals, tasks, outputs, profile). The rest can follow incrementally without breaking anything.
-
-## Deliverables
-
-- 1 migration: add 6 columns to `notification_preferences`.
-- New/updated files:
-  - `src/components/settings/NotificationPreferencesSection.tsx` (rebuild with groups)
-  - `src/hooks/useNotificationPreferences.ts` (add new fields)
-  - `src/hooks/useNotificationDaemon.ts` (add UPDATE listeners + gating)
-  - `src/components/AppNavigation.tsx` (responsive nav + avatar menu)
-  - `src/pages/SignIn.tsx` (redesign)
-  - `src/assets/betterme-logo.svg` (new)
-  - `src/lib/queryClient.ts` (defaults) + `src/hooks/queries/*.ts` (new query hooks)
-  - Wire query hooks into `useGoalsManager`, `useTasksManager`, `useWeeklyOutputsManager`, `useCurrentUser`.
-
-Approve to proceed, or tell me which pieces to drop / prioritize.
+4. Verify after changes.
+   - Query the RPC directly to confirm it returns active users.
+   - Confirm workload monitor receives non-empty users and can calculate overview, goals, outputs, and task counts.
