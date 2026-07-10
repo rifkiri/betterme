@@ -232,21 +232,31 @@ export const TeamWorkloadMonitoring = ({
   const loadWorkloadData = async () => {
     setLoadingWorkload(true);
     try {
-      // Fetch ALL active users via the org-dashboard RPC so admins are included
-      const { data: dashUsersRaw } = await (supabase.rpc as any)('get_all_active_users_for_dashboard');
-      const allUsers: User[] = ((dashUsersRaw as any[]) || []).map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        email: p.email,
-        role: p.role,
-        position: p.user_position,
-        temporaryPassword: undefined,
-        hasChangedPassword: true,
-        userStatus: p.user_status,
-        createdAt: p.created_at,
-        lastLogin: undefined,
-        managerId: undefined,
-      }));
+      // Fetch ALL active users via the org-dashboard RPC so admins are included.
+      // Fall back to the role-filtered RPC if the dashboard function is unavailable.
+      const { data: dashUsersRaw, error: dashUsersError } = await (supabase.rpc as any)('get_all_active_users_for_dashboard');
+      let allUsers: User[] = [];
+
+      if (dashUsersError) {
+        console.error('TeamWorkloadMonitoring - dashboard users RPC failed, using fallback:', dashUsersError);
+        allUsers = await supabaseDataService.getUsers();
+      } else {
+        allUsers = ((dashUsersRaw as any[]) || []).map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          email: p.email,
+          role: p.role,
+          position: p.user_position,
+          temporaryPassword: undefined,
+          hasChangedPassword: true,
+          userStatus: p.user_status,
+          createdAt: p.created_at,
+          lastLogin: undefined,
+          managerId: undefined,
+        }));
+      }
+
+      console.log('TeamWorkloadMonitoring - active dashboard users loaded:', allUsers.length);
       const userProfilesMap = new Map<string, User>();
       allUsers.forEach(user => {
         userProfilesMap.set(user.id, user);
