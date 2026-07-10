@@ -102,6 +102,7 @@ export const GoalCard = ({
                   <Badge className={`text-xs ${getCategoryColor(goal.category)}`}>
                     {goal.category}
                   </Badge>
+                  <VisibilityBadge visibility={goal.visibility} />
                   {isOkrGoal ? (
                     <TooltipProvider>
                       <Tooltip>
