@@ -83,13 +83,13 @@ export default function Notifications() {
 
       if (taskInvitationsError) throw taskInvitationsError;
 
-      const taskInviterIds: string[] = Array.from(
-        new Set(
+      const taskInviterIds = Array.from(
+        new Set<string>(
           (taskInvitationsData || [])
             .map((inv: any) => inv.invited_by || inv.tasks?.user_id)
-            .filter(Boolean)
+            .filter((id: unknown): id is string => typeof id === 'string')
         )
-      ) as Set<string>);
+      );
       if (taskInviterIds.length > 0) {
         const missingInviterIds = taskInviterIds.filter((id) => !inviterMap[id]);
         if (missingInviterIds.length > 0) {
