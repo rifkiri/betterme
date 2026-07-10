@@ -4,24 +4,25 @@ import { supabase } from '@/integrations/supabase/client';
 const cache = new Map<string, string>();
 const inflight = new Map<string, Promise<string>>();
 
-const fetchName = (userId: string): Promise<string> => {
-  if (cache.has(userId)) return Promise.resolve(cache.get(userId)!);
+const fetchName = async (userId: string): Promise<string> => {
+  if (cache.has(userId)) return cache.get(userId)!;
   if (inflight.has(userId)) return inflight.get(userId)!;
-  const promise = supabase
-    .from('profiles')
-    .select('name')
-    .eq('id', userId)
-    .maybeSingle()
-    .then(({ data }) => {
+  const promise = (async () => {
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('name')
+        .eq('id', userId)
+        .maybeSingle();
       const name = data?.name || 'Unknown';
       cache.set(userId, name);
-      inflight.delete(userId);
       return name;
-    })
-    .catch(() => {
-      inflight.delete(userId);
+    } catch {
       return 'Unknown';
-    });
+    } finally {
+      inflight.delete(userId);
+    }
+  })();
   inflight.set(userId, promise);
   return promise;
 };
