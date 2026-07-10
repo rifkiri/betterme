@@ -174,7 +174,7 @@ export class SupabaseGoalsService {
         .from('goals')
         .select(`
           *,
-          goal_assignments(user_id)
+          goal_assignments(user_id, acknowledged)
         `)
         .eq('is_deleted', false)
         .order('created_date', { ascending: false });
@@ -194,9 +194,15 @@ export class SupabaseGoalsService {
         // Owners always see their goals
         if (goal.user_id === user.id) return true;
         
-        // Collaborators always see the goal
+        // Check if user is an acknowledged collaborator
         const assignments = goal.goal_assignments as any[] | undefined;
-        if (assignments?.some(a => a.user_id === user.id)) return true;
+        const userAssignment = assignments?.find(a => a.user_id === user.id);
+        
+        if (userAssignment) {
+          // If they are a collaborator but haven't acknowledged yet, hide it from their active view
+          // (Unless they are the owner, which is handled above)
+          return userAssignment.acknowledged === true;
+        }
 
         // Admins and Managers see everything
         if (userRole === 'admin' || userRole === 'manager') return true;

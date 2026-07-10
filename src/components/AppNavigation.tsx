@@ -1,12 +1,13 @@
 
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Home, Calendar, Settings, Users, LogOut, Menu, X, Target } from 'lucide-react';
+import { Home, Calendar, Settings, Users, LogOut, Menu, X, Target, Bell } from 'lucide-react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { supabase } from '@/integrations/supabase/client';
 
 export const AppNavigation = () => {
   const location = useLocation();
@@ -14,6 +15,25 @@ export const AppNavigation = () => {
   const { currentUser } = useCurrentUser();
   const { signOut } = useUserProfile();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    const load = async () => {
+      const { count } = await supabase
+        .from('goal_assignments')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', currentUser.id)
+        .eq('acknowledged', false);
+      setPendingCount(count || 0);
+    };
+    load();
+    const channel = supabase
+      .channel('nav-invitations')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'goal_assignments', filter: `user_id=eq.${currentUser.id}` }, load)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [currentUser?.id]);
 
   const handleSignOut = async () => {
     try {
@@ -122,6 +142,16 @@ export const AppNavigation = () => {
             </div>
             
             <div className="flex items-center space-x-4">
+              {/* Notifications bell */}
+              <Link to="/notifications" className="relative inline-flex items-center p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors" aria-label="Notifications">
+                <Bell className="h-5 w-5" />
+                {pendingCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-semibold flex items-center justify-center">
+                    {pendingCount > 9 ? '9+' : pendingCount}
+                  </span>
+                )}
+              </Link>
+
               {/* Mobile menu button */}
               <Button
                 variant="ghost"
@@ -131,6 +161,7 @@ export const AppNavigation = () => {
               >
                 <Menu className="h-5 w-5" />
               </Button>
+              
               
               {/* User Avatar */}
               <Link to="/profile" className="flex items-center">
