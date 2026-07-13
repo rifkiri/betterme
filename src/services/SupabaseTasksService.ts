@@ -95,14 +95,16 @@ export class SupabaseTasksService {
         .eq('status', 'pending');
 
       if (invitationsError) {
-        console.error('Error fetching pending task invitations:', invitationsError);
-        throw invitationsError;
+        // Non-fatal: pending-invitation data is enrichment, not core task data.
+        // RLS or transient network errors here must not break bulk task loading
+        // (e.g. org dashboard iterating over many users).
+        console.warn('Error fetching pending task invitations (continuing without them):', invitationsError);
+      } else {
+        pendingInvitationsByTask = (pendingInvitations || []).reduce((acc: Record<string, string[]>, row: any) => {
+          acc[row.task_id] = [...(acc[row.task_id] || []), row.invitee_id];
+          return acc;
+        }, {});
       }
-
-      pendingInvitationsByTask = (pendingInvitations || []).reduce((acc: Record<string, string[]>, row: any) => {
-        acc[row.task_id] = [...(acc[row.task_id] || []), row.invitee_id];
-        return acc;
-      }, {});
     }
 
     return data.map(task => ({
