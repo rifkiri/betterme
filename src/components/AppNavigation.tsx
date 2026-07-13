@@ -28,6 +28,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { supabase } from '@/integrations/supabase/client';
+import { NotificationBell } from '@/components/NotificationBell';
 
 type NavItem = { name: string; href: string; icon: React.ComponentType<{ className?: string }> };
 
@@ -158,32 +159,8 @@ export const AppNavigation = () => {
             </nav>
 
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-              <Link
-                to="/notifications"
-                aria-label="Notifications"
-                className="relative inline-flex items-center p-2.5 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors group"
-              >
-                <motion.div
-                  animate={pendingCount > 0 ? { rotate: [0, -12, 10, -6, 4, 0] } : {}}
-                  transition={{ duration: 1.4, repeat: pendingCount > 0 ? Infinity : 0, repeatDelay: 2 }}
-                  style={{ transformOrigin: 'top center' }}
-                >
-                  <Bell className="h-5 w-5" />
-                </motion.div>
-                <AnimatePresence>
-                  {pendingCount > 0 && (
-                    <motion.span
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0, opacity: 0 }}
-                      transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                      className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-gradient-to-br from-destructive to-[hsl(0_84%_50%)] text-destructive-foreground text-[10px] font-semibold flex items-center justify-center ring-2 ring-background animate-soft-pulse"
-                    >
-                      {pendingCount > 9 ? '9+' : pendingCount}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </Link>
+              <NotificationBell pendingCount={pendingCount} />
+
 
               <div className="hidden md:block">
                 <DropdownMenu>

@@ -165,6 +165,7 @@ export const TeamWorkloadMonitoring = ({
     userTaskOwnerships: UserTaskOwnership[];
   }>({ memberWorkloads: [], workGoals: [], userGoalAssignments: [], outputOwnerships: [], userOutputOwnerships: [], taskOwnerships: [], userTaskOwnerships: [] });
   const [loadingWorkload, setLoadingWorkload] = useState(false);
+  const [workloadError, setWorkloadError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'goals' | 'outputs' | 'tasks' | 'name'>('goals');
   const [userProfiles, setUserProfiles] = useState<Map<string, User>>(new Map());
   const [goalViewType, setGoalViewType] = useState<'goal' | 'user'>('goal');
@@ -238,6 +239,7 @@ export const TeamWorkloadMonitoring = ({
 
   const loadWorkloadData = async () => {
     setLoadingWorkload(true);
+    setWorkloadError(null);
     try {
       // Fetch ALL active users via the org-dashboard RPC so admins are included.
       // Fall back to the role-filtered RPC if the dashboard function is unavailable.
@@ -575,6 +577,7 @@ export const TeamWorkloadMonitoring = ({
       setWorkloadData({ memberWorkloads, workGoals: workGoalsData, userGoalAssignments, outputOwnerships, userOutputOwnerships, taskOwnerships, userTaskOwnerships });
     } catch (error) {
       console.error('Error loading workload data:', error);
+      setWorkloadError(error instanceof Error ? error.message : 'Failed to load workload data');
     } finally {
       setLoadingWorkload(false);
     }
@@ -690,6 +693,19 @@ export const TeamWorkloadMonitoring = ({
           </CardDescription>
         </CardHeader>
       </Card>
+
+      {workloadError && (
+        <Card className="border-destructive/50 bg-destructive/5">
+          <CardContent className="p-4 flex items-start gap-3">
+            <div className="w-8 h-8 rounded-full bg-destructive/10 text-destructive flex items-center justify-center shrink-0">!</div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-destructive">Couldn't load workload data</p>
+              <p className="text-xs text-muted-foreground mt-1">{workloadError}</p>
+            </div>
+            <Button size="sm" variant="outline" onClick={loadWorkloadData}>Retry</Button>
+          </CardContent>
+        </Card>
+      )}
 
       <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as any)} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
