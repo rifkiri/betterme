@@ -239,6 +239,7 @@ export const TeamWorkloadMonitoring = ({
 
   const loadWorkloadData = async () => {
     setLoadingWorkload(true);
+    setWorkloadError(null);
     try {
       // Fetch ALL active users via the org-dashboard RPC so admins are included.
       // Fall back to the role-filtered RPC if the dashboard function is unavailable.
