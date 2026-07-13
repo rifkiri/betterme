@@ -577,6 +577,7 @@ export const TeamWorkloadMonitoring = ({
       setWorkloadData({ memberWorkloads, workGoals: workGoalsData, userGoalAssignments, outputOwnerships, userOutputOwnerships, taskOwnerships, userTaskOwnerships });
     } catch (error) {
       console.error('Error loading workload data:', error);
+      setWorkloadError(error instanceof Error ? error.message : 'Failed to load workload data');
     } finally {
       setLoadingWorkload(false);
     }
