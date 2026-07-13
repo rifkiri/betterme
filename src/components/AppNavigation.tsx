@@ -43,15 +43,23 @@ export const AppNavigation = () => {
   useEffect(() => {
     if (!currentUser?.id) return;
     const load = async () => {
-      const { count } = await supabase
-        .from('goal_assignments')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', currentUser.id)
-        .eq('acknowledged', false);
-      setPendingCount(count || 0);
+      const [{ count: goalCount }, { count: taskCount }] = await Promise.all([
+        supabase
+          .from('goal_assignments')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', currentUser.id)
+          .eq('acknowledged', false),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (supabase as any)
+          .from('task_invitations')
+          .select('id', { count: 'exact', head: true })
+          .eq('invitee_id', currentUser.id)
+          .eq('status', 'pending'),
+      ]);
+      setPendingCount((goalCount || 0) + (taskCount || 0));
     };
     load();
-    const channel = supabase
+    const goalChannel = supabase
       .channel('nav-invitations')
       .on(
         'postgres_changes',
@@ -59,8 +67,17 @@ export const AppNavigation = () => {
         load
       )
       .subscribe();
+    const taskChannel = supabase
+      .channel('nav-task-invitations')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'task_invitations', filter: `invitee_id=eq.${currentUser.id}` },
+        load
+      )
+      .subscribe();
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(goalChannel);
+      supabase.removeChannel(taskChannel);
     };
   }, [currentUser?.id]);
 

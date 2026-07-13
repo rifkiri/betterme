@@ -1,9 +1,11 @@
-import { useEffect, useRef } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useBrowserNotifications } from '@/hooks/useBrowserNotifications';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
+import { toast } from 'sonner';
 
 const DEADLINE_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 const ONE_HOUR_MS = 60 * 60 * 1000;
@@ -22,6 +24,14 @@ export const useNotificationDaemon = () => {
   const notifiedUpdatesRef = useRef<Set<string>>(new Set());
   // Cache of goal IDs the user is a member of, refreshed on realtime events
   const memberGoalsRef = useRef<Set<string>>(new Set());
+
+  const showNotification = useCallback(
+    (title: string, body?: string) => {
+      notify(title, body ? { body } : undefined);
+      toast.info(title, body ? { description: body } : undefined);
+    },
+    [notify]
+  );
 
   // Load & keep updated: goal IDs where user is an acknowledged collaborator
   useEffect(() => {
@@ -68,7 +78,7 @@ export const useNotificationDaemon = () => {
           const row = payload.new;
           if (row?.user_id === user.id) return;
           const title = isManagerOrAdmin ? 'A team member created a goal' : 'New goal available';
-          notify(title, { body: row?.title || 'A new goal was added.' });
+          showNotification(title, row?.title || 'A new goal was added.');
         }
       )
       .on(
@@ -91,15 +101,15 @@ export const useNotificationDaemon = () => {
           notifiedUpdatesRef.current.add(key);
           let body = 'A goal you belong to was updated.';
           if (old && old.progress !== row.progress) {
-            body = `Progress: ${old.progress ?? 0}% \u2192 ${row.progress ?? 0}%`;
+            body = `Progress: ${old.progress ?? 0}% → ${row.progress ?? 0}%`;
           } else if (row.completed && !old.completed) {
-            body = 'Goal marked complete \ud83c\udf89';
+            body = 'Goal marked complete 🎉';
           } else if (old.deadline !== row.deadline) {
             body = 'Deadline changed.';
           } else if (old.title !== row.title) {
-            body = `Renamed to \u201c${row.title}\u201d`;
+            body = `Renamed to “${row.title}”`;
           }
-          notify(`Goal updated: ${row.title || ''}`.trim(), { body });
+          showNotification(`Goal updated: ${row.title || ''}`.trim(), body);
         }
       )
       .subscribe();
@@ -116,11 +126,11 @@ export const useNotificationDaemon = () => {
           const tagged = Array.isArray(row.tagged_users) && row.tagged_users.includes(user.id);
           if (isMine) return;
           if (tagged && prefsRef.current.notify_mention) {
-            notify('You were tagged on a task', { body: row.title || 'A task tagged you.' });
+            showNotification('You were tagged on a task', row.title || 'A task tagged you.');
             return;
           }
           if (prefsRef.current.notify_new_task) {
-            notify('New task created', { body: row.title || 'A new task was added.' });
+            showNotification('New task created', row.title || 'A new task was added.');
           }
         }
       )
@@ -139,11 +149,11 @@ export const useNotificationDaemon = () => {
           const key = `task-update:${row.id}:${row.completed}:${row.due_date}:${row.title}`;
           if (notifiedUpdatesRef.current.has(key)) return;
           notifiedUpdatesRef.current.add(key);
-          let body = 'A task you\u2019re on was updated.';
-          if (row.completed && !old.completed) body = 'Marked complete \u2705';
+          let body = 'A task you’re on was updated.';
+          if (row.completed && !old.completed) body = 'Marked complete ✅';
           else if (old.due_date !== row.due_date) body = 'Due date changed.';
-          else if (old.title !== row.title) body = `Renamed to \u201c${row.title}\u201d`;
-          notify(`Task updated: ${row.title || ''}`.trim(), { body });
+          else if (old.title !== row.title) body = `Renamed to “${row.title}”`;
+          showNotification(`Task updated: ${row.title || ''}`.trim(), body);
         }
       )
       .subscribe();
@@ -162,9 +172,10 @@ export const useNotificationDaemon = () => {
           const key = `output-update:${row.id}:${row.progress}:${row.title}:${row.due_date}`;
           if (notifiedUpdatesRef.current.has(key)) return;
           notifiedUpdatesRef.current.add(key);
-          notify(`Output updated: ${row.title || ''}`.trim(), {
-            body: old.progress !== row.progress ? `Progress: ${old.progress ?? 0}% \u2192 ${row.progress ?? 0}%` : 'Details changed.',
-          });
+          showNotification(
+            `Output updated: ${row.title || ''}`.trim(),
+            old.progress !== row.progress ? `Progress: ${old.progress ?? 0}% → ${row.progress ?? 0}%` : 'Details changed.'
+          );
         }
       )
       .subscribe();
@@ -178,7 +189,7 @@ export const useNotificationDaemon = () => {
           if (!prefsRef.current.notify_team_added) return;
           const row = payload.new;
           if (row?.self_assigned) return;
-          notify("You've been invited to a goal", { body: `Role: ${row?.role ?? 'member'}` });
+          showNotification("You've been invited to a goal", `Role: ${row?.role ?? 'member'}`);
         }
       )
       .on(
@@ -192,12 +203,12 @@ export const useNotificationDaemon = () => {
           if (row.acknowledged === true && old.acknowledged === false) {
             if (row.assigned_by !== user.id) return;
             if (!prefsRef.current.notify_assignment_response) return;
-            notify('Invitation accepted', { body: `Someone accepted their goal invitation.` });
+            showNotification('Invitation accepted', 'Someone accepted their goal invitation.');
           }
           // Role change on someone's own assignment
           if (row.user_id === user.id && old.role && row.role && old.role !== row.role) {
             if (!prefsRef.current.notify_role_updates) return;
-            notify('Your role changed', { body: `You are now a ${row.role} on a goal.` });
+            showNotification('Your role changed', `You are now a ${row.role} on a goal.`);
           }
         }
       )
@@ -210,7 +221,7 @@ export const useNotificationDaemon = () => {
           if (!row) return;
           if (row.assigned_by !== user.id) return;
           if (row.acknowledged) return; // declined = deletion of a pending invite
-          notify('Invitation declined', { body: 'Someone declined your goal invitation.' });
+          showNotification('Invitation declined', 'Someone declined your goal invitation.');
         }
       )
       .subscribe();
@@ -231,9 +242,10 @@ export const useNotificationDaemon = () => {
             .eq('id', row.task_id)
             .maybeSingle();
 
-          notify("You've been invited to support a task", {
-            body: (task as any)?.title || 'Open notifications to accept or decline.',
-          });
+          showNotification(
+            "You've been invited to support a task",
+            (task as any)?.title || 'Open notifications to accept or decline.'
+          );
         }
       )
       .on(
@@ -252,9 +264,10 @@ export const useNotificationDaemon = () => {
             .eq('id', row.task_id)
             .maybeSingle();
 
-          notify(row.status === 'accepted' ? 'Task invitation accepted' : 'Task invitation declined', {
-            body: (task as any)?.title || 'Someone responded to your task invitation.',
-          });
+          showNotification(
+            row.status === 'accepted' ? 'Task invitation accepted' : 'Task invitation declined',
+            (task as any)?.title || 'Someone responded to your task invitation.'
+          );
         }
       )
       .subscribe();
@@ -266,7 +279,7 @@ export const useNotificationDaemon = () => {
       supabase.removeChannel(assignmentsChannel);
       supabase.removeChannel(taskInvitationsChannel);
     };
-  }, [user?.id, isManagerOrAdmin, notify, prefsRef]);
+  }, [user?.id, isManagerOrAdmin, showNotification, prefsRef]);
 
   // Deadline check every 5 minutes
   useEffect(() => {
@@ -294,7 +307,7 @@ export const useNotificationDaemon = () => {
         const key = `goal:${g.id}:${todayStr}`;
         if (notifiedDeadlinesRef.current.has(key)) return;
         notifiedDeadlinesRef.current.add(key);
-        notify('Deadline approaching', { body: `${g.title} is due in less than an hour!` });
+        showNotification('Deadline approaching', `${g.title} is due in less than an hour!`);
       });
 
       const { data: tasks } = await supabase
@@ -308,12 +321,12 @@ export const useNotificationDaemon = () => {
         const key = `task:${t.id}:${todayStr}`;
         if (notifiedDeadlinesRef.current.has(key)) return;
         notifiedDeadlinesRef.current.add(key);
-        notify('Deadline approaching', { body: `${t.title} is due in less than an hour!` });
+        showNotification('Deadline approaching', `${t.title} is due in less than an hour!`);
       });
     };
 
     checkDeadlines();
     const interval = setInterval(checkDeadlines, DEADLINE_CHECK_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [user?.id, notify, prefsRef]);
+  }, [user?.id, showNotification, prefsRef]);
 };
