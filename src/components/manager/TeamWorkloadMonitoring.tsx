@@ -694,6 +694,19 @@ export const TeamWorkloadMonitoring = ({
         </CardHeader>
       </Card>
 
+      {workloadError && (
+        <Card className="border-destructive/50 bg-destructive/5">
+          <CardContent className="p-4 flex items-start gap-3">
+            <div className="w-8 h-8 rounded-full bg-destructive/10 text-destructive flex items-center justify-center shrink-0">!</div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-destructive">Couldn't load workload data</p>
+              <p className="text-xs text-muted-foreground mt-1">{workloadError}</p>
+            </div>
+            <Button size="sm" variant="outline" onClick={loadWorkloadData}>Retry</Button>
+          </CardContent>
+        </Card>
+      )}
+
       <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as any)} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview" className="flex items-center gap-1">
