@@ -24,6 +24,7 @@ import {
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { supabase } from '@/integrations/supabase/client';
@@ -109,52 +110,87 @@ export const AppNavigation = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/70 border-b border-border/60 supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/75 border-b border-border/60 supports-[backdrop-filter]:bg-background/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 gap-4">
-            <Link to="/" className="flex items-center shrink-0" aria-label="BetterMe">
-              <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                BetterMe
-              </span>
+            <Link to="/" className="flex items-center shrink-0 group" aria-label="BetterMe">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.97 }}
+                className="flex items-center gap-2"
+              >
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-[hsl(var(--primary-glow))] shadow-glow flex items-center justify-center">
+                  <Target className="w-4 h-4 text-primary-foreground" strokeWidth={2.5} />
+                </div>
+                <span className="text-xl font-display font-bold tracking-tight text-foreground">
+                  BetterMe
+                </span>
+              </motion.div>
             </Link>
 
-            <nav className="hidden md:flex items-center gap-1 flex-1 justify-center">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                    isActive(item.href)
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
-                  }`}
-                >
-                  <item.icon className="h-4 w-4 mr-1.5" />
-                  {item.name}
-                </Link>
-              ))}
+            <nav className="hidden md:flex items-center gap-0.5 flex-1 justify-center">
+              {navItems.map((item) => {
+                const active = isActive(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className={`relative inline-flex items-center px-3.5 py-2 rounded-xl text-sm font-medium transition-colors ${
+                      active
+                        ? 'text-primary'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {active && (
+                      <motion.span
+                        layoutId="nav-active-pill"
+                        className="absolute inset-0 bg-primary/10 rounded-xl"
+                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                    <span className="relative flex items-center">
+                      <item.icon className="h-4 w-4 mr-1.5" />
+                      {item.name}
+                    </span>
+                  </Link>
+                );
+              })}
             </nav>
 
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               <Link
                 to="/notifications"
                 aria-label="Notifications"
-                className="relative inline-flex items-center p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                className="relative inline-flex items-center p-2.5 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors group"
               >
-                <Bell className="h-5 w-5" />
-                {pendingCount > 0 && (
-                  <span className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-semibold flex items-center justify-center ring-2 ring-background">
-                    {pendingCount > 9 ? '9+' : pendingCount}
-                  </span>
-                )}
+                <motion.div
+                  animate={pendingCount > 0 ? { rotate: [0, -12, 10, -6, 4, 0] } : {}}
+                  transition={{ duration: 1.4, repeat: pendingCount > 0 ? Infinity : 0, repeatDelay: 2 }}
+                  style={{ transformOrigin: 'top center' }}
+                >
+                  <Bell className="h-5 w-5" />
+                </motion.div>
+                <AnimatePresence>
+                  {pendingCount > 0 && (
+                    <motion.span
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                      className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-gradient-to-br from-destructive to-[hsl(0_84%_50%)] text-destructive-foreground text-[10px] font-semibold flex items-center justify-center ring-2 ring-background animate-soft-pulse"
+                    >
+                      {pendingCount > 9 ? '9+' : pendingCount}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </Link>
 
               <div className="hidden md:block">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="rounded-full ring-offset-background transition-shadow hover:ring-2 hover:ring-primary/40 hover:ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/40 text-primary text-sm font-semibold">
+                    <button className="rounded-full ring-offset-background transition-all hover:ring-2 hover:ring-primary/40 hover:ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                      <Avatar className="h-9 w-9 shadow-soft">
+                        <AvatarFallback className="bg-gradient-to-br from-primary to-[hsl(var(--primary-glow))] text-primary-foreground text-sm font-semibold">
                           {currentUser?.name ? getUserInitials(currentUser.name) : 'U'}
                         </AvatarFallback>
                       </Avatar>
@@ -209,6 +245,7 @@ export const AppNavigation = () => {
           </div>
         </div>
       </header>
+
 
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
