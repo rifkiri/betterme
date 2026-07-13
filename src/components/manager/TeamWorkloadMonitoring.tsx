@@ -165,6 +165,7 @@ export const TeamWorkloadMonitoring = ({
     userTaskOwnerships: UserTaskOwnership[];
   }>({ memberWorkloads: [], workGoals: [], userGoalAssignments: [], outputOwnerships: [], userOutputOwnerships: [], taskOwnerships: [], userTaskOwnerships: [] });
   const [loadingWorkload, setLoadingWorkload] = useState(false);
+  const [workloadError, setWorkloadError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'goals' | 'outputs' | 'tasks' | 'name'>('goals');
   const [userProfiles, setUserProfiles] = useState<Map<string, User>>(new Map());
   const [goalViewType, setGoalViewType] = useState<'goal' | 'user'>('goal');
