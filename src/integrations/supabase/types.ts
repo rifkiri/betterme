@@ -953,7 +953,7 @@ export type Database = {
         | "spiritual"
         | "wealth"
       task_priority: "low" | "medium" | "high" | "urgent"
-      user_role: "admin" | "manager" | "team-member"
+      user_role: "admin" | "manager" | "team-member" | "intern"
       user_status: "pending" | "active"
     }
     CompositeTypes: {
@@ -1096,7 +1096,7 @@ export const Constants = {
         "wealth",
       ],
       task_priority: ["low", "medium", "high", "urgent"],
-      user_role: ["admin", "manager", "team-member"],
+      user_role: ["admin", "manager", "team-member", "intern"],
       user_status: ["pending", "active"],
     },
   },
