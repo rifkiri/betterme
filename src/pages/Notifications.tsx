@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
 import { AppNavigation } from '@/components/AppNavigation';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { Check, X, Bell } from 'lucide-react';
@@ -46,7 +47,7 @@ export default function Notifications() {
             .filter(Boolean)
         )
       );
-      let inviterMap: Record<string, { name: string; email: string }> = {};
+      const inviterMap: Record<string, { name: string; email: string }> = {};
       if (inviterIds.length > 0) {
         const { data: profiles } = await supabase
           .from('profiles')
@@ -120,13 +121,29 @@ export default function Notifications() {
       // 2. General notifications
       const { data: notifData, error: notifError } = await supabase
         .from('goal_notifications')
-        .select('id, notification_type, role, acknowledged, created_date, goal_id, goals:goal_id ( title )')
+        .select('id, notification_type, role, acknowledged, created_date, goal_id')
         .eq('user_id', user.id)
         .order('created_date', { ascending: false })
         .limit(20);
 
       if (notifError) throw notifError;
-      setNotifications(notifData || []);
+
+      const notificationGoalIds = Array.from(new Set((notifData || []).map((n) => n.goal_id).filter(Boolean)));
+      const notificationGoalMap: Record<string, { title: string }> = {};
+      if (notificationGoalIds.length > 0) {
+        const { data: goals } = await supabase
+          .from('goals')
+          .select('id, title')
+          .in('id', notificationGoalIds);
+        (goals || []).forEach((goal) => {
+          notificationGoalMap[goal.id] = { title: goal.title };
+        });
+      }
+
+      setNotifications((notifData || []).map((notif) => ({
+        ...notif,
+        goals: notif.goal_id ? notificationGoalMap[notif.goal_id] : null,
+      })));
     } catch (err) {
       console.error('Error loading notifications:', err);
       toast.error('Failed to load notifications');
@@ -256,7 +273,7 @@ export default function Notifications() {
                     <Card key={inv.id} className="overflow-hidden border-l-4 border-l-primary">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg">{inv.title}</CardTitle>
-                        <CardDescription className="flex flex-wrap items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                           <Badge variant="secondary" className="capitalize">{inv.type} {inv.badge}</Badge>
                           {inv.inviter && (
                             <span className="text-xs">
@@ -264,7 +281,7 @@ export default function Notifications() {
                             </span>
                           )}
                           <span className="text-xs">• {formatDate(inv.date)}</span>
-                        </CardDescription>
+                        </div>
                       </CardHeader>
                       <CardContent>
                         <p className="text-sm text-muted-foreground line-clamp-2">
