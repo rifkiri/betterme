@@ -19,6 +19,10 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				sans: ['Manrope', 'system-ui', 'sans-serif'],
+				display: ['Sora', 'system-ui', 'sans-serif'],
+			},
 			screens: {
 				'xs': '475px',
 			},
