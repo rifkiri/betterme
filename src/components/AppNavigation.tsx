@@ -28,6 +28,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { supabase } from '@/integrations/supabase/client';
+import { NotificationBell } from '@/components/NotificationBell';
 
 type NavItem = { name: string; href: string; icon: React.ComponentType<{ className?: string }> };
 
