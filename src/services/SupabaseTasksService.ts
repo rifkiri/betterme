@@ -88,22 +88,29 @@ export class SupabaseTasksService {
     let pendingInvitationsByTask: Record<string, string[]> = {};
 
     if (taskIds.length > 0) {
-      const { data: pendingInvitations, error: invitationsError } = await (supabase as any)
-        .from('task_invitations')
-        .select('task_id, invitee_id')
-        .in('task_id', taskIds)
-        .eq('status', 'pending');
+      // Batch task IDs to avoid exceeding PostgREST URL length limits (Bad Request)
+      // when a user owns many tasks (e.g. admin/manager on org dashboard).
+      const CHUNK_SIZE = 100;
+      for (let i = 0; i < taskIds.length; i += CHUNK_SIZE) {
+        const chunk = taskIds.slice(i, i + CHUNK_SIZE);
+        const { data: pendingInvitations, error: invitationsError } = await (supabase as any)
+          .from('task_invitations')
+          .select('task_id, invitee_id')
+          .in('task_id', chunk)
+          .eq('status', 'pending');
 
-      if (invitationsError) {
-        // Non-fatal: pending-invitation data is enrichment, not core task data.
-        // RLS or transient network errors here must not break bulk task loading
-        // (e.g. org dashboard iterating over many users).
-        console.warn('Error fetching pending task invitations (continuing without them):', invitationsError);
-      } else {
-        pendingInvitationsByTask = (pendingInvitations || []).reduce((acc: Record<string, string[]>, row: any) => {
-          acc[row.task_id] = [...(acc[row.task_id] || []), row.invitee_id];
-          return acc;
-        }, {});
+        if (invitationsError) {
+          // Non-fatal: pending-invitation data is enrichment, not core task data.
+          console.warn('Error fetching pending task invitations chunk (continuing without them):', invitationsError);
+          continue;
+        }
+
+        for (const row of pendingInvitations || []) {
+          pendingInvitationsByTask[row.task_id] = [
+            ...(pendingInvitationsByTask[row.task_id] || []),
+            row.invitee_id,
+          ];
+        }
       }
     }
 
