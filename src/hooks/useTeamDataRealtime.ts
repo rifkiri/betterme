@@ -70,6 +70,7 @@ export const useTeamDataRealtime = () => {
       cachedTeamData = data;
       cachedForUserId = user.id;
       cachedAt = Date.now();
+      writeSessionCache(user.id, data);
       setLastUpdated(new Date(cachedAt));
       
       if (showToast && !isInitialLoad.current) {
