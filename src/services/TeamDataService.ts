@@ -310,68 +310,57 @@ class TeamDataService {
   }
 
   private async generateMembersSummary(teamMembers: User[]): Promise<TeamMember[]> {
-    const membersSummary: TeamMember[] = [];
-
-    for (const member of teamMembers) {
+    const results = await Promise.all(teamMembers.map(async (member) => {
       try {
-        // Get member's data
-        const habits = await supabaseDataService.getHabits(member.id);
-        const tasks = await supabaseDataService.getTasks(member.id);
-        const outputs = await supabaseDataService.getWeeklyOutputs(member.id);
-        
-        // Calculate rates
+        const [habits, tasks, outputs] = await Promise.all([
+          supabaseDataService.getHabits(member.id),
+          supabaseDataService.getTasks(member.id),
+          supabaseDataService.getWeeklyOutputs(member.id),
+        ]);
+
         const completedHabits = habits.filter(h => h.completed && !h.archived).length;
         const totalHabits = habits.filter(h => !h.archived).length;
         const habitsRate = totalHabits > 0 ? Math.round((completedHabits / totalHabits) * 100) : 0;
-        
+
         const completedTasks = tasks.filter(t => t.completed && !t.isDeleted).length;
         const totalTasks = tasks.filter(t => !t.isDeleted).length;
         const tasksRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-        
+
         const completedOutputs = outputs.filter(o => o.progress === 100 && !o.isDeleted).length;
         const totalOutputs = outputs.filter(o => !o.isDeleted).length;
         const outputsRate = totalOutputs > 0 ? Math.round((completedOutputs / totalOutputs) * 100) : 0;
-        
-        // Determine status based on average performance
+
         const avgPerformance = (habitsRate + tasksRate + outputsRate) / 3;
         let status: 'excellent' | 'good' | 'average' | 'needs-attention';
-        
         if (avgPerformance >= 90) status = 'excellent';
         else if (avgPerformance >= 75) status = 'good';
         else if (avgPerformance >= 60) status = 'average';
         else status = 'needs-attention';
-        
-        membersSummary.push({
-          id: member.id,
-          name: member.name,
-          role: member.role,
-          habitsRate,
-          tasksRate,
-          outputsRate,
-          status
-        });
+
+        return { id: member.id, name: member.name, role: member.role, habitsRate, tasksRate, outputsRate, status } as TeamMember;
       } catch (error) {
         console.error(`Error generating summary for member ${member.id}:`, error);
+        return null;
       }
-    }
-
-    return membersSummary;
+    }));
+    return results.filter((r): r is TeamMember => r !== null);
   }
 
   private async generateOverdueData(teamMembers: User[]) {
-    const overdueTasks: OverdueTask[] = [];
-    const overdueOutputs: OverdueOutput[] = [];
-    
-    for (const member of teamMembers) {
+    const perMember = await Promise.all(teamMembers.map(async (member) => {
+      const localTasks: OverdueTask[] = [];
+      const localOutputs: OverdueOutput[] = [];
       try {
-        // Get overdue tasks
-        const tasks = await supabaseDataService.getTasks(member.id);
+        const [tasks, outputs] = await Promise.all([
+          supabaseDataService.getTasks(member.id),
+          supabaseDataService.getWeeklyOutputs(member.id),
+        ]);
         const today = new Date();
-        
+
         tasks.forEach(task => {
           if (!task.completed && !task.isDeleted && task.dueDate && isTaskOverdue(task.dueDate)) {
             const daysOverdue = Math.floor((today.getTime() - task.dueDate.getTime()) / (1000 * 60 * 60 * 24));
-            overdueTasks.push({
+            localTasks.push({
               id: task.id,
               title: task.title,
               assignee: member.name,
@@ -381,13 +370,11 @@ class TeamDataService {
             });
           }
         });
-        
-        // Get overdue outputs
-        const outputs = await supabaseDataService.getWeeklyOutputs(member.id);
+
         outputs.forEach(output => {
           if (!output.isDeleted && output.dueDate && isWeeklyOutputOverdue(output.dueDate, output.progress, output.completedDate, output.createdDate)) {
             const daysOverdue = Math.floor((today.getTime() - output.dueDate.getTime()) / (1000 * 60 * 60 * 24));
-            overdueOutputs.push({
+            localOutputs.push({
               id: output.id,
               title: output.title,
               assignee: member.name,
@@ -400,7 +387,12 @@ class TeamDataService {
       } catch (error) {
         console.error(`Error generating overdue data for member ${member.id}:`, error);
       }
-    }
+      return { localTasks, localOutputs };
+    }));
+
+    const overdueTasks: OverdueTask[] = perMember.flatMap(p => p.localTasks);
+    const overdueOutputs: OverdueOutput[] = perMember.flatMap(p => p.localOutputs);
+
     
     return {
       tasks: overdueTasks.slice(0, 10), // Limit to 10 most recent
