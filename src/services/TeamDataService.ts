@@ -260,37 +260,35 @@ class TeamDataService {
     let totalMood = 0;
     let membersWithMood = 0;
 
-    for (const member of teamMembers) {
+    await Promise.all(teamMembers.map(async (member) => {
       try {
-        // Get member's habits
-        const habits = await supabaseDataService.getHabits(member.id);
+        const [habits, tasks, outputs, moodEntries] = await Promise.all([
+          supabaseDataService.getHabits(member.id),
+          supabaseDataService.getTasks(member.id),
+          supabaseDataService.getWeeklyOutputs(member.id),
+          supabaseDataService.getMoodData(member.id),
+        ]);
+
         const completedHabits = habits.filter(h => h.completed && !h.archived).length;
         const totalHabits = habits.filter(h => !h.archived).length;
         const habitsRate = totalHabits > 0 ? (completedHabits / totalHabits) * 100 : 0;
-        
-        // Get member's tasks
-        const tasks = await supabaseDataService.getTasks(member.id);
+
         const completedTasks = tasks.filter(t => t.completed && !t.isDeleted).length;
         const totalTasks = tasks.filter(t => !t.isDeleted).length;
         const tasksRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
-        
-        // Get member's weekly outputs
-        const outputs = await supabaseDataService.getWeeklyOutputs(member.id);
+
         const completedOutputs = outputs.filter(o => o.progress === 100 && !o.isDeleted).length;
         const totalOutputs = outputs.filter(o => !o.isDeleted).length;
         const outputsRate = totalOutputs > 0 ? (completedOutputs / totalOutputs) * 100 : 0;
-        
-        // Calculate average habit streak
+
         const avgStreak = habits.length > 0 ? habits.reduce((sum, h) => sum + h.streak, 0) / habits.length : 0;
-        
-        // Get recent mood data
-        const moodEntries = await supabaseDataService.getMoodData(member.id);
+
         if (moodEntries.length > 0) {
           const recentMood = moodEntries[moodEntries.length - 1]?.mood || 0;
           totalMood += recentMood;
           membersWithMood++;
         }
-        
+
         totalHabitsRate += habitsRate;
         totalTasksRate += tasksRate;
         totalOutputsRate += outputsRate;
@@ -298,7 +296,8 @@ class TeamDataService {
       } catch (error) {
         console.error(`Error calculating stats for member ${member.id}:`, error);
       }
-    }
+    }));
+
 
     return {
       habitsCompletionRate: Math.round(totalHabitsRate / teamMembers.length),
