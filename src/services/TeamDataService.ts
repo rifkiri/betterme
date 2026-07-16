@@ -47,21 +47,15 @@ class TeamDataService {
         return this.getEmptyTeamData();
       }
       
-      // Generate team statistics
-      console.log('Calculating team stats...');
-      const teamStats = await this.calculateTeamStats(teamMembers);
-      
-      console.log('Generating members summary...');
-      const membersSummary = await this.generateMembersSummary(teamMembers);
-      
-      console.log('Generating overdue data...');
-      const overdueData = await this.generateOverdueData(teamMembers);
-      
-      console.log('Calculating team trends...');
-      const teamTrends = await this.calculateTeamTrends(teamMembers);
-      
-      console.log('Generating mood data...');
-      const moodData = await this.generateMoodData(teamMembers);
+      // Run top-level aggregations in parallel
+      const [teamStats, membersSummary, overdueData, teamTrends, moodData] = await Promise.all([
+        this.calculateTeamStats(teamMembers),
+        this.generateMembersSummary(teamMembers),
+        this.generateOverdueData(teamMembers),
+        this.calculateTeamTrends(teamMembers),
+        this.generateMoodData(teamMembers),
+      ]);
+
 
       const result = {
         totalMembers: teamMembers.length,
