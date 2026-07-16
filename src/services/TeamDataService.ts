@@ -419,25 +419,20 @@ class TeamDataService {
       last30Days.push(formatDateForDatabase(date));
     }
     
-    // Get mood data for each day and member
-    for (const member of teamMembers) {
+    await Promise.all(teamMembers.map(async (member) => {
       try {
         const moodEntries = await supabaseDataService.getMoodData(member.id);
-        
         last30Days.forEach(date => {
           const dayMood = moodEntries.find(entry => entry.date === date);
           if (dayMood) {
-            moodData.push({
-              date,
-              mood: dayMood.mood,
-              memberId: member.id
-            });
+            moodData.push({ date, mood: dayMood.mood, memberId: member.id });
           }
         });
       } catch (error) {
         console.error(`Error generating mood data for member ${member.id}:`, error);
       }
-    }
+    }));
+
     
     return moodData;
   }
