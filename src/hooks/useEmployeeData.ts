@@ -1,51 +1,86 @@
-
 import { useState, useEffect } from 'react';
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { EmployeeData } from '@/types/individualData';
 import { transformUserToEmployeeData } from '@/utils/employeeDataTransformer';
 
+const CACHE_KEY = 'betterme_employee_data_cache_v1';
+const CACHE_TTL_MS = 1000 * 60 * 10; // 10 min
+
+interface CacheShape {
+  timestamp: number;
+  data: Record<string, EmployeeData>;
+}
+
+const readCache = (): Record<string, EmployeeData> | null => {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const parsed: CacheShape = JSON.parse(raw);
+    if (!parsed || !parsed.data) return null;
+    if (Date.now() - parsed.timestamp > CACHE_TTL_MS) return null;
+    return parsed.data;
+  } catch {
+    return null;
+  }
+};
+
+const writeCache = (data: Record<string, EmployeeData>) => {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data }));
+  } catch {
+    // ignore quota errors
+  }
+};
+
 export const useEmployeeData = () => {
-  const [employeeData, setEmployeeData] = useState<Record<string, EmployeeData>>({});
-  const [isLoading, setIsLoading] = useState(true);
+  const cached = readCache();
+  const [employeeData, setEmployeeData] = useState<Record<string, EmployeeData>>(cached || {});
+  const [isLoading, setIsLoading] = useState(!cached);
 
   useEffect(() => {
+    let cancelled = false;
+
     const loadEmployeeData = async () => {
-      setIsLoading(true);
+      if (!cached) setIsLoading(true);
       try {
-        console.log('Loading users for employee data...');
         const users = await supabaseDataService.getUsers();
-        
-        // Include both team members and managers, exclude only admins
         const teamMembers = users.filter(user => user.role !== 'admin');
-        console.log('Team members for employee data (excluding admins):', teamMembers);
-        
+
+        // Parallel fetch across all team members (was sequential await-in-loop).
+        const results = await Promise.all(
+          teamMembers.map(async (user) => {
+            try {
+              const data = await transformUserToEmployeeData(user);
+              return [user.id, data] as const;
+            } catch (error) {
+              console.error(`Failed to transform data for user ${user.id}:`, error);
+              return null;
+            }
+          })
+        );
+
+        if (cancelled) return;
+
         const employeeDataMap: Record<string, EmployeeData> = {};
-        
-        for (const user of teamMembers) {
-          try {
-            console.log(`Transforming data for user: ${user.name} (${user.role})`);
-            const employeeData = await transformUserToEmployeeData(user);
-            employeeDataMap[user.id] = employeeData;
-            console.log(`Successfully transformed data for ${user.name}`);
-          } catch (error) {
-            console.error(`Failed to transform data for user ${user.id}:`, error);
-          }
+        for (const entry of results) {
+          if (entry) employeeDataMap[entry[0]] = entry[1];
         }
-        
-        console.log('Final employee data map:', employeeDataMap);
+
         setEmployeeData(employeeDataMap);
+        writeCache(employeeDataMap);
       } catch (error) {
         console.error('Failed to load employee data:', error);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
 
     loadEmployeeData();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return {
-    employeeData,
-    isLoading
-  };
+  return { employeeData, isLoading };
 };
