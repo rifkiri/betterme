@@ -73,7 +73,7 @@ export const IndividualPerformanceContent = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <HabitsPerformance habits={filteredHabits} />
-        <RecentTasksCard tasks={filteredTasks} />
+        <RecentTasksCard tasks={filteredTasks} allTasks={employee.allTasks || employee.recentTasks || []} />
       </div>
 
       <WeeklyOutputsProgress outputs={filteredOutputs} />
