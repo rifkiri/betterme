@@ -12,6 +12,26 @@ let cachedTeamData: TeamData | null = null;
 let cachedForUserId: string | null = null;
 let cachedAt = 0;
 const CACHE_TTL_MS = 60_000;
+const SS_CACHE_PREFIX = 'betterme_team_data_';
+
+const readSessionCache = (userId: string): { data: TeamData; ts: number } | null => {
+  try {
+    const raw = sessionStorage.getItem(SS_CACHE_PREFIX + userId);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+};
+
+const writeSessionCache = (userId: string, data: TeamData) => {
+  try {
+    sessionStorage.setItem(SS_CACHE_PREFIX + userId, JSON.stringify({ data, ts: Date.now() }));
+  } catch {
+    // ignore quota errors
+  }
+};
+
 
 export const useTeamDataRealtime = () => {
   const { user } = useAuth();
