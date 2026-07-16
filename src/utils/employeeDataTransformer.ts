@@ -10,8 +10,16 @@ export const transformToEmployeeData = (
   habits: any[], 
   tasks: any[], 
   outputs: any[],
-  moodData: any[] = []
+  moodData: any[] = [],
+  currentUserId?: string
 ): EmployeeData => {
+  const isSelf = !currentUserId || user.id === currentUserId;
+  const isVisible = (item: any) =>
+    isSelf || !item.visibility || item.visibility === 'all';
+
+  tasks = tasks.filter(isVisible);
+  outputs = outputs.filter(isVisible);
+
   // Calculate completion rates
   const completedHabits = habits.filter(h => h.completed && !h.archived).length;
   const totalHabits = habits.filter(h => !h.archived).length;
