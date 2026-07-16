@@ -67,7 +67,7 @@ export const IndividualPerformance = ({
         onEmployeeChange={handleEmployeeChange} 
       />
 
-      <IndividualPerformanceContent employee={employee} />
+      <IndividualPerformanceContent employee={employee} showOnlyOngoing={true} />
     </div>
   );
 };

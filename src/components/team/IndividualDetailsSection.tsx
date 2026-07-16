@@ -6,6 +6,13 @@ import { FullEmployeeDashboardView } from './FullEmployeeDashboardView';
 import { TeamData } from '@/types/teamData';
 import { Users } from 'lucide-react';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface IndividualDetailsSectionProps {
   teamData: TeamData;
@@ -23,6 +30,22 @@ export const IndividualDetailsSection = ({
   viewMode = 'summary'
 }: IndividualDetailsSectionProps) => {
   const { employeeData, isLoading } = useEmployeeData();
+  const [statusFilter, setStatusFilter] = React.useState<'all' | 'ongoing' | 'completed'>('all');
+  const [yearFilter, setYearFilter] = React.useState<string>('all');
+
+  const selectedEmployeeData = selectedMemberId ? employeeData[selectedMemberId] : undefined;
+
+  const availableYears = React.useMemo(() => {
+    if (!selectedEmployeeData) return [] as string[];
+    const years = new Set<string>();
+    selectedEmployeeData.recentTasks?.forEach(t => {
+      if (t.dueDate) years.add(new Date(t.dueDate).getFullYear().toString());
+    });
+    selectedEmployeeData.weeklyOutputs?.forEach(o => {
+      if (o.dueDate) years.add(new Date(o.dueDate).getFullYear().toString());
+    });
+    return Array.from(years).sort((a, b) => b.localeCompare(a));
+  }, [selectedEmployeeData]);
 
   console.log('IndividualDetailsSection - selectedMemberId:', selectedMemberId);
   console.log('IndividualDetailsSection - viewMode:', viewMode);
@@ -122,17 +145,48 @@ export const IndividualDetailsSection = ({
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              {selectedMember.name}'s Performance Summary
-            </CardTitle>
-            <CardDescription>
-              Detailed productivity overview including habits, tasks, outputs, and mood tracking
-            </CardDescription>
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  {selectedMember.name}'s Performance Summary
+                </CardTitle>
+                <CardDescription>
+                  Detailed productivity overview including habits, tasks, outputs, and mood tracking
+                </CardDescription>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as 'all' | 'ongoing' | 'completed')}>
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="ongoing">Ongoing Only</SelectItem>
+                    <SelectItem value="completed">Completed Only</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={yearFilter} onValueChange={setYearFilter}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Years</SelectItem>
+                    {availableYears.map(year => (
+                      <SelectItem key={year} value={year}>{year}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </CardHeader>
         </Card>
 
-        <IndividualPerformanceContent employee={selectedEmployeeData} />
+        <IndividualPerformanceContent
+          employee={selectedEmployeeData}
+          statusFilter={statusFilter}
+          yearFilter={yearFilter}
+        />
 
         <div className="flex justify-center gap-4 mt-6">
           <button
