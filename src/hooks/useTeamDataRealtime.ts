@@ -12,16 +12,41 @@ let cachedTeamData: TeamData | null = null;
 let cachedForUserId: string | null = null;
 let cachedAt = 0;
 const CACHE_TTL_MS = 60_000;
+const SS_CACHE_PREFIX = 'betterme_team_data_';
+
+const readSessionCache = (userId: string): { data: TeamData; ts: number } | null => {
+  try {
+    const raw = sessionStorage.getItem(SS_CACHE_PREFIX + userId);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+};
+
+const writeSessionCache = (userId: string, data: TeamData) => {
+  try {
+    sessionStorage.setItem(SS_CACHE_PREFIX + userId, JSON.stringify({ data, ts: Date.now() }));
+  } catch {
+    // ignore quota errors
+  }
+};
+
 
 export const useTeamDataRealtime = () => {
   const { user } = useAuth();
-  const hasCache = !!user?.id && cachedForUserId === user.id && cachedTeamData !== null;
-  const [teamData, setTeamData] = useState<TeamData | null>(hasCache ? cachedTeamData : null);
+  const memHasCache = !!user?.id && cachedForUserId === user.id && cachedTeamData !== null;
+  const ssCache = !memHasCache && user?.id ? readSessionCache(user.id) : null;
+  const hasCache = memHasCache || !!ssCache;
+  const initialData = memHasCache ? cachedTeamData : ssCache?.data ?? null;
+  const initialTs = memHasCache ? cachedAt : ssCache?.ts ?? 0;
+  const [teamData, setTeamData] = useState<TeamData | null>(initialData);
   const [isLoading, setIsLoading] = useState(!hasCache);
   const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(hasCache ? new Date(cachedAt) : null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(hasCache ? new Date(initialTs) : null);
   const isInitialLoad = useRef(!hasCache);
   const subscriptionsRef = useRef<any[]>([]);
+
 
   const loadTeamData = async (showToast = false) => {
     if (!user?.id) {
@@ -45,6 +70,7 @@ export const useTeamDataRealtime = () => {
       cachedTeamData = data;
       cachedForUserId = user.id;
       cachedAt = Date.now();
+      writeSessionCache(user.id, data);
       setLastUpdated(new Date(cachedAt));
       
       if (showToast && !isInitialLoad.current) {

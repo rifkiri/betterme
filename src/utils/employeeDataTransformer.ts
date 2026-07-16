@@ -10,8 +10,16 @@ export const transformToEmployeeData = (
   habits: any[], 
   tasks: any[], 
   outputs: any[],
-  moodData: any[] = []
+  moodData: any[] = [],
+  currentUserId?: string
 ): EmployeeData => {
+  const isSelf = !currentUserId || user.id === currentUserId;
+  const isVisible = (item: any) =>
+    isSelf || !item.visibility || item.visibility === 'all';
+
+  tasks = tasks.filter(isVisible);
+  outputs = outputs.filter(isVisible);
+
   // Calculate completion rates
   const completedHabits = habits.filter(h => h.completed && !h.archived).length;
   const totalHabits = habits.filter(h => !h.archived).length;
@@ -107,7 +115,7 @@ export const transformToEmployeeData = (
   };
 };
 
-export const transformUserToEmployeeData = async (user: User): Promise<EmployeeData> => {
+export const transformUserToEmployeeData = async (user: User, currentUserId?: string): Promise<EmployeeData> => {
   try {
     // Fetch all data for the user
     const [habits, tasks, outputs, moodData] = await Promise.all([
@@ -118,7 +126,7 @@ export const transformUserToEmployeeData = async (user: User): Promise<EmployeeD
     ]);
     
     // Use the existing transform function
-    return transformToEmployeeData(user, habits, tasks, outputs, moodData);
+    return transformToEmployeeData(user, habits, tasks, outputs, moodData, currentUserId);
   } catch (error) {
     console.error(`Error transforming user data for ${user.name}:`, error);
     throw error;

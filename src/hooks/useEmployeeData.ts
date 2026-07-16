@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { EmployeeData } from '@/types/individualData';
 import { transformUserToEmployeeData } from '@/utils/employeeDataTransformer';
@@ -43,6 +44,8 @@ export const useEmployeeData = () => {
     const loadEmployeeData = async () => {
       if (!cached) setIsLoading(true);
       try {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        const currentUserId = authUser?.id;
         const users = await supabaseDataService.getUsers();
         const teamMembers = users.filter(user => user.role !== 'admin');
 
@@ -50,7 +53,7 @@ export const useEmployeeData = () => {
         const results = await Promise.all(
           teamMembers.map(async (user) => {
             try {
-              const data = await transformUserToEmployeeData(user);
+              const data = await transformUserToEmployeeData(user, currentUserId);
               return [user.id, data] as const;
             } catch (error) {
               console.error(`Failed to transform data for user ${user.id}:`, error);

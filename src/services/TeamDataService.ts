@@ -47,21 +47,15 @@ class TeamDataService {
         return this.getEmptyTeamData();
       }
       
-      // Generate team statistics
-      console.log('Calculating team stats...');
-      const teamStats = await this.calculateTeamStats(teamMembers);
-      
-      console.log('Generating members summary...');
-      const membersSummary = await this.generateMembersSummary(teamMembers);
-      
-      console.log('Generating overdue data...');
-      const overdueData = await this.generateOverdueData(teamMembers);
-      
-      console.log('Calculating team trends...');
-      const teamTrends = await this.calculateTeamTrends(teamMembers);
-      
-      console.log('Generating mood data...');
-      const moodData = await this.generateMoodData(teamMembers);
+      // Run top-level aggregations in parallel
+      const [teamStats, membersSummary, overdueData, teamTrends, moodData] = await Promise.all([
+        this.calculateTeamStats(teamMembers),
+        this.generateMembersSummary(teamMembers),
+        this.generateOverdueData(teamMembers),
+        this.calculateTeamTrends(teamMembers),
+        this.generateMoodData(teamMembers),
+      ]);
+
 
       const result = {
         totalMembers: teamMembers.length,
@@ -143,12 +137,14 @@ class TeamDataService {
       let currentOutputsRate = 0;
       let previousOutputsRate = 0;
 
-      for (const member of teamMembers) {
+      await Promise.all(teamMembers.map(async (member) => {
         try {
-          // Get member's data
-          const habits = await supabaseDataService.getHabits(member.id);
-          const tasks = await supabaseDataService.getTasks(member.id);
-          const outputs = await supabaseDataService.getWeeklyOutputs(member.id);
+          // Get member's data in parallel
+          const [habits, tasks, outputs] = await Promise.all([
+            supabaseDataService.getHabits(member.id),
+            supabaseDataService.getTasks(member.id),
+            supabaseDataService.getWeeklyOutputs(member.id),
+          ]);
 
           // Filter by date periods
           const currentTasks = tasks.filter(t => 
@@ -165,7 +161,6 @@ class TeamDataService {
             o.dueDate && o.dueDate >= fourWeeksAgo && o.dueDate < twoWeeksAgo && !o.isDeleted
           );
 
-          // Calculate rates for current period
           const currentTasksCompleted = currentTasks.filter(t => t.completed).length;
           const currentTasksTotal = currentTasks.length;
           const currentTaskRate = currentTasksTotal > 0 ? (currentTasksCompleted / currentTasksTotal) * 100 : 0;
@@ -174,7 +169,6 @@ class TeamDataService {
           const currentOutputsTotal = currentOutputs.length;
           const currentOutputRate = currentOutputsTotal > 0 ? (currentOutputsCompleted / currentOutputsTotal) * 100 : 0;
 
-          // Calculate rates for previous period
           const previousTasksCompleted = previousTasks.filter(t => t.completed).length;
           const previousTasksTotal = previousTasks.length;
           const previousTaskRate = previousTasksTotal > 0 ? (previousTasksCompleted / previousTasksTotal) * 100 : 0;
@@ -183,12 +177,11 @@ class TeamDataService {
           const previousOutputsTotal = previousOutputs.length;
           const previousOutputRate = previousOutputsTotal > 0 ? (previousOutputsCompleted / previousOutputsTotal) * 100 : 0;
 
-          // For habits, we'll use a simple current vs previous streak comparison
           const activeHabits = habits.filter(h => !h.archived && !h.isDeleted);
           const currentHabitRate = activeHabits.length > 0 ? 
             (activeHabits.filter(h => h.completed).length / activeHabits.length) * 100 : 0;
           const previousHabitRate = activeHabits.length > 0 ? 
-            (activeHabits.reduce((sum, h) => sum + Math.max(0, h.streak - 7), 0) / activeHabits.length) * 10 : 0; // Rough estimate
+            (activeHabits.reduce((sum, h) => sum + Math.max(0, h.streak - 7), 0) / activeHabits.length) * 10 : 0;
 
           currentHabitsRate += currentHabitRate;
           previousHabitsRate += Math.min(100, previousHabitRate);
@@ -199,7 +192,8 @@ class TeamDataService {
         } catch (error) {
           console.error(`Error calculating trends for member ${member.id}:`, error);
         }
-      }
+      }));
+
 
       // Average the rates
       const avgCurrentHabits = currentHabitsRate / teamMembers.length;
@@ -260,37 +254,35 @@ class TeamDataService {
     let totalMood = 0;
     let membersWithMood = 0;
 
-    for (const member of teamMembers) {
+    await Promise.all(teamMembers.map(async (member) => {
       try {
-        // Get member's habits
-        const habits = await supabaseDataService.getHabits(member.id);
+        const [habits, tasks, outputs, moodEntries] = await Promise.all([
+          supabaseDataService.getHabits(member.id),
+          supabaseDataService.getTasks(member.id),
+          supabaseDataService.getWeeklyOutputs(member.id),
+          supabaseDataService.getMoodData(member.id),
+        ]);
+
         const completedHabits = habits.filter(h => h.completed && !h.archived).length;
         const totalHabits = habits.filter(h => !h.archived).length;
         const habitsRate = totalHabits > 0 ? (completedHabits / totalHabits) * 100 : 0;
-        
-        // Get member's tasks
-        const tasks = await supabaseDataService.getTasks(member.id);
+
         const completedTasks = tasks.filter(t => t.completed && !t.isDeleted).length;
         const totalTasks = tasks.filter(t => !t.isDeleted).length;
         const tasksRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
-        
-        // Get member's weekly outputs
-        const outputs = await supabaseDataService.getWeeklyOutputs(member.id);
+
         const completedOutputs = outputs.filter(o => o.progress === 100 && !o.isDeleted).length;
         const totalOutputs = outputs.filter(o => !o.isDeleted).length;
         const outputsRate = totalOutputs > 0 ? (completedOutputs / totalOutputs) * 100 : 0;
-        
-        // Calculate average habit streak
+
         const avgStreak = habits.length > 0 ? habits.reduce((sum, h) => sum + h.streak, 0) / habits.length : 0;
-        
-        // Get recent mood data
-        const moodEntries = await supabaseDataService.getMoodData(member.id);
+
         if (moodEntries.length > 0) {
           const recentMood = moodEntries[moodEntries.length - 1]?.mood || 0;
           totalMood += recentMood;
           membersWithMood++;
         }
-        
+
         totalHabitsRate += habitsRate;
         totalTasksRate += tasksRate;
         totalOutputsRate += outputsRate;
@@ -298,7 +290,8 @@ class TeamDataService {
       } catch (error) {
         console.error(`Error calculating stats for member ${member.id}:`, error);
       }
-    }
+    }));
+
 
     return {
       habitsCompletionRate: Math.round(totalHabitsRate / teamMembers.length),
@@ -311,68 +304,57 @@ class TeamDataService {
   }
 
   private async generateMembersSummary(teamMembers: User[]): Promise<TeamMember[]> {
-    const membersSummary: TeamMember[] = [];
-
-    for (const member of teamMembers) {
+    const results = await Promise.all(teamMembers.map(async (member) => {
       try {
-        // Get member's data
-        const habits = await supabaseDataService.getHabits(member.id);
-        const tasks = await supabaseDataService.getTasks(member.id);
-        const outputs = await supabaseDataService.getWeeklyOutputs(member.id);
-        
-        // Calculate rates
+        const [habits, tasks, outputs] = await Promise.all([
+          supabaseDataService.getHabits(member.id),
+          supabaseDataService.getTasks(member.id),
+          supabaseDataService.getWeeklyOutputs(member.id),
+        ]);
+
         const completedHabits = habits.filter(h => h.completed && !h.archived).length;
         const totalHabits = habits.filter(h => !h.archived).length;
         const habitsRate = totalHabits > 0 ? Math.round((completedHabits / totalHabits) * 100) : 0;
-        
+
         const completedTasks = tasks.filter(t => t.completed && !t.isDeleted).length;
         const totalTasks = tasks.filter(t => !t.isDeleted).length;
         const tasksRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-        
+
         const completedOutputs = outputs.filter(o => o.progress === 100 && !o.isDeleted).length;
         const totalOutputs = outputs.filter(o => !o.isDeleted).length;
         const outputsRate = totalOutputs > 0 ? Math.round((completedOutputs / totalOutputs) * 100) : 0;
-        
-        // Determine status based on average performance
+
         const avgPerformance = (habitsRate + tasksRate + outputsRate) / 3;
         let status: 'excellent' | 'good' | 'average' | 'needs-attention';
-        
         if (avgPerformance >= 90) status = 'excellent';
         else if (avgPerformance >= 75) status = 'good';
         else if (avgPerformance >= 60) status = 'average';
         else status = 'needs-attention';
-        
-        membersSummary.push({
-          id: member.id,
-          name: member.name,
-          role: member.role,
-          habitsRate,
-          tasksRate,
-          outputsRate,
-          status
-        });
+
+        return { id: member.id, name: member.name, role: member.role, habitsRate, tasksRate, outputsRate, status } as TeamMember;
       } catch (error) {
         console.error(`Error generating summary for member ${member.id}:`, error);
+        return null;
       }
-    }
-
-    return membersSummary;
+    }));
+    return results.filter((r): r is TeamMember => r !== null);
   }
 
   private async generateOverdueData(teamMembers: User[]) {
-    const overdueTasks: OverdueTask[] = [];
-    const overdueOutputs: OverdueOutput[] = [];
-    
-    for (const member of teamMembers) {
+    const perMember = await Promise.all(teamMembers.map(async (member) => {
+      const localTasks: OverdueTask[] = [];
+      const localOutputs: OverdueOutput[] = [];
       try {
-        // Get overdue tasks
-        const tasks = await supabaseDataService.getTasks(member.id);
+        const [tasks, outputs] = await Promise.all([
+          supabaseDataService.getTasks(member.id),
+          supabaseDataService.getWeeklyOutputs(member.id),
+        ]);
         const today = new Date();
-        
+
         tasks.forEach(task => {
           if (!task.completed && !task.isDeleted && task.dueDate && isTaskOverdue(task.dueDate)) {
             const daysOverdue = Math.floor((today.getTime() - task.dueDate.getTime()) / (1000 * 60 * 60 * 24));
-            overdueTasks.push({
+            localTasks.push({
               id: task.id,
               title: task.title,
               assignee: member.name,
@@ -382,13 +364,11 @@ class TeamDataService {
             });
           }
         });
-        
-        // Get overdue outputs
-        const outputs = await supabaseDataService.getWeeklyOutputs(member.id);
+
         outputs.forEach(output => {
           if (!output.isDeleted && output.dueDate && isWeeklyOutputOverdue(output.dueDate, output.progress, output.completedDate, output.createdDate)) {
             const daysOverdue = Math.floor((today.getTime() - output.dueDate.getTime()) / (1000 * 60 * 60 * 24));
-            overdueOutputs.push({
+            localOutputs.push({
               id: output.id,
               title: output.title,
               assignee: member.name,
@@ -401,7 +381,12 @@ class TeamDataService {
       } catch (error) {
         console.error(`Error generating overdue data for member ${member.id}:`, error);
       }
-    }
+      return { localTasks, localOutputs };
+    }));
+
+    const overdueTasks: OverdueTask[] = perMember.flatMap(p => p.localTasks);
+    const overdueOutputs: OverdueOutput[] = perMember.flatMap(p => p.localOutputs);
+
     
     return {
       tasks: overdueTasks.slice(0, 10), // Limit to 10 most recent
@@ -428,25 +413,20 @@ class TeamDataService {
       last30Days.push(formatDateForDatabase(date));
     }
     
-    // Get mood data for each day and member
-    for (const member of teamMembers) {
+    await Promise.all(teamMembers.map(async (member) => {
       try {
         const moodEntries = await supabaseDataService.getMoodData(member.id);
-        
         last30Days.forEach(date => {
           const dayMood = moodEntries.find(entry => entry.date === date);
           if (dayMood) {
-            moodData.push({
-              date,
-              mood: dayMood.mood,
-              memberId: member.id
-            });
+            moodData.push({ date, mood: dayMood.mood, memberId: member.id });
           }
         });
       } catch (error) {
         console.error(`Error generating mood data for member ${member.id}:`, error);
       }
-    }
+    }));
+
     
     return moodData;
   }
