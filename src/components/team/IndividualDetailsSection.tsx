@@ -30,6 +30,22 @@ export const IndividualDetailsSection = ({
   viewMode = 'summary'
 }: IndividualDetailsSectionProps) => {
   const { employeeData, isLoading } = useEmployeeData();
+  const [statusFilter, setStatusFilter] = React.useState<'all' | 'ongoing' | 'completed'>('all');
+  const [yearFilter, setYearFilter] = React.useState<string>('all');
+
+  const selectedEmployeeData = selectedMemberId ? employeeData[selectedMemberId] : undefined;
+
+  const availableYears = React.useMemo(() => {
+    if (!selectedEmployeeData) return [] as string[];
+    const years = new Set<string>();
+    selectedEmployeeData.recentTasks?.forEach(t => {
+      if (t.dueDate) years.add(new Date(t.dueDate).getFullYear().toString());
+    });
+    selectedEmployeeData.weeklyOutputs?.forEach(o => {
+      if (o.dueDate) years.add(new Date(o.dueDate).getFullYear().toString());
+    });
+    return Array.from(years).sort((a, b) => b.localeCompare(a));
+  }, [selectedEmployeeData]);
 
   console.log('IndividualDetailsSection - selectedMemberId:', selectedMemberId);
   console.log('IndividualDetailsSection - viewMode:', viewMode);
