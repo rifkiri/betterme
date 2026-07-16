@@ -90,6 +90,13 @@ export const transformToEmployeeData = (
       dueDate: t.dueDate,
       priority: t.priority || 'Medium'
     })),
+    allTasks: tasks.filter(t => !t.isDeleted).map(t => ({
+      id: t.id,
+      title: t.title,
+      completed: t.completed,
+      dueDate: t.dueDate,
+      priority: t.priority || 'Medium'
+    })),
     weeklyOutputs: outputs.filter(o => !o.isDeleted).map(o => ({
       id: o.id,
       title: o.title,
