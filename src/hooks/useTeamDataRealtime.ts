@@ -35,13 +35,18 @@ const writeSessionCache = (userId: string, data: TeamData) => {
 
 export const useTeamDataRealtime = () => {
   const { user } = useAuth();
-  const hasCache = !!user?.id && cachedForUserId === user.id && cachedTeamData !== null;
-  const [teamData, setTeamData] = useState<TeamData | null>(hasCache ? cachedTeamData : null);
+  const memHasCache = !!user?.id && cachedForUserId === user.id && cachedTeamData !== null;
+  const ssCache = !memHasCache && user?.id ? readSessionCache(user.id) : null;
+  const hasCache = memHasCache || !!ssCache;
+  const initialData = memHasCache ? cachedTeamData : ssCache?.data ?? null;
+  const initialTs = memHasCache ? cachedAt : ssCache?.ts ?? 0;
+  const [teamData, setTeamData] = useState<TeamData | null>(initialData);
   const [isLoading, setIsLoading] = useState(!hasCache);
   const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(hasCache ? new Date(cachedAt) : null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(hasCache ? new Date(initialTs) : null);
   const isInitialLoad = useRef(!hasCache);
   const subscriptionsRef = useRef<any[]>([]);
+
 
   const loadTeamData = async (showToast = false) => {
     if (!user?.id) {
