@@ -143,12 +143,14 @@ class TeamDataService {
       let currentOutputsRate = 0;
       let previousOutputsRate = 0;
 
-      for (const member of teamMembers) {
+      await Promise.all(teamMembers.map(async (member) => {
         try {
-          // Get member's data
-          const habits = await supabaseDataService.getHabits(member.id);
-          const tasks = await supabaseDataService.getTasks(member.id);
-          const outputs = await supabaseDataService.getWeeklyOutputs(member.id);
+          // Get member's data in parallel
+          const [habits, tasks, outputs] = await Promise.all([
+            supabaseDataService.getHabits(member.id),
+            supabaseDataService.getTasks(member.id),
+            supabaseDataService.getWeeklyOutputs(member.id),
+          ]);
 
           // Filter by date periods
           const currentTasks = tasks.filter(t => 
@@ -165,7 +167,6 @@ class TeamDataService {
             o.dueDate && o.dueDate >= fourWeeksAgo && o.dueDate < twoWeeksAgo && !o.isDeleted
           );
 
-          // Calculate rates for current period
           const currentTasksCompleted = currentTasks.filter(t => t.completed).length;
           const currentTasksTotal = currentTasks.length;
           const currentTaskRate = currentTasksTotal > 0 ? (currentTasksCompleted / currentTasksTotal) * 100 : 0;
@@ -174,7 +175,6 @@ class TeamDataService {
           const currentOutputsTotal = currentOutputs.length;
           const currentOutputRate = currentOutputsTotal > 0 ? (currentOutputsCompleted / currentOutputsTotal) * 100 : 0;
 
-          // Calculate rates for previous period
           const previousTasksCompleted = previousTasks.filter(t => t.completed).length;
           const previousTasksTotal = previousTasks.length;
           const previousTaskRate = previousTasksTotal > 0 ? (previousTasksCompleted / previousTasksTotal) * 100 : 0;
@@ -183,12 +183,11 @@ class TeamDataService {
           const previousOutputsTotal = previousOutputs.length;
           const previousOutputRate = previousOutputsTotal > 0 ? (previousOutputsCompleted / previousOutputsTotal) * 100 : 0;
 
-          // For habits, we'll use a simple current vs previous streak comparison
           const activeHabits = habits.filter(h => !h.archived && !h.isDeleted);
           const currentHabitRate = activeHabits.length > 0 ? 
             (activeHabits.filter(h => h.completed).length / activeHabits.length) * 100 : 0;
           const previousHabitRate = activeHabits.length > 0 ? 
-            (activeHabits.reduce((sum, h) => sum + Math.max(0, h.streak - 7), 0) / activeHabits.length) * 10 : 0; // Rough estimate
+            (activeHabits.reduce((sum, h) => sum + Math.max(0, h.streak - 7), 0) / activeHabits.length) * 10 : 0;
 
           currentHabitsRate += currentHabitRate;
           previousHabitsRate += Math.min(100, previousHabitRate);
@@ -199,7 +198,8 @@ class TeamDataService {
         } catch (error) {
           console.error(`Error calculating trends for member ${member.id}:`, error);
         }
-      }
+      }));
+
 
       // Average the rates
       const avgCurrentHabits = currentHabitsRate / teamMembers.length;
