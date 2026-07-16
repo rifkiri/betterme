@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { EmployeeData } from '@/types/individualData';
 import { transformUserToEmployeeData } from '@/utils/employeeDataTransformer';
