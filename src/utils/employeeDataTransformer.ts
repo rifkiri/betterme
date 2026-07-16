@@ -115,7 +115,7 @@ export const transformToEmployeeData = (
   };
 };
 
-export const transformUserToEmployeeData = async (user: User): Promise<EmployeeData> => {
+export const transformUserToEmployeeData = async (user: User, currentUserId?: string): Promise<EmployeeData> => {
   try {
     // Fetch all data for the user
     const [habits, tasks, outputs, moodData] = await Promise.all([
@@ -126,7 +126,7 @@ export const transformUserToEmployeeData = async (user: User): Promise<EmployeeD
     ]);
     
     // Use the existing transform function
-    return transformToEmployeeData(user, habits, tasks, outputs, moodData);
+    return transformToEmployeeData(user, habits, tasks, outputs, moodData, currentUserId);
   } catch (error) {
     console.error(`Error transforming user data for ${user.name}:`, error);
     throw error;
