@@ -145,17 +145,48 @@ export const IndividualDetailsSection = ({
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              {selectedMember.name}'s Performance Summary
-            </CardTitle>
-            <CardDescription>
-              Detailed productivity overview including habits, tasks, outputs, and mood tracking
-            </CardDescription>
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  {selectedMember.name}'s Performance Summary
+                </CardTitle>
+                <CardDescription>
+                  Detailed productivity overview including habits, tasks, outputs, and mood tracking
+                </CardDescription>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as 'all' | 'ongoing' | 'completed')}>
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="ongoing">Ongoing Only</SelectItem>
+                    <SelectItem value="completed">Completed Only</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={yearFilter} onValueChange={setYearFilter}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Years</SelectItem>
+                    {availableYears.map(year => (
+                      <SelectItem key={year} value={year}>{year}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </CardHeader>
         </Card>
 
-        <IndividualPerformanceContent employee={selectedEmployeeData} />
+        <IndividualPerformanceContent
+          employee={selectedEmployeeData}
+          statusFilter={statusFilter}
+          yearFilter={yearFilter}
+        />
 
         <div className="flex justify-center gap-4 mt-6">
           <button
