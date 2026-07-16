@@ -22,7 +22,8 @@ export const IndividualPerformanceContent = ({
   yearFilter = 'all',
 }: IndividualPerformanceContentProps) => {
   const filteredTasks = React.useMemo(() => {
-    return (employee.recentTasks || []).filter(task => {
+    const source = employee.allTasks || employee.recentTasks || [];
+    return source.filter(task => {
       if (showOnlyOngoing && task.completed) return false;
       if (statusFilter === 'ongoing' && task.completed) return false;
       if (statusFilter === 'completed' && !task.completed) return false;
@@ -32,7 +33,7 @@ export const IndividualPerformanceContent = ({
       }
       return true;
     });
-  }, [employee.recentTasks, showOnlyOngoing, statusFilter, yearFilter]);
+  }, [employee.allTasks, employee.recentTasks, showOnlyOngoing, statusFilter, yearFilter]);
 
   const filteredOutputs = React.useMemo(() => {
     return (employee.weeklyOutputs || []).filter(output => {
