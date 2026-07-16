@@ -6,6 +6,13 @@ import { FullEmployeeDashboardView } from './FullEmployeeDashboardView';
 import { TeamData } from '@/types/teamData';
 import { Users } from 'lucide-react';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface IndividualDetailsSectionProps {
   teamData: TeamData;
