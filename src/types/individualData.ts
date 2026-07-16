@@ -65,6 +65,7 @@ export interface EmployeeData {
   overdueOutputs: OverdueOutput[];
   habits: Habit[];
   recentTasks: Task[];
+  allTasks?: Task[];
   weeklyOutputs: WeeklyOutput[];
   moodData?: MoodData[];
 }
