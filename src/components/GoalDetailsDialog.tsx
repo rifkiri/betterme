@@ -148,7 +148,7 @@ const getCategoryColor = (category: Goal['category']) => {
   const isGoalCreator = currentUserId && (goal.createdBy === currentUserId || goal.userId === currentUserId);
   const userAssignment = assignments.find(a => a.goalId === goal.id && a.userId === currentUserId);
   const hasAssignmentRole = userAssignment?.role;
-  const canFullEdit = isGoalCreator || isAdmin;
+  const canFullEdit = isGoalCreator || isAdmin || !!hasAssignmentRole;
   const canEditLinkagesAndRoles = hasAssignmentRole || isGoalCreator || isAdmin;
 
   console.log('[GoalDetailsDialog] Rendering:', { 
