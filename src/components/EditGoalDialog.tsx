@@ -453,6 +453,69 @@ export const EditGoalDialog = ({
 
                   <FormField
                     control={form.control}
+                    name="progressCalculation"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Progress Calculation</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || 'manual'}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="manual">Manual Progress Control (default)</SelectItem>
+                            <SelectItem value="weighted">Automatic Weighted Progress</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {form.watch('subcategory') === 'Sales' && (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="tenderOutcome"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Tender Outcome</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value || 'pending'}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="pending">Pending</SelectItem>
+                                <SelectItem value="won">Won</SelectItem>
+                                <SelectItem value="lost">Lost</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="tenderOutcomeNote"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Tender Outcome Note</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Optional note about the outcome" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
+                  )}
+
+
+                  <FormField
+                    control={form.control}
                     name="deadline"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
