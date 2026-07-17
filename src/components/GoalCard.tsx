@@ -277,6 +277,8 @@ export const GoalCard = ({
           />
         )}
       </ContentCard>
+      </div>
+
       
       <GoalDetailsDialog
         goal={goal}
