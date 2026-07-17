@@ -20,7 +20,7 @@ export const TeamMoodChart = ({ teamData }: TeamMoodChartProps) => {
     // Group mood entries by date
     const moodByDate: Record<string, number[]> = {};
     
-    teamData.moodData.forEach(entry => {
+    windowed.forEach(entry => {
       if (!moodByDate[entry.date]) {
         moodByDate[entry.date] = [];
       }
