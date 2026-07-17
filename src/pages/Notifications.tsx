@@ -198,6 +198,28 @@ export default function Notifications() {
     }
   };
 
+  const handleAcceptAll = async () => {
+    const goalInvites = invitations.filter((i) => i.type === 'goal');
+    const taskInvites = invitations.filter((i) => i.type === 'task');
+    if (goalInvites.length === 0 && taskInvites.length === 0) return;
+    try {
+      await Promise.all([
+        ...goalInvites.map((a) =>
+          supabase.from('goal_assignments').update({ acknowledged: true }).eq('id', a.id)
+        ),
+        ...taskInvites.map((inv) =>
+          (supabase as any).rpc('accept_task_invitation', { p_invitation_id: inv.id })
+        ),
+      ]);
+      invalidateProductivityCache(user?.id);
+      toast.success(`Accepted ${goalInvites.length + taskInvites.length} invitation(s)`);
+      loadData();
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to accept all invitations');
+    }
+  };
+
   const formatDate = (d: string | null | undefined) => {
     if (!d) return '';
     try { return formatDistanceToNow(new Date(d), { addSuffix: true }); }
@@ -294,9 +316,17 @@ export default function Notifications() {
                     <Sparkles className="h-3.5 w-3.5" />
                     Pending Invitations
                   </h2>
-                  {invitations.length > 0 && (
-                    <span className="text-xs text-muted-foreground">{invitations.length} awaiting response</span>
-                  )}
+                  <div className="flex items-center gap-3">
+                    {invitations.length > 0 && (
+                      <span className="text-xs text-muted-foreground">{invitations.length} awaiting response</span>
+                    )}
+                    {invitations.length > 0 && (
+                      <Button size="sm" onClick={handleAcceptAll} className="gap-1.5">
+                        <Check className="h-3.5 w-3.5" />
+                        Accept All ({invitations.length})
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
                 {invitations.length === 0 ? (
