@@ -177,7 +177,8 @@ export class SupabaseTasksService {
         created_date: task.createdDate.toISOString(),
         weekly_output_id: task.weeklyOutputId || null,
         tagged_users: acceptedSupporters,
-        visibility: task.visibility || 'all'
+        visibility: task.visibility || 'all',
+        weight: task.weight ?? 1
       });
 
     if (error) {
