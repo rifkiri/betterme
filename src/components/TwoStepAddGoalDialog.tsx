@@ -28,6 +28,8 @@ const formSchema = z.object({
   subcategory: z.string().optional(),
   deadline: z.date().optional(),
   visibility: z.enum(['all', 'managers', 'self']).optional(),
+  tenderOutcome: z.enum(['pending', 'won', 'lost']).optional(),
+  tenderOutcomeNote: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
