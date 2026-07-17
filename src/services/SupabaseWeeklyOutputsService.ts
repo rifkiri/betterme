@@ -80,6 +80,9 @@ export class SupabaseWeeklyOutputsService {
     if (updates.visibility !== undefined) {
       supabaseUpdates.visibility = updates.visibility || 'all';
     }
+    if (updates.taggedUsers !== undefined) {
+      (supabaseUpdates as any).tagged_users = updates.taggedUsers || [];
+    }
 
     console.log('SupabaseWeeklyOutputsService - Final supabase updates object:', supabaseUpdates);
 
