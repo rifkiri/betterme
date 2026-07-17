@@ -103,6 +103,9 @@ export const EditGoalDialog = ({
         visibility: goal.visibility || 'all',
         selectedOutputIds: [],
         selectedHabitIds: [],
+        tenderOutcome: (goal.tenderOutcome as 'pending' | 'won' | 'lost') || 'pending',
+        tenderOutcomeNote: goal.tenderOutcomeNote || '',
+        progressCalculation: goal.progressCalculation || 'manual',
       });
 
       // Load linked items
