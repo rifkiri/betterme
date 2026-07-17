@@ -29,7 +29,8 @@ export class SupabaseWeeklyOutputsService {
       deletedDate: output.deleted_date ? new Date(output.deleted_date) : undefined,
       createdDate: new Date(output.created_date),
       linkedGoalId: output.linked_goal_id || undefined, // Restored from database column
-      visibility: (output as any).visibility || 'all'
+      visibility: (output as any).visibility || 'all',
+      taggedUsers: (output as any).tagged_users || []
     }));
   }
 
