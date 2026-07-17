@@ -295,6 +295,11 @@ export const TaskItemWithPomodoro = ({
               {user.name}
             </Badge>
           ))}
+          <ResourceLinksQuickButton
+            entityType="task"
+            entityId={task.id}
+            collaboratorIds={[task.userId ?? '', ...(task.taggedUsers || [])].filter(Boolean)}
+          />
         </>
       }
       metadata={
