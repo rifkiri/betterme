@@ -186,8 +186,26 @@ export const GoalCard = ({
                   {formatCountDisplay(linkedOutputsCount, "output")} linked
                 </LinkBadge>
               )}
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-gray-500 flex items-center gap-1">
                 Progress: {goal.progress}%
+                {isWeighted && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Calculator className="h-3 w-3 text-blue-600" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">Progress calculated automatically based on weighted child items.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                {isWon && (
+                  <Badge className="ml-1 bg-green-600 text-white text-[10px] py-0 px-1"><Trophy className="h-3 w-3 mr-0.5" />WON</Badge>
+                )}
+                {isLost && (
+                  <Badge className="ml-1 bg-red-600 text-white text-[10px] py-0 px-1"><XCircle className="h-3 w-3 mr-0.5" />LOST</Badge>
+                )}
               </span>
               <ResourceLinksQuickButton
                 entityType="goal"
