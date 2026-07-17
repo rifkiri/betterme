@@ -194,6 +194,7 @@ export type Database = {
           is_deleted: boolean
           last_external_sync_at: string | null
           progress: number
+          progress_calculation: string | null
           subcategory: string | null
           tender_outcome: string | null
           tender_outcome_note: string | null
@@ -221,6 +222,7 @@ export type Database = {
           is_deleted?: boolean
           last_external_sync_at?: string | null
           progress?: number
+          progress_calculation?: string | null
           subcategory?: string | null
           tender_outcome?: string | null
           tender_outcome_note?: string | null
@@ -248,6 +250,7 @@ export type Database = {
           is_deleted?: boolean
           last_external_sync_at?: string | null
           progress?: number
+          progress_calculation?: string | null
           subcategory?: string | null
           tender_outcome?: string | null
           tender_outcome_note?: string | null
@@ -772,6 +775,7 @@ export type Database = {
           user_id: string
           visibility: string | null
           weekly_output_id: string | null
+          weight: number | null
         }
         Insert: {
           completed?: boolean
@@ -792,6 +796,7 @@ export type Database = {
           user_id: string
           visibility?: string | null
           weekly_output_id?: string | null
+          weight?: number | null
         }
         Update: {
           completed?: boolean
@@ -812,6 +817,7 @@ export type Database = {
           user_id?: string
           visibility?: string | null
           weekly_output_id?: string | null
+          weight?: number | null
         }
         Relationships: [
           {
@@ -843,12 +849,14 @@ export type Database = {
           linked_goal_id: string | null
           original_due_date: string | null
           progress: number
+          progress_calculation: string | null
           project_id: string | null
           tagged_users: string[] | null
           title: string
           updated_at: string
           user_id: string
           visibility: string | null
+          weight: number | null
         }
         Insert: {
           completed_date?: string | null
@@ -862,12 +870,14 @@ export type Database = {
           linked_goal_id?: string | null
           original_due_date?: string | null
           progress?: number
+          progress_calculation?: string | null
           project_id?: string | null
           tagged_users?: string[] | null
           title: string
           updated_at?: string
           user_id: string
           visibility?: string | null
+          weight?: number | null
         }
         Update: {
           completed_date?: string | null
@@ -881,12 +891,14 @@ export type Database = {
           linked_goal_id?: string | null
           original_due_date?: string | null
           progress?: number
+          progress_calculation?: string | null
           project_id?: string | null
           tagged_users?: string[] | null
           title?: string
           updated_at?: string
           user_id?: string
           visibility?: string | null
+          weight?: number | null
         }
         Relationships: [
           {
@@ -1000,6 +1012,14 @@ export type Database = {
       is_goal_owner: {
         Args: { _goal_id: string; _user_id: string }
         Returns: boolean
+      }
+      recalculate_goal_progress: {
+        Args: { goal_uuid: string }
+        Returns: undefined
+      }
+      recalculate_output_progress: {
+        Args: { output_uuid: string }
+        Returns: undefined
       }
       toggle_habit_completion: {
         Args: {
