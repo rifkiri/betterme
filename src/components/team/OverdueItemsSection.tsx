@@ -105,6 +105,45 @@ export const OverdueItemsSection = ({ teamData }: OverdueItemsSectionProps) => {
           </div>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Target className="h-5 w-5 text-purple-500" />
+            Overdue Goals
+          </CardTitle>
+          <CardDescription>
+            Goals past their deadline that are still in progress
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-2xl font-bold text-purple-600">
+              {teamData.overdueStats.goalsCount ?? teamData.overdueGoals?.length ?? 0}
+            </div>
+          </div>
+          <div className="space-y-3">
+            {(teamData.overdueGoals || []).length === 0 && (
+              <p className="text-xs text-muted-foreground">No overdue goals — nice.</p>
+            )}
+            {(teamData.overdueGoals || []).map((goal) => (
+              <div key={goal.id} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">{goal.title}</div>
+                    <div className="text-xs text-muted-foreground">{goal.assignee}</div>
+                  </div>
+                  <span className="text-xs text-purple-600">{goal.daysOverdue}d late</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Progress value={goal.progress} className="flex-1 h-2" />
+                  <span className="text-xs text-muted-foreground">{goal.progress}%</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
