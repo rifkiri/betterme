@@ -17,6 +17,7 @@ import { Task, WeeklyOutput, Goal } from '@/types/productivity';
 import { format, isBefore } from 'date-fns';
 import { useState } from 'react';
 import { EditTaskDialog } from './EditTaskDialog';
+import { ResourceLinksPanel } from './ResourceLinksPanel';
 
 interface TaskDetailsDialogProps {
   task: Task | null;
