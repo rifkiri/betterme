@@ -76,8 +76,12 @@ export const TwoStepAddGoalDialog = ({
       subcategory: '',
       deadline: undefined,
       visibility: 'all',
+      tenderOutcome: 'pending',
+      tenderOutcomeNote: '',
     },
   });
+
+  const watchSubcategory = useWatch({ control: form.control, name: 'subcategory' });
 
   // Use useWatch for more reliable reactivity when category changes
   const watchCategory = useWatch({ control: form.control, name: 'category' });
