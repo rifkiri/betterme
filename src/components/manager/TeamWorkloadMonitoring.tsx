@@ -503,12 +503,13 @@ export const TeamWorkloadMonitoring = ({
         userName: string;
         userRole: string;
         visibility: 'all' | 'managers' | 'self';
+        collaboratorCount: number;
       }> = [];
       
       // Collect all active tasks from all users
       for (const userProfile of allUsers) {
         const userTasks = await supabaseDataService.getTasks(userProfile.id);
-        const activeTasks = userTasks.filter(t => !t.completed && !t.isDeleted);
+        const activeTasks = userTasks.filter(t => !t.completed && !t.isDeleted && t.userId === userProfile.id);
         
         for (const task of activeTasks) {
           allActiveTasks.push({
@@ -520,6 +521,7 @@ export const TeamWorkloadMonitoring = ({
             userName: userProfile.name,
             userRole: userProfile.role,
             visibility: (task.visibility || 'all') as 'all' | 'managers' | 'self',
+            collaboratorCount: (task.taggedUsers || []).length,
           });
         }
       }
@@ -541,7 +543,8 @@ export const TeamWorkloadMonitoring = ({
           userRole: task.userRole,
           visibility: task.visibility,
           pomodoroSessions: stats.workSessionCount,
-          totalDuration: stats.totalDuration
+          totalDuration: stats.totalDuration,
+          collaboratorCount: task.collaboratorCount,
         };
       });
       
