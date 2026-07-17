@@ -2,7 +2,7 @@ import { supabaseDataService } from './SupabaseDataService';
 import { TeamData, TeamMember, OverdueTask, OverdueOutput, TeamTrends } from '@/types/teamData';
 import { User } from '@/types/userTypes';
 import { supabase } from '@/integrations/supabase/client';
-import { isTaskOverdue, isWeeklyOutputOverdue } from '@/utils/dateUtils';
+import { isTaskOverdue, isWeeklyOutputOverdue, isGoalOverdue } from '@/utils/dateUtils';
 import { formatDateForDatabase } from '@/lib/utils';
 
 interface TeamDataServiceConfig {
