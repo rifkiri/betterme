@@ -30,6 +30,7 @@ import { PomodoroCounter } from '@/components/ui/PomodoroCounter';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { PomodoroSettings } from './pomodoro/PomodoroSettings';
 import { getSessionStartAction, getStartButtonTooltip } from '@/utils/pomodoroSessionHelpers';
+import { ResourceLinksQuickButton } from './ResourceLinksQuickButton';
 
 interface TaskItemProps {
   task: Task;
@@ -294,6 +295,11 @@ export const TaskItemWithPomodoro = ({
               {user.name}
             </Badge>
           ))}
+          <ResourceLinksQuickButton
+            entityType="task"
+            entityId={task.id}
+            collaboratorIds={[task.userId ?? '', ...(task.taggedUsers || [])].filter(Boolean)}
+          />
         </>
       }
       metadata={

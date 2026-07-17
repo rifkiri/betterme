@@ -14,6 +14,7 @@ import { ContentCard, StatusBadge, LinkBadge, ProgressControls, ActionButtonGrou
 import { getContentCardVariant, getStatusBadgeStatus, formatCountDisplay } from '@/utils/standardizedHelpers';
 import { CardMetaStrip } from '@/components/ui/card-meta-strip';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { ResourceLinksQuickButton } from './ResourceLinksQuickButton';
 
 interface WeeklyOutputCardProps {
   output: WeeklyOutput;
@@ -74,6 +75,11 @@ export const WeeklyOutputCard = ({
                   {linkedGoal.title}
                 </LinkBadge>
               )}
+              <ResourceLinksQuickButton
+                entityType="weekly_output"
+                entityId={output.id}
+                collaboratorIds={[output.userId ?? '', ...(output.taggedUsers || [])].filter(Boolean)}
+              />
             </div>
             <CardMetaStrip
               ownerId={output.userId}

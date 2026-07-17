@@ -17,6 +17,7 @@ import { Task, WeeklyOutput, Goal } from '@/types/productivity';
 import { format, isBefore } from 'date-fns';
 import { useState } from 'react';
 import { EditTaskDialog } from './EditTaskDialog';
+import { ResourceLinksPanel } from './ResourceLinksPanel';
 
 interface TaskDetailsDialogProps {
   task: Task | null;
@@ -250,6 +251,15 @@ const getCategoryColor = (category: Goal['category']) => {
                   </p>
                 )}
               </div>
+            </div>
+
+            {/* Resource Links */}
+            <div className="pt-2 border-t">
+              <ResourceLinksPanel
+                entityType="task"
+                entityId={task.id}
+                collaboratorIds={[task.userId ?? '', ...(task.taggedUsers || [])].filter(Boolean)}
+              />
             </div>
           </div>
 

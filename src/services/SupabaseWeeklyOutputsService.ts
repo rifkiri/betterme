@@ -29,7 +29,8 @@ export class SupabaseWeeklyOutputsService {
       deletedDate: output.deleted_date ? new Date(output.deleted_date) : undefined,
       createdDate: new Date(output.created_date),
       linkedGoalId: output.linked_goal_id || undefined, // Restored from database column
-      visibility: (output as any).visibility || 'all'
+      visibility: (output as any).visibility || 'all',
+      taggedUsers: (output as any).tagged_users || []
     }));
   }
 
@@ -78,6 +79,9 @@ export class SupabaseWeeklyOutputsService {
     }
     if (updates.visibility !== undefined) {
       supabaseUpdates.visibility = updates.visibility || 'all';
+    }
+    if (updates.taggedUsers !== undefined) {
+      (supabaseUpdates as any).tagged_users = updates.taggedUsers || [];
     }
 
     console.log('SupabaseWeeklyOutputsService - Final supabase updates object:', supabaseUpdates);

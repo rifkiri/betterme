@@ -10,6 +10,7 @@ import { ItemCard, StatusBadge, LinkBadge, DateDisplay } from '@/components/ui/s
 import { VisibilityBadge } from '@/components/ui/visibility-badge';
 import { CardMetaStrip } from '@/components/ui/card-meta-strip';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { ResourceLinksQuickButton } from './ResourceLinksQuickButton';
 
 interface TaskItemProps {
   task: Task;
@@ -174,6 +175,11 @@ export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteT
               {user.name}
             </Badge>
           ))}
+          <ResourceLinksQuickButton
+            entityType="task"
+            entityId={task.id}
+            collaboratorIds={[task.userId ?? '', ...(task.taggedUsers || [])].filter(Boolean)}
+          />
         </>
       }
       metadata={

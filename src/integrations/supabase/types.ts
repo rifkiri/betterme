@@ -634,6 +634,44 @@ export type Database = {
           },
         ]
       }
+      resource_links: {
+        Row: {
+          added_by: string | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          label: string
+          url: string
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          label: string
+          url: string
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          label?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_links_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_invitations: {
         Row: {
           created_at: string
@@ -806,6 +844,7 @@ export type Database = {
           original_due_date: string | null
           progress: number
           project_id: string | null
+          tagged_users: string[] | null
           title: string
           updated_at: string
           user_id: string
@@ -824,6 +863,7 @@ export type Database = {
           original_due_date?: string | null
           progress?: number
           project_id?: string | null
+          tagged_users?: string[] | null
           title: string
           updated_at?: string
           user_id: string
@@ -842,6 +882,7 @@ export type Database = {
           original_due_date?: string | null
           progress?: number
           project_id?: string | null
+          tagged_users?: string[] | null
           title?: string
           updated_at?: string
           user_id?: string

@@ -24,6 +24,7 @@ import { VisibilityBadge } from '@/components/ui/visibility-badge';
 import { CardMetaStrip } from '@/components/ui/card-meta-strip';
 import { AssignmentRole } from '@/components/ui/role-styles';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ResourceLinksQuickButton } from './ResourceLinksQuickButton';
 
 interface GoalCardProps {
   goal: Goal;
@@ -178,6 +179,11 @@ export const GoalCard = ({
               <span className="text-xs text-gray-500">
                 Progress: {goal.progress}%
               </span>
+              <ResourceLinksQuickButton
+                entityType="goal"
+                entityId={goal.id}
+                collaboratorIds={[goal.userId ?? '', ...assignments.filter(a => a.goalId === goal.id).map(a => a.userId)].filter(Boolean)}
+              />
             </div>
             {goal.deadline && (
               <DateDisplay 

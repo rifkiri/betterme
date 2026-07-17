@@ -23,6 +23,8 @@ import { useHabits } from '@/hooks/useHabits';
 import { mapSubcategoryDatabaseToDisplay } from '@/utils/goalCategoryUtils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
+import { supabase } from '@/integrations/supabase/client';
+import { ResourceLinksPanel } from './ResourceLinksPanel';
 
 // Lazy load heavy dialog components to reduce initial bundle size
 const EditGoalDialog = lazy(() => import('./EditGoalDialog').then(module => ({ default: module.EditGoalDialog })));
@@ -62,6 +64,7 @@ export const GoalDetailsDialog = ({
   const [linkedHabits, setLinkedHabits] = useState<Habit[]>([]);
   const [loadingLinkedOutputs, setLoadingLinkedOutputs] = useState(false);
   const [loadingLinkedHabits, setLoadingLinkedHabits] = useState(false);
+  const [assignedUserIds, setAssignedUserIds] = useState<string[]>([]);
   const { user } = useAuth();
   const { isAdmin } = useUserRole();
   
@@ -108,6 +111,18 @@ export const GoalDetailsDialog = ({
     fetchLinkedItems();
   }, [goal?.id, goal?.category, currentUserId, open, weeklyOutputs, habits, allHabits]);
 
+  useEffect(() => {
+    if (!open || !goal?.id) return;
+    supabase
+      .from('goal_assignments')
+      .select('user_id')
+      .eq('goal_id', goal.id)
+      .then(({ data }) => {
+        const ids = (data || []).map((r: any) => r.user_id).filter(Boolean);
+        setAssignedUserIds(ids);
+      });
+  }, [open, goal?.id]);
+
   // Early return AFTER all hooks have been called
   if (!goal || !goal.id) {
     console.error('[GoalDetailsDialog] No valid goal provided');
@@ -133,7 +148,7 @@ const getCategoryColor = (category: Goal['category']) => {
   const isGoalCreator = currentUserId && (goal.createdBy === currentUserId || goal.userId === currentUserId);
   const userAssignment = assignments.find(a => a.goalId === goal.id && a.userId === currentUserId);
   const hasAssignmentRole = userAssignment?.role;
-  const canFullEdit = isGoalCreator || isAdmin;
+  const canFullEdit = isGoalCreator || isAdmin || !!hasAssignmentRole;
   const canEditLinkagesAndRoles = hasAssignmentRole || isGoalCreator || isAdmin;
 
   console.log('[GoalDetailsDialog] Rendering:', { 
@@ -484,6 +499,15 @@ const getCategoryColor = (category: Goal['category']) => {
                   }
                 </p>
               </div>
+            </div>
+
+            {/* Resource Links */}
+            <div className="pt-2 border-t">
+              <ResourceLinksPanel
+                entityType="goal"
+                entityId={goal.id}
+                collaboratorIds={[goal.userId ?? '', ...assignedUserIds].filter(Boolean)}
+              />
             </div>
           </div>
 
