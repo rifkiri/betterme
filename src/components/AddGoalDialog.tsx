@@ -77,6 +77,7 @@ export const AddGoalDialog = ({
         deadline: deadline,
         completed: false,
         archived: false,
+        progressCalculation: data.progressCalculation || 'manual',
       });
     }
     
