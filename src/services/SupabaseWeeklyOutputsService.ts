@@ -30,7 +30,9 @@ export class SupabaseWeeklyOutputsService {
       createdDate: new Date(output.created_date),
       linkedGoalId: output.linked_goal_id || undefined, // Restored from database column
       visibility: (output as any).visibility || 'all',
-      taggedUsers: (output as any).tagged_users || []
+      taggedUsers: (output as any).tagged_users || [],
+      progressCalculation: ((output as any).progress_calculation as 'manual' | 'weighted') || 'manual',
+      weight: (output as any).weight ?? 1
     }));
   }
 
