@@ -56,6 +56,7 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
       dueDate: undefined,
       goalId: undefined,
       visibility: 'all',
+      progressCalculation: 'manual',
     },
   });
 
