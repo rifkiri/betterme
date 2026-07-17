@@ -179,6 +179,11 @@ export const GoalCard = ({
               <span className="text-xs text-gray-500">
                 Progress: {goal.progress}%
               </span>
+              <ResourceLinksQuickButton
+                entityType="goal"
+                entityId={goal.id}
+                collaboratorIds={[goal.userId ?? '', ...assignments.filter(a => a.goalId === goal.id).map(a => a.userId)].filter(Boolean)}
+              />
             </div>
             {goal.deadline && (
               <DateDisplay 
