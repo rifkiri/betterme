@@ -68,10 +68,13 @@ export const SimpleAddGoalDialog = ({
       coachId: '',
       leadId: '',
       memberIds: [],
+      tenderOutcome: 'pending',
+      tenderOutcomeNote: '',
     },
   });
 
   const watchCategory = form.watch('category');
+  const watchSubcategory = form.watch('subcategory');
 
   const onSubmit = (data: FormData) => {
     let deadline = data.deadline;
@@ -79,16 +82,23 @@ export const SimpleAddGoalDialog = ({
       deadline = new Date(deadline.getFullYear(), deadline.getMonth(), deadline.getDate(), 23, 59, 59, 999);
     }
 
+    const isSales = data.subcategory === 'Sales';
+    const tenderOutcome = isSales ? (data.tenderOutcome || 'pending') : undefined;
+
     onAddGoal({
       title: data.title,
       description: data.description,
       category: data.category,
       subcategory: mapSubcategoryDisplayToDatabase(data.subcategory),
       deadline: deadline,
-      completed: false,
+      completed: isSales && tenderOutcome === 'won' ? true : false,
       archived: false,
       createdBy: data.category === 'work' ? currentUserId : undefined,
       visibility: data.category === 'work' ? (isTeamMember ? 'all' : (data.visibility || 'all')) : undefined,
+      ...(isSales && {
+        tenderOutcome,
+        tenderOutcomeNote: data.tenderOutcomeNote || '',
+      }),
     });
 
     form.reset();
