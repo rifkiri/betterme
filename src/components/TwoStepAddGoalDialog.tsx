@@ -135,16 +135,22 @@ export const TwoStepAddGoalDialog = ({
       }
 
       // Create the goal and get the ID
+      const isSales = data.subcategory === 'Sales';
+      const tenderOutcome = isSales ? (data.tenderOutcome || 'pending') : undefined;
       const goalId = await onAddGoal({
         title: data.title,
         description: data.description,
         category: data.category,
         subcategory: mapSubcategoryDisplayToDatabase(data.subcategory),
         deadline: deadline,
-        completed: false,
+        completed: isSales && tenderOutcome === 'won' ? true : false,
         archived: false,
         createdBy: data.category === 'work' ? currentUserId : undefined,
         visibility: data.category === 'work' ? (data.visibility || 'all') : undefined,
+        ...(isSales && {
+          tenderOutcome,
+          tenderOutcomeNote: data.tenderOutcomeNote || '',
+        }),
       });
 
       // Create assignments if this is a work goal and we have a goal ID
