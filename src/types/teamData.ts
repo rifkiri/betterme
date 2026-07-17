@@ -67,13 +67,17 @@ export interface TeamData {
   membersSummary: TeamMember[];
   overdueTasks: OverdueTask[];
   overdueOutputs: OverdueOutput[];
+  overdueGoals?: OverdueGoal[];
   overdueStats: {
     tasksCount: number;
     outputsCount: number;
+    goalsCount?: number;
     tasksTrend: 'up' | 'down';
     outputsTrend: 'up' | 'down';
+    goalsTrend?: 'up' | 'down';
     tasksChange: string;
     outputsChange: string;
+    goalsChange?: string;
   };
   moodData?: MoodEntry[];
   teamTrends?: TeamTrends;
