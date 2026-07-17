@@ -100,7 +100,21 @@ export const WeeklyOutputCard = ({
             <StatusBadge 
               status={getStatusBadgeStatus(output.progress, isOverdue(), output.progress === 100)}
             >
-              {output.progress}%
+              <span className="flex items-center gap-1">
+                {output.progress}%
+                {output.progressCalculation === 'weighted' && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Calculator className="h-3 w-3" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">Progress calculated automatically based on weighted child items.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </span>
             </StatusBadge>
             <ActionButtonGroup
               layout="vertical"
@@ -120,13 +134,15 @@ export const WeeklyOutputCard = ({
           <Progress value={output.progress} className={`h-2 ${isOverdue() ? 'bg-red-100' : ''}`} />
         </div>
         
-        <ProgressControls
-          progress={output.progress}
-          onDecrease={() => onUpdateProgress(output.id, output.progress - 10)}
-          onIncrease={() => onUpdateProgress(output.id, output.progress + 10)}
-          onComplete={() => onUpdateProgress(output.id, 100)}
-          step={10}
-        />
+        {output.progressCalculation !== 'weighted' && (
+          <ProgressControls
+            progress={output.progress}
+            onDecrease={() => onUpdateProgress(output.id, output.progress - 10)}
+            onIncrease={() => onUpdateProgress(output.id, output.progress + 10)}
+            onComplete={() => onUpdateProgress(output.id, 100)}
+            step={10}
+          />
+        )}
       </ContentCard>
       
       <OutputDetailsDialog
