@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Heart, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { TeamData } from '@/types/teamData';
+import { filterMoodDataToLast30Days } from '@/hooks/useMoodData';
 
 interface TeamMoodChartProps {
   teamData: TeamData;
