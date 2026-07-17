@@ -111,6 +111,18 @@ export const GoalDetailsDialog = ({
     fetchLinkedItems();
   }, [goal?.id, goal?.category, currentUserId, open, weeklyOutputs, habits, allHabits]);
 
+  useEffect(() => {
+    if (!open || !goal?.id) return;
+    supabase
+      .from('goal_assignments')
+      .select('user_id')
+      .eq('goal_id', goal.id)
+      .then(({ data }) => {
+        const ids = (data || []).map((r: any) => r.user_id).filter(Boolean);
+        setAssignedUserIds(ids);
+      });
+  }, [open, goal?.id]);
+
   // Early return AFTER all hooks have been called
   if (!goal || !goal.id) {
     console.error('[GoalDetailsDialog] No valid goal provided');
