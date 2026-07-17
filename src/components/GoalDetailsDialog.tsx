@@ -125,7 +125,6 @@ export const GoalDetailsDialog = ({
 
   // Early return AFTER all hooks have been called
   if (!goal || !goal.id) {
-    console.error('[GoalDetailsDialog] No valid goal provided');
     return null;
   }
 
