@@ -17,7 +17,7 @@ interface ChildItem {
 interface WeightedProgressPanelProps {
   mode: 'manual' | 'weighted';
   onModeChange: (mode: 'manual' | 'weighted') => Promise<void> | void;
-  children: ChildItem[];
+  items: ChildItem[];
   childLabel: string; // "output" or "task"
   onSaveWeights: (weights: { id: string; weight: number }[]) => Promise<void> | void;
 }
@@ -25,7 +25,7 @@ interface WeightedProgressPanelProps {
 export const WeightedProgressPanel = ({
   mode,
   onModeChange,
-  children,
+  items,
   childLabel,
   onSaveWeights,
 }: WeightedProgressPanelProps) => {
@@ -34,7 +34,7 @@ export const WeightedProgressPanel = ({
 
   useEffect(() => {
     const init: Record<string, number> = {};
-    children.forEach((c) => { init[c.id] = c.weight ?? 1; });
+    items.forEach((c) => { init[c.id] = c.weight ?? 1; });
     setWeights(init);
   }, [children]);
 
@@ -43,7 +43,7 @@ export const WeightedProgressPanel = ({
   const handleSave = async () => {
     setSaving(true);
     try {
-      await onSaveWeights(children.map(c => ({ id: c.id, weight: Number(weights[c.id]) || 0 })));
+      await onSaveWeights(items.map(c => ({ id: c.id, weight: Number(weights[c.id]) || 0 })));
       toast({ title: 'Weights saved', description: 'Progress will recalculate automatically.' });
     } catch (e: any) {
       toast({ title: 'Failed to save weights', description: e?.message || String(e), variant: 'destructive' });
@@ -72,11 +72,11 @@ export const WeightedProgressPanel = ({
 
       {mode === 'weighted' && (
         <>
-          {children.length === 0 ? (
+          {items.length === 0 ? (
             <p className="text-xs text-muted-foreground">No linked {childLabel}s yet. Progress will remain at 0% until children are linked.</p>
           ) : (
             <div className="space-y-2">
-              {children.map((child) => {
+              {items.map((child) => {
                 const w = Number(weights[child.id]) || 0;
                 const rel = totalWeight > 0 ? Math.round((w / totalWeight) * 1000) / 10 : 0;
                 return (
