@@ -32,6 +32,8 @@ const formSchema = z.object({
   coachId: z.string().optional(),
   leadId: z.string().optional(),
   memberIds: z.array(z.string()).optional(),
+  tenderOutcome: z.enum(['pending', 'won', 'lost']).optional(),
+  tenderOutcomeNote: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
