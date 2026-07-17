@@ -10,7 +10,9 @@ interface IndividualMoodChartProps {
   moodData?: Array<{ date: string; mood: number; }>;
 }
 
-export const IndividualMoodChart = ({ employeeName, moodData = [] }: IndividualMoodChartProps) => {
+export const IndividualMoodChart = ({ employeeName, moodData: rawMoodData = [] }: IndividualMoodChartProps) => {
+  // Task 6: Enforce shared 30-day window across every dashboard.
+  const moodData = useMemo(() => filterMoodDataToLast30Days(rawMoodData), [rawMoodData]);
   const getMoodIcon = (trendType: string) => {
     if (trendType === 'improving') return <TrendingUp className="h-4 w-4 text-green-500" />;
     if (trendType === 'declining') return <TrendingDown className="h-4 w-4 text-red-500" />;
