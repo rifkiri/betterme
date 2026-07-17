@@ -35,6 +35,15 @@ export interface OverdueOutput {
   originalDueDate: string;
 }
 
+export interface OverdueGoal {
+  id: string;
+  title: string;
+  assignee: string;
+  progress: number;
+  daysOverdue: number;
+  originalDeadline: string;
+}
+
 export interface TeamTrends {
   habitsTrend: 'up' | 'down' | 'stable';
   habitsChange: number;
