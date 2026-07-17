@@ -325,6 +325,8 @@ export class SupabaseGoalsService {
       supabaseUpdates.assignment_date = updates.assignmentDate ? updates.assignmentDate.toISOString() : null;
     }
     if (enforceVisibility !== undefined) supabaseUpdates.visibility = enforceVisibility;
+    if ((updates as any).tenderOutcome !== undefined) supabaseUpdates.tender_outcome = (updates as any).tenderOutcome;
+    if ((updates as any).tenderOutcomeNote !== undefined) supabaseUpdates.tender_outcome_note = (updates as any).tenderOutcomeNote;
 
     // Handle soft delete (archiving) - only set archived, not is_deleted
     // is_deleted should only be set for permanent deletion
