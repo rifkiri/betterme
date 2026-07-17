@@ -256,6 +256,30 @@ export const AddGoalDialog = ({
             {!isJoiningGoal && (
               <FormField
                 control={form.control}
+                name="progressCalculation"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Progress Calculation</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || 'manual'}>
+                      <FormControl>
+                        <SelectTrigger className="bg-background border border-border">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-background border border-border shadow-lg z-50">
+                        <SelectItem value="manual">Manual Progress Control (default)</SelectItem>
+                        <SelectItem value="weighted">Automatic Weighted Progress</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {!isJoiningGoal && (
+              <FormField
+                control={form.control}
                 name="deadline"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
