@@ -117,13 +117,32 @@ export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteT
       }}
       header={
         <div className="flex items-center space-x-3">
-          <button onClick={() => onToggleTask(task.id)}>
-            {task.completed ? (
-              <CheckCircle className="h-4 w-4 text-green-500" />
+          {(() => {
+            const canToggle =
+              !!currentUser?.id &&
+              (currentUser.id === task.userId ||
+                (task.taggedUsers || []).includes(currentUser.id));
+            return canToggle ? (
+              <button onClick={() => onToggleTask(task.id)}>
+                {task.completed ? (
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                ) : (
+                  <Circle className="h-4 w-4 text-gray-400" />
+                )}
+              </button>
             ) : (
-              <Circle className="h-4 w-4 text-gray-400" />
-            )}
-          </button>
+              <span
+                className="cursor-not-allowed opacity-50"
+                title="Only the task owner or accepted collaborators can complete this task"
+              >
+                {task.completed ? (
+                  <CheckCircle className="h-4 w-4 text-gray-400" />
+                ) : (
+                  <Circle className="h-4 w-4 text-gray-300" />
+                )}
+              </span>
+            );
+          })()}
           <p className={`text-sm font-medium ${task.completed ? 'line-through text-gray-500' : ''}`}>
             {task.title}
           </p>
