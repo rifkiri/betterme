@@ -23,6 +23,8 @@ import { useHabits } from '@/hooks/useHabits';
 import { mapSubcategoryDatabaseToDisplay } from '@/utils/goalCategoryUtils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
+import { supabase } from '@/integrations/supabase/client';
+import { ResourceLinksPanel } from './ResourceLinksPanel';
 
 // Lazy load heavy dialog components to reduce initial bundle size
 const EditGoalDialog = lazy(() => import('./EditGoalDialog').then(module => ({ default: module.EditGoalDialog })));
