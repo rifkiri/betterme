@@ -22,6 +22,7 @@ const formSchema = z.object({
   category: z.enum(['work', 'personal']),
   deadline: z.date().optional(),
   selectedGoalId: z.string().optional(),
+  progressCalculation: z.enum(['manual', 'weighted']).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
