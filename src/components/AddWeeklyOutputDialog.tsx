@@ -25,7 +25,8 @@ const formSchema = z.object({
   description: z.string().optional(),
   dueDate: z.date().optional(),
   goalId: z.string().optional(),
-  visibility: z.enum(['all', 'managers', 'self']).optional()
+  visibility: z.enum(['all', 'managers', 'self']).optional(),
+  progressCalculation: z.enum(['manual', 'weighted']).optional()
 });
 
 type FormData = z.infer<typeof formSchema>;
