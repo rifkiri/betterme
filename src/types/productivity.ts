@@ -95,6 +95,7 @@ export interface Goal {
   // Tender win/loss tracking (applies only when subcategory === 'sales')
   tenderOutcome?: 'won' | 'lost' | 'pending';
   tenderOutcomeNote?: string;
+  progressCalculation?: 'manual' | 'weighted'; // How this goal's progress is computed
 }
 
 export interface GoalAssignment {
