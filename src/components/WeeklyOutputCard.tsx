@@ -75,6 +75,11 @@ export const WeeklyOutputCard = ({
                   {linkedGoal.title}
                 </LinkBadge>
               )}
+              <ResourceLinksQuickButton
+                entityType="weekly_output"
+                entityId={output.id}
+                collaboratorIds={[output.userId ?? '', ...(output.taggedUsers || [])].filter(Boolean)}
+              />
             </div>
             <CardMetaStrip
               ownerId={output.userId}
