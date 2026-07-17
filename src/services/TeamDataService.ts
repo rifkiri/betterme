@@ -64,6 +64,7 @@ class TeamDataService {
         membersSummary,
         overdueTasks: overdueData.tasks,
         overdueOutputs: overdueData.outputs,
+        overdueGoals: overdueData.goals,
         overdueStats: overdueData.stats,
         moodData,
         teamTrends
