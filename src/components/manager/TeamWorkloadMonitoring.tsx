@@ -1301,6 +1301,16 @@ export const TeamWorkloadMonitoring = ({
                             <SelectItem value="twoweeks">Due within 2 weeks</SelectItem>
                           </SelectContent>
                         </Select>
+                        <Select value={taskSort} onValueChange={(v) => setTaskSort(v as any)}>
+                          <SelectTrigger className="h-9"><SelectValue placeholder="Sort" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="default">Default order</SelectItem>
+                            <SelectItem value="fewest-collaborators">Fewest collaborators first</SelectItem>
+                            <SelectItem value="most-collaborators">Most collaborators first</SelectItem>
+                            <SelectItem value="due-date">Due date (earliest first)</SelectItem>
+                            <SelectItem value="priority">Priority (High → Low)</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   )}
