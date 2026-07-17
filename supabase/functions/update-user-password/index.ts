@@ -46,8 +46,15 @@ serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(jwt);
+    const userClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: userData, error: userError } = await userClient.auth.getUser();
     if (userError || !userData?.user) {
+      console.error("getUser failed:", userError?.message);
       return new Response(
         JSON.stringify({ success: false, error: "Invalid session" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
