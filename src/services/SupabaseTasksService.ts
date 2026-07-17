@@ -234,6 +234,7 @@ export class SupabaseTasksService {
       supabaseUpdates.tagged_users = acceptedSupporters;
     }
     if (updates.visibility !== undefined) supabaseUpdates.visibility = updates.visibility || 'all';
+    if (updates.weight !== undefined) supabaseUpdates.weight = updates.weight;
 
     console.log('SupabaseTasksService - Final supabase updates object:', supabaseUpdates);
 
