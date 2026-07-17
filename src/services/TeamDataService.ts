@@ -2,7 +2,7 @@ import { supabaseDataService } from './SupabaseDataService';
 import { TeamData, TeamMember, OverdueTask, OverdueOutput, TeamTrends } from '@/types/teamData';
 import { User } from '@/types/userTypes';
 import { supabase } from '@/integrations/supabase/client';
-import { isTaskOverdue, isWeeklyOutputOverdue } from '@/utils/dateUtils';
+import { isTaskOverdue, isWeeklyOutputOverdue, isGoalOverdue } from '@/utils/dateUtils';
 import { formatDateForDatabase } from '@/lib/utils';
 
 interface TeamDataServiceConfig {
@@ -64,6 +64,7 @@ class TeamDataService {
         membersSummary,
         overdueTasks: overdueData.tasks,
         overdueOutputs: overdueData.outputs,
+        overdueGoals: overdueData.goals,
         overdueStats: overdueData.stats,
         moodData,
         teamTrends
@@ -92,13 +93,17 @@ class TeamDataService {
       membersSummary: [],
       overdueTasks: [],
       overdueOutputs: [],
+      overdueGoals: [],
       overdueStats: {
         tasksCount: 0,
         outputsCount: 0,
+        goalsCount: 0,
         tasksTrend: 'down',
         outputsTrend: 'down',
+        goalsTrend: 'down',
         tasksChange: '0',
-        outputsChange: '0'
+        outputsChange: '0',
+        goalsChange: '0'
       },
       moodData: [],
       teamTrends: {
@@ -344,10 +349,12 @@ class TeamDataService {
     const perMember = await Promise.all(teamMembers.map(async (member) => {
       const localTasks: OverdueTask[] = [];
       const localOutputs: OverdueOutput[] = [];
+      const localGoals: import('@/types/teamData').OverdueGoal[] = [];
       try {
-        const [tasks, outputs] = await Promise.all([
+        const [tasks, outputs, goals] = await Promise.all([
           supabaseDataService.getTasks(member.id),
           supabaseDataService.getWeeklyOutputs(member.id),
+          supabaseDataService.getGoals(member.id),
         ]);
         const today = new Date();
 
@@ -378,26 +385,47 @@ class TeamDataService {
             });
           }
         });
+
+        // Task 7 — surface overdue goals for the "Overdue Goals" card
+        (goals || []).forEach(goal => {
+          if (goal.userId !== member.id) return; // only count goals the member owns
+          if (isGoalOverdue(goal)) {
+            const deadline = goal.deadline as Date;
+            const daysOverdue = Math.floor((today.getTime() - deadline.getTime()) / (1000 * 60 * 60 * 24));
+            localGoals.push({
+              id: goal.id,
+              title: goal.title,
+              assignee: member.name,
+              progress: goal.progress,
+              daysOverdue,
+              originalDeadline: formatDateForDatabase(deadline),
+            });
+          }
+        });
       } catch (error) {
         console.error(`Error generating overdue data for member ${member.id}:`, error);
       }
-      return { localTasks, localOutputs };
+      return { localTasks, localOutputs, localGoals };
     }));
 
     const overdueTasks: OverdueTask[] = perMember.flatMap(p => p.localTasks);
     const overdueOutputs: OverdueOutput[] = perMember.flatMap(p => p.localOutputs);
+    const overdueGoals = perMember.flatMap(p => p.localGoals);
 
-    
     return {
-      tasks: overdueTasks.slice(0, 10), // Limit to 10 most recent
-      outputs: overdueOutputs.slice(0, 10), // Limit to 10 most recent
+      tasks: overdueTasks.slice(0, 10),
+      outputs: overdueOutputs.slice(0, 10),
+      goals: overdueGoals.slice(0, 10),
       stats: {
         tasksCount: overdueTasks.length,
         outputsCount: overdueOutputs.length,
+        goalsCount: overdueGoals.length,
         tasksTrend: 'down' as const,
         outputsTrend: 'down' as const,
+        goalsTrend: 'down' as const,
         tasksChange: '0',
-        outputsChange: '0'
+        outputsChange: '0',
+        goalsChange: '0'
       }
     };
   }

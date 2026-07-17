@@ -3,22 +3,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Heart, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { TeamData } from '@/types/teamData';
+import { filterMoodDataToLast30Days } from '@/hooks/useMoodData';
 
 interface TeamMoodChartProps {
   teamData: TeamData;
 }
 
 export const TeamMoodChart = ({ teamData }: TeamMoodChartProps) => {
-  // Calculate daily team mood averages from individual member data
+  // Calculate daily team mood averages from individual member data (30-day window)
   const calculateDailyAverages = () => {
-    if (!teamData.moodData || teamData.moodData.length === 0) {
+    const windowed = filterMoodDataToLast30Days(teamData.moodData);
+    if (!windowed || windowed.length === 0) {
       return [];
     }
 
     // Group mood entries by date
     const moodByDate: Record<string, number[]> = {};
     
-    teamData.moodData.forEach(entry => {
+    windowed.forEach(entry => {
       if (!moodByDate[entry.date]) {
         moodByDate[entry.date] = [];
       }

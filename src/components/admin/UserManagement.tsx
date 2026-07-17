@@ -34,6 +34,7 @@ export const UserManagement = () => {
           onDeleteUser={handleDeleteUser}
           onUpdateUser={handleUpdateUser}
           onActivateUser={handleActivateUser}
+          onLifecycleChange={loadUsers}
         />
       </Card>
 

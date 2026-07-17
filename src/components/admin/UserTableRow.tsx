@@ -14,9 +14,10 @@ interface UserTableRowProps {
   onDeleteUser: (userId: string) => void;
   onUpdateUser: (userId: string, updates: Partial<User>) => void;
   onActivateUser?: (userId: string) => void;
+  onLifecycleChange?: () => void;
 }
 
-export const UserTableRow = ({ user, onEditUser, onDeleteUser, onUpdateUser, onActivateUser }: UserTableRowProps) => {
+export const UserTableRow = ({ user, onEditUser, onDeleteUser, onUpdateUser, onActivateUser, onLifecycleChange }: UserTableRowProps) => {
   const handleRoleChange = (userId: string, newRole: UserRole) => {
     onUpdateUser(userId, {
       role: newRole
@@ -24,9 +25,16 @@ export const UserTableRow = ({ user, onEditUser, onDeleteUser, onUpdateUser, onA
     toast.success('User role updated successfully');
   };
 
+  const isArchived = (user as any).isArchived === true;
+
   return (
-    <TableRow key={user.id}>
-      <TableCell className="font-medium">{user.name}</TableCell>
+    <TableRow key={user.id} className={isArchived ? 'opacity-60' : ''}>
+      <TableCell className="font-medium">
+        {user.name}
+        {isArchived && (
+          <Badge variant="secondary" className="ml-2 text-xs">Archived</Badge>
+        )}
+      </TableCell>
       <TableCell>{user.email}</TableCell>
       <TableCell>
         <Select value={user.role} onValueChange={(value: UserRole) => handleRoleChange(user.id, value)}>
@@ -54,6 +62,7 @@ export const UserTableRow = ({ user, onEditUser, onDeleteUser, onUpdateUser, onA
           onEdit={onEditUser}
           onDelete={onDeleteUser}
           onActivateUser={onActivateUser}
+          onLifecycleChange={onLifecycleChange}
         />
       </TableCell>
     </TableRow>

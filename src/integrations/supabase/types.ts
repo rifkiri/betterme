@@ -195,6 +195,8 @@ export type Database = {
           last_external_sync_at: string | null
           progress: number
           subcategory: string | null
+          tender_outcome: string | null
+          tender_outcome_note: string | null
           title: string
           unit: string
           updated_at: string
@@ -220,6 +222,8 @@ export type Database = {
           last_external_sync_at?: string | null
           progress?: number
           subcategory?: string | null
+          tender_outcome?: string | null
+          tender_outcome_note?: string | null
           title: string
           unit?: string
           updated_at?: string
@@ -245,6 +249,8 @@ export type Database = {
           last_external_sync_at?: string | null
           progress?: number
           subcategory?: string | null
+          tender_outcome?: string | null
+          tender_outcome_note?: string | null
           title?: string
           unit?: string
           updated_at?: string
@@ -571,10 +577,13 @@ export type Database = {
       }
       profiles: {
         Row: {
+          archived_at: string | null
+          archived_by: string | null
           created_at: string
           email: string
           has_changed_password: boolean
           id: string
+          is_archived: boolean
           last_login: string | null
           name: string
           position: string | null
@@ -584,10 +593,13 @@ export type Database = {
           user_status: Database["public"]["Enums"]["user_status"] | null
         }
         Insert: {
+          archived_at?: string | null
+          archived_by?: string | null
           created_at?: string
           email: string
           has_changed_password?: boolean
           id: string
+          is_archived?: boolean
           last_login?: string | null
           name: string
           position?: string | null
@@ -597,10 +609,13 @@ export type Database = {
           user_status?: Database["public"]["Enums"]["user_status"] | null
         }
         Update: {
+          archived_at?: string | null
+          archived_by?: string | null
           created_at?: string
           email?: string
           has_changed_password?: boolean
           id?: string
+          is_archived?: boolean
           last_login?: string | null
           name?: string
           position?: string | null
@@ -609,7 +624,15 @@ export type Database = {
           updated_at?: string
           user_status?: Database["public"]["Enums"]["user_status"] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_archived_by_fkey"
+            columns: ["archived_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       task_invitations: {
         Row: {

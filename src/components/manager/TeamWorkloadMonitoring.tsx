@@ -132,6 +132,7 @@ interface TaskOwnership {
   visibility: 'all' | 'managers' | 'self';
   pomodoroSessions: number;
   totalDuration: number;
+  collaboratorCount: number;
 }
 
 interface UserTaskOwnership {
@@ -181,6 +182,16 @@ export const TeamWorkloadMonitoring = ({
   const [taskFilterVisibility, setTaskFilterVisibility] = useState<string>('all');
   const [taskFilterDeadline, setTaskFilterDeadline] = useState<string>('all');
   const [taskFilterSearch, setTaskFilterSearch] = useState<string>('');
+  // Task 9 — sort by number of collaborators (or fallback sorts)
+  const [taskSort, setTaskSort] = useState<'default' | 'fewest-collaborators' | 'most-collaborators' | 'due-date' | 'priority'>('default');
+
+  // Task 11 — reset the view toggle when the parent tab changes so it never
+  // gets stuck on the previous tab's mode.
+  useEffect(() => {
+    if (viewMode === 'goals') setGoalViewType('goal');
+    if (viewMode === 'outputs') setOutputViewType('output');
+    if (viewMode === 'tasks') setTaskViewType('task');
+  }, [viewMode]);
 
   const filteredTaskOwnerships = React.useMemo(() => {
     const now = new Date();
@@ -188,7 +199,7 @@ export const TeamWorkloadMonitoring = ({
     const endOfWeek = new Date(startOfToday); endOfWeek.setDate(endOfWeek.getDate() + 7);
     const endOfTwoWeeks = new Date(startOfToday); endOfTwoWeeks.setDate(endOfTwoWeeks.getDate() + 14);
 
-    return workloadData.taskOwnerships.filter(t => {
+    const filtered = workloadData.taskOwnerships.filter(t => {
       if (taskFilterUser !== 'all' && t.userId !== taskFilterUser) return false;
       if (taskFilterPriority !== 'all' && t.priority !== taskFilterPriority) return false;
       if (taskFilterVisibility === 'public' && t.visibility !== 'all') return false;
@@ -203,7 +214,25 @@ export const TeamWorkloadMonitoring = ({
       }
       return true;
     });
-  }, [workloadData.taskOwnerships, taskFilterUser, taskFilterPriority, taskFilterVisibility, taskFilterDeadline, taskFilterSearch]);
+
+    const priorityRank: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
+    const sorted = [...filtered];
+    switch (taskSort) {
+      case 'fewest-collaborators':
+        sorted.sort((a, b) => (a.collaboratorCount ?? 0) - (b.collaboratorCount ?? 0));
+        break;
+      case 'most-collaborators':
+        sorted.sort((a, b) => (b.collaboratorCount ?? 0) - (a.collaboratorCount ?? 0));
+        break;
+      case 'due-date':
+        sorted.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+        break;
+      case 'priority':
+        sorted.sort((a, b) => (priorityRank[a.priority] ?? 1) - (priorityRank[b.priority] ?? 1));
+        break;
+    }
+    return sorted;
+  }, [workloadData.taskOwnerships, taskFilterUser, taskFilterPriority, taskFilterVisibility, taskFilterDeadline, taskFilterSearch, taskSort]);
 
   const hasActiveTaskFilters = taskFilterUser !== 'all' || taskFilterPriority !== 'all' || taskFilterVisibility !== 'all' || taskFilterDeadline !== 'all' || taskFilterSearch !== '';
 
@@ -502,12 +531,13 @@ export const TeamWorkloadMonitoring = ({
         userName: string;
         userRole: string;
         visibility: 'all' | 'managers' | 'self';
+        collaboratorCount: number;
       }> = [];
       
       // Collect all active tasks from all users
       for (const userProfile of allUsers) {
         const userTasks = await supabaseDataService.getTasks(userProfile.id);
-        const activeTasks = userTasks.filter(t => !t.completed && !t.isDeleted);
+        const activeTasks = userTasks.filter(t => !t.completed && !t.isDeleted && t.userId === userProfile.id);
         
         for (const task of activeTasks) {
           allActiveTasks.push({
@@ -519,6 +549,7 @@ export const TeamWorkloadMonitoring = ({
             userName: userProfile.name,
             userRole: userProfile.role,
             visibility: (task.visibility || 'all') as 'all' | 'managers' | 'self',
+            collaboratorCount: (task.taggedUsers || []).length,
           });
         }
       }
@@ -540,7 +571,8 @@ export const TeamWorkloadMonitoring = ({
           userRole: task.userRole,
           visibility: task.visibility,
           pomodoroSessions: stats.workSessionCount,
-          totalDuration: stats.totalDuration
+          totalDuration: stats.totalDuration,
+          collaboratorCount: task.collaboratorCount,
         };
       });
       
@@ -1267,6 +1299,16 @@ export const TeamWorkloadMonitoring = ({
                             <SelectItem value="overdue">Overdue</SelectItem>
                             <SelectItem value="week">Due within 1 week</SelectItem>
                             <SelectItem value="twoweeks">Due within 2 weeks</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Select value={taskSort} onValueChange={(v) => setTaskSort(v as any)}>
+                          <SelectTrigger className="h-9"><SelectValue placeholder="Sort" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="default">Default order</SelectItem>
+                            <SelectItem value="fewest-collaborators">Fewest collaborators first</SelectItem>
+                            <SelectItem value="most-collaborators">Most collaborators first</SelectItem>
+                            <SelectItem value="due-date">Due date (earliest first)</SelectItem>
+                            <SelectItem value="priority">Priority (High → Low)</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>

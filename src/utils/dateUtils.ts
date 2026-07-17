@@ -95,3 +95,12 @@ export const isTaskWithinWeek = (taskDate: Date) => {
   const { start, end } = getCurrentWeekInterval();
   return isWithinInterval(taskDate, { start, end });
 };
+
+// Task 7 helper — an active goal past its deadline
+export const isGoalOverdue = (goal: { deadline?: Date | string | null; progress: number; archived?: boolean; isDeleted?: boolean }) => {
+  if (goal.archived || goal.isDeleted) return false;
+  if (!goal.deadline) return false;
+  if (goal.progress >= 100) return false;
+  const deadlineDate = typeof goal.deadline === 'string' ? new Date(goal.deadline) : goal.deadline;
+  return isBefore(deadlineDate, getToday()) && !isToday(deadlineDate);
+};

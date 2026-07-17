@@ -10,13 +10,15 @@ interface UserTableProps {
   onDeleteUser: (userId: string) => void;
   onUpdateUser: (userId: string, updates: Partial<User>) => void;
   onActivateUser?: (userId: string) => void;
+  onLifecycleChange?: () => void;
 }
 
 export const UserTable = ({
   users,
   onDeleteUser,
   onUpdateUser,
-  onActivateUser
+  onActivateUser,
+  onLifecycleChange,
 }: UserTableProps) => {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -52,6 +54,7 @@ export const UserTable = ({
                 onDeleteUser={onDeleteUser}
                 onUpdateUser={onUpdateUser}
                 onActivateUser={onActivateUser}
+                onLifecycleChange={onLifecycleChange}
               />
             ))}
           </TableBody>

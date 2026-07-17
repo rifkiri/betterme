@@ -14,6 +14,9 @@ export interface User {
   createdAt: string;
   lastLogin?: string;
   managerId?: string; // Added managerId field
+  isArchived?: boolean;
+  archivedAt?: string;
+  archivedBy?: string;
 }
 
 export interface AuthUser {

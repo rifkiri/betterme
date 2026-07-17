@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { CalendarIcon, Trash2, Link, Eye, Minus, Plus, CheckCircle, Target, RefreshCw, Cloud, CloudOff } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { CalendarIcon, Trash2, Link, Eye, Minus, Plus, CheckCircle, Target, RefreshCw, Cloud, CloudOff, Trophy, XCircle } from 'lucide-react';
 import { Goal, Task, WeeklyOutput, GoalAssignment } from '@/types/productivity';
 import { format, isToday, isTomorrow, formatDistanceToNow } from 'date-fns';
 import { EditGoalDialog } from './EditGoalDialog';
@@ -208,7 +209,48 @@ export const GoalCard = ({
         <div className="mb-3">
           <Progress value={goal.progress} className={`h-2 ${isOverdue ? 'bg-red-100' : ''}`} />
         </div>
-        
+
+        {/* Tender Win/Loss controls for sales goals */}
+        {goal.category === 'work' && goal.subcategory === 'sales' && (
+          <div className="mb-3 space-y-2 border-t pt-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-gray-500 font-medium">Tender:</span>
+              {(['won', 'lost', 'pending'] as const).map((outcome) => {
+                const active = (goal.tenderOutcome ?? 'pending') === outcome;
+                const styles = active
+                  ? outcome === 'won' ? 'bg-green-600 text-white hover:bg-green-700'
+                  : outcome === 'lost' ? 'bg-red-600 text-white hover:bg-red-700'
+                  : 'bg-gray-500 text-white hover:bg-gray-600'
+                  : 'bg-white';
+                const Icon = outcome === 'won' ? Trophy : outcome === 'lost' ? XCircle : Minus;
+                return (
+                  <Button
+                    key={outcome}
+                    size="sm"
+                    variant={active ? 'default' : 'outline'}
+                    className={`h-7 px-2 text-xs capitalize ${styles}`}
+                    onClick={() => onEditGoal(goal.id, { tenderOutcome: outcome } as Partial<Goal>)}
+                  >
+                    <Icon className="h-3 w-3 mr-1" />
+                    {outcome}
+                  </Button>
+                );
+              })}
+            </div>
+            <Input
+              defaultValue={goal.tenderOutcomeNote || ''}
+              placeholder="Add note…"
+              className="h-8 text-xs"
+              onBlur={(e) => {
+                const val = e.target.value;
+                if (val !== (goal.tenderOutcomeNote || '')) {
+                  onEditGoal(goal.id, { tenderOutcomeNote: val } as Partial<Goal>);
+                }
+              }}
+            />
+          </div>
+        )}
+
         {canUpdateProgress && (
           <ProgressControls
             progress={goal.progress}

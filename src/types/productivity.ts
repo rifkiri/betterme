@@ -88,6 +88,9 @@ export interface Goal {
   externalKeyResultTitle?: string;
   externalObjectiveId?: string;
   externalObjectiveTitle?: string;
+  // Tender win/loss tracking (applies only when subcategory === 'sales')
+  tenderOutcome?: 'won' | 'lost' | 'pending';
+  tenderOutcomeNote?: string;
 }
 
 export interface GoalAssignment {
