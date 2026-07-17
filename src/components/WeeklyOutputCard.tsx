@@ -14,6 +14,7 @@ import { ContentCard, StatusBadge, LinkBadge, ProgressControls, ActionButtonGrou
 import { getContentCardVariant, getStatusBadgeStatus, formatCountDisplay } from '@/utils/standardizedHelpers';
 import { CardMetaStrip } from '@/components/ui/card-meta-strip';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { ResourceLinksQuickButton } from './ResourceLinksQuickButton';
 
 interface WeeklyOutputCardProps {
   output: WeeklyOutput;
