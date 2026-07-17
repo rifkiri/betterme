@@ -175,6 +175,11 @@ export const TaskItem = ({ task, onToggleTask, onEditTask, onMoveTask, onDeleteT
               {user.name}
             </Badge>
           ))}
+          <ResourceLinksQuickButton
+            entityType="task"
+            entityId={task.id}
+            collaboratorIds={[task.userId ?? '', ...(task.taggedUsers || [])].filter(Boolean)}
+          />
         </>
       }
       metadata={
