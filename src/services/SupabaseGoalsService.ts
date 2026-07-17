@@ -141,6 +141,7 @@ export class SupabaseGoalsService {
         externalObjectiveTitle: goal.external_objective_title,
         tenderOutcome: (goal as any).tender_outcome ?? 'pending',
         tenderOutcomeNote: (goal as any).tender_outcome_note ?? '',
+        progressCalculation: ((goal as any).progress_calculation as 'manual' | 'weighted') || 'manual',
       }));
 
       // Debug: Check subcategory data after transformation
