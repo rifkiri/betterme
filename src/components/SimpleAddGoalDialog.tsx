@@ -82,7 +82,7 @@ export const SimpleAddGoalDialog = ({
       deadline = new Date(deadline.getFullYear(), deadline.getMonth(), deadline.getDate(), 23, 59, 59, 999);
     }
 
-    const isSales = data.subcategory === 'Sales';
+    const isSales = data.subcategory?.toLowerCase() === 'sales';
     const tenderOutcome = isSales ? (data.tenderOutcome || 'pending') : undefined;
 
     onAddGoal({
@@ -204,7 +204,7 @@ export const SimpleAddGoalDialog = ({
               )}
             />
 
-            {watchSubcategory === 'Sales' && (
+            {watchSubcategory?.toLowerCase() === 'sales' && (
               <>
                 <FormField
                   control={form.control}

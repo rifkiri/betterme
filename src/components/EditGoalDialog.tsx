@@ -473,7 +473,7 @@ export const EditGoalDialog = ({
                     )}
                   />
 
-                  {form.watch('subcategory') === 'Sales' && (
+                  {form.watch('subcategory')?.toLowerCase() === 'sales' && (
                     <>
                       <FormField
                         control={form.control}

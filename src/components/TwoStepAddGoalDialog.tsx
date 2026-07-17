@@ -135,7 +135,7 @@ export const TwoStepAddGoalDialog = ({
       }
 
       // Create the goal and get the ID
-      const isSales = data.subcategory === 'Sales';
+      const isSales = data.subcategory?.toLowerCase() === 'sales';
       const tenderOutcome = isSales ? (data.tenderOutcome || 'pending') : undefined;
       const goalId = await onAddGoal({
         title: data.title,
@@ -349,7 +349,7 @@ export const TwoStepAddGoalDialog = ({
                     )}
                   />
 
-                  {watchSubcategory === 'Sales' && (
+                  {watchSubcategory?.toLowerCase() === 'sales' && (
                     <>
                       <FormField
                         control={form.control}
