@@ -34,6 +34,9 @@ const formSchema = z.object({
   visibility: z.enum(['all', 'managers', 'self']).optional(),
   selectedOutputIds: z.array(z.string()).optional(),
   selectedHabitIds: z.array(z.string()).optional(),
+  tenderOutcome: z.enum(['pending', 'won', 'lost']).optional(),
+  tenderOutcomeNote: z.string().optional(),
+  progressCalculation: z.enum(['manual', 'weighted']).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -100,6 +103,9 @@ export const EditGoalDialog = ({
         visibility: goal.visibility || 'all',
         selectedOutputIds: [],
         selectedHabitIds: [],
+        tenderOutcome: (goal.tenderOutcome as 'pending' | 'won' | 'lost') || 'pending',
+        tenderOutcomeNote: goal.tenderOutcomeNote || '',
+        progressCalculation: goal.progressCalculation || 'manual',
       });
 
       // Load linked items
@@ -153,14 +159,25 @@ export const EditGoalDialog = ({
     }
 
     // Save the goal updates (always work category)
-    onSave(goal.id, {
+    const subcatDb = data.subcategory === "none" ? undefined : mapSubcategoryDisplayToDatabase(data.subcategory);
+    const updates: Partial<Goal> = {
       title: data.title,
       description: data.description,
       category: 'work',
-      subcategory: data.subcategory === "none" ? undefined : mapSubcategoryDisplayToDatabase(data.subcategory),
+      subcategory: subcatDb,
       deadline: deadline,
       visibility: isTeamMember ? 'all' : (data.visibility || 'all'),
-    });
+      progressCalculation: data.progressCalculation || 'manual',
+    };
+    if (subcatDb === 'sales') {
+      updates.tenderOutcome = data.tenderOutcome || 'pending';
+      updates.tenderOutcomeNote = data.tenderOutcomeNote || '';
+      if (data.tenderOutcome === 'won') {
+        updates.progress = 100;
+        updates.completed = true;
+      }
+    }
+    onSave(goal.id, updates);
 
     // Update output linkages
     if (currentUser?.id) {
@@ -433,6 +450,69 @@ export const EditGoalDialog = ({
                       </FormItem>
                     )}
                   />
+
+                  <FormField
+                    control={form.control}
+                    name="progressCalculation"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Progress Calculation</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || 'manual'}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="manual">Manual Progress Control (default)</SelectItem>
+                            <SelectItem value="weighted">Automatic Weighted Progress</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {form.watch('subcategory') === 'Sales' && (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="tenderOutcome"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Tender Outcome</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value || 'pending'}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="pending">Pending</SelectItem>
+                                <SelectItem value="won">Won</SelectItem>
+                                <SelectItem value="lost">Lost</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="tenderOutcomeNote"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Tender Outcome Note</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Optional note about the outcome" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
+                  )}
+
 
                   <FormField
                     control={form.control}

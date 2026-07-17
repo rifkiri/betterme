@@ -31,6 +31,7 @@ export interface Task {
   taggedUsers?: string[]; // Array of user IDs who are tagged for support
   pendingTaggedUsers?: string[]; // Supporter invitation user IDs awaiting acceptance
   visibility?: 'all' | 'managers' | 'self'; // Who can view this task
+  weight?: number; // Relative weight when parent output uses weighted progress calculation
 }
 
 export interface WeeklyPlan {
@@ -62,6 +63,8 @@ export interface WeeklyOutput {
   linkedGoalId?: string;
   visibility?: 'all' | 'managers' | 'self'; // Who can view this output
   taggedUsers?: string[]; // Accepted collaborators
+  progressCalculation?: 'manual' | 'weighted'; // How this output's progress is computed
+  weight?: number; // Relative weight when parent goal uses weighted progress calculation
 }
 
 export interface Goal {
@@ -92,6 +95,7 @@ export interface Goal {
   // Tender win/loss tracking (applies only when subcategory === 'sales')
   tenderOutcome?: 'won' | 'lost' | 'pending';
   tenderOutcomeNote?: string;
+  progressCalculation?: 'manual' | 'weighted'; // How this goal's progress is computed
 }
 
 export interface GoalAssignment {

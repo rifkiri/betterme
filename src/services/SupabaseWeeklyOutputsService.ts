@@ -30,7 +30,9 @@ export class SupabaseWeeklyOutputsService {
       createdDate: new Date(output.created_date),
       linkedGoalId: output.linked_goal_id || undefined, // Restored from database column
       visibility: (output as any).visibility || 'all',
-      taggedUsers: (output as any).tagged_users || []
+      taggedUsers: (output as any).tagged_users || [],
+      progressCalculation: ((output as any).progress_calculation as 'manual' | 'weighted') || 'manual',
+      weight: (output as any).weight ?? 1
     }));
   }
 
@@ -50,7 +52,9 @@ export class SupabaseWeeklyOutputsService {
         deleted_date: output.deletedDate?.toISOString(),
         created_date: output.createdDate.toISOString(),
         linked_goal_id: output.linkedGoalId || null,
-        visibility: output.visibility || 'all'
+        visibility: output.visibility || 'all',
+        progress_calculation: output.progressCalculation || 'manual',
+        weight: output.weight ?? 1
       });
 
     if (error) {
@@ -82,6 +86,12 @@ export class SupabaseWeeklyOutputsService {
     }
     if (updates.taggedUsers !== undefined) {
       (supabaseUpdates as any).tagged_users = updates.taggedUsers || [];
+    }
+    if (updates.progressCalculation !== undefined) {
+      (supabaseUpdates as any).progress_calculation = updates.progressCalculation;
+    }
+    if (updates.weight !== undefined) {
+      (supabaseUpdates as any).weight = updates.weight;
     }
 
     console.log('SupabaseWeeklyOutputsService - Final supabase updates object:', supabaseUpdates);

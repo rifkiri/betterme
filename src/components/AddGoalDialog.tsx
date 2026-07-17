@@ -22,6 +22,7 @@ const formSchema = z.object({
   category: z.enum(['work', 'personal']),
   deadline: z.date().optional(),
   selectedGoalId: z.string().optional(),
+  progressCalculation: z.enum(['manual', 'weighted']).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -54,6 +55,7 @@ export const AddGoalDialog = ({
       category: 'personal',
       deadline: undefined,
       selectedGoalId: '',
+      progressCalculation: 'manual',
     },
   });
 
@@ -75,6 +77,7 @@ export const AddGoalDialog = ({
         deadline: deadline,
         completed: false,
         archived: false,
+        progressCalculation: data.progressCalculation || 'manual',
       });
     }
     
@@ -242,6 +245,30 @@ export const AddGoalDialog = ({
                        <SelectContent className="bg-background border border-border shadow-lg z-50 max-h-60">
                         <SelectItem value="work" className="hover:bg-accent">Work</SelectItem>
                         <SelectItem value="personal" className="hover:bg-accent">Personal</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {!isJoiningGoal && (
+              <FormField
+                control={form.control}
+                name="progressCalculation"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Progress Calculation</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || 'manual'}>
+                      <FormControl>
+                        <SelectTrigger className="bg-background border border-border">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-background border border-border shadow-lg z-50">
+                        <SelectItem value="manual">Manual Progress Control (default)</SelectItem>
+                        <SelectItem value="weighted">Automatic Weighted Progress</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

@@ -58,6 +58,7 @@ export class SupabaseGoalsService {
       externalKeyResultTitle: goal.external_key_result_title,
       externalObjectiveId: goal.external_objective_id,
       externalObjectiveTitle: goal.external_objective_title,
+      progressCalculation: ((goal as any).progress_calculation as 'manual' | 'weighted') || 'manual',
     }));
   }
 
@@ -140,6 +141,7 @@ export class SupabaseGoalsService {
         externalObjectiveTitle: goal.external_objective_title,
         tenderOutcome: (goal as any).tender_outcome ?? 'pending',
         tenderOutcomeNote: (goal as any).tender_outcome_note ?? '',
+        progressCalculation: ((goal as any).progress_calculation as 'manual' | 'weighted') || 'manual',
       }));
 
       // Debug: Check subcategory data after transformation
@@ -241,6 +243,9 @@ export class SupabaseGoalsService {
         externalKeyResultTitle: goal.external_key_result_title,
         externalObjectiveId: goal.external_objective_id,
         externalObjectiveTitle: goal.external_objective_title,
+        tenderOutcome: (goal as any).tender_outcome ?? 'pending',
+        tenderOutcomeNote: (goal as any).tender_outcome_note ?? '',
+        progressCalculation: ((goal as any).progress_calculation as 'manual' | 'weighted') || 'manual',
       }));
 
       console.log('Transformed goals for frontend:', {
@@ -287,7 +292,8 @@ export class SupabaseGoalsService {
         // linked_output_ids removed - now handled by ItemLinkageService
         created_by: goal.createdBy,
         assignment_date: goal.assignmentDate ? goal.assignmentDate.toISOString() : null,
-        visibility: enforceVisibility
+        visibility: enforceVisibility,
+        progress_calculation: goal.progressCalculation || 'manual',
       });
 
     if (error) {
@@ -327,6 +333,8 @@ export class SupabaseGoalsService {
     if (enforceVisibility !== undefined) supabaseUpdates.visibility = enforceVisibility;
     if ((updates as any).tenderOutcome !== undefined) supabaseUpdates.tender_outcome = (updates as any).tenderOutcome;
     if ((updates as any).tenderOutcomeNote !== undefined) supabaseUpdates.tender_outcome_note = (updates as any).tenderOutcomeNote;
+    if (updates.progressCalculation !== undefined) supabaseUpdates.progress_calculation = updates.progressCalculation;
+
 
     // Handle soft delete (archiving) - only set archived, not is_deleted
     // is_deleted should only be set for permanent deletion

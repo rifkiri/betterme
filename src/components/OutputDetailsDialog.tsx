@@ -18,6 +18,8 @@ import { format } from 'date-fns';
 import { useState } from 'react';
 import { EditWeeklyOutputDialog } from './EditWeeklyOutputDialog';
 import { ResourceLinksPanel } from './ResourceLinksPanel';
+import { WeightedProgressPanel } from './WeightedProgressPanel';
+import { supabase } from '@/integrations/supabase/client';
 
 interface OutputDetailsDialogProps {
   output: WeeklyOutput;
@@ -107,39 +109,59 @@ export const OutputDetailsDialog = ({
 
               <div className="space-y-2">
                 <Progress value={output.progress} className="h-3" />
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onUpdateProgress(output.id, Math.max(0, output.progress - 10))}
-                    disabled={output.progress <= 0}
-                    className="text-xs px-3"
-                  >
-                    <Minus className="h-3 w-3 mr-1" />
-                    -10%
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onUpdateProgress(output.id, Math.min(100, output.progress + 10))}
-                    disabled={output.progress >= 100}
-                    className="text-xs px-3"
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    +10%
-                  </Button>
-                  {output.progress !== 100 && (
+                {output.progressCalculation !== 'weighted' ? (
+                  <div className="flex items-center gap-2">
                     <Button
                       size="sm"
-                      onClick={() => onUpdateProgress(output.id, 100)}
+                      variant="outline"
+                      onClick={() => onUpdateProgress(output.id, Math.max(0, output.progress - 10))}
+                      disabled={output.progress <= 0}
                       className="text-xs px-3"
                     >
-                      <CheckCircle2 className="h-3 w-3 mr-1" />
-                      Complete
+                      <Minus className="h-3 w-3 mr-1" />
+                      -10%
                     </Button>
-                  )}
-                </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onUpdateProgress(output.id, Math.min(100, output.progress + 10))}
+                      disabled={output.progress >= 100}
+                      className="text-xs px-3"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      +10%
+                    </Button>
+                    {output.progress !== 100 && (
+                      <Button
+                        size="sm"
+                        onClick={() => onUpdateProgress(output.id, 100)}
+                        className="text-xs px-3"
+                      >
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                        Complete
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-blue-600">Progress is calculated automatically from weighted linked tasks.</p>
+                )}
               </div>
+
+              <WeightedProgressPanel
+                mode={output.progressCalculation || 'manual'}
+                onModeChange={async (mode) => {
+                  await onEditWeeklyOutput(output.id, { progressCalculation: mode });
+                  if (onRefresh) await onRefresh();
+                }}
+                items={linkedTasks.map(t => ({ id: t.id, title: t.title, progress: t.completed ? 100 : 0, weight: t.weight }))}
+                childLabel="task"
+                onSaveWeights={async (updates) => {
+                  for (const u of updates) {
+                    await supabase.from('tasks').update({ weight: u.weight } as any).eq('id', u.id);
+                  }
+                  if (onRefresh) await onRefresh();
+                }}
+              />
             </div>
 
             {/* Contributing Goals */}

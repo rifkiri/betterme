@@ -131,7 +131,8 @@ export class SupabaseTasksService {
       weeklyOutputId: task.weekly_output_id,
       taggedUsers: (task as any).tagged_users || [],
       pendingTaggedUsers: pendingInvitationsByTask[task.id] || [],
-      visibility: (task as any).visibility || 'all'
+      visibility: (task as any).visibility || 'all',
+      weight: (task as any).weight ?? 1
     }));
   }
 
@@ -176,7 +177,8 @@ export class SupabaseTasksService {
         created_date: task.createdDate.toISOString(),
         weekly_output_id: task.weeklyOutputId || null,
         tagged_users: acceptedSupporters,
-        visibility: task.visibility || 'all'
+        visibility: task.visibility || 'all',
+        weight: task.weight ?? 1
       });
 
     if (error) {
@@ -232,6 +234,7 @@ export class SupabaseTasksService {
       supabaseUpdates.tagged_users = acceptedSupporters;
     }
     if (updates.visibility !== undefined) supabaseUpdates.visibility = updates.visibility || 'all';
+    if (updates.weight !== undefined) supabaseUpdates.weight = updates.weight;
 
     console.log('SupabaseTasksService - Final supabase updates object:', supabaseUpdates);
 

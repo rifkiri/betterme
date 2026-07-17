@@ -25,7 +25,8 @@ const formSchema = z.object({
   description: z.string().optional(),
   dueDate: z.date().optional(),
   goalId: z.string().optional(),
-  visibility: z.enum(['all', 'managers', 'self']).optional()
+  visibility: z.enum(['all', 'managers', 'self']).optional(),
+  progressCalculation: z.enum(['manual', 'weighted']).optional()
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -55,6 +56,7 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
       dueDate: undefined,
       goalId: undefined,
       visibility: 'all',
+      progressCalculation: 'manual',
     },
   });
 
@@ -72,6 +74,7 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
       dueDate: dueDate,
       linkedGoalId: data.goalId !== "none" ? data.goalId : undefined,
       visibility: data.visibility || 'all',
+      progressCalculation: data.progressCalculation || 'manual',
     });
     
     form.reset();
@@ -218,6 +221,28 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
                           </div>
                         </SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="progressCalculation"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Progress Calculation</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || 'manual'}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="z-50 bg-background border border-border shadow-lg">
+                      <SelectItem value="manual">Manual Progress Control (default)</SelectItem>
+                      <SelectItem value="weighted">Automatic Weighted Progress</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

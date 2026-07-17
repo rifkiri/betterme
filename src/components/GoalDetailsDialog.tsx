@@ -25,6 +25,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
 import { ResourceLinksPanel } from './ResourceLinksPanel';
+import { WeightedProgressPanel } from './WeightedProgressPanel';
 
 // Lazy load heavy dialog components to reduce initial bundle size
 const EditGoalDialog = lazy(() => import('./EditGoalDialog').then(module => ({ default: module.EditGoalDialog })));
@@ -240,7 +241,7 @@ const getCategoryColor = (category: Goal['category']) => {
 
               <div className="space-y-2">
                 <Progress value={goal.progress} className="h-3" />
-                {canUpdateProgress && (
+                {canUpdateProgress && goal.progressCalculation !== 'weighted' && (
                   <div className="flex items-center gap-2">
                     <Button
                       size="sm"
@@ -274,7 +275,28 @@ const getCategoryColor = (category: Goal['category']) => {
                     )}
                   </div>
                 )}
+                {goal.progressCalculation === 'weighted' && (
+                  <p className="text-xs text-blue-600">Progress is calculated automatically from weighted linked outputs.</p>
+                )}
               </div>
+
+              {canFullEdit && (
+                <WeightedProgressPanel
+                  mode={goal.progressCalculation || 'manual'}
+                  onModeChange={async (mode) => {
+                    onEditGoal(goal.id, { progressCalculation: mode });
+                    if (onRefresh) await onRefresh();
+                  }}
+                  items={linkedOutputs.map(o => ({ id: o.id, title: o.title, progress: o.progress, weight: o.weight }))}
+                  childLabel="output"
+                  onSaveWeights={async (updates) => {
+                    for (const u of updates) {
+                      await supabase.from('weekly_outputs').update({ weight: u.weight } as any).eq('id', u.id);
+                    }
+                    if (onRefresh) await onRefresh();
+                  }}
+                />
+              )}
             </div>
 
             {/* Linked Outputs */}

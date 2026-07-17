@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CalendarIcon, Trash2, Link, Eye, Minus, Plus, CheckCircle, Target, RefreshCw, Cloud, CloudOff, Trophy, XCircle } from 'lucide-react';
+import { CalendarIcon, Trash2, Link, Eye, Minus, Plus, CheckCircle, Target, RefreshCw, Cloud, CloudOff, Trophy, XCircle, Calculator } from 'lucide-react';
 import { Goal, Task, WeeklyOutput, GoalAssignment } from '@/types/productivity';
 import { format, isToday, isTomorrow, formatDistanceToNow } from 'date-fns';
 import { EditGoalDialog } from './EditGoalDialog';
@@ -96,8 +96,18 @@ export const GoalCard = ({
 
   const lastSyncDisplay = getLastSyncDisplay();
 
+  const isWeighted = goal.progressCalculation === 'weighted';
+  const isWon = goal.category === 'work' && goal.subcategory === 'sales' && goal.tenderOutcome === 'won';
+  const isLost = goal.category === 'work' && goal.subcategory === 'sales' && goal.tenderOutcome === 'lost';
+  const outcomeBorderClass = isWon
+    ? 'ring-2 ring-green-500 border-green-500 bg-green-50/40'
+    : isLost
+      ? 'ring-2 ring-red-500 border-red-500 bg-red-50/40'
+      : '';
+
   return (
     <>
+      <div className={`rounded-lg ${outcomeBorderClass}`}>
       <ContentCard variant={getContentCardVariant(isOverdue, isCompleted)}>
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
@@ -176,8 +186,26 @@ export const GoalCard = ({
                   {formatCountDisplay(linkedOutputsCount, "output")} linked
                 </LinkBadge>
               )}
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-gray-500 flex items-center gap-1">
                 Progress: {goal.progress}%
+                {isWeighted && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Calculator className="h-3 w-3 text-blue-600" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">Progress calculated automatically based on weighted child items.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                {isWon && (
+                  <Badge className="ml-1 bg-green-600 text-white text-[10px] py-0 px-1"><Trophy className="h-3 w-3 mr-0.5" />WON</Badge>
+                )}
+                {isLost && (
+                  <Badge className="ml-1 bg-red-600 text-white text-[10px] py-0 px-1"><XCircle className="h-3 w-3 mr-0.5" />LOST</Badge>
+                )}
               </span>
               <ResourceLinksQuickButton
                 entityType="goal"
@@ -235,7 +263,16 @@ export const GoalCard = ({
                     size="sm"
                     variant={active ? 'default' : 'outline'}
                     className={`h-7 px-2 text-xs capitalize ${styles}`}
-                    onClick={() => onEditGoal(goal.id, { tenderOutcome: outcome } as Partial<Goal>)}
+                    onClick={() => {
+                      const updates: Partial<Goal> = { tenderOutcome: outcome };
+                      if (outcome === 'won') {
+                        updates.progress = 100;
+                        updates.completed = true;
+                      } else if (outcome === 'lost') {
+                        updates.completed = false;
+                      }
+                      onEditGoal(goal.id, updates);
+                    }}
                   >
                     <Icon className="h-3 w-3 mr-1" />
                     {outcome}
@@ -257,7 +294,7 @@ export const GoalCard = ({
           </div>
         )}
 
-        {canUpdateProgress && (
+        {canUpdateProgress && !isWeighted && !isLost && !isWon && (
           <ProgressControls
             progress={goal.progress}
             onDecrease={() => onUpdateProgress(goal.id, Math.max(0, goal.progress - 10))}
@@ -267,6 +304,8 @@ export const GoalCard = ({
           />
         )}
       </ContentCard>
+      </div>
+
       
       <GoalDetailsDialog
         goal={goal}
