@@ -34,6 +34,9 @@ const formSchema = z.object({
   visibility: z.enum(['all', 'managers', 'self']).optional(),
   selectedOutputIds: z.array(z.string()).optional(),
   selectedHabitIds: z.array(z.string()).optional(),
+  tenderOutcome: z.enum(['pending', 'won', 'lost']).optional(),
+  tenderOutcomeNote: z.string().optional(),
+  progressCalculation: z.enum(['manual', 'weighted']).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
