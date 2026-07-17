@@ -199,7 +199,7 @@ export const TeamWorkloadMonitoring = ({
     const endOfWeek = new Date(startOfToday); endOfWeek.setDate(endOfWeek.getDate() + 7);
     const endOfTwoWeeks = new Date(startOfToday); endOfTwoWeeks.setDate(endOfTwoWeeks.getDate() + 14);
 
-    return workloadData.taskOwnerships.filter(t => {
+    const filtered = workloadData.taskOwnerships.filter(t => {
       if (taskFilterUser !== 'all' && t.userId !== taskFilterUser) return false;
       if (taskFilterPriority !== 'all' && t.priority !== taskFilterPriority) return false;
       if (taskFilterVisibility === 'public' && t.visibility !== 'all') return false;
@@ -214,7 +214,25 @@ export const TeamWorkloadMonitoring = ({
       }
       return true;
     });
-  }, [workloadData.taskOwnerships, taskFilterUser, taskFilterPriority, taskFilterVisibility, taskFilterDeadline, taskFilterSearch]);
+
+    const priorityRank: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
+    const sorted = [...filtered];
+    switch (taskSort) {
+      case 'fewest-collaborators':
+        sorted.sort((a, b) => (a.collaboratorCount ?? 0) - (b.collaboratorCount ?? 0));
+        break;
+      case 'most-collaborators':
+        sorted.sort((a, b) => (b.collaboratorCount ?? 0) - (a.collaboratorCount ?? 0));
+        break;
+      case 'due-date':
+        sorted.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+        break;
+      case 'priority':
+        sorted.sort((a, b) => (priorityRank[a.priority] ?? 1) - (priorityRank[b.priority] ?? 1));
+        break;
+    }
+    return sorted;
+  }, [workloadData.taskOwnerships, taskFilterUser, taskFilterPriority, taskFilterVisibility, taskFilterDeadline, taskFilterSearch, taskSort]);
 
   const hasActiveTaskFilters = taskFilterUser !== 'all' || taskFilterPriority !== 'all' || taskFilterVisibility !== 'all' || taskFilterDeadline !== 'all' || taskFilterSearch !== '';
 
