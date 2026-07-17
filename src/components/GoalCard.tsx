@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CalendarIcon, Trash2, Link, Eye, Minus, Plus, CheckCircle, Target, RefreshCw, Cloud, CloudOff, Trophy, XCircle, Calculator } from 'lucide-react';
+import { CalendarIcon, Trash2, Link, Eye, Minus, Plus, CheckCircle, Target, RefreshCw, Cloud, CloudOff, Trophy, XCircle, Calculator, User as UserIcon } from 'lucide-react';
 import { Goal, Task, WeeklyOutput, GoalAssignment } from '@/types/productivity';
 import { format, isToday, isTomorrow, formatDistanceToNow } from 'date-fns';
 import { EditGoalDialog } from './EditGoalDialog';
@@ -180,6 +180,33 @@ export const GoalCard = ({
               visibility={goal.visibility}
               className="mb-2"
             />
+            {goal.category === 'work' && (() => {
+              const goalAssignments = assignments.filter(a => a.goalId === goal.id);
+              if (goalAssignments.length === 0) return null;
+              return (
+                <div className="flex flex-wrap gap-1.5 mt-1 mb-2">
+                  {goalAssignments.map((assignment) => {
+                    const assignedUser = availableUsers?.find(u => u.id === assignment.userId);
+                    const name = assignedUser?.name || 'Unknown';
+                    const roleStyle =
+                      assignment.role === 'coach' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                      assignment.role === 'lead' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                      'bg-slate-50 text-slate-600 border-slate-200';
+                    return (
+                      <Badge
+                        key={assignment.id}
+                        variant="outline"
+                        className={`text-[10px] px-1.5 py-0.5 font-normal capitalize flex items-center gap-1 ${roleStyle}`}
+                        title={`${name} is assigned as ${assignment.role}`}
+                      >
+                        <UserIcon className="h-2.5 w-2.5 opacity-60" />
+                        {name}: {assignment.role}
+                      </Badge>
+                    );
+                  })}
+                </div>
+              );
+            })()}
             <div className="flex items-center gap-2 mb-2">
               {linkedOutputsCount > 0 && (
                 <LinkBadge variant="success">
