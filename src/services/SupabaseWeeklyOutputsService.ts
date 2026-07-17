@@ -52,7 +52,9 @@ export class SupabaseWeeklyOutputsService {
         deleted_date: output.deletedDate?.toISOString(),
         created_date: output.createdDate.toISOString(),
         linked_goal_id: output.linkedGoalId || null,
-        visibility: output.visibility || 'all'
+        visibility: output.visibility || 'all',
+        progress_calculation: output.progressCalculation || 'manual',
+        weight: output.weight ?? 1
       });
 
     if (error) {
