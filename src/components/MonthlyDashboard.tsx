@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { TrendingUp, Target, CheckCircle, Clock } from 'lucide-react';
+import { TrendingUp, Target, CheckCircle, Flag } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday } from 'date-fns';
 import { useProductivity } from '@/hooks/useProductivity';
 import { useMoodTracking } from '@/hooks/useMoodTracking';
@@ -20,7 +20,8 @@ export const MonthlyDashboard = () => {
   const {
     habits,
     tasks,
-    weeklyOutputs
+    weeklyOutputs,
+    goals,
   } = useProductivity();
   
   const { moodEntries } = useMoodTracking();
@@ -35,9 +36,18 @@ export const MonthlyDashboard = () => {
   // Calculate monthly metrics from real data
   const monthlyTasks = tasks.filter(task => task.dueDate && isSameMonth(task.dueDate, selectedMonth));
   const monthlyOutputs = weeklyOutputs.filter(output => output.dueDate && isSameMonth(output.dueDate, selectedMonth));
-  const completedTasks = monthlyTasks.filter(task => task.completed).length;
-  const completedOutputs = monthlyOutputs.filter(output => output.progress === 100).length;
-  const averageHabitStreak = habits.length > 0 ? Math.round(habits.reduce((sum, habit) => sum + habit.streak, 0) / habits.length) : 0;
+  const monthlyGoals = (goals || []).filter(g => !g.isDeleted && !g.archived);
+
+  const completedTasksCount = monthlyTasks.filter(t => t.completed).length;
+  const completedOutputsCount = monthlyOutputs.filter(o => o.progress === 100).length;
+  const completedGoalsCount = monthlyGoals.filter(g => g.progress === 100).length;
+
+  const taskCompletionRate = monthlyTasks.length > 0 ? Math.round((completedTasksCount / monthlyTasks.length) * 100) : 0;
+  const outputCompletionRate = monthlyOutputs.length > 0 ? Math.round((completedOutputsCount / monthlyOutputs.length) * 100) : 0;
+  const goalCompletionRate = monthlyGoals.length > 0 ? Math.round((completedGoalsCount / monthlyGoals.length) * 100) : 0;
+  const bestHabitStreak = habits && habits.length > 0
+    ? Math.max(...habits.filter(h => !h.archived).map(h => h.streak || 0), 0)
+    : 0;
 
   // Filter mood data for the selected month
   const monthlyMoodData = moodEntries
@@ -78,30 +88,30 @@ export const MonthlyDashboard = () => {
         {/* Monthly Overview Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
-            title="Tasks Completed"
-            value={`${completedTasks}/${monthlyTasks.length}`}
-            icon={CheckCircle}
-            variant="info"
+            title="Goal Completion"
+            value={`${goalCompletionRate}%`}
+            icon={Flag}
+            variant="gradient"
           />
-          
+
           <StatCard
-            title="Outputs Done"
-            value={`${completedOutputs}/${monthlyOutputs.length}`}
+            title="Output Completion"
+            value={`${outputCompletionRate}%`}
             icon={Target}
             variant="success"
           />
-          
+
           <StatCard
-            title="Avg Habit Streak"
-            value={`${averageHabitStreak} days`}
-            icon={TrendingUp}
-            variant="gradient"
+            title="Task Completion"
+            value={`${taskCompletionRate}%`}
+            icon={CheckCircle}
+            variant="info"
           />
-          
+
           <StatCard
-            title="Days Active"
-            value={monthDays.filter(day => isToday(day)).length > 0 ? 'Today' : '0'}
-            icon={Clock}
+            title="Best Habit Streak"
+            value={`${bestHabitStreak} days`}
+            icon={TrendingUp}
             variant="warning"
           />
         </div>
