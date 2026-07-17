@@ -287,7 +287,7 @@ const getCategoryColor = (category: Goal['category']) => {
                     onEditGoal(goal.id, { progressCalculation: mode });
                     if (onRefresh) await onRefresh();
                   }}
-                  children={linkedOutputs.map(o => ({ id: o.id, title: o.title, progress: o.progress, weight: o.weight }))}
+                  items={linkedOutputs.map(o => ({ id: o.id, title: o.title, progress: o.progress, weight: o.weight }))}
                   childLabel="output"
                   onSaveWeights={async (updates) => {
                     for (const u of updates) {
