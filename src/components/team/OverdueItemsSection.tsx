@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Calendar, TrendingUp, TrendingDown } from 'lucide-react';
+import { AlertTriangle, Calendar, TrendingUp, TrendingDown, Target } from 'lucide-react';
 import { TeamData } from '@/types/teamData';
 
 interface OverdueItemsSectionProps {
