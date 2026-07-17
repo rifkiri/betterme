@@ -191,6 +191,16 @@ const getCategoryColor = (category: Goal['category']) => {
                       {mapSubcategoryDatabaseToDisplay(goal.subcategory)}
                     </Badge>
                   )}
+                  {goal.subcategory === 'sales' && goal.tenderOutcome === 'won' && (
+                    <Badge className="text-xs bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      🏆 Tender Won
+                    </Badge>
+                  )}
+                  {goal.subcategory === 'sales' && goal.tenderOutcome === 'lost' && (
+                    <Badge className="text-xs bg-red-100 text-red-800 border border-red-300">
+                      Tender Lost
+                    </Badge>
+                  )}
                   {isOverdue && (
                     <Badge variant="destructive" className="text-xs">
                       <Clock className="h-3 w-3 mr-1" />

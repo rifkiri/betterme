@@ -32,6 +32,8 @@ const formSchema = z.object({
   coachId: z.string().optional(),
   leadId: z.string().optional(),
   memberIds: z.array(z.string()).optional(),
+  tenderOutcome: z.enum(['pending', 'won', 'lost']).optional(),
+  tenderOutcomeNote: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -66,10 +68,13 @@ export const SimpleAddGoalDialog = ({
       coachId: '',
       leadId: '',
       memberIds: [],
+      tenderOutcome: 'pending',
+      tenderOutcomeNote: '',
     },
   });
 
   const watchCategory = form.watch('category');
+  const watchSubcategory = form.watch('subcategory');
 
   const onSubmit = (data: FormData) => {
     let deadline = data.deadline;
@@ -77,16 +82,23 @@ export const SimpleAddGoalDialog = ({
       deadline = new Date(deadline.getFullYear(), deadline.getMonth(), deadline.getDate(), 23, 59, 59, 999);
     }
 
+    const isSales = data.subcategory === 'Sales';
+    const tenderOutcome = isSales ? (data.tenderOutcome || 'pending') : undefined;
+
     onAddGoal({
       title: data.title,
       description: data.description,
       category: data.category,
       subcategory: mapSubcategoryDisplayToDatabase(data.subcategory),
       deadline: deadline,
-      completed: false,
+      completed: isSales && tenderOutcome === 'won' ? true : false,
       archived: false,
       createdBy: data.category === 'work' ? currentUserId : undefined,
       visibility: data.category === 'work' ? (isTeamMember ? 'all' : (data.visibility || 'all')) : undefined,
+      ...(isSales && {
+        tenderOutcome,
+        tenderOutcomeNote: data.tenderOutcomeNote || '',
+      }),
     });
 
     form.reset();
@@ -191,6 +203,47 @@ export const SimpleAddGoalDialog = ({
                 </FormItem>
               )}
             />
+
+            {watchSubcategory === 'Sales' && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="tenderOutcome"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tender Outcome</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || 'pending'}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="won">Won</SelectItem>
+                          <SelectItem value="lost">Lost</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="tenderOutcomeNote"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tender Outcome Note</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Optional note about the outcome" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
+
 
             <FormField
               control={form.control}
