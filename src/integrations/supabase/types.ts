@@ -993,6 +993,14 @@ export type Database = {
       }
       get_user_role: { Args: { user_id: string }; Returns: string }
       is_admin: { Args: never; Returns: boolean }
+      is_goal_assignee: {
+        Args: { _goal_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_goal_owner: {
+        Args: { _goal_id: string; _user_id: string }
+        Returns: boolean
+      }
       toggle_habit_completion: {
         Args: {
           habit_id_param: string
