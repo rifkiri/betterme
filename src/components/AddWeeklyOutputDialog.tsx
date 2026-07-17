@@ -74,6 +74,7 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
       dueDate: dueDate,
       linkedGoalId: data.goalId !== "none" ? data.goalId : undefined,
       visibility: data.visibility || 'all',
+      progressCalculation: data.progressCalculation || 'manual',
     });
     
     form.reset();
