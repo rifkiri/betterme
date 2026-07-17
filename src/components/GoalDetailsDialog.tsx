@@ -64,6 +64,7 @@ export const GoalDetailsDialog = ({
   const [linkedHabits, setLinkedHabits] = useState<Habit[]>([]);
   const [loadingLinkedOutputs, setLoadingLinkedOutputs] = useState(false);
   const [loadingLinkedHabits, setLoadingLinkedHabits] = useState(false);
+  const [assignedUserIds, setAssignedUserIds] = useState<string[]>([]);
   const { user } = useAuth();
   const { isAdmin } = useUserRole();
   
