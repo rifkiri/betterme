@@ -87,6 +87,12 @@ export class SupabaseWeeklyOutputsService {
     if (updates.taggedUsers !== undefined) {
       (supabaseUpdates as any).tagged_users = updates.taggedUsers || [];
     }
+    if (updates.progressCalculation !== undefined) {
+      (supabaseUpdates as any).progress_calculation = updates.progressCalculation;
+    }
+    if (updates.weight !== undefined) {
+      (supabaseUpdates as any).weight = updates.weight;
+    }
 
     console.log('SupabaseWeeklyOutputsService - Final supabase updates object:', supabaseUpdates);
 
