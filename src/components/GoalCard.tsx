@@ -263,7 +263,16 @@ export const GoalCard = ({
                     size="sm"
                     variant={active ? 'default' : 'outline'}
                     className={`h-7 px-2 text-xs capitalize ${styles}`}
-                    onClick={() => onEditGoal(goal.id, { tenderOutcome: outcome } as Partial<Goal>)}
+                    onClick={() => {
+                      const updates: Partial<Goal> = { tenderOutcome: outcome };
+                      if (outcome === 'won') {
+                        updates.progress = 100;
+                        updates.completed = true;
+                      } else if (outcome === 'lost') {
+                        updates.completed = false;
+                      }
+                      onEditGoal(goal.id, updates);
+                    }}
                   >
                     <Icon className="h-3 w-3 mr-1" />
                     {outcome}
