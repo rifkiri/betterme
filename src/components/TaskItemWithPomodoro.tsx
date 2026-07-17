@@ -30,6 +30,7 @@ import { PomodoroCounter } from '@/components/ui/PomodoroCounter';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { PomodoroSettings } from './pomodoro/PomodoroSettings';
 import { getSessionStartAction, getStartButtonTooltip } from '@/utils/pomodoroSessionHelpers';
+import { ResourceLinksQuickButton } from './ResourceLinksQuickButton';
 
 interface TaskItemProps {
   task: Task;
