@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CalendarIcon, Trash2, Link, Eye, Minus, Plus, CheckCircle, Target, RefreshCw, Cloud, CloudOff, Trophy, XCircle } from 'lucide-react';
+import { CalendarIcon, Trash2, Link, Eye, Minus, Plus, CheckCircle, Target, RefreshCw, Cloud, CloudOff, Trophy, XCircle, Calculator } from 'lucide-react';
 import { Goal, Task, WeeklyOutput, GoalAssignment } from '@/types/productivity';
 import { format, isToday, isTomorrow, formatDistanceToNow } from 'date-fns';
 import { EditGoalDialog } from './EditGoalDialog';
