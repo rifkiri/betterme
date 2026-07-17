@@ -228,6 +228,28 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
               )}
             />
 
+            <FormField
+              control={form.control}
+              name="progressCalculation"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Progress Calculation</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || 'manual'}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="z-50 bg-background border border-border shadow-lg">
+                      <SelectItem value="manual">Manual Progress Control (default)</SelectItem>
+                      <SelectItem value="weighted">Automatic Weighted Progress</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {isManagerOrAdmin && (
               <FormField
                 control={form.control}
