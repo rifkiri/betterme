@@ -243,6 +243,9 @@ export class SupabaseGoalsService {
         externalKeyResultTitle: goal.external_key_result_title,
         externalObjectiveId: goal.external_objective_id,
         externalObjectiveTitle: goal.external_objective_title,
+        tenderOutcome: (goal as any).tender_outcome ?? 'pending',
+        tenderOutcomeNote: (goal as any).tender_outcome_note ?? '',
+        progressCalculation: ((goal as any).progress_calculation as 'manual' | 'weighted') || 'manual',
       }));
 
       console.log('Transformed goals for frontend:', {
