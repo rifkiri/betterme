@@ -59,7 +59,7 @@ export const GoalsSection = ({
           <div className="min-w-0">
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Target className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="truncate">Goals</span>
+              <span className="truncate">My Goals</span>
             </CardTitle>
             <CardDescription className="text-xs sm:text-sm">
               Track your objectives and targets

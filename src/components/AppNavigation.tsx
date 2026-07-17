@@ -97,8 +97,8 @@ export const AppNavigation = () => {
     name.split(' ').map((w) => w.charAt(0)).join('').toUpperCase().substring(0, 2);
 
   const navItems: NavItem[] = [
-    { name: 'Productivity', href: '/', icon: Home },
-    { name: 'Goals', href: '/goals', icon: Target },
+    { name: 'My Productivity', href: '/', icon: Home },
+    { name: 'My Goals', href: '/goals', icon: Target },
     { name: 'Progress', href: '/monthly', icon: Calendar },
     { name: 'Team', href: '/team', icon: Users },
   ];
