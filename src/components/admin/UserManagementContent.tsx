@@ -11,9 +11,10 @@ interface UserManagementContentProps {
   onDeleteUser: (userId: string) => void;
   onUpdateUser: (userId: string, updates: Partial<User>) => void;
   onActivateUser?: (userId: string) => void;
+  onLifecycleChange?: () => void;
 }
 
-export const UserManagementContent = ({ users, onDeleteUser, onUpdateUser, onActivateUser }: UserManagementContentProps) => {
+export const UserManagementContent = ({ users, onDeleteUser, onUpdateUser, onActivateUser, onLifecycleChange }: UserManagementContentProps) => {
   return (
     <CardContent className="space-y-4">
       <Alert>
@@ -28,6 +29,7 @@ export const UserManagementContent = ({ users, onDeleteUser, onUpdateUser, onAct
         onDeleteUser={onDeleteUser}
         onUpdateUser={onUpdateUser}
         onActivateUser={onActivateUser}
+        onLifecycleChange={onLifecycleChange}
       />
     </CardContent>
   );
