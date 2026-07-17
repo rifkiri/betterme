@@ -349,6 +349,47 @@ export const TwoStepAddGoalDialog = ({
                     )}
                   />
 
+                  {watchSubcategory === 'Sales' && (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="tenderOutcome"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Tender Outcome</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value || 'pending'}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="pending">Pending</SelectItem>
+                                <SelectItem value="won">Won</SelectItem>
+                                <SelectItem value="lost">Lost</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="tenderOutcomeNote"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Tender Outcome Note</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Optional note about the outcome" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
+                  )}
+
+
                   <FormField
                     control={form.control}
                     name="title"
