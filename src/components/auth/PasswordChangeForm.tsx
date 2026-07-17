@@ -70,28 +70,64 @@ export const PasswordChangeForm = ({ isFirstTime = false }: PasswordChangeFormPr
       return;
     }
 
+    if (!user?.email) {
+      toast.error('You must be signed in to change your password');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
+      // Try the standard self-serve update first.
+      let updateError: string | null = null;
       const { error } = await supabase.auth.updateUser({
-        password: sanitizedNewPassword
+        password: sanitizedNewPassword,
       });
 
       if (error) {
-        console.error('Password update failed'); // No sensitive data logged
-        toast.error('Error updating password. Please try again.');
-        return;
+        updateError = error.message || 'update failed';
+        console.error('Direct password update failed, falling back to admin update');
+
+        // Fallback: some sessions (e.g. right after an admin-provisioned
+        // temporary password) fail with "session_not_found". Use the
+        // service-role edge function to force the update.
+        const { data: fnData, error: fnError } = await supabase.functions.invoke(
+          'update-user-password',
+          { body: { userId: user.id, newPassword: sanitizedNewPassword } }
+        );
+
+        if (fnError || !(fnData as any)?.success) {
+          console.error('Fallback password update failed');
+          toast.error('Error updating password. Please try again.');
+          return;
+        }
+
+        // Admin update invalidates existing sessions — re-authenticate so the
+        // client has a fresh, valid session before we hit any RLS-protected
+        // endpoints (e.g. profile update below).
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: user.email,
+          password: sanitizedNewPassword,
+        });
+        if (signInError) {
+          console.error('Re-sign in after password change failed');
+          toast.error('Password changed. Please sign in again.');
+          await supabase.auth.signOut();
+          navigate('/signin');
+          return;
+        }
       }
 
-      // Update the profile to mark password as changed and set status to active
-      if (user) {
+      // Mark profile as password-changed / active.
+      try {
         await ProfileService.updatePasswordStatus(user.id);
+      } catch (profileErr) {
+        console.error('Profile status update failed after password change');
       }
 
       toast.success('Password updated successfully!');
-      
-      // If this is first time, redirect to appropriate dashboard
-      if (isFirstTime && user) {
+
+      if (isFirstTime) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('role')
@@ -103,7 +139,7 @@ export const PasswordChangeForm = ({ isFirstTime = false }: PasswordChangeFormPr
         }
       }
     } catch (error) {
-      console.error('Password change error occurred'); // No sensitive data logged
+      console.error('Password change error occurred');
       toast.error('Failed to update password');
     } finally {
       setIsLoading(false);

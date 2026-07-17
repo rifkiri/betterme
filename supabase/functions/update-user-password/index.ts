@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -23,43 +22,79 @@ serve(async (req) => {
       );
     }
 
-    // Create admin client with service role key
+    if (typeof newPassword !== "string" || newPassword.length < 8 || newPassword.length > 72) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Password must be 8-72 characters" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Verify the caller: must be signed in and either updating their own
+    // password or be an admin.
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const jwt = authHeader.replace(/^Bearer\s+/i, "");
+    if (!jwt) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Missing authorization" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
+      { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    console.log('Updating password for user:', userId);
+    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(jwt);
+    if (userError || !userData?.user) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid session" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    // Update password in Supabase Auth
+    const callerId = userData.user.id;
+    let allowed = callerId === userId;
+    if (!allowed) {
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("role")
+        .eq("id", callerId)
+        .maybeSingle();
+      allowed = profile?.role === "admin";
+    }
+
+    if (!allowed) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Forbidden" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log("Updating password for user:", userId, "by caller:", callerId);
+
     const { data, error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
-      password: newPassword
+      password: newPassword,
     });
 
     if (error) {
-      console.error('Error updating password in auth:', error);
+      console.error("Error updating password in auth:", error);
       return new Response(
         JSON.stringify({ success: false, error: error.message }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log('Successfully updated password in auth system');
+    console.log("Successfully updated password in auth system");
     return new Response(
       JSON.stringify({ success: true, data }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-
   } catch (error) {
-    console.error('Failed to update password:', error);
+    console.error("Failed to update password:", error);
     return new Response(
-      JSON.stringify({ success: false, error: 'Failed to update password in authentication system' }),
+      JSON.stringify({ success: false, error: "Failed to update password" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
