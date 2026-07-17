@@ -96,8 +96,18 @@ export const GoalCard = ({
 
   const lastSyncDisplay = getLastSyncDisplay();
 
+  const isWeighted = goal.progressCalculation === 'weighted';
+  const isWon = goal.category === 'work' && goal.subcategory === 'sales' && goal.tenderOutcome === 'won';
+  const isLost = goal.category === 'work' && goal.subcategory === 'sales' && goal.tenderOutcome === 'lost';
+  const outcomeBorderClass = isWon
+    ? 'ring-2 ring-green-500 border-green-500 bg-green-50/40'
+    : isLost
+      ? 'ring-2 ring-red-500 border-red-500 bg-red-50/40'
+      : '';
+
   return (
     <>
+      <div className={`rounded-lg ${outcomeBorderClass}`}>
       <ContentCard variant={getContentCardVariant(isOverdue, isCompleted)}>
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
