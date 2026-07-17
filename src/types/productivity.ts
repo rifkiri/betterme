@@ -61,6 +61,7 @@ export interface WeeklyOutput {
   deletedDate?: Date;
   linkedGoalId?: string;
   visibility?: 'all' | 'managers' | 'self'; // Who can view this output
+  taggedUsers?: string[]; // Accepted collaborators
 }
 
 export interface Goal {
