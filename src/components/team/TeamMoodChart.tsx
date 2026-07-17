@@ -10,9 +10,10 @@ interface TeamMoodChartProps {
 }
 
 export const TeamMoodChart = ({ teamData }: TeamMoodChartProps) => {
-  // Calculate daily team mood averages from individual member data
+  // Calculate daily team mood averages from individual member data (30-day window)
   const calculateDailyAverages = () => {
-    if (!teamData.moodData || teamData.moodData.length === 0) {
+    const windowed = filterMoodDataToLast30Days(teamData.moodData);
+    if (!windowed || windowed.length === 0) {
       return [];
     }
 
