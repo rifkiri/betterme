@@ -24,6 +24,7 @@ import { VisibilityBadge } from '@/components/ui/visibility-badge';
 import { CardMetaStrip } from '@/components/ui/card-meta-strip';
 import { AssignmentRole } from '@/components/ui/role-styles';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ResourceLinksQuickButton } from './ResourceLinksQuickButton';
 
 interface GoalCardProps {
   goal: Goal;
