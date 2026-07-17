@@ -18,6 +18,8 @@ import { format } from 'date-fns';
 import { useState } from 'react';
 import { EditWeeklyOutputDialog } from './EditWeeklyOutputDialog';
 import { ResourceLinksPanel } from './ResourceLinksPanel';
+import { WeightedProgressPanel } from './WeightedProgressPanel';
+import { supabase } from '@/integrations/supabase/client';
 
 interface OutputDetailsDialogProps {
   output: WeeklyOutput;
