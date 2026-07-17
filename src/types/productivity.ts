@@ -63,6 +63,8 @@ export interface WeeklyOutput {
   linkedGoalId?: string;
   visibility?: 'all' | 'managers' | 'self'; // Who can view this output
   taggedUsers?: string[]; // Accepted collaborators
+  progressCalculation?: 'manual' | 'weighted'; // How this output's progress is computed
+  weight?: number; // Relative weight when parent goal uses weighted progress calculation
 }
 
 export interface Goal {
