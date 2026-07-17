@@ -93,13 +93,17 @@ class TeamDataService {
       membersSummary: [],
       overdueTasks: [],
       overdueOutputs: [],
+      overdueGoals: [],
       overdueStats: {
         tasksCount: 0,
         outputsCount: 0,
+        goalsCount: 0,
         tasksTrend: 'down',
         outputsTrend: 'down',
+        goalsTrend: 'down',
         tasksChange: '0',
-        outputsChange: '0'
+        outputsChange: '0',
+        goalsChange: '0'
       },
       moodData: [],
       teamTrends: {
