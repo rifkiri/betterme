@@ -17,6 +17,7 @@ import { WeeklyOutput, Task, Goal } from '@/types/productivity';
 import { format } from 'date-fns';
 import { useState } from 'react';
 import { EditWeeklyOutputDialog } from './EditWeeklyOutputDialog';
+import { ResourceLinksPanel } from './ResourceLinksPanel';
 
 interface OutputDetailsDialogProps {
   output: WeeklyOutput;
