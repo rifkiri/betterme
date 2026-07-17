@@ -752,6 +752,23 @@ export const EnhancedGoalsSection = ({
                 </Select>
               </div>
 
+              {/* Sales / Tender quick chip */}
+              <Button
+                variant={activeGoalSubcategoryFilter === 'sales' ? 'default' : 'outline'}
+                size="sm"
+                className="h-9"
+                onClick={() => {
+                  if (activeGoalSubcategoryFilter === 'sales') {
+                    setActiveGoalSubcategoryFilter('all');
+                  } else {
+                    setActiveGoalTypeFilter('work');
+                    setActiveGoalSubcategoryFilter('sales');
+                  }
+                }}
+              >
+                Sales / Tender
+              </Button>
+
               {/* Clear Filters Button */}
               {hasActiveGoalFilters && (
                 <Button
@@ -765,7 +782,22 @@ export const EnhancedGoalsSection = ({
                 </Button>
               )}
             </div>
-            
+
+            {/* Tender outcome summary — only when Sales filter is active */}
+            {activeGoalSubcategoryFilter === 'sales' && (
+              <div className="mb-4 flex items-center gap-4 rounded-md bg-muted/40 border p-3 text-sm">
+                <span className="text-green-700 font-medium">
+                  Won: {activeGoals.filter(g => (g.tenderOutcome ?? 'pending') === 'won').length}
+                </span>
+                <span className="text-red-700 font-medium">
+                  Lost: {activeGoals.filter(g => (g.tenderOutcome ?? 'pending') === 'lost').length}
+                </span>
+                <span className="text-gray-700 font-medium">
+                  Pending: {activeGoals.filter(g => (g.tenderOutcome ?? 'pending') === 'pending').length}
+                </span>
+              </div>
+            )}
+
             {activeGoals.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <Target className="h-12 w-12 mx-auto mb-4 text-gray-300" />
