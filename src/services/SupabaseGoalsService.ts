@@ -292,7 +292,8 @@ export class SupabaseGoalsService {
         // linked_output_ids removed - now handled by ItemLinkageService
         created_by: goal.createdBy,
         assignment_date: goal.assignmentDate ? goal.assignmentDate.toISOString() : null,
-        visibility: enforceVisibility
+        visibility: enforceVisibility,
+        progress_calculation: goal.progressCalculation || 'manual',
       });
 
     if (error) {
