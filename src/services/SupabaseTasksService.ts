@@ -131,7 +131,8 @@ export class SupabaseTasksService {
       weeklyOutputId: task.weekly_output_id,
       taggedUsers: (task as any).tagged_users || [],
       pendingTaggedUsers: pendingInvitationsByTask[task.id] || [],
-      visibility: (task as any).visibility || 'all'
+      visibility: (task as any).visibility || 'all',
+      weight: (task as any).weight ?? 1
     }));
   }
 
