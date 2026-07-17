@@ -333,6 +333,8 @@ export class SupabaseGoalsService {
     if (enforceVisibility !== undefined) supabaseUpdates.visibility = enforceVisibility;
     if ((updates as any).tenderOutcome !== undefined) supabaseUpdates.tender_outcome = (updates as any).tenderOutcome;
     if ((updates as any).tenderOutcomeNote !== undefined) supabaseUpdates.tender_outcome_note = (updates as any).tenderOutcomeNote;
+    if (updates.progressCalculation !== undefined) supabaseUpdates.progress_calculation = updates.progressCalculation;
+
 
     // Handle soft delete (archiving) - only set archived, not is_deleted
     // is_deleted should only be set for permanent deletion
