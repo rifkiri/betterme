@@ -55,6 +55,7 @@ export const AddGoalDialog = ({
       category: 'personal',
       deadline: undefined,
       selectedGoalId: '',
+      progressCalculation: 'manual',
     },
   });
 
