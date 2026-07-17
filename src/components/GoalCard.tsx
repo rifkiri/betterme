@@ -294,7 +294,7 @@ export const GoalCard = ({
           </div>
         )}
 
-        {canUpdateProgress && (
+        {canUpdateProgress && !isWeighted && !isLost && !isWon && (
           <ProgressControls
             progress={goal.progress}
             onDecrease={() => onUpdateProgress(goal.id, Math.max(0, goal.progress - 10))}
