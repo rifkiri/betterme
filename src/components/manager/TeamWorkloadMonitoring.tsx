@@ -132,6 +132,7 @@ interface TaskOwnership {
   visibility: 'all' | 'managers' | 'self';
   pomodoroSessions: number;
   totalDuration: number;
+  collaboratorCount: number;
 }
 
 interface UserTaskOwnership {
