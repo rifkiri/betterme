@@ -182,6 +182,16 @@ export const TeamWorkloadMonitoring = ({
   const [taskFilterVisibility, setTaskFilterVisibility] = useState<string>('all');
   const [taskFilterDeadline, setTaskFilterDeadline] = useState<string>('all');
   const [taskFilterSearch, setTaskFilterSearch] = useState<string>('');
+  // Task 9 — sort by number of collaborators (or fallback sorts)
+  const [taskSort, setTaskSort] = useState<'default' | 'fewest-collaborators' | 'most-collaborators' | 'due-date' | 'priority'>('default');
+
+  // Task 11 — reset the view toggle when the parent tab changes so it never
+  // gets stuck on the previous tab's mode.
+  useEffect(() => {
+    if (viewMode === 'goals') setGoalViewType('goal');
+    if (viewMode === 'outputs') setOutputViewType('output');
+    if (viewMode === 'tasks') setTaskViewType('task');
+  }, [viewMode]);
 
   const filteredTaskOwnerships = React.useMemo(() => {
     const now = new Date();
