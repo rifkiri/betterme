@@ -159,14 +159,25 @@ export const EditGoalDialog = ({
     }
 
     // Save the goal updates (always work category)
-    onSave(goal.id, {
+    const subcatDb = data.subcategory === "none" ? undefined : mapSubcategoryDisplayToDatabase(data.subcategory);
+    const updates: Partial<Goal> = {
       title: data.title,
       description: data.description,
       category: 'work',
-      subcategory: data.subcategory === "none" ? undefined : mapSubcategoryDisplayToDatabase(data.subcategory),
+      subcategory: subcatDb,
       deadline: deadline,
       visibility: isTeamMember ? 'all' : (data.visibility || 'all'),
-    });
+      progressCalculation: data.progressCalculation || 'manual',
+    };
+    if (subcatDb === 'sales') {
+      updates.tenderOutcome = data.tenderOutcome || 'pending';
+      updates.tenderOutcomeNote = data.tenderOutcomeNote || '';
+      if (data.tenderOutcome === 'won') {
+        updates.progress = 100;
+        updates.completed = true;
+      }
+    }
+    onSave(goal.id, updates);
 
     // Update output linkages
     if (currentUser?.id) {
