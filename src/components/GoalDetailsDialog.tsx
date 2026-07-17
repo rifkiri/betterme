@@ -500,6 +500,15 @@ const getCategoryColor = (category: Goal['category']) => {
                 </p>
               </div>
             </div>
+
+            {/* Resource Links */}
+            <div className="pt-2 border-t">
+              <ResourceLinksPanel
+                entityType="goal"
+                entityId={goal.id}
+                collaboratorIds={[goal.userId ?? '', ...assignedUserIds].filter(Boolean)}
+              />
+            </div>
           </div>
 
           <div className="flex justify-between pt-4 border-t">
