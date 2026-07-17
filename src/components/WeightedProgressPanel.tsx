@@ -36,7 +36,7 @@ export const WeightedProgressPanel = ({
     const init: Record<string, number> = {};
     items.forEach((c) => { init[c.id] = c.weight ?? 1; });
     setWeights(init);
-  }, [children]);
+  }, [items]);
 
   const totalWeight = Object.values(weights).reduce((a, b) => a + (Number(b) || 0), 0);
 
