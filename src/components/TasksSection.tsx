@@ -134,7 +134,7 @@ export const TasksSection = ({
           <div className="border-t pt-2 sm:pt-3 mt-2 sm:mt-3">
             <h4 className="text-sm font-medium text-orange-600 mb-2">Overdue Tasks</h4>
             <div className="space-y-2">
-              {overdueTasks.filter(task => !task.completed).slice(0, 3).map(task => (
+              {overdueTasks.filter(task => !task.completed).map(task => (
             <TaskItemWithPomodoro
                   key={task.id} 
                   task={task}
