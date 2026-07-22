@@ -46,7 +46,14 @@ export const TasksSection = ({
 }: TasksSectionProps) => {
   const [selectedTaskDate, setSelectedTaskDate] = useState(new Date());
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  
+
+  // Filter/sort controls
+  const [searchQuery, setSearchQuery] = useState('');
+  const [outputFilter, setOutputFilter] = useState<string>('all'); // 'all' | 'none' | outputId
+  const [priorityFilter, setPriorityFilter] = useState<'all' | 'High' | 'Medium' | 'Low'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'completed'>('all');
+  const [sortBy, setSortBy] = useState<'dueDate' | 'priority' | 'title' | 'output'>('dueDate');
+
   // Keep selectedTask synchronized with the latest task data
   useEffect(() => {
     if (selectedTask) {
@@ -56,25 +63,61 @@ export const TasksSection = ({
       }
     }
   }, [tasks, selectedTask?.id]);
-  
+
+  const outputById = useMemo(() => {
+    const m = new Map<string, WeeklyOutput>();
+    weeklyOutputs.forEach(o => m.set(o.id, o));
+    return m;
+  }, [weeklyOutputs]);
+
+  const priorityRank: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
+
+  const applyFiltersAndSort = (list: Task[]) => {
+    let out = list.filter(t => {
+      if (outputFilter === 'none' && t.weeklyOutputId) return false;
+      if (outputFilter !== 'all' && outputFilter !== 'none' && t.weeklyOutputId !== outputFilter) return false;
+      if (priorityFilter !== 'all' && t.priority !== priorityFilter) return false;
+      if (statusFilter === 'pending' && t.completed) return false;
+      if (statusFilter === 'completed' && !t.completed) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        if (!t.title.toLowerCase().includes(q) && !(t.description || '').toLowerCase().includes(q)) return false;
+      }
+      return true;
+    });
+    out = [...out].sort((a, b) => {
+      switch (sortBy) {
+        case 'priority':
+          return (priorityRank[a.priority] ?? 3) - (priorityRank[b.priority] ?? 3);
+        case 'title':
+          return a.title.localeCompare(b.title);
+        case 'output': {
+          const an = a.weeklyOutputId ? outputById.get(a.weeklyOutputId)?.title || '' : '';
+          const bn = b.weeklyOutputId ? outputById.get(b.weeklyOutputId)?.title || '' : '';
+          return an.localeCompare(bn);
+        }
+        case 'dueDate':
+        default: {
+          const at = a.dueDate ? a.dueDate.getTime() : Infinity;
+          const bt = b.dueDate ? b.dueDate.getTime() : Infinity;
+          return at - bt;
+        }
+      }
+    });
+    return out;
+  };
+
   // Enhanced task filtering for selected date
   const getTasksForSelectedDate = (date: Date) => {
     return tasks.filter(task => {
-      // Show tasks due on this date
-      if (task.dueDate && isSameDay(task.dueDate, date)) {
-        return true;
-      }
-      
-      // Show completed tasks that were completed on this date (even if they were overdue)
-      if (task.completed && task.completedDate && isSameDay(task.completedDate, date)) {
-        return true;
-      }
-      
+      if (task.dueDate && isSameDay(task.dueDate, date)) return true;
+      if (task.completed && task.completedDate && isSameDay(task.completedDate, date)) return true;
       return false;
     });
   };
-  
-  const selectedDateTasks = getTasksForSelectedDate(selectedTaskDate);
+
+  const selectedDateTasks = applyFiltersAndSort(getTasksForSelectedDate(selectedTaskDate));
+  const filteredOverdue = applyFiltersAndSort(overdueTasks);
 
   return (
     <Card className="h-fit">
