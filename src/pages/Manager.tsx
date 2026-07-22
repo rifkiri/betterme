@@ -4,15 +4,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { IndividualDetailsSection } from "@/components/team/IndividualDetailsSection";
 import { TeamWorkloadMonitoring } from "@/components/manager/TeamWorkloadMonitoring";
+import { GoalAlignmentSection } from "@/components/manager/GoalAlignmentSection";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useTeamDataRealtime } from "@/hooks/useTeamDataRealtime";
-import { Target, Users } from "lucide-react";
+import { Target, Users, Sparkles } from "lucide-react";
 import { PageContainer, PageHeader } from '@/components/ui/standardized';
 
 const Manager = () => {
   const [selectedEmployee, setSelectedEmployee] = useState<string>('');
   const [viewMode, setViewMode] = useState<'summary' | 'dashboard'>('summary');
-  const [activeTab, setActiveTab] = useState<'workload' | 'individual'>('workload');
+  const [activeTab, setActiveTab] = useState<'workload' | 'alignment' | 'individual'>('workload');
   
   const { profile: currentUser, isLoading: profileLoading } = useUserProfile();
   const { teamData, isLoading } = useTeamDataRealtime();
