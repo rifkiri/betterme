@@ -1,8 +1,10 @@
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Target } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Target, Search } from 'lucide-react';
 import { DeletedWeeklyOutputsDialog } from './DeletedWeeklyOutputsDialog';
 import { CompletedWeeklyOutputsDialog } from './CompletedWeeklyOutputsDialog';
 import { AddWeeklyOutputDialog } from './AddWeeklyOutputDialog';
