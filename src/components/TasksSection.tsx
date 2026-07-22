@@ -155,10 +155,59 @@ export const TasksSection = ({
           onDateChange={setSelectedTaskDate} 
         />
 
+        {/* Filter & Sort bar */}
+        <div className="flex flex-wrap items-center gap-2 border-b pb-2">
+          <div className="relative flex-1 min-w-[140px]">
+            <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Search tasks…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-7 h-8 text-xs"
+            />
+          </div>
+          <Select value={outputFilter} onValueChange={setOutputFilter}>
+            <SelectTrigger className="h-8 text-xs w-[150px]"><SelectValue placeholder="Output" /></SelectTrigger>
+            <SelectContent className="bg-background z-50 max-h-64">
+              <SelectItem value="all">All outputs</SelectItem>
+              <SelectItem value="none">Unlinked only</SelectItem>
+              {weeklyOutputs.map(o => (
+                <SelectItem key={o.id} value={o.id}>{o.title}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={priorityFilter} onValueChange={(v: any) => setPriorityFilter(v)}>
+            <SelectTrigger className="h-8 text-xs w-[120px]"><SelectValue /></SelectTrigger>
+            <SelectContent className="bg-background z-50">
+              <SelectItem value="all">All priorities</SelectItem>
+              <SelectItem value="High">🔴 High</SelectItem>
+              <SelectItem value="Medium">🟡 Medium</SelectItem>
+              <SelectItem value="Low">🟢 Low</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
+            <SelectTrigger className="h-8 text-xs w-[120px]"><SelectValue /></SelectTrigger>
+            <SelectContent className="bg-background z-50">
+              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
+            <SelectTrigger className="h-8 text-xs w-[140px]"><SelectValue /></SelectTrigger>
+            <SelectContent className="bg-background z-50">
+              <SelectItem value="dueDate">Sort: Due date</SelectItem>
+              <SelectItem value="priority">Sort: Priority</SelectItem>
+              <SelectItem value="title">Sort: Title (A–Z)</SelectItem>
+              <SelectItem value="output">Sort: Linked output</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Tasks for Selected Date */}
         <div className="space-y-2">
           {selectedDateTasks.length === 0 ? (
-            <p className="text-center text-gray-500 py-4 text-sm">No tasks for this date</p>
+            <p className="text-center text-gray-500 py-4 text-sm">No tasks match filters for this date</p>
           ) : (
             selectedDateTasks.map(task => (
               <TaskItemWithPomodoro 
@@ -174,14 +223,14 @@ export const TasksSection = ({
             ))
           )}
         </div>
-        
+
         {/* Show overdue tasks only when viewing today and they haven't been completed */}
-        {isToday(selectedTaskDate) && overdueTasks.filter(task => !task.completed).length > 0 && (
+        {isToday(selectedTaskDate) && filteredOverdue.filter(t => !t.completed).length > 0 && (
           <div className="border-t pt-2 sm:pt-3 mt-2 sm:mt-3">
             <h4 className="text-sm font-medium text-orange-600 mb-2">Overdue Tasks</h4>
             <div className="space-y-2">
-              {overdueTasks.filter(task => !task.completed).map(task => (
-            <TaskItemWithPomodoro
+              {filteredOverdue.filter(t => !t.completed).map(task => (
+                <TaskItemWithPomodoro
                   key={task.id} 
                   task={task}
                   onToggleTask={onToggleTask}
