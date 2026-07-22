@@ -109,19 +109,11 @@ export const WeeklyOutputsSection = ({
   const periodOutputs = applyFiltersAndSort(getOutputsForSelectedPeriod());
 
   // For current period, show incomplete outputs from previous periods that are truly overdue
-  const rolledOverOutputs = isCurrentPeriod ? weeklyOutputs.filter(output => {
-    // Must have a due date and progress must be less than 100%
+  const rolledOverOutputs = isCurrentPeriod ? applyFiltersAndSort(weeklyOutputs.filter(output => {
     if (!output.dueDate || output.progress >= 100) return false;
-    
-    // Must be due before today (overdue)
     if (!isBefore(output.dueDate, today)) return false;
-    
-    // Must NOT be from the current bi-weekly period
-    return !isWithinInterval(output.dueDate, {
-      start: periodStart,
-      end: periodEnd
-    });
-  }) : [];
+    return !isWithinInterval(output.dueDate, { start: periodStart, end: periodEnd });
+  })) : [];
 
   // Navigate by 1 week for rolling bi-weekly
   const navigatePeriod = (direction: 'prev' | 'next') => {
