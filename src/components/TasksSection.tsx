@@ -1,7 +1,10 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format, isToday, isSameDay } from 'date-fns';
+import { Search } from 'lucide-react';
 import { Task, WeeklyOutput, Goal } from '@/types/productivity';
 import { AddTaskDialog } from './AddTaskDialog';
 import { TaskItemWithPomodoro } from './TaskItemWithPomodoro';
