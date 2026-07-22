@@ -157,6 +157,49 @@ export const WeeklyOutputsSection = ({
             />
           </div>
         </div>
+
+        {/* Filter & Sort bar */}
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t">
+          <div className="relative flex-1 min-w-[140px]">
+            <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Search outputs…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-7 h-8 text-xs"
+            />
+          </div>
+          <Select value={goalFilter} onValueChange={setGoalFilter}>
+            <SelectTrigger className="h-8 text-xs w-[150px]"><SelectValue /></SelectTrigger>
+            <SelectContent className="bg-background z-50 max-h-64">
+              <SelectItem value="all">All goals</SelectItem>
+              <SelectItem value="none">Unlinked only</SelectItem>
+              {goals.map(g => (
+                <SelectItem key={g.id} value={g.id}>{g.title}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
+            <SelectTrigger className="h-8 text-xs w-[130px]"><SelectValue /></SelectTrigger>
+            <SelectContent className="bg-background z-50">
+              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="not_started">Not started</SelectItem>
+              <SelectItem value="in_progress">In progress</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
+            <SelectTrigger className="h-8 text-xs w-[160px]"><SelectValue /></SelectTrigger>
+            <SelectContent className="bg-background z-50">
+              <SelectItem value="dueDateAsc">Sort: Due (earliest)</SelectItem>
+              <SelectItem value="dueDateDesc">Sort: Due (latest)</SelectItem>
+              <SelectItem value="progressDesc">Sort: Progress (high)</SelectItem>
+              <SelectItem value="progressAsc">Sort: Progress (low)</SelectItem>
+              <SelectItem value="title">Sort: Title (A–Z)</SelectItem>
+              <SelectItem value="goal">Sort: Linked goal</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
       <CardContent>
         <WeekNavigator 
