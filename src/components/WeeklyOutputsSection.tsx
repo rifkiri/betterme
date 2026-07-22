@@ -1,8 +1,10 @@
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Target } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Target, Search } from 'lucide-react';
 import { DeletedWeeklyOutputsDialog } from './DeletedWeeklyOutputsDialog';
 import { CompletedWeeklyOutputsDialog } from './CompletedWeeklyOutputsDialog';
 import { AddWeeklyOutputDialog } from './AddWeeklyOutputDialog';
@@ -44,7 +46,51 @@ export const WeeklyOutputsSection = ({
   onRefresh
 }: WeeklyOutputsSectionProps) => {
   const [selectedPeriod, setSelectedPeriod] = useState(new Date());
-  
+
+  // Filter & sort
+  const [searchQuery, setSearchQuery] = useState('');
+  const [goalFilter, setGoalFilter] = useState<string>('all'); // 'all' | 'none' | goalId
+  const [statusFilter, setStatusFilter] = useState<'all' | 'in_progress' | 'completed' | 'not_started'>('all');
+  const [sortBy, setSortBy] = useState<'dueDateAsc' | 'dueDateDesc' | 'progressDesc' | 'progressAsc' | 'title' | 'goal'>('dueDateAsc');
+
+  const goalById = useMemo(() => {
+    const m = new Map<string, Goal>();
+    goals.forEach(g => m.set(g.id, g));
+    return m;
+  }, [goals]);
+
+  const applyFiltersAndSort = (list: WeeklyOutput[]) => {
+    let out = list.filter(o => {
+      if (goalFilter === 'none' && o.linkedGoalId) return false;
+      if (goalFilter !== 'all' && goalFilter !== 'none' && o.linkedGoalId !== goalFilter) return false;
+      if (statusFilter === 'completed' && o.progress < 100) return false;
+      if (statusFilter === 'in_progress' && (o.progress >= 100 || o.progress === 0)) return false;
+      if (statusFilter === 'not_started' && o.progress !== 0) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        if (!o.title.toLowerCase().includes(q) && !(o.description || '').toLowerCase().includes(q)) return false;
+      }
+      return true;
+    });
+    out = [...out].sort((a, b) => {
+      switch (sortBy) {
+        case 'dueDateDesc': return (b.dueDate?.getTime() || 0) - (a.dueDate?.getTime() || 0);
+        case 'progressDesc': return b.progress - a.progress;
+        case 'progressAsc': return a.progress - b.progress;
+        case 'title': return a.title.localeCompare(b.title);
+        case 'goal': {
+          const an = a.linkedGoalId ? goalById.get(a.linkedGoalId)?.title || '' : '';
+          const bn = b.linkedGoalId ? goalById.get(b.linkedGoalId)?.title || '' : '';
+          return an.localeCompare(bn);
+        }
+        case 'dueDateAsc':
+        default:
+          return (a.dueDate?.getTime() || Infinity) - (b.dueDate?.getTime() || Infinity);
+      }
+    });
+    return out;
+  };
+
   // Get bi-weekly (2-week) interval
   const { start: periodStart, end: periodEnd } = getBiWeeklyInterval(selectedPeriod);
   const today = new Date();
@@ -53,41 +99,21 @@ export const WeeklyOutputsSection = ({
   // Enhanced filtering for outputs in the selected bi-weekly period
   const getOutputsForSelectedPeriod = () => {
     return weeklyOutputs.filter(output => {
-      // Show outputs due in this period (regardless of completion status)
-      if (output.dueDate && isWithinInterval(output.dueDate, { start: periodStart, end: periodEnd })) {
-        return true;
-      }
-      
-      // Show completed outputs that were completed in this period (even if they were overdue)
-      if (output.progress >= 100 && output.completedDate && isWithinInterval(output.completedDate, { start: periodStart, end: periodEnd })) {
-        return true;
-      }
-      
-      // Show outputs without due dates in all periods
-      if (!output.dueDate) {
-        return true;
-      }
-      
+      if (output.dueDate && isWithinInterval(output.dueDate, { start: periodStart, end: periodEnd })) return true;
+      if (output.progress >= 100 && output.completedDate && isWithinInterval(output.completedDate, { start: periodStart, end: periodEnd })) return true;
+      if (!output.dueDate) return true;
       return false;
     });
   };
 
-  const periodOutputs = getOutputsForSelectedPeriod();
+  const periodOutputs = applyFiltersAndSort(getOutputsForSelectedPeriod());
 
   // For current period, show incomplete outputs from previous periods that are truly overdue
-  const rolledOverOutputs = isCurrentPeriod ? weeklyOutputs.filter(output => {
-    // Must have a due date and progress must be less than 100%
+  const rolledOverOutputs = isCurrentPeriod ? applyFiltersAndSort(weeklyOutputs.filter(output => {
     if (!output.dueDate || output.progress >= 100) return false;
-    
-    // Must be due before today (overdue)
     if (!isBefore(output.dueDate, today)) return false;
-    
-    // Must NOT be from the current bi-weekly period
-    return !isWithinInterval(output.dueDate, {
-      start: periodStart,
-      end: periodEnd
-    });
-  }) : [];
+    return !isWithinInterval(output.dueDate, { start: periodStart, end: periodEnd });
+  })) : [];
 
   // Navigate by 1 week for rolling bi-weekly
   const navigatePeriod = (direction: 'prev' | 'next') => {
@@ -130,6 +156,49 @@ export const WeeklyOutputsSection = ({
               onUpdateProgress={onUpdateProgress} 
             />
           </div>
+        </div>
+
+        {/* Filter & Sort bar */}
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t">
+          <div className="relative flex-1 min-w-[140px]">
+            <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Search outputs…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-7 h-8 text-xs"
+            />
+          </div>
+          <Select value={goalFilter} onValueChange={setGoalFilter}>
+            <SelectTrigger className="h-8 text-xs w-[150px]"><SelectValue /></SelectTrigger>
+            <SelectContent className="bg-background z-50 max-h-64">
+              <SelectItem value="all">All goals</SelectItem>
+              <SelectItem value="none">Unlinked only</SelectItem>
+              {goals.map(g => (
+                <SelectItem key={g.id} value={g.id}>{g.title}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
+            <SelectTrigger className="h-8 text-xs w-[130px]"><SelectValue /></SelectTrigger>
+            <SelectContent className="bg-background z-50">
+              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="not_started">Not started</SelectItem>
+              <SelectItem value="in_progress">In progress</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
+            <SelectTrigger className="h-8 text-xs w-[160px]"><SelectValue /></SelectTrigger>
+            <SelectContent className="bg-background z-50">
+              <SelectItem value="dueDateAsc">Sort: Due (earliest)</SelectItem>
+              <SelectItem value="dueDateDesc">Sort: Due (latest)</SelectItem>
+              <SelectItem value="progressDesc">Sort: Progress (high)</SelectItem>
+              <SelectItem value="progressAsc">Sort: Progress (low)</SelectItem>
+              <SelectItem value="title">Sort: Title (A–Z)</SelectItem>
+              <SelectItem value="goal">Sort: Linked goal</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </CardHeader>
       <CardContent>

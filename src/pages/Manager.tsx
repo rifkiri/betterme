@@ -4,15 +4,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { IndividualDetailsSection } from "@/components/team/IndividualDetailsSection";
 import { TeamWorkloadMonitoring } from "@/components/manager/TeamWorkloadMonitoring";
+import { GoalAlignmentSection } from "@/components/manager/GoalAlignmentSection";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useTeamDataRealtime } from "@/hooks/useTeamDataRealtime";
-import { Target, Users } from "lucide-react";
+import { Target, Users, Sparkles } from "lucide-react";
 import { PageContainer, PageHeader } from '@/components/ui/standardized';
 
 const Manager = () => {
   const [selectedEmployee, setSelectedEmployee] = useState<string>('');
   const [viewMode, setViewMode] = useState<'summary' | 'dashboard'>('summary');
-  const [activeTab, setActiveTab] = useState<'workload' | 'individual'>('workload');
+  const [activeTab, setActiveTab] = useState<'workload' | 'alignment' | 'individual'>('workload');
   
   const { profile: currentUser, isLoading: profileLoading } = useUserProfile();
   const { teamData, isLoading } = useTeamDataRealtime();
@@ -110,14 +111,21 @@ const Manager = () => {
          subtitle="Monitor organization-wide performance and individual progress"
         />
       
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'workload' | 'individual')} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-gray-100 rounded-lg p-1">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'workload' | 'alignment' | 'individual')} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 bg-gray-100 rounded-lg p-1">
             <TabsTrigger 
               value="workload" 
               className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
             >
               <Target className="w-4 h-4" />
               <span className="hidden sm:inline-flex">Team Workload</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="alignment" 
+              className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span className="hidden sm:inline-flex">Goal Alignment</span>
             </TabsTrigger>
             <TabsTrigger 
               value="individual" 
@@ -144,6 +152,10 @@ const Manager = () => {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          <TabsContent value="alignment" className="mt-4">
+            <GoalAlignmentSection />
           </TabsContent>
 
           <TabsContent value="individual" className="mt-4">
