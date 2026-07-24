@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Target, BarChart3, TrendingUp, UserCog, UserCheck, Calendar, CheckCircle, FileText, Eye, CheckSquare, User as UserIcon, Clock, Timer } from 'lucide-react';
+import { Users, Target, BarChart3, TrendingUp, UserCog, UserCheck, Calendar, CheckCircle, FileText, Eye, CheckSquare, User as UserIcon, Clock, Timer, CalendarDays } from 'lucide-react';
+import { ActivitiesCalendarView, CalendarActivityItem } from '@/components/calendar/ActivitiesCalendarView';
 import { Progress } from '@/components/ui/progress';
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { supabaseGoalsService } from '@/services/SupabaseGoalsService';
@@ -740,7 +741,7 @@ export const TeamWorkloadMonitoring = ({
       )}
 
       <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as any)} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview" className="flex items-center gap-1">
             <BarChart3 className="h-3 w-3" />
             Overview
@@ -756,6 +757,10 @@ export const TeamWorkloadMonitoring = ({
           <TabsTrigger value="tasks" className="flex items-center gap-1">
             <Users className="h-3 w-3" />
             Tasks
+          </TabsTrigger>
+          <TabsTrigger value="calendar" className="flex items-center gap-1">
+            <CalendarDays className="h-3 w-3" />
+            Calendar
           </TabsTrigger>
         </TabsList>
 
