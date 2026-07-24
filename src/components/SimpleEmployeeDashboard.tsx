@@ -114,8 +114,47 @@ export const SimpleEmployeeDashboard = () => {
         <FeelingTracker />
       </div>
 
-      {/* 3-Column Grid Layout */}
-      <div className="space-y-2 sm:space-y-4 lg:grid lg:grid-cols-3 lg:gap-3 xl:gap-6 lg:space-y-0 animate-fade-in-up delay-100">
+      {/* View switcher */}
+      <ViewSwitcherAndContent
+        habits={habits}
+        archivedHabits={archivedHabits}
+        selectedDate={selectedDate}
+        handleDateChange={handleDateChange}
+        addHabit={addHabit}
+        editHabit={editHabit}
+        toggleHabit={toggleHabit}
+        archiveHabit={archiveHabit}
+        restoreHabit={restoreHabit}
+        permanentlyDeleteHabit={permanentlyDeleteHabit}
+        isLoading={isLoading}
+        goals={goals}
+        weeklyOutputs={weeklyOutputs}
+        deletedWeeklyOutputs={deletedWeeklyOutputs}
+        overdueWeeklyOutputs={overdueWeeklyOutputs}
+        tasks={tasks}
+        deletedTasks={deletedTasks}
+        overdueTasks={overdueTasks}
+        addWeeklyOutput={addWeeklyOutput}
+        editWeeklyOutput={editWeeklyOutput}
+        updateProgress={updateProgress}
+        moveWeeklyOutput={moveWeeklyOutput}
+        deleteWeeklyOutput={deleteWeeklyOutput}
+        restoreWeeklyOutput={restoreWeeklyOutput}
+        permanentlyDeleteWeeklyOutput={permanentlyDeleteWeeklyOutput}
+        loadAllData={loadAllData}
+        addTask={addTask}
+        editTask={editTask}
+        toggleTask={toggleTask}
+        handleRollOver={handleRollOver}
+        deleteTask={deleteTask}
+        restoreTask={restoreTask}
+        permanentlyDeleteTask={permanentlyDeleteTask}
+        getTasksByDate={getTasksByDate}
+        ownerName={profile?.name}
+        ownerId={profile?.id}
+      />
+      <div style={{ display: 'none' }}>
+      {/* legacy anchor kept intentionally empty */}
         <div className="lg:col-span-1">
           <HabitsSection 
             habits={habits}
