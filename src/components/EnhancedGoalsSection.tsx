@@ -636,7 +636,7 @@ export const EnhancedGoalsSection = ({
       />
 
       {/* Tabs positioned below header subtitle like TeamDashboard */}
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'completed' | 'marketplace')}>
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'completed' | 'marketplace' | 'calendar')}>
         <TabsList className="flex w-full h-auto p-1.5 bg-muted/30 backdrop-blur-md border border-border/50 rounded-xl overflow-x-auto mb-6">
           <TabsTrigger 
             value="active" 
