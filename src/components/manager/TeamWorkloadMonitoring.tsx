@@ -155,7 +155,7 @@ export const TeamWorkloadMonitoring = ({
   isLoading, 
   onSelectEmployee 
 }: TeamWorkloadMonitoringProps) => {
-  const [viewMode, setViewMode] = useState<'goals' | 'outputs' | 'tasks' | 'overview'>('overview');
+  const [viewMode, setViewMode] = useState<'goals' | 'outputs' | 'tasks' | 'overview' | 'calendar'>('overview');
   const [workloadData, setWorkloadData] = useState<{
     memberWorkloads: MemberWorkload[];
     workGoals: WorkGoal[];
