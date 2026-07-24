@@ -1439,6 +1439,15 @@ export const TeamWorkloadMonitoring = ({
             </div>
           )}
         </TabsContent>
+
+        <TabsContent value="calendar" className="space-y-4">
+          <ActivitiesCalendarView
+            title="Team Activities"
+            activities={calendarActivities}
+            users={calendarUsers}
+            showUserFilter
+          />
+        </TabsContent>
       </Tabs>
 
       {/* Goal Linked Outputs Dialog */}
