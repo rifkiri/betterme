@@ -1,5 +1,6 @@
 
-import { Target, CheckCircle, Clock, Award } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Target, CheckCircle, Clock, Award, LayoutGrid, Calendar as CalendarIcon } from 'lucide-react';
 import { useProductivity } from '@/hooks/useProductivity';
 import { QuickStatsCard } from './QuickStatsCard';
 import { FeelingTracker } from './FeelingTracker';
@@ -8,6 +9,8 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { WeeklyOutputsSection } from './WeeklyOutputsSection';
 import { TasksSection } from './TasksSection';
 import { PageContainer, PageHeader } from '@/components/ui/standardized';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { ActivitiesCalendarView, CalendarActivityItem } from './calendar/ActivitiesCalendarView';
 
 export const SimpleEmployeeDashboard = () => {
   console.log('SimpleEmployeeDashboard rendering...');
