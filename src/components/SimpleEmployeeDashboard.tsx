@@ -114,8 +114,7 @@ export const SimpleEmployeeDashboard = () => {
         <FeelingTracker />
       </div>
 
-      {/* View switcher */}
-      <ViewSwitcherAndContent
+      <ProductivityBody
         habits={habits}
         archivedHabits={archivedHabits}
         selectedDate={selectedDate}
@@ -153,63 +152,3 @@ export const SimpleEmployeeDashboard = () => {
         ownerName={profile?.name}
         ownerId={profile?.id}
       />
-      <div style={{ display: 'none' }}>
-      {/* legacy anchor kept intentionally empty */}
-        <div className="lg:col-span-1">
-          <HabitsSection 
-            habits={habits}
-            archivedHabits={archivedHabits}
-            selectedDate={selectedDate}
-            onDateChange={handleDateChange}
-            onAddHabit={addHabit}
-            onEditHabit={editHabit}
-            onToggleHabit={toggleHabit}
-            onArchiveHabit={archiveHabit}
-            onRestoreHabit={restoreHabit}
-            onPermanentlyDeleteHabit={permanentlyDeleteHabit}
-            isLoading={isLoading}
-            goals={goals}
-          />
-        </div>
-
-        <div className="lg:col-span-1">
-          <WeeklyOutputsSection 
-            weeklyOutputs={weeklyOutputs}
-            deletedWeeklyOutputs={deletedWeeklyOutputs}
-            overdueWeeklyOutputs={overdueWeeklyOutputs}
-            tasks={tasks}
-            goals={goals}
-            onAddWeeklyOutput={(output) => 
-              addWeeklyOutput(output)
-            }
-            onEditWeeklyOutput={editWeeklyOutput}
-            onUpdateProgress={updateProgress}
-            onMoveWeeklyOutput={moveWeeklyOutput}
-            onDeleteWeeklyOutput={deleteWeeklyOutput}
-            onRestoreWeeklyOutput={restoreWeeklyOutput}
-            onPermanentlyDeleteWeeklyOutput={permanentlyDeleteWeeklyOutput}
-            onRefresh={loadAllData}
-          />
-        </div>
-
-        <div className="lg:col-span-1">
-          <TasksSection 
-            tasks={tasks}
-            deletedTasks={deletedTasks}
-            overdueTasks={overdueTasks}
-            onAddTask={addTask}
-            onEditTask={editTask}
-            onToggleTask={toggleTask}
-            onMoveTask={handleRollOver}
-            onDeleteTask={deleteTask}
-            onRestoreTask={restoreTask}
-            onPermanentlyDeleteTask={permanentlyDeleteTask}
-            getTasksByDate={getTasksByDate}
-            weeklyOutputs={weeklyOutputs}
-            goals={goals}
-          />
-        </div>
-      </div>
-    </PageContainer>
-  );
-};
