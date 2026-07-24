@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Target, BarChart3, TrendingUp, UserCog, UserCheck, Calendar, CheckCircle, FileText, Eye, CheckSquare, User as UserIcon, Clock, Timer } from 'lucide-react';
+import { Users, Target, BarChart3, TrendingUp, UserCog, UserCheck, Calendar, CheckCircle, FileText, Eye, CheckSquare, User as UserIcon, Clock, Timer, CalendarDays } from 'lucide-react';
+import { ActivitiesCalendarView, CalendarActivityItem } from '@/components/calendar/ActivitiesCalendarView';
 import { Progress } from '@/components/ui/progress';
 import { supabaseDataService } from '@/services/SupabaseDataService';
 import { supabaseGoalsService } from '@/services/SupabaseGoalsService';
@@ -155,7 +156,7 @@ export const TeamWorkloadMonitoring = ({
   isLoading, 
   onSelectEmployee 
 }: TeamWorkloadMonitoringProps) => {
-  const [viewMode, setViewMode] = useState<'goals' | 'outputs' | 'tasks' | 'overview'>('overview');
+  const [viewMode, setViewMode] = useState<'goals' | 'outputs' | 'tasks' | 'overview' | 'calendar'>('overview');
   const [workloadData, setWorkloadData] = useState<{
     memberWorkloads: MemberWorkload[];
     workGoals: WorkGoal[];
@@ -249,6 +250,79 @@ export const TeamWorkloadMonitoring = ({
     workloadData.taskOwnerships.forEach(t => map.set(t.userId, t.userName));
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
   }, [workloadData.taskOwnerships]);
+
+  const calendarActivities = React.useMemo<CalendarActivityItem[]>(() => {
+    const items: CalendarActivityItem[] = [];
+    const seenOutputs = new Set<string>();
+    const seenTasks = new Set<string>();
+
+    workloadData.workGoals.forEach((g: any) => {
+      const owner = userProfiles.get(g.coach || g.leads?.[0] || g.members?.[0] || '');
+      if (g.deadline) {
+        items.push({
+          id: g.id,
+          type: 'goal',
+          title: g.title,
+          date: new Date(g.deadline),
+          progress: g.progress ?? 0,
+          ownerId: owner?.id,
+          ownerName: owner?.name,
+        });
+      }
+      (g.linkedOutputs || []).forEach((o: any) => {
+        if (seenOutputs.has(o.id)) return;
+        seenOutputs.add(o.id);
+        const ou = userProfiles.get(o.userId);
+        items.push({
+          id: o.id,
+          type: 'output',
+          title: o.title,
+          date: new Date(o.dueDate),
+          progress: o.progress ?? 0,
+          ownerId: o.userId,
+          ownerName: ou?.name,
+        });
+      });
+    });
+
+    workloadData.outputOwnerships.forEach((o) => {
+      if (seenOutputs.has(o.id)) return;
+      seenOutputs.add(o.id);
+      items.push({
+        id: o.id,
+        type: 'output',
+        title: o.title,
+        date: new Date(o.dueDate),
+        progress: o.progress ?? 0,
+        ownerId: o.userId,
+        ownerName: o.userName,
+      });
+    });
+
+    workloadData.taskOwnerships.forEach((t) => {
+      if (seenTasks.has(t.id)) return;
+      seenTasks.add(t.id);
+      items.push({
+        id: t.id,
+        type: 'task',
+        title: t.title,
+        date: new Date(t.dueDate),
+        priority: t.priority,
+        ownerId: t.userId,
+        ownerName: t.userName,
+      });
+    });
+
+    return items.filter((i) => i.date && !isNaN(i.date.getTime()));
+  }, [workloadData, userProfiles]);
+
+  const calendarUsers = React.useMemo(() => {
+    const map = new Map<string, string>();
+    workloadData.memberWorkloads.forEach((m) => map.set(m.id, m.name));
+    workloadData.taskOwnerships.forEach((t) => map.set(t.userId, t.userName));
+    workloadData.outputOwnerships.forEach((o) => map.set(o.userId, o.userName));
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [workloadData]);
 
   // Load workload data on mount via the RPC-backed loader — do NOT gate on
   // teamData.membersSummary, which can be empty when RLS hides admins/interns
@@ -740,7 +814,7 @@ export const TeamWorkloadMonitoring = ({
       )}
 
       <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as any)} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview" className="flex items-center gap-1">
             <BarChart3 className="h-3 w-3" />
             Overview
@@ -756,6 +830,10 @@ export const TeamWorkloadMonitoring = ({
           <TabsTrigger value="tasks" className="flex items-center gap-1">
             <Users className="h-3 w-3" />
             Tasks
+          </TabsTrigger>
+          <TabsTrigger value="calendar" className="flex items-center gap-1">
+            <CalendarDays className="h-3 w-3" />
+            Calendar
           </TabsTrigger>
         </TabsList>
 
@@ -1433,6 +1511,15 @@ export const TeamWorkloadMonitoring = ({
               </Card>
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="calendar" className="space-y-4">
+          <ActivitiesCalendarView
+            title="Team Activities"
+            activities={calendarActivities}
+            users={calendarUsers}
+            showUserFilter
+          />
         </TabsContent>
       </Tabs>
 

@@ -14,7 +14,8 @@ import { MarketplaceGoalCard } from './MarketplaceGoalCard';
 import { MarketplaceFilters } from '@/components/ui/MarketplaceFilters';
 import { ZatzetSyncPreviewDialog } from './integration/ZatzetSyncPreviewDialog';
 import { Goal, WeeklyOutput, Habit, GoalAssignment, Task } from '@/types/productivity';
-import { Target, Briefcase, User, Plus, CheckCircle, Minus, Edit, Trash2, Eye, Link2, Store, RotateCcw, Filter, X, ArrowUpDown, RefreshCw } from 'lucide-react';
+import { Target, Briefcase, User, Plus, CheckCircle, Minus, Edit, Trash2, Eye, Link2, Store, RotateCcw, Filter, X, ArrowUpDown, RefreshCw, Calendar as CalendarIcon } from 'lucide-react';
+import { ActivitiesCalendarView, CalendarActivityItem } from './calendar/ActivitiesCalendarView';
 import { mapSubcategoryDatabaseToDisplay, WORK_SUBCATEGORY_DISPLAY_MAP, PERSONAL_SUBCATEGORY_DISPLAY_MAP } from '@/utils/goalCategoryUtils';
 import { PageContainer, PageHeader } from '@/components/ui/standardized';
 import { Label } from '@/components/ui/label';
@@ -71,7 +72,7 @@ export const EnhancedGoalsSection = ({
   onRestoreDeletedGoal,
   onRefresh
 }: EnhancedGoalsSectionProps) => {
-  const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'marketplace'>('active');
+  const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'marketplace' | 'calendar'>('active');
   const [viewingGoal, setViewingGoal] = useState<Goal | null>(null);
   const [isLoadingGoalDetails, setIsLoadingGoalDetails] = useState(false);
   
@@ -84,6 +85,50 @@ export const EnhancedGoalsSection = ({
     importInitiatives 
   } = useZatzetIntegration();
   const [showSyncPreview, setShowSyncPreview] = useState(false);
+
+  const calendarActivities = useMemo<CalendarActivityItem[]>(() => {
+    const items: CalendarActivityItem[] = [];
+    (allGoals || []).forEach((g) => {
+      if (g.deadline) {
+        items.push({
+          id: g.id,
+          type: 'goal',
+          title: g.title,
+          description: g.description,
+          date: new Date(g.deadline),
+          progress: g.progress ?? 0,
+          ownerId: g.userId,
+        });
+      }
+    });
+    (weeklyOutputs || []).forEach((o) => {
+      if (o.dueDate) {
+        items.push({
+          id: o.id,
+          type: 'output',
+          title: o.title,
+          description: o.description,
+          date: new Date(o.dueDate),
+          progress: o.progress ?? 0,
+          ownerId: o.userId,
+        });
+      }
+    });
+    (tasks || []).forEach((t) => {
+      if (t.dueDate) {
+        items.push({
+          id: t.id,
+          type: 'task',
+          title: t.title,
+          description: t.description,
+          date: new Date(t.dueDate),
+          priority: t.priority,
+          ownerId: t.userId,
+        });
+      }
+    });
+    return items;
+  }, [allGoals, weeklyOutputs, tasks]);
   
   // Marketplace filters state
   const [marketplaceSearch, setMarketplaceSearch] = useState('');
@@ -635,7 +680,7 @@ export const EnhancedGoalsSection = ({
       />
 
       {/* Tabs positioned below header subtitle like TeamDashboard */}
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'completed' | 'marketplace')}>
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'completed' | 'marketplace' | 'calendar')}>
         <TabsList className="flex w-full h-auto p-1.5 bg-muted/30 backdrop-blur-md border border-border/50 rounded-xl overflow-x-auto mb-6">
           <TabsTrigger 
             value="active" 
@@ -660,6 +705,13 @@ export const EnhancedGoalsSection = ({
               Goal Marketplace ({marketplaceGoals.length})
             </TabsTrigger>
           )}
+          <TabsTrigger
+            value="calendar"
+            className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-4 py-2.5 rounded-lg whitespace-nowrap flex-shrink-0 transition-all data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm"
+          >
+            <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+            Calendar View
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="active" className="space-y-4">
@@ -990,6 +1042,15 @@ export const EnhancedGoalsSection = ({
               )
             )}
           </Card>
+        </TabsContent>
+
+        <TabsContent value="calendar" className="space-y-4">
+          <ActivitiesCalendarView
+            title="Goals, Outputs & Tasks"
+            activities={calendarActivities}
+            users={availableUsers?.map((u) => ({ id: u.id, name: u.name })) ?? []}
+            showUserFilter
+          />
         </TabsContent>
       </Tabs>
 
