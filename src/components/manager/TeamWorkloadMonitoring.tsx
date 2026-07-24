@@ -251,6 +251,79 @@ export const TeamWorkloadMonitoring = ({
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
   }, [workloadData.taskOwnerships]);
 
+  const calendarActivities = React.useMemo<CalendarActivityItem[]>(() => {
+    const items: CalendarActivityItem[] = [];
+    const seenOutputs = new Set<string>();
+    const seenTasks = new Set<string>();
+
+    workloadData.workGoals.forEach((g: any) => {
+      const owner = userProfiles.get(g.coach || g.leads?.[0] || g.members?.[0] || '');
+      if (g.deadline) {
+        items.push({
+          id: g.id,
+          type: 'goal',
+          title: g.title,
+          date: new Date(g.deadline),
+          progress: g.progress ?? 0,
+          ownerId: owner?.id,
+          ownerName: owner?.name,
+        });
+      }
+      (g.linkedOutputs || []).forEach((o: any) => {
+        if (seenOutputs.has(o.id)) return;
+        seenOutputs.add(o.id);
+        const ou = userProfiles.get(o.userId);
+        items.push({
+          id: o.id,
+          type: 'output',
+          title: o.title,
+          date: new Date(o.dueDate),
+          progress: o.progress ?? 0,
+          ownerId: o.userId,
+          ownerName: ou?.name,
+        });
+      });
+    });
+
+    workloadData.outputOwnerships.forEach((o) => {
+      if (seenOutputs.has(o.id)) return;
+      seenOutputs.add(o.id);
+      items.push({
+        id: o.id,
+        type: 'output',
+        title: o.title,
+        date: new Date(o.dueDate),
+        progress: o.progress ?? 0,
+        ownerId: o.userId,
+        ownerName: o.userName,
+      });
+    });
+
+    workloadData.taskOwnerships.forEach((t) => {
+      if (seenTasks.has(t.id)) return;
+      seenTasks.add(t.id);
+      items.push({
+        id: t.id,
+        type: 'task',
+        title: t.title,
+        date: new Date(t.dueDate),
+        priority: t.priority,
+        ownerId: t.userId,
+        ownerName: t.userName,
+      });
+    });
+
+    return items.filter((i) => i.date && !isNaN(i.date.getTime()));
+  }, [workloadData, userProfiles]);
+
+  const calendarUsers = React.useMemo(() => {
+    const map = new Map<string, string>();
+    workloadData.memberWorkloads.forEach((m) => map.set(m.id, m.name));
+    workloadData.taskOwnerships.forEach((t) => map.set(t.userId, t.userName));
+    workloadData.outputOwnerships.forEach((o) => map.set(o.userId, o.userName));
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [workloadData]);
+
   // Load workload data on mount via the RPC-backed loader — do NOT gate on
   // teamData.membersSummary, which can be empty when RLS hides admins/interns
   // from a manager's profiles view. The loader fetches its own user list.
