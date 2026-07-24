@@ -85,6 +85,50 @@ export const EnhancedGoalsSection = ({
     importInitiatives 
   } = useZatzetIntegration();
   const [showSyncPreview, setShowSyncPreview] = useState(false);
+
+  const calendarActivities = useMemo<CalendarActivityItem[]>(() => {
+    const items: CalendarActivityItem[] = [];
+    (allGoals || []).forEach((g) => {
+      if (g.deadline) {
+        items.push({
+          id: g.id,
+          type: 'goal',
+          title: g.title,
+          description: g.description,
+          date: new Date(g.deadline),
+          progress: g.progress ?? 0,
+          ownerId: g.userId,
+        });
+      }
+    });
+    (weeklyOutputs || []).forEach((o) => {
+      if (o.dueDate) {
+        items.push({
+          id: o.id,
+          type: 'output',
+          title: o.title,
+          description: o.description,
+          date: new Date(o.dueDate),
+          progress: o.progress ?? 0,
+          ownerId: o.userId,
+        });
+      }
+    });
+    (tasks || []).forEach((t) => {
+      if (t.dueDate) {
+        items.push({
+          id: t.id,
+          type: 'task',
+          title: t.title,
+          description: t.description,
+          date: new Date(t.dueDate),
+          priority: t.priority,
+          ownerId: t.userId,
+        });
+      }
+    });
+    return items;
+  }, [allGoals, weeklyOutputs, tasks]);
   
   // Marketplace filters state
   const [marketplaceSearch, setMarketplaceSearch] = useState('');
