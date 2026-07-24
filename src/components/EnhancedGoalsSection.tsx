@@ -72,7 +72,7 @@ export const EnhancedGoalsSection = ({
   onRestoreDeletedGoal,
   onRefresh
 }: EnhancedGoalsSectionProps) => {
-  const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'marketplace'>('active');
+  const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'marketplace' | 'calendar'>('active');
   const [viewingGoal, setViewingGoal] = useState<Goal | null>(null);
   const [isLoadingGoalDetails, setIsLoadingGoalDetails] = useState(false);
   
