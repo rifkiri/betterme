@@ -152,3 +152,170 @@ export const SimpleEmployeeDashboard = () => {
         ownerName={profile?.name}
         ownerId={profile?.id}
       />
+    </PageContainer>
+  );
+};
+
+interface ProductivityBodyProps {
+  habits: any[];
+  archivedHabits: any[];
+  selectedDate: Date;
+  handleDateChange: (d: Date) => void;
+  addHabit: any;
+  editHabit: any;
+  toggleHabit: any;
+  archiveHabit: any;
+  restoreHabit: any;
+  permanentlyDeleteHabit: any;
+  isLoading: boolean;
+  goals: any[];
+  weeklyOutputs: any[];
+  deletedWeeklyOutputs: any[];
+  overdueWeeklyOutputs: any[];
+  tasks: any[];
+  deletedTasks: any[];
+  overdueTasks: any[];
+  addWeeklyOutput: any;
+  editWeeklyOutput: any;
+  updateProgress: any;
+  moveWeeklyOutput: any;
+  deleteWeeklyOutput: any;
+  restoreWeeklyOutput: any;
+  permanentlyDeleteWeeklyOutput: any;
+  loadAllData: any;
+  addTask: any;
+  editTask: any;
+  toggleTask: any;
+  handleRollOver: any;
+  deleteTask: any;
+  restoreTask: any;
+  permanentlyDeleteTask: any;
+  getTasksByDate: any;
+  ownerName?: string;
+  ownerId?: string;
+}
+
+const ProductivityBody = (props: ProductivityBodyProps) => {
+  const [view, setView] = useState<'grid' | 'calendar'>('grid');
+
+  const activities = useMemo<CalendarActivityItem[]>(() => {
+    const items: CalendarActivityItem[] = [];
+    props.goals.forEach((g: any) => {
+      if (g.deadline) {
+        items.push({
+          id: g.id,
+          type: 'goal',
+          title: g.title,
+          description: g.description,
+          date: new Date(g.deadline),
+          progress: g.progress ?? 0,
+          ownerId: props.ownerId,
+          ownerName: props.ownerName,
+        });
+      }
+    });
+    props.weeklyOutputs.forEach((o: any) => {
+      if (o.dueDate) {
+        items.push({
+          id: o.id,
+          type: 'output',
+          title: o.title,
+          description: o.description,
+          date: new Date(o.dueDate),
+          progress: o.progress ?? 0,
+          ownerId: props.ownerId,
+          ownerName: props.ownerName,
+        });
+      }
+    });
+    props.tasks.forEach((t: any) => {
+      if (t.dueDate) {
+        items.push({
+          id: t.id,
+          type: 'task',
+          title: t.title,
+          description: t.description,
+          date: new Date(t.dueDate),
+          priority: t.priority,
+          ownerId: props.ownerId,
+          ownerName: props.ownerName,
+        });
+      }
+    });
+    return items;
+  }, [props.goals, props.weeklyOutputs, props.tasks, props.ownerId, props.ownerName]);
+
+  return (
+    <>
+      <div className="mb-2 flex justify-end px-1 sm:px-2">
+        <ToggleGroup type="single" value={view} onValueChange={(v) => v && setView(v as 'grid' | 'calendar')} size="sm">
+          <ToggleGroupItem value="grid" aria-label="Grid view" className="gap-1">
+            <LayoutGrid className="h-4 w-4" /> Grid
+          </ToggleGroupItem>
+          <ToggleGroupItem value="calendar" aria-label="Calendar view" className="gap-1">
+            <CalendarIcon className="h-4 w-4" /> Calendar
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+
+      {view === 'calendar' ? (
+        <div className="px-1 sm:px-2">
+          <ActivitiesCalendarView activities={activities} title="My Activities" />
+        </div>
+      ) : (
+        <div className="space-y-2 sm:space-y-4 lg:grid lg:grid-cols-3 lg:gap-3 xl:gap-6 lg:space-y-0 animate-fade-in-up delay-100">
+          <div className="lg:col-span-1">
+            <HabitsSection
+              habits={props.habits}
+              archivedHabits={props.archivedHabits}
+              selectedDate={props.selectedDate}
+              onDateChange={props.handleDateChange}
+              onAddHabit={props.addHabit}
+              onEditHabit={props.editHabit}
+              onToggleHabit={props.toggleHabit}
+              onArchiveHabit={props.archiveHabit}
+              onRestoreHabit={props.restoreHabit}
+              onPermanentlyDeleteHabit={props.permanentlyDeleteHabit}
+              isLoading={props.isLoading}
+              goals={props.goals}
+            />
+          </div>
+          <div className="lg:col-span-1">
+            <WeeklyOutputsSection
+              weeklyOutputs={props.weeklyOutputs}
+              deletedWeeklyOutputs={props.deletedWeeklyOutputs}
+              overdueWeeklyOutputs={props.overdueWeeklyOutputs}
+              tasks={props.tasks}
+              goals={props.goals}
+              onAddWeeklyOutput={(output) => props.addWeeklyOutput(output)}
+              onEditWeeklyOutput={props.editWeeklyOutput}
+              onUpdateProgress={props.updateProgress}
+              onMoveWeeklyOutput={props.moveWeeklyOutput}
+              onDeleteWeeklyOutput={props.deleteWeeklyOutput}
+              onRestoreWeeklyOutput={props.restoreWeeklyOutput}
+              onPermanentlyDeleteWeeklyOutput={props.permanentlyDeleteWeeklyOutput}
+              onRefresh={props.loadAllData}
+            />
+          </div>
+          <div className="lg:col-span-1">
+            <TasksSection
+              tasks={props.tasks}
+              deletedTasks={props.deletedTasks}
+              overdueTasks={props.overdueTasks}
+              onAddTask={props.addTask}
+              onEditTask={props.editTask}
+              onToggleTask={props.toggleTask}
+              onMoveTask={props.handleRollOver}
+              onDeleteTask={props.deleteTask}
+              onRestoreTask={props.restoreTask}
+              onPermanentlyDeleteTask={props.permanentlyDeleteTask}
+              getTasksByDate={props.getTasksByDate}
+              weeklyOutputs={props.weeklyOutputs}
+              goals={props.goals}
+            />
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
