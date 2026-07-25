@@ -420,11 +420,14 @@ export const GoalAlignmentSection: React.FC = () => {
                       <div className="mb-3">
                         <p className="text-xs font-medium text-muted-foreground mb-1">Team</p>
                         <div className="flex flex-wrap gap-1">
-                          {goal.assignedMembers.map(m => (
-                            <Badge key={m.userId} variant="secondary" className="text-[10px]">
-                              {m.name} · {m.role}
-                            </Badge>
-                          ))}
+                          {goal.assignedMembers.map(m => {
+                            const pal = memberPalette(m.userId);
+                            return (
+                              <Badge key={m.userId} variant="outline" className={`text-[10px] ${pal.bg} ${pal.text} ${pal.border}`}>
+                                {m.name} · {m.role}
+                              </Badge>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
