@@ -395,7 +395,11 @@ export const GoalAlignmentSection: React.FC = () => {
                         <Badge variant="outline" className="text-[10px]">{goal.category}</Badge>
                       </div>
                       <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1"><UserIcon className="h-3 w-3" /> {goal.ownerName}</span>
+                        {(() => { const pal = memberPalette(goal.userId || ''); return (
+                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded border ${pal.bg} ${pal.text} ${pal.border}`}>
+                            <UserIcon className="h-3 w-3" /> {goal.ownerName}
+                          </span>
+                        ); })()}
                         {goal.deadline && (
                           <span className="flex items-center gap-1"><CalendarIcon className="h-3 w-3" /> {format(goal.deadline, 'MMM dd, yyyy')}</span>
                         )}
