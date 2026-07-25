@@ -6,6 +6,26 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+
+// Deterministic team-member highlight palette
+const MEMBER_PALETTE = [
+  { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300', ring: 'ring-blue-400', dot: 'bg-blue-500' },
+  { bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-300', ring: 'ring-emerald-400', dot: 'bg-emerald-500' },
+  { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-300', ring: 'ring-purple-400', dot: 'bg-purple-500' },
+  { bg: 'bg-amber-100', text: 'text-amber-800', border: 'border-amber-300', ring: 'ring-amber-400', dot: 'bg-amber-500' },
+  { bg: 'bg-rose-100', text: 'text-rose-800', border: 'border-rose-300', ring: 'ring-rose-400', dot: 'bg-rose-500' },
+  { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-300', ring: 'ring-indigo-400', dot: 'bg-indigo-500' },
+  { bg: 'bg-teal-100', text: 'text-teal-800', border: 'border-teal-300', ring: 'ring-teal-400', dot: 'bg-teal-500' },
+  { bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-300', ring: 'ring-pink-400', dot: 'bg-pink-500' },
+];
+const memberPalette = (userId: string) => {
+  if (!userId) return MEMBER_PALETTE[0];
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) hash = (hash * 31 + userId.charCodeAt(i)) >>> 0;
+  return MEMBER_PALETTE[hash % MEMBER_PALETTE.length];
+};
 import {
   Target,
   CheckCircle2,
