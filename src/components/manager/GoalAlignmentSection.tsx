@@ -467,12 +467,16 @@ export const GoalAlignmentSection: React.FC = () => {
             const aligned = group.goals.filter(g => g.alignmentStatus === 'aligned').length;
             const rate = active > 0 ? Math.round((aligned / active) * 100) : 100;
             return (
-              <Card key={group.profile.id}>
+              <Card key={group.profile.id} className={`border-l-4 ${memberPalette(group.profile.id).border.replace('border-', 'border-l-')}`}>
                 <CardContent className="p-3 sm:p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                     <div className="flex items-center gap-2">
-                      <UserIcon className="h-4 w-4 text-primary" />
-                      <p className="font-semibold text-sm">{group.profile.name}</p>
+                      {(() => { const pal = memberPalette(group.profile.id); return (
+                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border ${pal.bg} ${pal.text} ${pal.border}`}>
+                          <span className={`h-2 w-2 rounded-full ${pal.dot}`} />
+                          <span className="font-semibold text-sm">{group.profile.name}</span>
+                        </span>
+                      ); })()}
                       <Badge variant="outline" className="text-[10px]">{group.profile.role}</Badge>
                     </div>
                     <div className="text-xs text-muted-foreground">
