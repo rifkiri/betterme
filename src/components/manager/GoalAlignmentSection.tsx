@@ -6,6 +6,26 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+
+// Deterministic team-member highlight palette
+const MEMBER_PALETTE = [
+  { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300', ring: 'ring-blue-400', dot: 'bg-blue-500' },
+  { bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-300', ring: 'ring-emerald-400', dot: 'bg-emerald-500' },
+  { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-300', ring: 'ring-purple-400', dot: 'bg-purple-500' },
+  { bg: 'bg-amber-100', text: 'text-amber-800', border: 'border-amber-300', ring: 'ring-amber-400', dot: 'bg-amber-500' },
+  { bg: 'bg-rose-100', text: 'text-rose-800', border: 'border-rose-300', ring: 'ring-rose-400', dot: 'bg-rose-500' },
+  { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-300', ring: 'ring-indigo-400', dot: 'bg-indigo-500' },
+  { bg: 'bg-teal-100', text: 'text-teal-800', border: 'border-teal-300', ring: 'ring-teal-400', dot: 'bg-teal-500' },
+  { bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-300', ring: 'ring-pink-400', dot: 'bg-pink-500' },
+];
+const memberPalette = (userId: string) => {
+  if (!userId) return MEMBER_PALETTE[0];
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) hash = (hash * 31 + userId.charCodeAt(i)) >>> 0;
+  return MEMBER_PALETTE[hash % MEMBER_PALETTE.length];
+};
 import {
   Target,
   CheckCircle2,
@@ -56,6 +76,7 @@ export const GoalAlignmentSection: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'goals' | 'pic'>('goals');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [showCompletedGoals, setShowCompletedGoals] = useState(false);
 
   const loadAlignmentData = async () => {
     setFetching(true);
@@ -173,6 +194,7 @@ export const GoalAlignmentSection: React.FC = () => {
 
   const filteredGoals = useMemo(() => {
     return enrichedGoals.filter(goal => {
+      if (!showCompletedGoals && goal.alignmentStatus === 'completed') return false;
       if (selectedPic !== 'all') {
         const isOwner = goal.userId === selectedPic;
         const isAssigned = goal.assignedMembers.some(m => m.userId === selectedPic);
@@ -190,7 +212,7 @@ export const GoalAlignmentSection: React.FC = () => {
       }
       return true;
     });
-  }, [enrichedGoals, selectedPic, alignmentFilter, categoryFilter, searchQuery]);
+  }, [enrichedGoals, selectedPic, alignmentFilter, categoryFilter, searchQuery, showCompletedGoals]);
 
   const activeCount = enrichedGoals.filter(g => g.alignmentStatus !== 'completed').length;
   const alignedCount = enrichedGoals.filter(g => g.alignmentStatus === 'aligned').length;
@@ -311,7 +333,41 @@ export const GoalAlignmentSection: React.FC = () => {
                 <SelectItem value="pic">By PIC</SelectItem>
               </SelectContent>
             </Select>
+
+            <div className="flex items-center gap-2 pl-2 border-l ml-1">
+              <Switch id="show-completed-goals" checked={showCompletedGoals} onCheckedChange={setShowCompletedGoals} />
+              <Label htmlFor="show-completed-goals" className="text-xs cursor-pointer">Include Completed Goals</Label>
+            </div>
           </div>
+
+          {/* Team Members Highlight Palette */}
+          {allPicList.length > 0 && (
+            <div className="mt-3 pt-3 border-t">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1.5">Team Members</p>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  onClick={() => setSelectedPic('all')}
+                  className={`text-[11px] px-2 py-0.5 rounded-full border transition ${selectedPic === 'all' ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-muted'}`}
+                >
+                  All
+                </button>
+                {allPicList.map(p => {
+                  const pal = memberPalette(p.id);
+                  const active = selectedPic === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => setSelectedPic(active ? 'all' : p.id)}
+                      className={`text-[11px] px-2 py-0.5 rounded-full border flex items-center gap-1.5 ${pal.bg} ${pal.text} ${pal.border} ${active ? `ring-2 ${pal.ring}` : ''}`}
+                    >
+                      <span className={`h-1.5 w-1.5 rounded-full ${pal.dot}`} />
+                      {p.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -339,7 +395,11 @@ export const GoalAlignmentSection: React.FC = () => {
                         <Badge variant="outline" className="text-[10px]">{goal.category}</Badge>
                       </div>
                       <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1"><UserIcon className="h-3 w-3" /> {goal.ownerName}</span>
+                        {(() => { const pal = memberPalette(goal.userId || ''); return (
+                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded border ${pal.bg} ${pal.text} ${pal.border}`}>
+                            <UserIcon className="h-3 w-3" /> {goal.ownerName}
+                          </span>
+                        ); })()}
                         {goal.deadline && (
                           <span className="flex items-center gap-1"><CalendarIcon className="h-3 w-3" /> {format(goal.deadline, 'MMM dd, yyyy')}</span>
                         )}
@@ -360,11 +420,14 @@ export const GoalAlignmentSection: React.FC = () => {
                       <div className="mb-3">
                         <p className="text-xs font-medium text-muted-foreground mb-1">Team</p>
                         <div className="flex flex-wrap gap-1">
-                          {goal.assignedMembers.map(m => (
-                            <Badge key={m.userId} variant="secondary" className="text-[10px]">
-                              {m.name} · {m.role}
-                            </Badge>
-                          ))}
+                          {goal.assignedMembers.map(m => {
+                            const pal = memberPalette(m.userId);
+                            return (
+                              <Badge key={m.userId} variant="outline" className={`text-[10px] ${pal.bg} ${pal.text} ${pal.border}`}>
+                                {m.name} · {m.role}
+                              </Badge>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
@@ -404,12 +467,16 @@ export const GoalAlignmentSection: React.FC = () => {
             const aligned = group.goals.filter(g => g.alignmentStatus === 'aligned').length;
             const rate = active > 0 ? Math.round((aligned / active) * 100) : 100;
             return (
-              <Card key={group.profile.id}>
+              <Card key={group.profile.id} className={`border-l-4 ${memberPalette(group.profile.id).border.replace('border-', 'border-l-')}`}>
                 <CardContent className="p-3 sm:p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                     <div className="flex items-center gap-2">
-                      <UserIcon className="h-4 w-4 text-primary" />
-                      <p className="font-semibold text-sm">{group.profile.name}</p>
+                      {(() => { const pal = memberPalette(group.profile.id); return (
+                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border ${pal.bg} ${pal.text} ${pal.border}`}>
+                          <span className={`h-2 w-2 rounded-full ${pal.dot}`} />
+                          <span className="font-semibold text-sm">{group.profile.name}</span>
+                        </span>
+                      ); })()}
                       <Badge variant="outline" className="text-[10px]">{group.profile.role}</Badge>
                     </div>
                     <div className="text-xs text-muted-foreground">
