@@ -76,6 +76,7 @@ export const GoalAlignmentSection: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'goals' | 'pic'>('goals');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [showCompletedGoals, setShowCompletedGoals] = useState(false);
 
   const loadAlignmentData = async () => {
     setFetching(true);
