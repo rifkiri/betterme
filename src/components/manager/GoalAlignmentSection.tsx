@@ -234,10 +234,6 @@ export const GoalAlignmentSection: React.FC = () => {
     });
   }, [goals, profiles, assignmentsMap, weeklyOutputs, tasksLite]);
 
-  const allPicList = useMemo(
-    () => Array.from(profiles.values()).sort((a, b) => a.name.localeCompare(b.name)),
-    [profiles]
-  );
 
   const filteredGoals = useMemo(() => {
     return enrichedGoals.filter(goal => {
@@ -377,26 +373,6 @@ export const GoalAlignmentSection: React.FC = () => {
             </div>
           </div>
 
-          {/* Team Members legend */}
-          {allPicList.length > 0 && (
-            <div className="mt-3 pt-3 border-t">
-              <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1.5">Team Members</p>
-              <div className="flex flex-wrap gap-1.5">
-                {allPicList.map(p => {
-                  const pal = memberPalette(p.id);
-                  return (
-                    <span
-                      key={p.id}
-                      className={`text-[11px] px-2 py-0.5 rounded-full border flex items-center gap-1.5 ${pal.bg} ${pal.text} ${pal.border}`}
-                    >
-                      <span className={`h-1.5 w-1.5 rounded-full ${pal.dot}`} />
-                      {p.name}
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
 
