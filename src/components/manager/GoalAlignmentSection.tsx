@@ -234,10 +234,6 @@ export const GoalAlignmentSection: React.FC = () => {
     });
   }, [goals, profiles, assignmentsMap, weeklyOutputs, tasksLite]);
 
-  const allPicList = useMemo(
-    () => Array.from(profiles.values()).sort((a, b) => a.name.localeCompare(b.name)),
-    [profiles]
-  );
 
   const filteredGoals = useMemo(() => {
     return enrichedGoals.filter(goal => {
