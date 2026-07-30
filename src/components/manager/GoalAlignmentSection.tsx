@@ -134,7 +134,9 @@ export const GoalAlignmentSection: React.FC = () => {
       setAssignmentsMap(aMap);
 
       setWeeklyOutputs(
-        (outputsRes.data || []).map((o: any) => ({
+        (outputsRes.data || [])
+          .filter((o: any) => (o.visibility || 'all') === 'all')
+          .map((o: any) => ({
           id: o.id,
           userId: o.user_id,
           title: o.title,
@@ -150,7 +152,9 @@ export const GoalAlignmentSection: React.FC = () => {
       );
 
       setTasksLite(
-        (tasksRes.data || []).map((t: any) => ({
+        (tasksRes.data || [])
+          .filter((t: any) => (t.visibility || 'all') === 'all')
+          .map((t: any) => ({
           id: t.id,
           userId: t.user_id,
           title: t.title,
@@ -158,6 +162,7 @@ export const GoalAlignmentSection: React.FC = () => {
           completed: !!t.completed,
           weeklyOutputId: t.weekly_output_id || undefined,
           taggedUsers: t.tagged_users || [],
+          visibility: t.visibility || 'all',
         }))
       );
 
