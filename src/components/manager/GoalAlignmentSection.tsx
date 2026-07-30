@@ -53,9 +53,12 @@ interface EnrichedOutput extends WeeklyOutput {
   ownerName: string;
   isUpcomingInNext2Weeks: boolean;
 }
+interface TaskLite { id: string; userId?: string; title: string; dueDate?: Date; completed: boolean; weeklyOutputId?: string; taggedUsers: string[] }
+interface MemberAlignment { userId: string; name: string; role: string; isAligned: boolean }
 interface EnrichedGoal extends Goal {
   ownerName: string;
   assignedMembers: Array<{ userId: string; name: string; role: string }>;
+  memberAlignments: MemberAlignment[];
   linkedOutputs: EnrichedOutput[];
   upcomingBiweeklyOutputs: EnrichedOutput[];
   alignmentStatus: 'aligned' | 'unaligned' | 'completed';
@@ -66,6 +69,7 @@ export const GoalAlignmentSection: React.FC = () => {
 
   const [goals, setGoals] = useState<Goal[]>([]);
   const [weeklyOutputs, setWeeklyOutputs] = useState<WeeklyOutput[]>([]);
+  const [tasksLite, setTasksLite] = useState<TaskLite[]>([]);
   const [profiles, setProfiles] = useState<Map<string, ProfileLite>>(new Map());
   const [assignmentsMap, setAssignmentsMap] = useState<Map<string, Assignment[]>>(new Map());
   const [fetching, setFetching] = useState(true);
@@ -81,11 +85,12 @@ export const GoalAlignmentSection: React.FC = () => {
   const loadAlignmentData = async () => {
     setFetching(true);
     try {
-      const [profilesRes, goalsRes, assignRes, outputsRes] = await Promise.all([
+      const [profilesRes, goalsRes, assignRes, outputsRes, tasksRes] = await Promise.all([
         supabase.from('profiles').select('id,name,email,role'),
         supabase.from('goals').select('*').eq('is_deleted', false).order('created_date', { ascending: false }),
         supabase.from('goal_assignments').select('goal_id,user_id,role'),
         supabase.from('weekly_outputs').select('*').eq('is_deleted', false).order('due_date', { ascending: true }),
+        supabase.from('tasks').select('id,user_id,title,due_date,completed,weekly_output_id,tagged_users').eq('is_deleted', false),
       ]);
 
       const pMap = new Map<string, ProfileLite>();
@@ -137,8 +142,22 @@ export const GoalAlignmentSection: React.FC = () => {
           completedDate: o.completed_date ? new Date(o.completed_date) : undefined,
           linkedGoalId: o.linked_goal_id || undefined,
           visibility: o.visibility || 'all',
+          taggedUsers: o.tagged_users || [],
         })) as WeeklyOutput[]
       );
+
+      setTasksLite(
+        (tasksRes.data || []).map((t: any) => ({
+          id: t.id,
+          userId: t.user_id,
+          title: t.title,
+          dueDate: t.due_date ? new Date(t.due_date) : undefined,
+          completed: !!t.completed,
+          weeklyOutputId: t.weekly_output_id || undefined,
+          taggedUsers: t.tagged_users || [],
+        }))
+      );
+
     } catch (err) {
       console.error('Error loading alignment data:', err);
     } finally {
@@ -172,20 +191,40 @@ export const GoalAlignmentSection: React.FC = () => {
 
       const upcoming = linked.filter(o => o.isUpcomingInNext2Weeks && o.progress < 100);
 
+      // Per-member alignment: owner + all assigned members must have an upcoming
+      // output (owned or tagged) or a task under one of the goal's outputs.
+      const linkedOutputIds = new Set(linked.map(o => o.id));
+      const upcomingTasks = tasksLite.filter(t =>
+        !t.completed &&
+        t.weeklyOutputId && linkedOutputIds.has(t.weeklyOutputId) &&
+        t.dueDate && isWithinInterval(t.dueDate, { start: today, end: twoWeeksLater })
+      );
+
+      const involved = new Map<string, { userId: string; name: string; role: string }>();
+      if (goal.userId) involved.set(goal.userId, { userId: goal.userId, name: owner?.name || 'Unknown Owner', role: 'owner' });
+      assignedMembers.forEach(m => { if (!involved.has(m.userId)) involved.set(m.userId, m); });
+
+      const memberAlignments: MemberAlignment[] = Array.from(involved.values()).map(m => {
+        const hasOutput = upcoming.some(o => o.userId === m.userId || (o.taggedUsers || []).includes(m.userId));
+        const hasTask = upcomingTasks.some(t => t.userId === m.userId || t.taggedUsers.includes(m.userId));
+        return { ...m, isAligned: hasOutput || hasTask };
+      });
+
       let status: 'aligned' | 'unaligned' | 'completed' = 'unaligned';
       if (goal.completed || goal.progress >= 100) status = 'completed';
-      else if (upcoming.length > 0) status = 'aligned';
+      else if (memberAlignments.length > 0 ? memberAlignments.every(m => m.isAligned) : upcoming.length > 0) status = 'aligned';
 
       return {
         ...goal,
         ownerName: owner?.name || 'Unknown Owner',
         assignedMembers,
+        memberAlignments,
         linkedOutputs: linked,
         upcomingBiweeklyOutputs: upcoming,
         alignmentStatus: status,
       };
     });
-  }, [goals, profiles, assignmentsMap, weeklyOutputs]);
+  }, [goals, profiles, assignmentsMap, weeklyOutputs, tasksLite]);
 
   const allPicList = useMemo(
     () => Array.from(profiles.values()).sort((a, b) => a.name.localeCompare(b.name)),
@@ -198,7 +237,7 @@ export const GoalAlignmentSection: React.FC = () => {
       if (selectedPic !== 'all') {
         const isOwner = goal.userId === selectedPic;
         const isAssigned = goal.assignedMembers.some(m => m.userId === selectedPic);
-        const isOutputOwner = goal.linkedOutputs.some(o => o.userId === selectedPic);
+        const isOutputOwner = goal.linkedOutputs.some(o => o.userId === selectedPic || (o.taggedUsers || []).includes(selectedPic));
         if (!isOwner && !isAssigned && !isOutputOwner) return false;
       }
       if (alignmentFilter !== 'all' && goal.alignmentStatus !== alignmentFilter) return false;
@@ -230,9 +269,9 @@ export const GoalAlignmentSection: React.FC = () => {
   };
 
   const statusBadge = (s: EnrichedGoal['alignmentStatus']) => {
-    if (s === 'aligned') return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">🟢 Scheduled for Next 2 Weeks</Badge>;
+    if (s === 'aligned') return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">🟢 All Team Members Aligned</Badge>;
     if (s === 'completed') return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">🔵 Goal Completed</Badge>;
-    return <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100">⚠️ Missing Output for Next 2 Weeks</Badge>;
+    return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">🔴 Action Needed</Badge>;
   };
 
   // PIC view aggregation
@@ -242,13 +281,13 @@ export const GoalAlignmentSection: React.FC = () => {
       const involved = new Set<string>();
       if (goal.userId) involved.add(goal.userId);
       goal.assignedMembers.forEach(m => involved.add(m.userId));
-      goal.linkedOutputs.forEach(o => o.userId && involved.add(o.userId));
+      goal.linkedOutputs.forEach(o => { if (o.userId) involved.add(o.userId); (o.taggedUsers || []).forEach(u => involved.add(u)); });
       involved.forEach(uid => {
         const p = profiles.get(uid);
         if (!p) return;
         const entry = map.get(uid) || { profile: p, goals: [], outputs: [] };
         entry.goals.push(goal);
-        goal.linkedOutputs.filter(o => o.userId === uid).forEach(o => entry.outputs.push(o));
+        goal.linkedOutputs.filter(o => o.userId === uid || (o.taggedUsers || []).includes(uid)).forEach(o => entry.outputs.push(o));
         map.set(uid, entry);
       });
     });
@@ -416,21 +455,34 @@ export const GoalAlignmentSection: React.FC = () => {
                   </div>
 
                   <CollapsibleContent className="mt-3 pl-9">
-                    {goal.assignedMembers.length > 0 && (
+                    {goal.memberAlignments.length > 0 && (
                       <div className="mb-3">
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Team</p>
-                        <div className="flex flex-wrap gap-1">
-                          {goal.assignedMembers.map(m => {
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Team Alignment (next 2 weeks)</p>
+                        <div className="space-y-1">
+                          {goal.memberAlignments.map(m => {
                             const pal = memberPalette(m.userId);
                             return (
-                              <Badge key={m.userId} variant="outline" className={`text-[10px] ${pal.bg} ${pal.text} ${pal.border}`}>
-                                {m.name} · {m.role}
-                              </Badge>
+                              <div key={m.userId} className="flex items-center gap-2 text-xs border rounded p-2">
+                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded border ${pal.bg} ${pal.text} ${pal.border}`}>
+                                  <UserIcon className="h-3 w-3" /> {m.name}
+                                </span>
+                                <Badge variant="outline" className="text-[10px]">{m.role}</Badge>
+                                <span className="flex-1" />
+                                {m.isAligned ? (
+                                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100 text-[10px]">🟢 Aligned &amp; Contributed</Badge>
+                                ) : (
+                                  <>
+                                    <Badge className="bg-red-100 text-red-800 hover:bg-red-100 text-[10px]">🔴 Missing Output/Task Schedule</Badge>
+                                    <AddWeeklyOutputTrigger goal={goal} onAdd={async (o) => { await addWeeklyOutput({ ...o, taggedUsers: Array.from(new Set([...(o.taggedUsers || []), m.userId])) }); await loadAlignmentData(); }} />
+                                  </>
+                                )}
+                              </div>
                             );
                           })}
                         </div>
                       </div>
                     )}
+
 
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-xs font-medium text-muted-foreground">Linked Outputs</p>
