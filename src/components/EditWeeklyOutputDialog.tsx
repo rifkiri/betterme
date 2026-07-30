@@ -18,13 +18,15 @@ import { cn } from '@/lib/utils';
 import { WeeklyOutput, Goal } from '@/types/productivity';
 import { GoalVisibilitySelector } from '@/components/ui/GoalVisibilitySelector';
 import { useUserRole } from '@/hooks/useUserRole';
+import { UserSelector } from '@/components/task/UserSelector';
 
 const weeklyOutputSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
   dueDate: z.date().optional(),
   linkedGoalId: z.string().optional(),
-  visibility: z.enum(['all', 'managers', 'self']).optional()
+  visibility: z.enum(['all', 'managers', 'self']).optional(),
+  taggedUsers: z.array(z.string()).optional()
 });
 
 type WeeklyOutputFormValues = z.infer<typeof weeklyOutputSchema>;
