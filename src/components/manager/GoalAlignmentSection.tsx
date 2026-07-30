@@ -53,8 +53,8 @@ interface EnrichedOutput extends WeeklyOutput {
   ownerName: string;
   isUpcomingInNext2Weeks: boolean;
 }
-interface TaskLite { id: string; userId?: string; title: string; dueDate?: Date; completed: boolean; weeklyOutputId?: string; taggedUsers: string[] }
-interface MemberAlignment { userId: string; name: string; role: string; isAligned: boolean }
+interface TaskLite { id: string; userId?: string; title: string; dueDate?: Date; completed: boolean; weeklyOutputId?: string; taggedUsers: string[]; visibility?: string }
+interface MemberAlignment { userId: string; name: string; role: string; isAligned: boolean; outputCount: number; taskCount: number }
 interface EnrichedGoal extends Goal {
   ownerName: string;
   assignedMembers: Array<{ userId: string; name: string; role: string }>;
@@ -74,7 +74,7 @@ export const GoalAlignmentSection: React.FC = () => {
   const [assignmentsMap, setAssignmentsMap] = useState<Map<string, Assignment[]>>(new Map());
   const [fetching, setFetching] = useState(true);
 
-  const [selectedPic, setSelectedPic] = useState<string>('all');
+
   const [alignmentFilter, setAlignmentFilter] = useState<'all' | 'aligned' | 'unaligned' | 'completed'>('all');
   const [categoryFilter, setCategoryFilter] = useState<'all' | 'work' | 'personal'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -87,10 +87,11 @@ export const GoalAlignmentSection: React.FC = () => {
     try {
       const [profilesRes, goalsRes, assignRes, outputsRes, tasksRes] = await Promise.all([
         supabase.from('profiles').select('id,name,email,role'),
-        supabase.from('goals').select('*').eq('is_deleted', false).order('created_date', { ascending: false }),
+        // Strict privacy scoping: organization view only ever shows public WORK goals
+        supabase.from('goals').select('*').eq('is_deleted', false).eq('category', 'work').eq('visibility', 'all').order('created_date', { ascending: false }),
         supabase.from('goal_assignments').select('goal_id,user_id,role'),
-        supabase.from('weekly_outputs').select('*').eq('is_deleted', false).order('due_date', { ascending: true }),
-        supabase.from('tasks').select('id,user_id,title,due_date,completed,weekly_output_id,tagged_users').eq('is_deleted', false),
+        supabase.from('weekly_outputs').select('*').eq('is_deleted', false).eq('visibility', 'all').order('due_date', { ascending: true }),
+        supabase.from('tasks').select('id,user_id,title,due_date,completed,weekly_output_id,tagged_users,visibility').eq('is_deleted', false).eq('visibility', 'all'),
       ]);
 
       const pMap = new Map<string, ProfileLite>();
@@ -105,7 +106,9 @@ export const GoalAlignmentSection: React.FC = () => {
       setProfiles(pMap);
 
       setGoals(
-        (goalsRes.data || []).map((g: any) => ({
+        (goalsRes.data || [])
+          .filter((g: any) => g.category === 'work' && (g.visibility || 'all') === 'all')
+          .map((g: any) => ({
           id: g.id,
           userId: g.user_id,
           title: g.title,
@@ -131,7 +134,9 @@ export const GoalAlignmentSection: React.FC = () => {
       setAssignmentsMap(aMap);
 
       setWeeklyOutputs(
-        (outputsRes.data || []).map((o: any) => ({
+        (outputsRes.data || [])
+          .filter((o: any) => (o.visibility || 'all') === 'all')
+          .map((o: any) => ({
           id: o.id,
           userId: o.user_id,
           title: o.title,
@@ -147,7 +152,9 @@ export const GoalAlignmentSection: React.FC = () => {
       );
 
       setTasksLite(
-        (tasksRes.data || []).map((t: any) => ({
+        (tasksRes.data || [])
+          .filter((t: any) => (t.visibility || 'all') === 'all')
+          .map((t: any) => ({
           id: t.id,
           userId: t.user_id,
           title: t.title,
@@ -155,6 +162,7 @@ export const GoalAlignmentSection: React.FC = () => {
           completed: !!t.completed,
           weeklyOutputId: t.weekly_output_id || undefined,
           taggedUsers: t.tagged_users || [],
+          visibility: t.visibility || 'all',
         }))
       );
 
@@ -205,9 +213,9 @@ export const GoalAlignmentSection: React.FC = () => {
       assignedMembers.forEach(m => { if (!involved.has(m.userId)) involved.set(m.userId, m); });
 
       const memberAlignments: MemberAlignment[] = Array.from(involved.values()).map(m => {
-        const hasOutput = upcoming.some(o => o.userId === m.userId || (o.taggedUsers || []).includes(m.userId));
-        const hasTask = upcomingTasks.some(t => t.userId === m.userId || t.taggedUsers.includes(m.userId));
-        return { ...m, isAligned: hasOutput || hasTask };
+        const outputCount = upcoming.filter(o => o.userId === m.userId || (o.taggedUsers || []).includes(m.userId)).length;
+        const taskCount = upcomingTasks.filter(t => t.userId === m.userId || t.taggedUsers.includes(m.userId)).length;
+        return { ...m, outputCount, taskCount, isAligned: outputCount > 0 || taskCount > 0 };
       });
 
       let status: 'aligned' | 'unaligned' | 'completed' = 'unaligned';
@@ -234,12 +242,9 @@ export const GoalAlignmentSection: React.FC = () => {
   const filteredGoals = useMemo(() => {
     return enrichedGoals.filter(goal => {
       if (!showCompletedGoals && goal.alignmentStatus === 'completed') return false;
-      if (selectedPic !== 'all') {
-        const isOwner = goal.userId === selectedPic;
-        const isAssigned = goal.assignedMembers.some(m => m.userId === selectedPic);
-        const isOutputOwner = goal.linkedOutputs.some(o => o.userId === selectedPic || (o.taggedUsers || []).includes(selectedPic));
-        if (!isOwner && !isAssigned && !isOutputOwner) return false;
-      }
+      // Strict privacy: organization alignment only shows public work goals
+      if (goal.category !== 'work') return false;
+      if ((goal.visibility || 'all') !== 'all') return false;
       if (alignmentFilter !== 'all' && goal.alignmentStatus !== alignmentFilter) return false;
       if (categoryFilter !== 'all' && goal.category !== categoryFilter) return false;
       if (searchQuery.trim() !== '') {
@@ -251,7 +256,7 @@ export const GoalAlignmentSection: React.FC = () => {
       }
       return true;
     });
-  }, [enrichedGoals, selectedPic, alignmentFilter, categoryFilter, searchQuery, showCompletedGoals]);
+  }, [enrichedGoals, alignmentFilter, categoryFilter, searchQuery, showCompletedGoals]);
 
   const activeCount = enrichedGoals.filter(g => g.alignmentStatus !== 'completed').length;
   const alignedCount = enrichedGoals.filter(g => g.alignmentStatus === 'aligned').length;
@@ -338,13 +343,6 @@ export const GoalAlignmentSection: React.FC = () => {
               />
             </div>
 
-            <Select value={selectedPic} onValueChange={setSelectedPic}>
-              <SelectTrigger className="w-[180px] h-9 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent className="bg-background z-50">
-                <SelectItem value="all">All Persons In Charge</SelectItem>
-                {allPicList.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
 
             <Select value={alignmentFilter} onValueChange={(v: any) => setAlignmentFilter(v)}>
               <SelectTrigger className="w-[190px] h-9 text-xs"><SelectValue /></SelectTrigger>
@@ -379,29 +377,21 @@ export const GoalAlignmentSection: React.FC = () => {
             </div>
           </div>
 
-          {/* Team Members Highlight Palette */}
+          {/* Team Members legend */}
           {allPicList.length > 0 && (
             <div className="mt-3 pt-3 border-t">
               <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1.5">Team Members</p>
               <div className="flex flex-wrap gap-1.5">
-                <button
-                  onClick={() => setSelectedPic('all')}
-                  className={`text-[11px] px-2 py-0.5 rounded-full border transition ${selectedPic === 'all' ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-muted'}`}
-                >
-                  All
-                </button>
                 {allPicList.map(p => {
                   const pal = memberPalette(p.id);
-                  const active = selectedPic === p.id;
                   return (
-                    <button
+                    <span
                       key={p.id}
-                      onClick={() => setSelectedPic(active ? 'all' : p.id)}
-                      className={`text-[11px] px-2 py-0.5 rounded-full border flex items-center gap-1.5 ${pal.bg} ${pal.text} ${pal.border} ${active ? `ring-2 ${pal.ring}` : ''}`}
+                      className={`text-[11px] px-2 py-0.5 rounded-full border flex items-center gap-1.5 ${pal.bg} ${pal.text} ${pal.border}`}
                     >
                       <span className={`h-1.5 w-1.5 rounded-full ${pal.dot}`} />
                       {p.name}
-                    </button>
+                    </span>
                   );
                 })}
               </div>
@@ -469,10 +459,10 @@ export const GoalAlignmentSection: React.FC = () => {
                                 <Badge variant="outline" className="text-[10px]">{m.role}</Badge>
                                 <span className="flex-1" />
                                 {m.isAligned ? (
-                                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100 text-[10px]">🟢 Aligned &amp; Contributed</Badge>
+                                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100 text-[10px]">🟢 {m.outputCount} Output{m.outputCount === 1 ? '' : 's'} / {m.taskCount} Task{m.taskCount === 1 ? '' : 's'} Scheduled</Badge>
                                 ) : (
                                   <>
-                                    <Badge className="bg-red-100 text-red-800 hover:bg-red-100 text-[10px]">🔴 Missing Output/Task Schedule</Badge>
+                                    <Badge className="bg-red-100 text-red-800 hover:bg-red-100 text-[10px]">🔴 No Bi-Weekly Output / Task Scheduled</Badge>
                                     <AddWeeklyOutputTrigger goal={goal} onAdd={async (o) => { await addWeeklyOutput({ ...o, taggedUsers: Array.from(new Set([...(o.taggedUsers || []), m.userId])) }); await loadAlignmentData(); }} />
                                   </>
                                 )}
