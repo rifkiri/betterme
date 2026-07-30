@@ -263,6 +263,24 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
                     )}
                   />
                 )}
+
+                <FormField
+                  control={form.control}
+                  name="taggedUsers"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Collaborators (Optional)</FormLabel>
+                      <FormControl>
+                        <UserSelector
+                          selectedUserIds={field.value || []}
+                          onSelectionChange={field.onChange}
+                          currentUserId={weeklyOutput.userId}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </form>
           </Form>
