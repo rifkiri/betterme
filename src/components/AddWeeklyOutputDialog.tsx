@@ -234,6 +234,25 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
 
             <FormField
               control={form.control}
+              name="taggedUsers"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Collaborators (Optional)</FormLabel>
+                  <FormControl>
+                    <UserSelector
+                      selectedUserIds={field.value || []}
+                      onSelectionChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+
+
+            <FormField
+              control={form.control}
               name="progressCalculation"
               render={({ field }) => (
                 <FormItem>
