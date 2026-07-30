@@ -242,12 +242,9 @@ export const GoalAlignmentSection: React.FC = () => {
   const filteredGoals = useMemo(() => {
     return enrichedGoals.filter(goal => {
       if (!showCompletedGoals && goal.alignmentStatus === 'completed') return false;
-      if (selectedPic !== 'all') {
-        const isOwner = goal.userId === selectedPic;
-        const isAssigned = goal.assignedMembers.some(m => m.userId === selectedPic);
-        const isOutputOwner = goal.linkedOutputs.some(o => o.userId === selectedPic || (o.taggedUsers || []).includes(selectedPic));
-        if (!isOwner && !isAssigned && !isOutputOwner) return false;
-      }
+      // Strict privacy: organization alignment only shows public work goals
+      if (goal.category !== 'work') return false;
+      if ((goal.visibility || 'all') !== 'all') return false;
       if (alignmentFilter !== 'all' && goal.alignmentStatus !== alignmentFilter) return false;
       if (categoryFilter !== 'all' && goal.category !== categoryFilter) return false;
       if (searchQuery.trim() !== '') {
@@ -259,7 +256,7 @@ export const GoalAlignmentSection: React.FC = () => {
       }
       return true;
     });
-  }, [enrichedGoals, selectedPic, alignmentFilter, categoryFilter, searchQuery, showCompletedGoals]);
+  }, [enrichedGoals, alignmentFilter, categoryFilter, searchQuery, showCompletedGoals]);
 
   const activeCount = enrichedGoals.filter(g => g.alignmentStatus !== 'completed').length;
   const alignedCount = enrichedGoals.filter(g => g.alignmentStatus === 'aligned').length;
