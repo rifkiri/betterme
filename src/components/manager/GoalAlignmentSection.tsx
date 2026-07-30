@@ -53,9 +53,11 @@ interface EnrichedOutput extends WeeklyOutput {
   ownerName: string;
   isUpcomingInNext2Weeks: boolean;
 }
+interface MemberAlignment { userId: string; name: string; role: string; isAligned: boolean }
 interface EnrichedGoal extends Goal {
   ownerName: string;
   assignedMembers: Array<{ userId: string; name: string; role: string }>;
+  memberAlignments: MemberAlignment[];
   linkedOutputs: EnrichedOutput[];
   upcomingBiweeklyOutputs: EnrichedOutput[];
   alignmentStatus: 'aligned' | 'unaligned' | 'completed';
