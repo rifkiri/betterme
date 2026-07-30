@@ -59,6 +59,7 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
       goalId: undefined,
       visibility: 'all',
       progressCalculation: 'manual',
+      taggedUsers: [],
     },
   });
 
@@ -77,6 +78,7 @@ export const AddWeeklyOutputDialog = ({ onAddWeeklyOutput, availableGoals = [] }
       linkedGoalId: data.goalId !== "none" ? data.goalId : undefined,
       visibility: data.visibility || 'all',
       progressCalculation: data.progressCalculation || 'manual',
+      taggedUsers: data.taggedUsers || [],
     });
     
     form.reset();
