@@ -387,29 +387,21 @@ export const GoalAlignmentSection: React.FC = () => {
             </div>
           </div>
 
-          {/* Team Members Highlight Palette */}
+          {/* Team Members legend */}
           {allPicList.length > 0 && (
             <div className="mt-3 pt-3 border-t">
               <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1.5">Team Members</p>
               <div className="flex flex-wrap gap-1.5">
-                <button
-                  onClick={() => setSelectedPic('all')}
-                  className={`text-[11px] px-2 py-0.5 rounded-full border transition ${selectedPic === 'all' ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-muted'}`}
-                >
-                  All
-                </button>
                 {allPicList.map(p => {
                   const pal = memberPalette(p.id);
-                  const active = selectedPic === p.id;
                   return (
-                    <button
+                    <span
                       key={p.id}
-                      onClick={() => setSelectedPic(active ? 'all' : p.id)}
-                      className={`text-[11px] px-2 py-0.5 rounded-full border flex items-center gap-1.5 ${pal.bg} ${pal.text} ${pal.border} ${active ? `ring-2 ${pal.ring}` : ''}`}
+                      className={`text-[11px] px-2 py-0.5 rounded-full border flex items-center gap-1.5 ${pal.bg} ${pal.text} ${pal.border}`}
                     >
                       <span className={`h-1.5 w-1.5 rounded-full ${pal.dot}`} />
                       {p.name}
-                    </button>
+                    </span>
                   );
                 })}
               </div>
