@@ -60,6 +60,7 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
       dueDate: weeklyOutput.dueDate || undefined,
       linkedGoalId: weeklyOutput.linkedGoalId || 'none',
       visibility: weeklyOutput.visibility || 'all',
+      taggedUsers: weeklyOutput.taggedUsers || [],
     }
   });
 
@@ -71,6 +72,7 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
         dueDate: weeklyOutput.dueDate || undefined,
         linkedGoalId: weeklyOutput.linkedGoalId || 'none',
         visibility: weeklyOutput.visibility || 'all',
+        taggedUsers: weeklyOutput.taggedUsers || [],
       });
     }
   }, [weeklyOutput, open, form]);
@@ -94,6 +96,7 @@ export const EditWeeklyOutputDialog = ({ weeklyOutput, open, onOpenChange, onSav
         dueDate: dueDate,
         linkedGoalId: values.linkedGoalId === "none" ? "none" : values.linkedGoalId,
         visibility: values.visibility || 'all',
+        taggedUsers: values.taggedUsers || [],
       });
 
       console.log('EditWeeklyOutputDialog - onSave completed, calling onRefresh');
