@@ -53,6 +53,7 @@ interface EnrichedOutput extends WeeklyOutput {
   ownerName: string;
   isUpcomingInNext2Weeks: boolean;
 }
+interface TaskLite { id: string; userId?: string; title: string; dueDate?: Date; completed: boolean; weeklyOutputId?: string; taggedUsers: string[] }
 interface MemberAlignment { userId: string; name: string; role: string; isAligned: boolean }
 interface EnrichedGoal extends Goal {
   ownerName: string;
