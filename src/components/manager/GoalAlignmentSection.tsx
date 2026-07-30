@@ -346,13 +346,6 @@ export const GoalAlignmentSection: React.FC = () => {
               />
             </div>
 
-            <Select value={selectedPic} onValueChange={setSelectedPic}>
-              <SelectTrigger className="w-[180px] h-9 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent className="bg-background z-50">
-                <SelectItem value="all">All Persons In Charge</SelectItem>
-                {allPicList.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
 
             <Select value={alignmentFilter} onValueChange={(v: any) => setAlignmentFilter(v)}>
               <SelectTrigger className="w-[190px] h-9 text-xs"><SelectValue /></SelectTrigger>
