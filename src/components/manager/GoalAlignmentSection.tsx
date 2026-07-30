@@ -68,6 +68,7 @@ export const GoalAlignmentSection: React.FC = () => {
 
   const [goals, setGoals] = useState<Goal[]>([]);
   const [weeklyOutputs, setWeeklyOutputs] = useState<WeeklyOutput[]>([]);
+  const [tasksLite, setTasksLite] = useState<TaskLite[]>([]);
   const [profiles, setProfiles] = useState<Map<string, ProfileLite>>(new Map());
   const [assignmentsMap, setAssignmentsMap] = useState<Map<string, Assignment[]>>(new Map());
   const [fetching, setFetching] = useState(true);
