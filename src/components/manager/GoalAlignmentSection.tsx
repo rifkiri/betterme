@@ -83,11 +83,12 @@ export const GoalAlignmentSection: React.FC = () => {
   const loadAlignmentData = async () => {
     setFetching(true);
     try {
-      const [profilesRes, goalsRes, assignRes, outputsRes] = await Promise.all([
+      const [profilesRes, goalsRes, assignRes, outputsRes, tasksRes] = await Promise.all([
         supabase.from('profiles').select('id,name,email,role'),
         supabase.from('goals').select('*').eq('is_deleted', false).order('created_date', { ascending: false }),
         supabase.from('goal_assignments').select('goal_id,user_id,role'),
         supabase.from('weekly_outputs').select('*').eq('is_deleted', false).order('due_date', { ascending: true }),
+        supabase.from('tasks').select('id,user_id,title,due_date,completed,weekly_output_id,tagged_users').eq('is_deleted', false),
       ]);
 
       const pMap = new Map<string, ProfileLite>();
