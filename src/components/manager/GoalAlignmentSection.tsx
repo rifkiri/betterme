@@ -237,7 +237,7 @@ export const GoalAlignmentSection: React.FC = () => {
       if (selectedPic !== 'all') {
         const isOwner = goal.userId === selectedPic;
         const isAssigned = goal.assignedMembers.some(m => m.userId === selectedPic);
-        const isOutputOwner = goal.linkedOutputs.some(o => o.userId === selectedPic);
+        const isOutputOwner = goal.linkedOutputs.some(o => o.userId === selectedPic || (o.taggedUsers || []).includes(selectedPic));
         if (!isOwner && !isAssigned && !isOutputOwner) return false;
       }
       if (alignmentFilter !== 'all' && goal.alignmentStatus !== alignmentFilter) return false;
@@ -281,13 +281,13 @@ export const GoalAlignmentSection: React.FC = () => {
       const involved = new Set<string>();
       if (goal.userId) involved.add(goal.userId);
       goal.assignedMembers.forEach(m => involved.add(m.userId));
-      goal.linkedOutputs.forEach(o => o.userId && involved.add(o.userId));
+      goal.linkedOutputs.forEach(o => { if (o.userId) involved.add(o.userId); (o.taggedUsers || []).forEach(u => involved.add(u)); });
       involved.forEach(uid => {
         const p = profiles.get(uid);
         if (!p) return;
         const entry = map.get(uid) || { profile: p, goals: [], outputs: [] };
         entry.goals.push(goal);
-        goal.linkedOutputs.filter(o => o.userId === uid).forEach(o => entry.outputs.push(o));
+        goal.linkedOutputs.filter(o => o.userId === uid || (o.taggedUsers || []).includes(uid)).forEach(o => entry.outputs.push(o));
         map.set(uid, entry);
       });
     });
