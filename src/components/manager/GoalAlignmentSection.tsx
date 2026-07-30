@@ -459,10 +459,10 @@ export const GoalAlignmentSection: React.FC = () => {
                                 <Badge variant="outline" className="text-[10px]">{m.role}</Badge>
                                 <span className="flex-1" />
                                 {m.isAligned ? (
-                                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100 text-[10px]">🟢 Aligned &amp; Contributed</Badge>
+                                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100 text-[10px]">🟢 {m.outputCount} Output{m.outputCount === 1 ? '' : 's'} / {m.taskCount} Task{m.taskCount === 1 ? '' : 's'} Scheduled</Badge>
                                 ) : (
                                   <>
-                                    <Badge className="bg-red-100 text-red-800 hover:bg-red-100 text-[10px]">🔴 Missing Output/Task Schedule</Badge>
+                                    <Badge className="bg-red-100 text-red-800 hover:bg-red-100 text-[10px]">🔴 No Bi-Weekly Output / Task Scheduled</Badge>
                                     <AddWeeklyOutputTrigger goal={goal} onAdd={async (o) => { await addWeeklyOutput({ ...o, taggedUsers: Array.from(new Set([...(o.taggedUsers || []), m.userId])) }); await loadAlignmentData(); }} />
                                   </>
                                 )}
