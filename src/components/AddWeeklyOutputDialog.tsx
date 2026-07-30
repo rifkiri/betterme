@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { WeeklyOutput, Goal } from '@/types/productivity';
 import { GoalVisibilitySelector } from '@/components/ui/GoalVisibilitySelector';
 import { useUserRole } from '@/hooks/useUserRole';
+import { UserSelector } from '@/components/task/UserSelector';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -26,7 +27,8 @@ const formSchema = z.object({
   dueDate: z.date().optional(),
   goalId: z.string().optional(),
   visibility: z.enum(['all', 'managers', 'self']).optional(),
-  progressCalculation: z.enum(['manual', 'weighted']).optional()
+  progressCalculation: z.enum(['manual', 'weighted']).optional(),
+  taggedUsers: z.array(z.string()).optional()
 });
 
 type FormData = z.infer<typeof formSchema>;
