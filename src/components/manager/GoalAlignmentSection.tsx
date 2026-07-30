@@ -74,7 +74,7 @@ export const GoalAlignmentSection: React.FC = () => {
   const [assignmentsMap, setAssignmentsMap] = useState<Map<string, Assignment[]>>(new Map());
   const [fetching, setFetching] = useState(true);
 
-  const [selectedPic, setSelectedPic] = useState<string>('all');
+
   const [alignmentFilter, setAlignmentFilter] = useState<'all' | 'aligned' | 'unaligned' | 'completed'>('all');
   const [categoryFilter, setCategoryFilter] = useState<'all' | 'work' | 'personal'>('all');
   const [searchQuery, setSearchQuery] = useState('');
