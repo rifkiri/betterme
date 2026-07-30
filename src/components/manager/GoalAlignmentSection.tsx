@@ -106,7 +106,9 @@ export const GoalAlignmentSection: React.FC = () => {
       setProfiles(pMap);
 
       setGoals(
-        (goalsRes.data || []).map((g: any) => ({
+        (goalsRes.data || [])
+          .filter((g: any) => g.category === 'work' && (g.visibility || 'all') === 'all')
+          .map((g: any) => ({
           id: g.id,
           userId: g.user_id,
           title: g.title,
