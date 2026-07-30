@@ -191,20 +191,40 @@ export const GoalAlignmentSection: React.FC = () => {
 
       const upcoming = linked.filter(o => o.isUpcomingInNext2Weeks && o.progress < 100);
 
+      // Per-member alignment: owner + all assigned members must have an upcoming
+      // output (owned or tagged) or a task under one of the goal's outputs.
+      const linkedOutputIds = new Set(linked.map(o => o.id));
+      const upcomingTasks = tasksLite.filter(t =>
+        !t.completed &&
+        t.weeklyOutputId && linkedOutputIds.has(t.weeklyOutputId) &&
+        t.dueDate && isWithinInterval(t.dueDate, { start: today, end: twoWeeksLater })
+      );
+
+      const involved = new Map<string, { userId: string; name: string; role: string }>();
+      if (goal.userId) involved.set(goal.userId, { userId: goal.userId, name: owner?.name || 'Unknown Owner', role: 'owner' });
+      assignedMembers.forEach(m => { if (!involved.has(m.userId)) involved.set(m.userId, m); });
+
+      const memberAlignments: MemberAlignment[] = Array.from(involved.values()).map(m => {
+        const hasOutput = upcoming.some(o => o.userId === m.userId || (o.taggedUsers || []).includes(m.userId));
+        const hasTask = upcomingTasks.some(t => t.userId === m.userId || t.taggedUsers.includes(m.userId));
+        return { ...m, isAligned: hasOutput || hasTask };
+      });
+
       let status: 'aligned' | 'unaligned' | 'completed' = 'unaligned';
       if (goal.completed || goal.progress >= 100) status = 'completed';
-      else if (upcoming.length > 0) status = 'aligned';
+      else if (memberAlignments.length > 0 ? memberAlignments.every(m => m.isAligned) : upcoming.length > 0) status = 'aligned';
 
       return {
         ...goal,
         ownerName: owner?.name || 'Unknown Owner',
         assignedMembers,
+        memberAlignments,
         linkedOutputs: linked,
         upcomingBiweeklyOutputs: upcoming,
         alignmentStatus: status,
       };
     });
-  }, [goals, profiles, assignmentsMap, weeklyOutputs]);
+  }, [goals, profiles, assignmentsMap, weeklyOutputs, tasksLite]);
 
   const allPicList = useMemo(
     () => Array.from(profiles.values()).sort((a, b) => a.name.localeCompare(b.name)),
