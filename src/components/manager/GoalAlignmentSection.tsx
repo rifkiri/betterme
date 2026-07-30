@@ -455,21 +455,34 @@ export const GoalAlignmentSection: React.FC = () => {
                   </div>
 
                   <CollapsibleContent className="mt-3 pl-9">
-                    {goal.assignedMembers.length > 0 && (
+                    {goal.memberAlignments.length > 0 && (
                       <div className="mb-3">
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Team</p>
-                        <div className="flex flex-wrap gap-1">
-                          {goal.assignedMembers.map(m => {
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Team Alignment (next 2 weeks)</p>
+                        <div className="space-y-1">
+                          {goal.memberAlignments.map(m => {
                             const pal = memberPalette(m.userId);
                             return (
-                              <Badge key={m.userId} variant="outline" className={`text-[10px] ${pal.bg} ${pal.text} ${pal.border}`}>
-                                {m.name} · {m.role}
-                              </Badge>
+                              <div key={m.userId} className="flex items-center gap-2 text-xs border rounded p-2">
+                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded border ${pal.bg} ${pal.text} ${pal.border}`}>
+                                  <UserIcon className="h-3 w-3" /> {m.name}
+                                </span>
+                                <Badge variant="outline" className="text-[10px]">{m.role}</Badge>
+                                <span className="flex-1" />
+                                {m.isAligned ? (
+                                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100 text-[10px]">🟢 Aligned &amp; Contributed</Badge>
+                                ) : (
+                                  <>
+                                    <Badge className="bg-red-100 text-red-800 hover:bg-red-100 text-[10px]">🔴 Missing Output/Task Schedule</Badge>
+                                    <AddWeeklyOutputTrigger goal={goal} onAdd={async (o) => { await addWeeklyOutput({ ...o, taggedUsers: Array.from(new Set([...(o.taggedUsers || []), m.userId])) }); await loadAlignmentData(); }} />
+                                  </>
+                                )}
+                              </div>
                             );
                           })}
                         </div>
                       </div>
                     )}
+
 
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-xs font-medium text-muted-foreground">Linked Outputs</p>
