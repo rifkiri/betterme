@@ -205,9 +205,9 @@ export const GoalAlignmentSection: React.FC = () => {
       assignedMembers.forEach(m => { if (!involved.has(m.userId)) involved.set(m.userId, m); });
 
       const memberAlignments: MemberAlignment[] = Array.from(involved.values()).map(m => {
-        const hasOutput = upcoming.some(o => o.userId === m.userId || (o.taggedUsers || []).includes(m.userId));
-        const hasTask = upcomingTasks.some(t => t.userId === m.userId || t.taggedUsers.includes(m.userId));
-        return { ...m, isAligned: hasOutput || hasTask };
+        const outputCount = upcoming.filter(o => o.userId === m.userId || (o.taggedUsers || []).includes(m.userId)).length;
+        const taskCount = upcomingTasks.filter(t => t.userId === m.userId || t.taggedUsers.includes(m.userId)).length;
+        return { ...m, outputCount, taskCount, isAligned: outputCount > 0 || taskCount > 0 };
       });
 
       let status: 'aligned' | 'unaligned' | 'completed' = 'unaligned';
