@@ -140,8 +140,22 @@ export const GoalAlignmentSection: React.FC = () => {
           completedDate: o.completed_date ? new Date(o.completed_date) : undefined,
           linkedGoalId: o.linked_goal_id || undefined,
           visibility: o.visibility || 'all',
+          taggedUsers: o.tagged_users || [],
         })) as WeeklyOutput[]
       );
+
+      setTasksLite(
+        (tasksRes.data || []).map((t: any) => ({
+          id: t.id,
+          userId: t.user_id,
+          title: t.title,
+          dueDate: t.due_date ? new Date(t.due_date) : undefined,
+          completed: !!t.completed,
+          weeklyOutputId: t.weekly_output_id || undefined,
+          taggedUsers: t.tagged_users || [],
+        }))
+      );
+
     } catch (err) {
       console.error('Error loading alignment data:', err);
     } finally {
